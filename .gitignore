@@ -16,3 +16,6 @@ credentials/
 # un trabajo sin sustentar publicado queda indexado, y los servicios antiplagio
 # rastrean GitHub.
 design/monografia-texto.txt
+
+.vercel
+.env*

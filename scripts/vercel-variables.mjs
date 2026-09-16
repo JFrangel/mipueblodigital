@@ -23,6 +23,41 @@
  */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { delimiter, join } from "node:path";
+import { existsSync } from "node:fs";
+
+/**
+ * La orden de Vercel, llamada por su archivo de JavaScript.
+ *
+ * `vercel env add` recibe el valor por la entrada estándar, y en Windows eso no
+ * sobrevive a ninguno de los dos caminos normales: lo que hay en el PATH es un
+ * `.cmd`, que Node se niega a lanzar sin intérprete (EINVAL), y con intérprete
+ * la entrada se pierde por el camino y la orden falla sin decir por qué.
+ *
+ * Así que se llama al propio `index.js` del paquete con este mismo Node. Sin
+ * intermediarios, la entrada llega.
+ */
+function ordenVercel() {
+  for (const carpeta of (process.env.PATH ?? "").split(delimiter)) {
+    const entrada = join(carpeta, "node_modules", "vercel", "dist", "index.js");
+    if (existsSync(entrada)) return entrada;
+  }
+  return null;
+}
+const VERCEL = ordenVercel();
+
+/** Ejecuta la orden de Vercel pasándole `valor` por la entrada estándar. */
+function vercel(args, valor) {
+  if (!VERCEL)
+    throw new Error(
+      "No se encontró la orden de Vercel. Instálala con `npm i -g vercel`.",
+    );
+  return execFileSync(process.execPath, [VERCEL, ...args], {
+    input: valor ?? "",
+    stdio: ["pipe", "ignore", "pipe"],
+    encoding: "utf-8",
+  });
+}
 
 const revisar = process.argv.includes("--revisar");
 const entornos = ["production", "preview", "development"];
@@ -132,18 +167,28 @@ if (!subir.FIREBASE_SERVICE_ACCOUNT_KEY) {
     for (const [clave, valor] of Object.entries(subir)) {
       for (const entorno of entornos) {
         try {
-          execFileSync("vercel", ["env", "rm", clave, entorno, "--yes"], {
-            stdio: "ignore",
-            shell: true,
-          });
+          vercel(["env", "rm", clave, entorno, "--yes"]);
         } catch {
           /* No estaba puesta. Es lo normal la primera vez. */
         }
-        execFileSync("vercel", ["env", "add", clave, entorno], {
-          input: valor,
-          stdio: ["pipe", "ignore", "inherit"],
-          shell: true,
-        });
+        try {
+          /**
+           * Vercel pide clasificar cada valor, y con razón: `NEXT_PUBLIC_`
+           * significa que el valor acaba dentro del JavaScript que descarga
+           * cualquiera. Para la clave web de Firebase eso es lo correcto —está
+           * diseñada para ser pública: identifica el proyecto, no autoriza
+           * nada, y quien protege son las reglas de Firestore y la sesión—,
+           * pero su detector de credenciales no puede saberlo y se planta. Se
+           * le dice a mano; el resto va como secreto.
+           */
+          const tipo = clave.startsWith("NEXT_PUBLIC_") ? "config" : "secret";
+          vercel(["env", "add", clave, entorno, "--type", tipo], valor);
+        } catch (error) {
+          console.error(`
+  falló   ${clave} (${entorno})`);
+          console.error(String(error.stderr || error.message).trim());
+          process.exitCode = 1;
+        }
       }
       console.log(`  puesta  ${clave}`);
     }
