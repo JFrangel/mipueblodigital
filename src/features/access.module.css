@@ -1,0 +1,498 @@
+/*
+ * Acceso y registro sobre el mismo escenario de la bienvenida.
+ *
+ * Las piezas del fondo no se copian: se componen de welcome.module.css. Así el
+ * paisaje, la profundidad atmosférica, el vidrio de borde orgánico y todas sus
+ * variantes responsivas son literalmente las mismas, y arreglar una arregla las
+ * dos pantallas. Aquí solo vive lo que el formulario necesita encima.
+ */
+.page {
+  composes: stage from "./welcome.module.css";
+  /* Cabecera, presentación, formulario y pie. */
+  grid-template-rows: auto auto 1fr auto;
+}
+.light {
+  composes: light from "./welcome.module.css";
+}
+.landscape {
+  composes: landscape from "./welcome.module.css";
+}
+.depth {
+  composes: depth from "./welcome.module.css";
+}
+.veil {
+  composes: veil from "./welcome.module.css";
+}
+.header {
+  composes: header from "./welcome.module.css";
+}
+.brand {
+  composes: brand from "./welcome.module.css";
+}
+.controls {
+  composes: controls from "./welcome.module.css";
+}
+.link {
+  composes: link from "./welcome.module.css";
+}
+.theme {
+  composes: theme from "./welcome.module.css";
+}
+.foot {
+  composes: foot from "./welcome.module.css";
+}
+/* El pie de la bienvenida reparte dos piezas a los extremos; aquí solo hay
+   una, y «reparto» con un único elemento lo deja pegado a la izquierda bajo
+   un formulario centrado. Se escribe desde .page para no depender del orden
+   en que se junten las hojas. */
+.page .foot {
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── El formulario sobre el vidrio ──────────────────────────────────────── */
+
+.intro {
+  width: 100%;
+  max-width: 460px;
+  padding: 0 clamp(20px, 5vw, 64px);
+}
+.panel {
+  align-self: start;
+  width: 100%;
+  max-width: 420px;
+  padding: 22px clamp(20px, 5vw, 64px) 0;
+}
+.eyebrow {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: #9be49c;
+}
+.title {
+  margin: 12px 0 0;
+  font-size: clamp(28px, 4.4vw, 40px);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -1.2px;
+  color: #fff;
+}
+.title em {
+  font-style: normal;
+  color: #9be49c;
+}
+.lead {
+  margin: 12px 0 26px;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #cad8d1;
+}
+
+/* Los campos son de vidrio: el paisaje sigue detrás, atenuado lo justo para
+   que el texto que se escribe se lea sin esfuerzo. */
+.field {
+  display: block;
+  margin-bottom: 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #eaf1ec;
+}
+.field input {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 7px;
+  padding: 14px 16px;
+  border-radius: 15px;
+  border: 1px solid rgb(255 255 255 / 0.26);
+  background: rgb(6 47 41 / 0.42);
+  backdrop-filter: blur(14px);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 450;
+}
+.field input::placeholder {
+  color: rgb(234 241 236 / 0.55);
+}
+.field input:focus-visible {
+  outline: 2px solid #9be49c;
+  outline-offset: 2px;
+  border-color: transparent;
+}
+.field small {
+  display: block;
+  margin-top: 6px;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: #cad8d1;
+}
+.password {
+  position: relative;
+}
+.password input {
+  padding-right: 54px;
+}
+.reveal {
+  position: absolute;
+  right: 7px;
+  bottom: 7px;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 11px;
+  background: none;
+  color: #cad8d1;
+}
+.reveal:hover {
+  color: #fff;
+}
+
+/* La acción principal repite el botón de «Comenzar»: el mismo verde y el mismo
+   círculo con la flecha, para que entrar se sienta la continuación de aquello. */
+.primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 6px;
+  padding: 14px 16px 14px 22px;
+  border: 1px solid rgb(255 255 255 / 0.26);
+  border-radius: 999px;
+  background: linear-gradient(100deg, rgb(50 145 74 / 0.9), rgb(6 75 61 / 0.9));
+  box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.5);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+}
+.primary i {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: rgb(255 255 255 / 0.18);
+  transition:
+    transform 0.25s ease,
+    background 0.25s ease;
+}
+.primary:hover:not(:disabled) i {
+  transform: translateX(4px);
+  background: rgb(255 255 255 / 0.28);
+}
+.primary:disabled {
+  opacity: 0.6;
+}
+
+.quiet {
+  display: block;
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 6px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  color: #cad8d1;
+}
+.quiet:hover:not(:disabled) {
+  color: #fff;
+}
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 20px 0 14px;
+  font-size: 11px;
+  color: rgb(202 216 209 / 0.85);
+}
+.or:before,
+.or:after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgb(255 255 255 / 0.2);
+}
+/* El botón de Google conserva su blanco: es su marca, no la nuestra. */
+.google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 50px;
+  border-radius: 14px;
+  border: 1px solid rgb(255 255 255 / 0.3);
+  background: rgb(255 255 255 / 0.95);
+  color: #1f1f1f;
+  font-size: 13px;
+  font-weight: 600;
+}
+.google:hover:not(:disabled) {
+  background: #fff;
+}
+
+.notice,
+.errors {
+  margin: 0 0 16px;
+  padding: 11px 14px;
+  border-radius: 13px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.notice {
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(6 47 41 / 0.5);
+  color: #eaf1ec;
+}
+.errors {
+  border: 1px solid rgb(224 145 44 / 0.55);
+  background: rgb(92 52 12 / 0.55);
+  color: #ffdcb0;
+}
+.notice svg,
+.errors svg {
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+
+.guest {
+  display: block;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(255 255 255 / 0.16);
+  font-size: 12px;
+  text-align: center;
+  color: #eaf1ec;
+}
+.guest small {
+  display: block;
+  margin: 5px auto 0;
+  max-width: 36ch;
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--paper-dim, #cad8d1);
+}
+
+@media (max-width: 880px) {
+  /* En vertical el vidrio deja de ser una capa de fondo y pasa a ser el propio
+     panel del formulario. Así su borde superior cae exactamente donde empieza
+     el primer campo, y no a media altura del subtítulo: una altura en
+     porcentaje no puede saber cuánto ocupa el texto de arriba. */
+  .veil {
+    display: none;
+  }
+  /* Todo lo que queda por encima del formulario va sobre la fotografía, y una
+     copa de árbol al mediodía es fondo claro. El velo de profundidad se alarga
+     para sostener ahí el texto, y el texto se queda blanco en los dos temas:
+     sobre el paisaje manda el paisaje, no el tema elegido. */
+  .depth {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(4 33 28 / 0.78) 0%,
+        rgb(4 33 28 / 0.6) 32%,
+        rgb(4 33 28 / 0.42) 52%,
+        rgb(4 33 28 / 0.34) 100%
+      ),
+      /* Esta capa es la que faltaba. En escritorio el vidrio cae sobre la parte
+         oscura del río y el resultado se lee casi negro; aquí caía sobre la
+         copa del árbol al sol, y el mismo verde encima de un fondo claro se ve
+         verde. Oscurecer el pie devuelve el aspecto del escritorio. */
+        radial-gradient(
+          150% 74% at 50% 100%,
+          rgb(12 18 16 / 0.9),
+          transparent 68%
+        );
+  }
+  .intro {
+    max-width: none;
+    padding-bottom: 18px;
+  }
+  .panel {
+    align-self: end;
+    max-width: none;
+    /* El canto del vidrio es una curva alta, no una línea: el primer rótulo
+       necesita despejarla o queda partido entre los dos fondos. */
+    padding: clamp(54px, 13vw, 76px) clamp(20px, 5vw, 34px) 18px;
+    /* Vidrio, no una plancha verde: el canto superior deja pasar el paisaje y
+       la densidad sube conforme baja, igual que el velo de la bienvenida. Con
+       0,88 de entrada el panel se leía como pintura opaca. */
+    /* El mismo tono del escritorio: allí el vidrio cae sobre la sombra del
+       tronco y sale un gris cálido casi neutro, no verde. En vertical el fondo
+       es más claro, así que la neutralidad hay que ponerla en la propia capa. */
+    /* Negro, no verde. Dos cosas lo teñían: la propia capa —que llevaba más
+       verde que rojo y azul— y sobre todo el realce de saturación, que
+       intensificaba la vegetación al otro lado del vidrio en vez de apagarla.
+       Ahora la capa es neutra y el filtro dessatura lo que hay detrás. */
+    background: linear-gradient(
+      182deg,
+      rgb(9 10 10 / 0) 0%,
+      rgb(9 10 10 / 0.82) 14%,
+      rgb(10 11 11 / 0.94) 46%
+    );
+    backdrop-filter: blur(26px) saturate(55%) brightness(0.72);
+    border-radius: 46% 28% 0 0 / 14% 9% 0 0;
+    border-top: 1px solid rgb(255 255 255 / 0.18);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22);
+  }
+  .light .panel {
+    background: linear-gradient(
+      182deg,
+      rgb(245 247 230 / 0.55) 0%,
+      rgb(243 247 231 / 0.86) 20%,
+      rgb(239 246 231 / 0.96) 58%
+    );
+    backdrop-filter: blur(20px) saturate(115%);
+    border-top-color: rgb(28 76 47 / 0.18);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  }
+  /* El pie continúa el vidrio hasta el canto inferior de la pantalla: cortarlo
+     antes dejaba una franja de fotografía suelta debajo del formulario. */
+  .foot {
+    margin-top: -1px;
+    padding: 14px clamp(20px, 5vw, 34px)
+      calc(16px + env(safe-area-inset-bottom));
+    background: rgb(10 11 11 / 0.94);
+    backdrop-filter: blur(26px) saturate(55%) brightness(0.72);
+  }
+  .foot:before {
+    display: none;
+  }
+  .light .foot {
+    background: rgb(239 246 231 / 0.96);
+    backdrop-filter: blur(20px) saturate(115%);
+    color: #3d6353;
+  }
+  .title {
+    font-size: clamp(25px, 7vw, 32px);
+  }
+  .lead {
+    margin-bottom: 4px;
+  }
+}
+
+/* ── Tema claro: el vidrio se vuelve papel ──────────────────────────────────
+   El velo pasa de verde profundo a crema, así que el texto blanco desaparece.
+   La bienvenida ya resuelve esto invirtiendo el contraste; aquí se repite para
+   el formulario, que es lo único que ella no tiene. */
+.light .eyebrow {
+  color: #246a40;
+}
+.light .title {
+  color: #103c2e;
+}
+.light .title em {
+  color: #246a40;
+}
+.light .lead,
+.light .field,
+.light .guest {
+  color: #214e40;
+}
+.light .field small,
+.light .guest small,
+.light .or,
+.light .quiet {
+  color: #3d6353;
+}
+.light .field input {
+  background: rgb(255 255 255 / 0.8);
+  border-color: rgb(28 76 47 / 0.22);
+  color: #14312a;
+}
+.light .field input::placeholder {
+  color: rgb(33 78 64 / 0.55);
+}
+.light .reveal {
+  color: #3d6353;
+}
+.light .reveal:hover {
+  color: #103c2e;
+}
+.light .or:before,
+.light .or:after {
+  background: rgb(28 76 47 / 0.22);
+}
+.light .quiet:hover:not(:disabled) {
+  color: #103c2e;
+}
+.light .guest {
+  border-top-color: rgb(28 76 47 / 0.2);
+}
+.light .google {
+  border-color: rgb(28 76 47 / 0.26);
+}
+.light .notice {
+  background: rgb(255 255 255 / 0.78);
+  border-color: rgb(28 76 47 / 0.2);
+  color: #214e40;
+}
+.light .errors {
+  background: rgb(255 244 228 / 0.92);
+  border-color: rgb(186 126 43 / 0.5);
+  color: #7a4a10;
+}
+
+/* Estas van al final a propósito: el bloque de tema claro de arriba redefine
+   los mismos colores, y entre reglas de igual peso gana la última. Una consulta
+   de medios no añade especificidad; solo el orden decide. */
+@media (max-width: 880px) {
+  .light .eyebrow {
+    color: #9be49c;
+  }
+  .light .title,
+  .light .brand :global(.brand) {
+    color: #fff;
+  }
+  .light .title em,
+  .light .brand :global(.brand-word em) {
+    color: #9be49c;
+  }
+  .light .lead {
+    color: #e3ece6;
+  }
+}
+
+/* La cápsula de red y el botón de tema, más apagados en el acceso.
+   En la bienvenida el verde vivo es bienvenida: se entra por primera vez y la
+   pantalla saluda. En el acceso se entra a diario y a veces a oscuras, y ese
+   mismo verde da un salto de contraste al abrir. Mismo material, menos voz. */
+.link,
+.theme {
+  border-color: rgb(255 255 255 / 0.18);
+  background: rgb(14 22 20 / 0.52);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18);
+}
+.link svg {
+  color: #7cbf8a;
+}
+.light .link,
+.light .theme {
+  border-color: rgb(28 76 47 / 0.22);
+  background: rgb(18 30 26 / 0.44);
+}
+
+/* En horizontal el vidrio del acceso se oscurece respecto al de la bienvenida.
+   Allí es una portada y puede permitirse luz; aquí se entra a diario, a veces
+   de noche, y lo que se agradece es que la pantalla no deslumbre. */
+@media (min-width: 881px) {
+  .page:not(.light) .veil {
+    background: linear-gradient(
+      103deg,
+      rgb(8 9 9 / 0.94) 0%,
+      rgb(9 10 10 / 0.84) 46%,
+      rgb(10 12 12 / 0.34) 78%,
+      rgb(10 12 12 / 0) 100%
+    );
+    backdrop-filter: blur(24px) saturate(55%) brightness(0.72);
+  }
+}

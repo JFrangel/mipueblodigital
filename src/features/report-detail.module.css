@@ -1,0 +1,385 @@
+/* El cuerpo sube sobre la banda verde: sus esquinas redondeadas dejan el verde
+   asomando por detrás. */
+.body {
+  position: relative;
+  z-index: 1;
+  margin-top: -24px;
+  border-radius: 22px 22px 0 0;
+  background: var(--surface);
+  padding: 24px 26px 20px;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 17px;
+}
+.meta > span:last-child {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+.body h2 {
+  font-size: 24px;
+  line-height: 1.28;
+  font-weight: 650;
+  letter-spacing: -0.6px;
+}
+.location {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 12px;
+  margin: 9px 0 20px;
+}
+/* El tipo de incidencia abre la línea, con su propio icono y su cápsula, para
+   que se lea como una categoría y no como parte del sitio. */
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: var(--soft);
+  font-weight: 600;
+}
+.location small {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--soft);
+  font-size: 10px;
+  color: var(--muted);
+}
+.missing {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 10px;
+  min-height: 180px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--green);
+}
+.missing span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.missing strong {
+  font-size: 13px;
+}
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 12px 0 16px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.facts span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Dos columnas a partir de tableta: en escritorio una sola columna dejaba el
+   expediente flotando en medio de mucho blanco. */
+.columns {
+  display: grid;
+  gap: 24px;
+  margin-top: 20px;
+}
+@media (min-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* La evidencia acompaña la lectura del historial al desplazarse. */
+  .evidence {
+    position: sticky;
+    top: 88px;
+  }
+  .record > section:first-child {
+    margin-top: 0;
+  }
+}
+.body section {
+  margin: 22px 0;
+}
+.body h3 {
+  font-size: 15px;
+  margin-bottom: 9px;
+}
+.description {
+  font-size: 13px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* De quién es lo que se está leyendo. Va pegado al relato porque es sobre el
+   relato: de otra persona, lo que consta no es el expediente. */
+.shared {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.shared svg {
+  flex: none;
+  margin-top: 1px;
+}
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.heading small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.timeline {
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+}
+.timeline li {
+  display: flex;
+  gap: 14px;
+  position: relative;
+  padding-bottom: 22px;
+  margin-left: 10px;
+  border-left: 1px solid var(--line);
+}
+.timeline li:last-child {
+  border-color: transparent;
+  padding-bottom: 0;
+}
+.timeline i {
+  border-radius: 50%;
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  margin-left: -10px;
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+}
+.timeline strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+}
+.timeline small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.timeline p {
+  font-size: 12px;
+  margin-top: 7px;
+  line-height: 1.65;
+}
+.done i {
+  background: #2f7150;
+  border-color: #2f7150;
+  color: #fff;
+}
+.timeline li.done {
+  border-left-color: #2f715047;
+}
+/* El asiento que está al frente. Su color es el del estado, no el de «en
+   curso»: ámbar mientras el caso sigue abierto, verde cuando se resolvió y
+   apagado cuando se cerró sin resolverse. Son los mismos colores de la
+   insignia de arriba, que hasta ahora lo desmentía. */
+.current i {
+  background: #e0912c;
+  border-color: #e0912c;
+  color: #fff;
+  box-shadow: 0 0 0 3px #e0912c33;
+}
+.current strong {
+  color: #a6752b;
+}
+.solved i {
+  background: #2f7150;
+  border-color: #2f7150;
+  color: #fff;
+  box-shadow: 0 0 0 3px #2f715033;
+}
+.solved strong {
+  color: #2f7150;
+}
+:global(.dark) .solved strong {
+  color: #93c88b;
+}
+.closed i {
+  background: #9f6053;
+  border-color: #9f6053;
+  color: #fff;
+  box-shadow: 0 0 0 3px #9f605333;
+}
+.closed strong {
+  color: #9f6053;
+}
+:global(.dark) .closed strong {
+  color: #d69382;
+}
+/* Y la línea que baja de él deja de ser gris: el caso llegó hasta aquí. */
+.timeline li.solved {
+  border-left-color: #2f715047;
+}
+.timeline li.closed {
+  border-left-color: #9f605347;
+}
+.future {
+  color: var(--muted);
+}
+.future i {
+  background: var(--bg);
+}
+.assignee {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.assignee strong {
+  display: block;
+  color: var(--text);
+  font-size: 12px;
+}
+.update {
+  border: 1px solid var(--line);
+  background: var(--soft);
+  padding: 17px;
+  border-radius: 14px;
+}
+.update h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.update h3 svg {
+  color: #2f7150;
+}
+.dark .update h3 svg {
+  color: inherit;
+}
+.update p {
+  font-size: 12px;
+  line-height: 1.75;
+}
+.update small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.update button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 550;
+  text-align: left;
+}
+.update button svg {
+  transition: transform 0.2s ease;
+}
+.update button[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .update button svg {
+    transition: none;
+  }
+}
+.history {
+  border-top: 1px solid var(--line);
+  margin-top: 15px;
+  padding-top: 8px;
+}
+.history p {
+  padding: 8px 0;
+}
+.disclaimer {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+/* En qué punto del camino va, y qué hacer al respecto. */
+.delivery {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+}
+.delivery p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.deliveryActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+}
+/* Lo que nunca salió se marca en el canto: no es un estado más, es algo
+   pendiente de quien reportó. */
+.sin-enviar {
+  border-left: 3px solid #d08a2a;
+}
+/* La confirmación de retirada: se abre en el sitio para que se vea qué se
+   está quitando mientras se decide. */
+.removal {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+.removal p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.removal > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .body {
+    padding: 22px 20px;
+  }
+  .body h2 {
+    font-size: 21px;
+  }
+  .photo img {
+    height: 210px;
+  }
+}

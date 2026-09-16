@@ -1,0 +1,204 @@
+.container {
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+.container h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 1fr;
+  gap: 32px;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 0;
+  text-transform: capitalize;
+}
+.toToday {
+  padding: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+}
+/* La rejilla necesita su aire aunque el botón de hoy no esté. */
+.grid {
+  margin-top: 12px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  text-align: center;
+}
+.grid > span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.grid button {
+  position: relative;
+  min-height: 49px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 9px;
+  color: var(--text);
+  overflow: hidden;
+}
+/* El verde de la casilla crece con el movimiento del día: un mes se lee de un
+   vistazo por el tono. La cifra sigue ahí para quien no distinga matices. */
+.grid button:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #3f9a61;
+  opacity: calc(var(--carga, 0) * 0.26);
+}
+:global(.dark) .grid button:before {
+  opacity: calc(var(--carga, 0) * 0.34);
+}
+.grid button > * {
+  position: relative;
+}
+.grid button:hover {
+  background: var(--soft);
+}
+.grid button small {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  min-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--green);
+}
+/* Hoy se marca con un anillo, no con relleno: el relleno ya significa «día
+   elegido», y si coinciden hay que poder ver las dos cosas a la vez. */
+.grid button.today {
+  box-shadow: inset 0 0 0 2px #2f7150;
+  font-weight: 700;
+}
+:global(.dark) .grid button.today {
+  box-shadow: inset 0 0 0 2px #46a86b;
+}
+/* Verde propio, no el acento del tema: en oscuro «--green» es crema, y un día
+   elegido en crema con letra blanca no se lee. Aquí el verde además significa
+   algo —el día que se está mirando—, así que conviene que sea verde de verdad. */
+.grid button.selected {
+  background: #1c563a;
+  color: #fff;
+}
+:global(.dark) .grid button.selected {
+  background: #2f7150;
+}
+.grid button.today.selected {
+  box-shadow: inset 0 0 0 2px #9be49c;
+}
+.grid button.selected small {
+  color: white;
+}
+.grid button.selected:before {
+  display: none;
+}
+
+/* Reparto por día de la semana: una fila de barras bajo el mes. */
+.week {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.week h3 {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.week dl {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  margin: 0;
+  text-align: center;
+}
+.week dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.week abbr {
+  text-decoration: none;
+}
+.week dd {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  margin: 7px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* La barra crece desde abajo dentro de un carril de altura fija: sin carril,
+   siete barras de distinta altura no se podrían comparar de un vistazo. */
+.week dd span {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 46px;
+  border-radius: 6px;
+  background: var(--soft);
+  overflow: hidden;
+}
+.week dd i {
+  display: block;
+  width: 100%;
+  height: calc(var(--parte, 0) * 100%);
+  min-height: 2px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, #3f9a61, #1c563a);
+}
+:global(.dark) .week dd i {
+  background: linear-gradient(180deg, #46a86b, #23684a);
+}
+.results {
+  padding: 18px 0;
+}
+.results h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.chip {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #1c563a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.results p {
+  font-size: 12px;
+  margin: 8px 0 18px;
+}
+.results ul {
+  list-style: none;
+  padding: 0;
+  max-height: 330px;
+  overflow: auto;
+}
+.results li {
+  display: grid;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.results li small {
+  color: var(--muted);
+}
+@media (max-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}

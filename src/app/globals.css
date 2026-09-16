@@ -1,0 +1,6211 @@
+:root {
+  --bg: #f6f8f5;
+  --surface: #fff;
+  --text: #20372d;
+  --muted: #5e7166;
+  --line: #e7ece6;
+  --green: #174f3b;
+  --soft: #eaf2e9;
+  --accent: #b9d8a3;
+  --shadow: 0 4px 20px #243e2811;
+  --radius: 18px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  font-family: "DM Sans Variable", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--bg);
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  color: inherit;
+}
+svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+summary:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #71a45f;
+  outline-offset: 4px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1 {
+  font-size: 30px;
+  line-height: 1.25;
+  letter-spacing: -1px;
+  font-weight: 650;
+}
+h2 {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+  font-weight: 650;
+}
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+p {
+  color: var(--muted);
+}
+small {
+  font-size: 12px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  width: 100%;
+  margin: 24px 0;
+}
+.workspace {
+  color: var(--text);
+  min-height: 100vh;
+  background: var(--bg);
+}
+.account-live {
+  text-align: left;
+}
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 24px 0;
+  overflow-wrap: anywhere;
+}
+.account-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.account-empty,
+.news-empty {
+  padding: 28px;
+  text-align: center;
+}
+.account-empty h2,
+.account-empty p {
+  margin: 16px 0;
+}
+.newsroom {
+  margin-top: 28px;
+  padding: clamp(20px, 4vw, 32px);
+}
+.newsroom > p {
+  margin-top: 12px;
+}
+.newsroom .field-label {
+  margin-top: 18px;
+}
+.newsroom textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+.news-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.news-card time {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 12px 0;
+}
+.management-metrics {
+  position: relative;
+  overflow: hidden;
+  grid-column: 1 / -1;
+}
+/* El palafito no aparece en ninguna otra tarjeta: es la casa levantada sobre
+   pilotes, lo que sostiene el seguimiento cuando sube el agua. */
+.management-metrics:before {
+  --hoja: var(--palafito);
+  --tinte: #a9714a;
+  right: -22px;
+  bottom: -28px;
+  width: 175px;
+  height: 175px;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(-5deg);
+}
+.management-metrics dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+.management-metrics dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.management-metrics dd {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.management-metrics p {
+  font-size: 12px;
+  line-height: 1.6;
+}
+/* Lo que lleva más esperando: filas con la cifra de días a la izquierda, del
+   tamaño que merece la única pregunta que responde la tarjeta. La barra vive
+   detrás del texto, así que compara sin robarle sitio. */
+.waiting-panel {
+  margin-top: 20px;
+}
+.waiting-panel h2 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.waiting-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+}
+.waiting-list a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 12px;
+  margin: 0 -12px;
+  border-radius: 12px;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  overflow: hidden;
+}
+.waiting-list li:last-child a {
+  border-bottom: 0;
+}
+.waiting-list a:hover {
+  background: var(--soft);
+}
+.waiting-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--parte, 0) * 100%);
+  /* Arranca con cuerpo y se disuelve: la longitud es el dato, el degradado
+     evita que la fila parezca una barra de progreso con un final duro. */
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--green) 30%, transparent),
+    color-mix(in oklab, var(--green) 8%, transparent) 78%,
+    transparent
+  );
+  pointer-events: none;
+}
+/* Sobre fondo oscuro el mismo porcentaje se apaga: el verde necesita más
+   cuerpo para leerse como verde y no como un gris con suerte. */
+.dark .waiting-bar {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, #46a86b 42%, transparent),
+    color-mix(in oklab, #46a86b 12%, transparent) 78%,
+    transparent
+  );
+}
+.waiting-list a > :not(.waiting-bar) {
+  position: relative;
+}
+.waiting-list b {
+  display: grid;
+  justify-items: center;
+  min-width: 52px;
+  font-size: 23px;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: #1c563a;
+}
+.dark .waiting-list b {
+  color: #7ccf99;
+}
+.waiting-list b small {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.waiting-copy {
+  flex: 1;
+  min-width: 0;
+}
+.waiting-copy strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.waiting-copy small {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--muted);
+}
+@media (max-width: 560px) {
+  /* En el teléfono la insignia de estado cede el sitio al título. */
+  .waiting-list .badge {
+    display: none;
+  }
+}
+
+/* Rótulo de vereda sobre el mapa: nombre suelto, sin globo ni flecha. Un
+   recuadro con pico compite con los marcadores de reportes; el nombre a secas
+   se lee como lo que es, un topónimo impreso sobre el terreno. */
+/* Con doble clase a propósito: la hoja de Leaflet se inyecta después que esta
+   y, a igualdad de peso, ganaba por orden. Por eso los rótulos salían como
+   fichas blancas con borde —tapando el mapa y tapándose entre ellos— en vez
+   de como el texto rotulado que se pretendía. */
+.leaflet-tooltip.vereda-label {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  opacity: 1;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #1c4a38;
+  /* Filo claro alrededor: sobre el río o sobre el monte, siempre se lee. */
+  text-shadow:
+    0 1px 2px rgb(255 255 255 / 0.95),
+    0 -1px 2px rgb(255 255 255 / 0.95),
+    1px 0 2px rgb(255 255 255 / 0.95),
+    -1px 0 2px rgb(255 255 255 / 0.95);
+  white-space: nowrap;
+}
+.leaflet-tooltip.vereda-label:before,
+.leaflet-tooltip.vereda-label:after {
+  display: none;
+}
+.dark .leaflet-tooltip.vereda-label {
+  color: #0f3226;
+}
+.sin-rotulos .leaflet-tooltip.vereda-label {
+  display: none;
+}
+
+/* Cómo va cada vereda: una tabla, porque son cifras que se comparan fila a
+   fila. La tasa lleva su barra al lado para leer la columna de un vistazo. */
+.vereda-load {
+  margin-top: 20px;
+}
+.vereda-load table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+}
+.vereda-load th,
+.vereda-load td {
+  padding: 12px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.vereda-load thead th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.vereda-load th:first-child,
+.vereda-load td:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+.vereda-load td:last-child,
+.vereda-load th:last-child {
+  padding-right: 0;
+}
+.vereda-load tbody th {
+  font-size: 13px;
+  font-weight: 600;
+}
+.vereda-load tbody th small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10.5px;
+  font-weight: 400;
+  color: #c08a4a;
+}
+.vereda-load tbody td {
+  font-size: 15px;
+}
+/* Los abiertos son la columna que decide la semana: van en verde para que la
+   vista caiga ahí y no en el total, que solo dice cuánto se ha hablado. */
+.vereda-load td.open {
+  color: #1c563a;
+  font-weight: 600;
+}
+.dark .vereda-load td.open {
+  color: #6fc78f;
+}
+.rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+}
+.rate i {
+  display: block;
+  width: 62px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--soft);
+  box-shadow: inset calc(var(--parte, 0) * 62px) 0 0 #2f7150;
+}
+.dark .rate i {
+  box-shadow: inset calc(var(--parte, 0) * 62px) 0 0 #46a86b;
+}
+@media (max-width: 620px) {
+  /* En el teléfono la tabla conserva su forma y se desplaza sola. */
+  .vereda-load table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .rate i {
+    display: none;
+  }
+}
+.workspace,
+.workspace * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--surface);
+}
+.workspace ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.workspace ::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 8px;
+}
+.workspace ::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border: 2px solid var(--surface);
+  border-radius: 8px;
+}
+.map-list-scroll {
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.report-page {
+  max-width: 1040px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  overflow: hidden;
+}
+/* Cabecera del expediente: banda verde que queda POR DEBAJO del cuerpo. El
+   cuerpo sube sobre ella con sus esquinas redondeadas, así que el verde asoma
+   por detrás en lugar de apoyarse encima. El título va centrado en su propia
+   columna; la tercera es el espejo del botón de regreso. */
+.report-page > header {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  padding: 14px 18px 40px;
+  background: #084c37;
+  color: #fff;
+}
+.report-page > header a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+}
+.report-page > header a:hover {
+  background: #ffffff1f;
+}
+.report-page > header > span {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+.dark .report-page > header {
+  background: #242424;
+}
+.dark {
+  color-scheme: dark;
+  --bg: #111111;
+  --surface: #1b1b1b;
+  --text: #f0f0ed;
+  --muted: #aaa9a5;
+  --line: #343434;
+  --green: #e5e5e1;
+  --soft: #252525;
+  --shadow: 0 4px 20px #0002;
+}
+.sidebar {
+  width: 244px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  height: 100dvh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 32px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--green);
+  line-height: 1.2;
+}
+.brand-mark {
+  border-radius: 13px;
+  flex-shrink: 0;
+}
+/* El nombre lleva la tipografía de rótulo; el resto de la aplicación, no. */
+.brand-word {
+  font-family:
+    "Bricolage Grotesque Variable", "DM Sans Variable", Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 0.98;
+  letter-spacing: -0.9px;
+}
+/* «Digital» deja de ser una segunda palabra del mismo tamaño y pasa a ser lo
+   que es: el descriptor. Pequeño, espaciado y en el verde de la marca, vuelve
+   al cuerpo de texto para que el contraste entre las dos líneas sea evidente
+   y no parezca que la segunda se quedó corta. */
+.brand-word em {
+  display: block;
+  margin-top: 4px;
+  font-family: "DM Sans Variable", Arial, sans-serif;
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+  color: #2f7150;
+}
+.dark .brand-word em {
+  color: #8fcf9a;
+}
+.logo-link {
+  margin: 0 12px 40px;
+}
+.sidebar-caption {
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  font-weight: 700;
+  color: #99a398;
+  margin: 0 13px 12px;
+}
+.sidebar nav {
+  display: grid;
+  gap: 5px;
+}
+.sidebar nav a,
+.sidebar-bottom > a:not(.profile) {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 44px;
+}
+.sidebar a.active {
+  color: var(--green) !important;
+  background: var(--soft);
+  font-weight: 650;
+}
+.nav-count {
+  margin-left: auto;
+  border-radius: 5px;
+  background: var(--surface);
+  padding: 1px 6px;
+  font-size: 10px;
+}
+.sidebar-report {
+  margin: 24px 9px;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar-bottom > .sidebar-caption {
+  margin-top: 24px;
+}
+.territory-seal {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 22px 10px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  color: var(--green);
+}
+.territory-seal strong {
+  font-size: 10px;
+  display: block;
+}
+.territory-seal small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding: 18px 8px 0;
+}
+.profile strong {
+  font-size: 12px;
+  display: block;
+}
+.profile small {
+  font-size: 9px;
+  color: var(--muted);
+}
+.profile > svg {
+  margin-left: auto;
+}
+.avatar {
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #d9e4c9;
+  color: #3b5838;
+  font-weight: 650;
+  font-size: 12px;
+  border: 3px solid var(--surface);
+}
+.avatar.small {
+  width: 34px;
+  height: 34px;
+}
+.avatar.large {
+  width: 80px;
+  height: 80px;
+  font-size: 24px;
+}
+.main-shell {
+  margin-left: 244px;
+  /* Hueco de los controles flotantes: nada arranca debajo de ellos, pero el
+     contenido sí pasa por detrás al desplazarse. */
+  padding-top: 66px;
+}
+/* En escritorio no hay barra: los controles flotan sobre el contenido, que
+   pasa por debajo nítido. El contenedor no ocupa sitio en el flujo ni
+   intercepta clics; solo sus hijos son alcanzables. */
+.topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 244px;
+  height: 66px;
+  padding: 0 clamp(20px, 3vw, 42px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  z-index: 40;
+  pointer-events: none;
+}
+.topbar > * {
+  pointer-events: auto;
+}
+.identity {
+  display: none;
+  min-width: 0;
+}
+/* Cápsula de conectividad: en escritorio solo se muestra si hay que avisar. */
+.net-pill {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.net-pill.off {
+  display: inline-flex;
+  border-color: #e3c9a6;
+  background: #fdf3e5;
+  color: #8a5a20;
+}
+.dark .net-pill.off {
+  border-color: #4a3a26;
+  background: #2a2117;
+  color: #e7c79b;
+}
+.net-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4f9a5c;
+  flex-shrink: 0;
+}
+.net-pill.off i {
+  background: #d18f34;
+}
+.net-pill strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+}
+.net-pill small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.net-pill.off small {
+  color: inherit;
+  opacity: 0.8;
+}
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.control-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg);
+}
+.hero-tag > span {
+  width: 5px;
+  height: 5px;
+  background: #5d9357;
+  border-radius: 50%;
+}
+.icon-button {
+  background: transparent;
+  border: 0;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+}
+.icon-button:hover {
+  background: var(--soft);
+}
+.bell {
+  position: relative;
+}
+.bell i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d69f55;
+  position: absolute;
+  right: 8px;
+  top: 7px;
+}
+.main-content {
+  max-width: 1540px;
+  margin: auto;
+  padding: 34px 42px 0;
+}
+.eyebrow {
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 1.6px;
+  color: var(--muted);
+  display: block;
+  text-transform: uppercase;
+}
+.greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+/* El saludo abre la pantalla, así que se lee antes que nada. A 28 px competía
+   de tú a tú con los rótulos que lo rodean y el conjunto sonaba plano; el
+   salto de escala le devuelve el primer turno. */
+.greeting h1 {
+  margin: 10px 0;
+  font-size: 34px;
+  line-height: 1.12;
+  letter-spacing: -0.8px;
+}
+.greeting p {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+}
+.greeting-dot {
+  color: #c5a46b;
+  /* Proporcional al titular: la estrella lo acompaña, no compite con él. */
+  font-size: 0.7em;
+  margin-left: 5px;
+}
+.guide-link {
+  font-size: 11px;
+  color: var(--green);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.hero {
+  height: 290px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  background: #e1ecda;
+  isolation: isolate;
+}
+.hero > img {
+  object-fit: cover;
+  object-position: 50% 56%;
+  z-index: -1;
+}
+.hero-copy {
+  padding: 30px 34px;
+  color: #123e2b;
+  position: relative;
+}
+.hero-tag {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero h2 {
+  font-size: 39px;
+  font-weight: 600;
+  letter-spacing: -1.5px;
+  line-height: 1.12;
+  margin: 13px 0;
+}
+.hero p {
+  font-size: 12px;
+  color: #57765e;
+  line-height: 1.6;
+  margin-bottom: 19px;
+}
+.hero .btn {
+  font-size: 11px;
+  min-height: 40px;
+  padding: 10px 17px;
+  gap: 10px;
+  background: #1d573c;
+  color: #fff;
+}
+.hero-caption {
+  position: absolute;
+  bottom: 19px;
+  right: 118px;
+  font-size: 8px;
+  letter-spacing: 1.9px;
+  color: #ffffffc9;
+}
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-weight: 550;
+  font-size: 12px;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+.btn:hover {
+  background: var(--soft);
+}
+.btn.primary {
+  /* Verde para la flecha: sobre el botón verde del tema claro aclara, sobre el
+     crema del oscuro oscurece. En los dos casos se lee. */
+  --flecha: #8fd7a1;
+  background: #18533a;
+  color: #fff;
+  border-color: #18533a;
+}
+.dark .btn.primary {
+  --flecha: #1f6b46;
+}
+.btn.primary:hover {
+  background: #236b49;
+}
+/* El gesto vive en la flecha: se adelanta un paso y toma color. Teñir el botón
+   entero pesaba demasiado para algo que se pulsa en cada paso del formulario. */
+.btn.primary .lucide-arrow-right,
+.btn.primary .lucide-arrow-up-right {
+  transition:
+    transform 0.28s cubic-bezier(0.22, 0.7, 0.3, 1),
+    color 0.28s ease;
+}
+.btn.primary:hover:not(:disabled) .lucide-arrow-right,
+.btn.primary:focus-visible .lucide-arrow-right {
+  transform: translateX(3px);
+  color: var(--flecha);
+}
+.btn.primary:hover:not(:disabled) .lucide-arrow-up-right,
+.btn.primary:focus-visible .lucide-arrow-up-right {
+  transform: translate(3px, -3px);
+  color: var(--flecha);
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 25px 0 13px;
+}
+.section-heading h2 {
+  font-size: 15px;
+}
+.section-heading a,
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 550;
+}
+.metrics {
+  display: grid;
+  gap: 14px;
+}
+.metrics.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: 0 2px 3px #23421b02;
+}
+.metric {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  column-gap: 10px;
+  padding: 18px 20px;
+}
+.metric-icon {
+  background: var(--soft);
+  color: #567b56;
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-row: span 2;
+}
+.metric-icon.amber {
+  background: #fbf1df;
+  color: #ba8845;
+}
+.metric-icon.blue {
+  background: #e9f0f4;
+  color: #6e93a5;
+}
+.metric-icon.green {
+  background: #edf4df;
+  color: #6a8644;
+}
+.metric small {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.metric strong {
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-top: 4px;
+  letter-spacing: -1px;
+}
+.metric p {
+  font-size: 9px;
+  grid-column: 1/-1;
+  margin-top: 12px;
+}
+.metric-arrow {
+  position: absolute;
+  top: 18px;
+  right: 15px;
+  color: #a8b3a6;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 22px;
+  margin-top: 24px;
+}
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.panel-heading h2 {
+  font-size: 15px;
+}
+.panel-heading p {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.reports-panel {
+  padding: 21px 22px 0;
+}
+.case-list {
+  display: grid;
+}
+.case-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  width: 100%;
+  min-width: 0;
+}
+.case-row:hover {
+  background: var(--bg);
+}
+.case-row:last-child {
+  border-bottom: 0;
+}
+.case-art {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #d9e4d5, #a2bca4);
+  color: #365d42;
+}
+.case-art.recursos_naturales {
+  background: #dde8bb;
+  color: #698045;
+}
+.case-art.conflictos_territoriales {
+  background: #ecdfc4;
+  color: #a18452;
+}
+.case-copy {
+  flex: 1;
+  min-width: 0;
+}
+.case-copy strong {
+  font-size: 11px;
+  font-weight: 600;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.case-copy small {
+  font-size: 9px;
+  color: var(--muted);
+  display: block;
+  margin-top: 3px;
+}
+.case-copy small span {
+  margin: 0 3px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 3px 7px;
+  border-radius: 5px;
+  background: #edf0ed;
+  color: #6a776f;
+}
+.badge.en_proceso {
+  background: #fff2dc;
+  color: #a6752b;
+}
+.badge.pendiente {
+  background: #eef0e9;
+  color: #7f8567;
+}
+.badge.solucionado {
+  background: #eaf2e2;
+  color: #52754b;
+}
+/* Cerrado sin resolver, y descartado. Se quedaron sin color cuando se
+   añadieron al catálogo: salían con el gris de la insignia sin estado, que es
+   justo el que dice «aquí no hay nada decidido». */
+.badge.no_solucionado {
+  background: #f3e6e3;
+  color: #9f6053;
+}
+.badge.descartado {
+  background: #ecebe8;
+  color: #77736c;
+}
+.badge.escalado {
+  background: #f1e9df;
+  color: #986e46;
+}
+.badge.bloqueado_conflicto {
+  background: #f3e6e3;
+  color: #9f6053;
+}
+.panel-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--green);
+  padding: 15px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+}
+.panel-foot svg:last-child {
+  margin-left: auto;
+}
+.news-preview {
+  padding: 21px;
+}
+.news-preview .eyebrow {
+  font-size: 7px;
+  margin-top: 15px;
+  letter-spacing: 1px;
+}
+.news-preview h3 {
+  font-size: 16px;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+.news-preview p {
+  font-size: 10px;
+  margin-bottom: 14px;
+}
+.news-art {
+  border-radius: 11px;
+  background: #e7edde;
+  color: #618263;
+  min-height: 105px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  overflow: hidden;
+  padding: 15px;
+  position: relative;
+}
+.news-art:after {
+  content: "";
+  position: absolute;
+  border: 1px solid #76946d33;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  right: -90px;
+  top: -65px;
+}
+.news-art > span {
+  font-size: 15px;
+  letter-spacing: 1px;
+  font-weight: 650;
+  color: #3e674b;
+  line-height: 1.4;
+}
+.bottom-callout {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 20px 24px;
+  background: #eaf0e4;
+  border-radius: 12px;
+  margin-top: 22px;
+  color: #365a3f;
+}
+.bottom-callout strong {
+  display: block;
+  font-size: 12px;
+}
+.bottom-callout small {
+  display: block;
+  font-size: 10px;
+  color: #819077;
+  margin-top: 4px;
+}
+.bottom-callout > svg:last-child {
+  margin-left: auto;
+}
+.icon-tile {
+  width: 45px;
+  height: 45px;
+  background: var(--soft);
+  color: var(--green);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+.page-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.page-intro h1 {
+  margin: 10px 0;
+}
+.page-intro p {
+  font-size: 12px;
+}
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+select,
+input,
+textarea {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 11px 13px;
+  color: var(--text);
+  min-width: 0;
+}
+select {
+  font-size: 12px;
+  max-width: 100%;
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+}
+.search input {
+  border: 0;
+  background: transparent;
+  flex: 1;
+  width: 100%;
+  padding-left: 0;
+}
+.search.wide {
+  max-width: 540px;
+  margin-bottom: 24px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 5px;
+  background: var(--soft);
+  padding: 4px 8px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--green);
+}
+.muted {
+  color: var(--muted);
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+  font-size: 11px;
+}
+.pagination > span,
+.pagination > small {
+  margin-right: auto;
+}
+.notice {
+  padding: 13px 16px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.65;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+/* Una dirección que no existe. Se presenta sola, sin la barra lateral ni la
+   navegación: quien llega aquí viene de fuera y lo que necesita son dos
+   puertas, no el mapa entero de la aplicación. */
+.not-found {
+  max-width: 520px;
+  margin: clamp(60px, 14vh, 140px) auto;
+  padding: 0 24px;
+  text-align: center;
+}
+.not-found h1 {
+  font-size: clamp(24px, 5vw, 32px);
+  line-height: 1.22;
+  letter-spacing: -0.8px;
+  margin: 10px 0 14px;
+}
+.not-found p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.75;
+  margin-bottom: 26px;
+}
+.not-found .account-actions {
+  justify-content: center;
+}
+/* Lo que se está leyendo de una copia guardada. Va con el icono de la red
+   caída porque es lo que lo explica todo de un vistazo. */
+.notice.offline-copy {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.notice.offline-copy > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--muted);
+}
+/* De dónde salen las frases de arriba, pegado a ellas y no al panel entero:
+   lo de debajo lo redacta un modelo y lleva su propio rótulo. */
+.reading-source {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+/* La filigrana del mapa va en su tarjeta de resultados, no sobre el mapa: ahí
+   mandan las capas de Leaflet y una marca encima sería una mancha sobre el
+   territorio. Lleva la brújula, que no aparece en ninguna otra pantalla y es lo
+   que se mira cuando uno se pregunta dónde está. */
+.map-results {
+  position: relative;
+  overflow: hidden;
+}
+.map-results:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  right: -30px;
+  bottom: -26px;
+  width: 158px;
+  height: 158px;
+  background: #4a86b8;
+  opacity: var(--filigrana-grande, 0.13);
+  mask: var(--brujula) center / contain no-repeat;
+  -webkit-mask: var(--brujula) center / contain no-repeat;
+  transform: rotate(-9deg);
+}
+/* Las cifras del territorio, para quien las gestiona. Va antes de la lectura
+   porque primero está lo que hay y después lo que puede decirse de ello. */
+.council-stats {
+  margin-top: 26px;
+  position: relative;
+  overflow: hidden;
+}
+/* Lo que conviene mirar, encabezando el tablero. Un tablero contesta preguntas
+   que alguien ya se hizo; esto señala las que todavía no. */
+.council-alerts {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.council-alerts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.council-alerts li > svg {
+  flex: none;
+  margin-top: 1px;
+}
+.council-alerts .alert-riesgo {
+  border-left-color: #c0503a;
+  background: color-mix(in srgb, #c0503a 6%, transparent);
+}
+.council-alerts .alert-riesgo > svg {
+  color: #c0503a;
+}
+.council-alerts .alert-atencion {
+  border-left-color: #c8912f;
+  background: color-mix(in srgb, #c8912f 7%, transparent);
+}
+.council-alerts .alert-atencion > svg {
+  color: #b5842c;
+}
+.council-alerts .alert-bien {
+  border-left-color: var(--green);
+}
+.council-alerts .alert-bien > svg {
+  color: var(--green);
+}
+.council-metrics {
+  margin: 20px 0 8px;
+}
+.council-splits {
+  display: grid;
+  gap: 22px;
+  margin: 18px 0 14px;
+}
+@media (min-width: 900px) {
+  .council-splits {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+}
+.council-split {
+  margin-top: 20px;
+}
+.council-split ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 9px;
+}
+/* Las tres cifras del cierre, cada una con lo que significa debajo: una media
+   sin su mediana al lado es media verdad. */
+.council-figures {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.council-figures li {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.council-figures b {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+.council-figures span {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* Los plazos: la fila entera se tiñe cuando algo se pasó, porque lo que hay
+   que ver de un vistazo no es el número sino que hay número. */
+.council-sla li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 12px;
+}
+.council-sla li.late {
+  border-color: color-mix(in srgb, #c0503a 45%, var(--line));
+  background: color-mix(in srgb, #c0503a 7%, transparent);
+}
+.council-sla li > span {
+  display: grid;
+  gap: 1px;
+  font-weight: 600;
+}
+.council-sla small {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.council-sla b {
+  font-variant-numeric: tabular-nums;
+}
+/* La tabla por vereda: cifras alineadas a la derecha para poder compararlas
+   de arriba abajo sin leerlas una por una. */
+.council-stats .council-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 11.5px;
+}
+.council-stats .council-table th {
+  text-align: right;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 0 8px;
+}
+.council-stats .council-table th:first-child,
+.council-stats .council-table td:first-child {
+  text-align: left;
+}
+.council-stats .council-table td {
+  text-align: right;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+.council-stats .council-table td.urgent {
+  color: #c0503a;
+  font-weight: 650;
+}
+.dark .council-stats .council-table td.urgent {
+  color: #f0a58f;
+}
+/* El reparto de estados de cada categoría, en una sola barra: lo que importa
+   es la proporción, no la cifra exacta, que está al lado del nombre. */
+.council-stack li {
+  display: grid;
+  gap: 6px;
+  font-size: 11.5px;
+}
+.council-stack li > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.council-stack li > span > small {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.council-stack i {
+  display: flex;
+  height: 9px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--line);
+}
+.council-stack em {
+  display: block;
+  flex-basis: 0;
+}
+.council-stack em.pendiente {
+  background: #d9a441;
+}
+.council-stack em.activo {
+  background: #4a86b8;
+}
+.council-stack em.resuelto {
+  background: #4f9d69;
+}
+.council-stats .subtle-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+}
+.council-stats .subtle-note > svg {
+  flex: none;
+  margin-top: 2px;
+}
+/* Los avisos flotantes. Van fijos y por encima de todo, porque lo que cuentan
+   —que un cambio salió, o que no— no pertenece a ninguna parte concreta de la
+   pantalla y hay que verlo sin buscarlo. */
+.toasts {
+  position: fixed;
+  z-index: 60;
+  right: 18px;
+  bottom: 18px;
+  display: grid;
+  gap: 10px;
+  width: min(380px, calc(100vw - 36px));
+  pointer-events: none;
+}
+.toasts > div {
+  display: grid;
+  gap: 10px;
+}
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 10px 30px #1a2a2033;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text);
+  /* El contenedor no intercepta el puntero para no tapar lo que hay debajo;
+     cada aviso sí, porque lleva su botón de cerrar. */
+  pointer-events: auto;
+  animation: toast-entra 0.22s cubic-bezier(0.22, 0.7, 0.3, 1);
+}
+.toast > svg:first-child {
+  flex: none;
+  margin-top: 1px;
+}
+.toast > span {
+  flex: 1;
+  min-width: 0;
+}
+.toast > button {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.toast > button:hover {
+  color: var(--text);
+}
+.toast-done {
+  border-left: 3px solid var(--green);
+}
+.toast-done > svg:first-child {
+  color: var(--green);
+}
+.toast-error {
+  border-left: 3px solid #c0503a;
+}
+.toast-error > svg:first-child {
+  color: #c0503a;
+}
+@keyframes toast-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+}
+/* La barra inferior aparece a 800: por debajo, los avisos se apoyan sobre su
+   canto en vez de quedar tapados detrás. */
+@media (max-width: 800px) {
+  .toasts {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+}
+/* Una confirmación no es una nota informativa, y se distingue: lo que se
+   pregunta después de pulsar guardar es si se guardó, y la misma caja gris
+   para «esto funciona así» y para «quedó guardado» no lo responde. */
+.notice.done {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  border-left: 3px solid var(--green);
+}
+.notice.done > svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--green);
+}
+/* Un aviso puede venir en dos párrafos —lo que se envía y qué pasa después—
+   sin que el margen de serie lo separe del borde de la caja. */
+.notice > p {
+  margin: 0;
+}
+.notice > p + p {
+  margin-top: 9px;
+}
+.errors {
+  border: 1px solid #dfb7a9;
+  background: #fff0e9;
+  /* El color va también en la caja, no solo en sus párrafos: cuando el aviso
+     es el propio elemento —y no un párrafo dentro— heredaba el color del
+     tema, y en oscuro salía letra clara sobre rosa claro. */
+  color: #a04432;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 15px;
+  font-size: 12px;
+}
+.errors p,
+.error-text {
+  color: #a04432;
+  font-size: 12px;
+}
+/* En tema oscuro el aviso es oscuro: un recuadro rosa pálido sobre negro
+   deslumbra y deja el texto al borde de lo ilegible. */
+.dark .errors {
+  border-color: #6d3a2c;
+  background: #2b1a15;
+  color: #f2b8a6;
+}
+.dark .errors p,
+.dark .error-text {
+  color: #f2b8a6;
+}
+.empty {
+  padding: 45px;
+  text-align: center;
+  color: var(--muted);
+}
+.empty h3 {
+  margin-top: 15px;
+}
+.empty p {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.map-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 20px;
+}
+.map-panel {
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.map-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  font-size: 12px;
+}
+.map-top > span:first-child {
+  display: flex;
+  gap: 6px;
+}
+.leaflet-map {
+  height: 500px;
+  background: #e7eee5;
+  z-index: 1;
+}
+.map-caption {
+  padding: 13px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.cluster-marker > span {
+  height: 44px;
+  width: 44px;
+  background: #1d5b40;
+  color: white;
+  border: 4px solid #ffffffda;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 3px 8px #0002;
+}
+.map-results > p {
+  font-size: 11px;
+  margin-bottom: 15px;
+}
+.map-results .case-row .case-art {
+  display: none;
+}
+.map-results .case-row > .badge {
+  max-width: 100px;
+  overflow: hidden;
+}
+.map-results .case-copy strong {
+  font-size: 11px;
+}
+.map-list-scroll {
+  max-height: 370px;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding-right: 5px;
+}
+.field-label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 550;
+  margin-top: 18px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 22px;
+}
+.category-chart {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 20px 0;
+}
+.donut {
+  width: 145px;
+  height: 145px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.donut > span {
+  background: var(--surface);
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.donut strong {
+  font-size: 32px;
+}
+.donut small {
+  color: var(--muted);
+}
+.legend {
+  flex: 1;
+  display: grid;
+  gap: 13px;
+  font-size: 11px;
+}
+.legend > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.legend b {
+  margin-left: auto;
+}
+.bar-chart {
+  display: grid;
+  gap: 15px;
+  margin-top: 25px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 125px 1fr 18px;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+}
+.bar-row > div {
+  height: 7px;
+  border-radius: 5px;
+  background: var(--bg);
+  overflow: hidden;
+}
+.bar-row i {
+  display: block;
+  height: 100%;
+  background: #83a77b;
+  border-radius: 5px;
+}
+.bar-row b {
+  text-align: right;
+}
+/* El asistente es una tarjeta más de la pantalla, no un cajón aparte pegado
+   al final: mismo fondo, mismo canto y mismo aire que los paneles de arriba.
+   Lo que lo distingue es la filigrana del brote, que dice «esto todavía está
+   creciendo» sin necesidad de un fondo distinto. */
+.insight-panel {
+  position: relative;
+  overflow: hidden;
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+}
+.insight-panel:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  right: -30px;
+  bottom: -34px;
+  width: 180px;
+  height: 180px;
+  background: #56a86a;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(12deg);
+  mask: var(--brote) center / contain no-repeat;
+  -webkit-mask: var(--brote) center / contain no-repeat;
+}
+.insight-panel > * {
+  position: relative;
+}
+.insight-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.insight-heading h2 {
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
+/* El distintivo acompaña al rótulo en la misma línea. Sin «margin-left: auto»
+   no depende del ancho disponible, así que no hay anchura de pantalla en la
+   que pueda salirse de la tarjeta. */
+.insight-heading .eyebrow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.insight-heading .tag {
+  font-size: 9px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.insight-panel p {
+  font-size: 12px;
+  max-width: 820px;
+  margin-bottom: 19px;
+}
+.subtle-note {
+  display: flex;
+  gap: 7px;
+  font-size: 10px;
+  align-items: center;
+  color: var(--muted);
+  margin-top: 20px;
+}
+/* La lectura: frases sueltas, cada una sostenida por un cálculo. Se numeran
+   con un filo verde en el margen, no con viñetas: no es una lista de tareas
+   sino un texto que se lee seguido. */
+.reading {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-width: 82ch;
+}
+.reading li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.reading li:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3f9a61;
+}
+/* La salvedad cierra en otro tono: es lo que el dato NO dice, y confundirla
+   con un hallazgo sería el peor error de esta tarjeta. */
+.reading li.reading-salvedad {
+  margin-top: 4px;
+  padding-top: 11px;
+  padding-left: 0;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.reading li.reading-salvedad:before {
+  display: none;
+}
+/* La redacción con IA vive debajo de los hallazgos y con su propio marco: la
+   separación visual es la que impide confundir lo calculado con lo redactado. */
+.reading-ai {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin: 0 0 16px;
+  max-width: 82ch;
+}
+.reading-ai > small {
+  font-size: 10.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.reading-ai .errors {
+  margin: 0;
+}
+.reading-narrative {
+  margin: 0;
+  padding: 15px 17px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--soft);
+}
+.reading-narrative figcaption {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.reading-narrative figcaption .text-button {
+  margin-left: auto;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.reading-narrative p {
+  margin: 0;
+  font-size: 13px !important;
+  line-height: 1.75;
+}
+.reading-ai .btn[aria-busy="true"] svg {
+  animation: chispa 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reading-ai .btn[aria-busy="true"] svg {
+    animation: none;
+  }
+}
+
+/* La salvedad de la página: al pie de las cifras y a la vista de todos. */
+.stats-caveat {
+  align-items: flex-start;
+  max-width: 78ch;
+  margin: 18px 0 0;
+  line-height: 1.7;
+}
+.stats-caveat svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.reading-method {
+  font-size: 11px;
+  color: var(--muted);
+}
+.reading-method summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.reading-method p {
+  margin: 8px 0 0;
+  font-size: 11px !important;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.knowledge-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 35px;
+}
+.knowledge-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-self: start;
+  position: sticky;
+  top: 20px;
+}
+.knowledge-nav button {
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  border: 0;
+  background: transparent;
+  padding: 13px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.knowledge-nav button.selected {
+  background: var(--soft);
+  color: var(--green);
+  font-weight: 600;
+}
+.knowledge-section {
+  margin-bottom: 35px;
+}
+.knowledge-section h2 {
+  font-size: 23px;
+  margin: 5px 0;
+}
+.knowledge-section > p {
+  font-size: 12px;
+  margin-bottom: 17px;
+}
+details {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 8px 0;
+}
+summary {
+  cursor: pointer;
+  font-weight: 550;
+  font-size: 13px;
+}
+details p {
+  font-size: 13px;
+  line-height: 1.9;
+  margin-top: 14px;
+  max-width: 800px;
+}
+.report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 30px;
+}
+.report-form {
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.steps {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px;
+  align-items: center;
+}
+/* Cada paso ocupa lo suyo y cede el resto a la línea que lo une con el
+   siguiente; así el trazo se ajusta solo aunque las etiquetas midan distinto. */
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  color: var(--muted);
+}
+.steps li:last-child {
+  flex: 0 0 auto;
+}
+.steps li:not(:last-child):after {
+  content: "";
+  flex: 1;
+  min-width: 10px;
+  height: 2px;
+  border-radius: 2px;
+  /* Sin pintar, pero ocupando su sitio: el trazo aparece al completarse el
+     paso y los puntos no se mueven ni un píxel al hacerlo. */
+  background: transparent;
+  transition: background 0.4s ease;
+}
+/* El trazo se pinta solo entre dos pasos ya recorridos: es el camino hecho,
+   no una barra de progreso que adelante lo que todavía falta. */
+.steps li.active:has(+ li.active):after {
+  background: linear-gradient(90deg, #1c563a, #3f9a61);
+}
+/* Cada paso es un botón: los recorridos se pueden reabrir. */
+.steps button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px;
+  margin: -4px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+/* Un paso futuro no se atenúa: ya lo dice su color. Atenuarlo además lo
+   volvería ilegible. */
+.steps button:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.steps button > span {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border-radius: 50%;
+  transition: box-shadow 0.18s ease;
+}
+.steps button:not(:disabled):hover > span {
+  box-shadow: 0 0 0 3px #2f715026;
+}
+.steps li.active {
+  color: var(--green);
+  font-weight: 600;
+}
+.steps li.active button > span {
+  background: #1c563a;
+  color: #fff;
+}
+@media (prefers-reduced-motion: reduce) {
+  .steps button > span {
+    transition: none;
+  }
+}
+.report-form > p {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 25px;
+}
+.category {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface);
+  padding: 20px;
+  min-height: 138px;
+}
+.category strong {
+  font-size: 13px;
+}
+.category small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.category.selected {
+  background: var(--soft);
+  border-color: var(--green);
+}
+.category svg {
+  color: var(--green);
+}
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.report-aside {
+  padding: 24px 10px;
+}
+.report-aside h2 {
+  font-size: 23px;
+  margin: 10px 0;
+}
+.report-aside p,
+.report-aside ul {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.9;
+}
+.report-aside ul {
+  padding-left: 18px;
+  margin-top: 20px;
+}
+.aside-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 26px 0;
+}
+.report-aside h3 {
+  margin-bottom: 8px;
+}
+.report-aside a {
+  display: block;
+  color: var(--green);
+  font-size: 12px;
+  margin-top: 18px;
+}
+.location-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 35px;
+  background: var(--soft);
+  border-radius: 12px;
+  margin-top: 24px;
+  text-align: center;
+}
+.location-preview p {
+  font-size: 12px;
+}
+.upload-box {
+  border: 1px dashed #9daf9a;
+  border-radius: 10px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+  background: var(--bg);
+  cursor: pointer;
+}
+.upload-box input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  cursor: pointer;
+}
+.upload-box small {
+  font-weight: 400;
+  color: var(--muted);
+}
+textarea {
+  resize: vertical;
+  width: 100%;
+}
+.review {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.review-data {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.review small {
+  color: var(--muted);
+  margin-top: 8px;
+}
+/* La fotografía del resumen se mira, no se estudia: deja el pie para la única
+   advertencia que importa aquí. */
+.review-photo {
+  margin: 0;
+  max-width: 420px;
+}
+.review-photo .evidence-image {
+  height: 170px;
+}
+/* Con sitio de sobra, la ficha y la evidencia van una al lado de la otra. En
+   una sola columna la mitad derecha quedaba vacía justo en la pantalla que
+   más se mira: la de antes de enviar. */
+@media (min-width: 760px) {
+  .review {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    column-gap: 34px;
+    align-items: start;
+  }
+  .review-evidence small {
+    margin-top: 0;
+  }
+  .review-photo .evidence-image {
+    height: 230px;
+  }
+}
+.review-photo figcaption {
+  margin-top: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.success {
+  max-width: 650px;
+  margin: 50px auto;
+  padding: 50px;
+  text-align: center;
+}
+.success-mark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 25px;
+  width: 70px;
+  height: 70px;
+  background: var(--soft);
+  color: var(--green);
+  border-radius: 50%;
+}
+.success h1 {
+  margin: 12px 0;
+}
+.success p {
+  margin-bottom: 25px;
+}
+.tabs {
+  display: flex;
+  gap: 25px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+  font-size: 12px;
+}
+.community-tabs {
+  width: 100%;
+  gap: clamp(12px, 4vw, 28px);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.community-tabs > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+/* Las del Consejo son pestañas de verdad —botones que cambian lo que hay
+   debajo—, no enlaces a otras direcciones como las de comunidad. Comparten el
+   filo inferior para que la barra se lea igual en las dos pantallas. */
+.council-tabs > button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+}
+.council-tabs > button > svg {
+  flex-shrink: 0;
+}
+.council-tabs .nav-count {
+  margin-left: 2px;
+  background: var(--soft);
+  color: var(--green);
+  font-weight: 600;
+}
+/* Una pestaña oculta sigue montada: cambiar de sección con un expediente a
+   medio editar no puede costar la edición. */
+.council-tabpanel[hidden] {
+  display: none;
+}
+.admin-analysis {
+  padding: clamp(20px, 4vw, 32px);
+  margin-top: 28px;
+}
+.admin-analysis .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.admin-analysis p {
+  line-height: 1.7;
+  max-width: 75ch;
+}
+.admin-analysis dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+.admin-analysis dl > div {
+  padding: 14px;
+  background: var(--soft);
+  border-radius: 12px;
+}
+.admin-analysis dd {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+.tabs > * {
+  padding: 12px 4px;
+}
+.tabs .active {
+  border-bottom: 2px solid var(--green);
+  color: var(--green);
+  font-weight: 600;
+}
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.news-card .news-art {
+  height: 160px;
+  margin-bottom: 22px;
+}
+.news-card .eyebrow {
+  font-size: 8px;
+}
+.news-card h2 {
+  margin: 12px 0;
+  font-size: 20px;
+}
+.news-card p {
+  font-size: 12px;
+  line-height: 1.9;
+  margin-bottom: 20px;
+}
+/* Tonos de portada del catálogo de comunicados. */
+.news-art.tone-monte {
+  background: #e7edde;
+}
+.news-art.tone-agua {
+  background: #ddebe7;
+}
+.news-art.tone-arena {
+  background: #eeead9;
+}
+/* Portada con fotografía: la imagen va detrás y el lema sigue encima.
+   El velo no es adorno —sin él el texto se pierde en cuanto la foto tiene
+   cielo claro o agua al sol—, y carga hacia abajo, que es donde va el lema. */
+.news-art-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+/* Con fotografía el lema baja al pie y el velo se concentra ahí. Un velo
+   parejo tendría que ser muy oscuro para que el blanco se lea sobre un cielo
+   quemado, y entonces la fotografía ya no se vería; concentrado abajo, arriba
+   la imagen queda casi limpia y el lema se lee siempre. */
+.news-art.has-cover {
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 14px;
+}
+.news-art.has-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    #08150fdb,
+    #08150f9e 24%,
+    #08150f40 46%,
+    #08150f00 72%
+  );
+}
+/* El aro decorativo acompaña a un fondo liso; sobre una fotografía es ruido. */
+.news-art.has-cover::after {
+  display: none;
+}
+/* La sombra pegada al texto es la que asegura la lectura: el velo agrupa y
+   ambienta, pero solo ella sirve cuando a la fotografía le toca ser blanca
+   justo detrás de una letra. Al trazo del motivo hay que dársela aparte,
+   porque `text-shadow` no alcanza a un SVG. */
+.news-art.has-cover > svg,
+.news-art.has-cover > span {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+}
+.news-art.has-cover > span {
+  text-shadow:
+    0 1px 2px #08150fe6,
+    0 2px 14px #08150fcc;
+}
+.news-art.has-cover > svg {
+  filter: drop-shadow(0 1px 3px #08150fd9);
+}
+.account {
+  max-width: 620px;
+  margin: 25px auto;
+  text-align: center;
+  padding: 40px;
+}
+/* El perfil se lee como una ficha: el avatar arriba, el nombre debajo y el
+   correo al pie, todo en el eje. Los ajustes que vienen después —las filas—
+   siguen a la izquierda, porque son una lista. */
+.account-live .account-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 26px 0;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.account-live .account-identity > p {
+  margin: 2px 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* El avatar es el botón para cambiarlo: se toca donde se mira. La cámara al
+   canto lo dice sin necesidad de un enlace aparte debajo. */
+.avatar-change {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+.avatar-change .avatar.large {
+  transition: box-shadow 0.18s ease;
+}
+.avatar-change:hover .avatar.large,
+.avatar-change:focus-visible .avatar.large {
+  box-shadow: 0 0 0 3px var(--soft);
+}
+.avatar-change-mark {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--surface);
+  border: 2px solid var(--surface);
+}
+.avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+/* El nombre y su lápiz, en la misma línea. */
+.name-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 19px;
+}
+.name-view .icon-button {
+  width: 30px;
+  height: 30px;
+  color: var(--muted);
+}
+.name-edit {
+  width: 100%;
+  max-width: 320px;
+  text-align: left;
+}
+/* Diálogo del avatar: las marcas del catálogo y la fotografía propia. */
+.avatar-dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 60;
+  width: min(380px, calc(100vw - 32px));
+  max-height: 86dvh;
+  overflow-y: auto;
+  text-align: left;
+}
+.avatar-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.avatar-dialog-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.avatar-dialog > small {
+  display: block;
+  margin-top: 12px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.avatar-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 12px;
+}
+.avatar-options .btn {
+  justify-content: flex-start;
+  gap: 9px;
+}
+.avatar-options .btn[aria-pressed="true"] {
+  border-color: var(--green);
+  color: var(--green);
+}
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  cursor: pointer;
+}
+.avatar-upload input {
+  display: none;
+}
+/* Sin sesión no hay ajustes que alinear: es una invitación, y una invitación
+   se centra. */
+.account-empty {
+  text-align: center;
+}
+.account > .eyebrow {
+  margin-top: 20px;
+}
+.account h1 {
+  margin: 10px;
+}
+.account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  width: 100%;
+  padding: 20px 0;
+  font-size: 13px;
+}
+.account-row > span,
+.account-row > strong {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+/* La fila que lleva a otra pantalla lo dice con la misma flecha que el pie de
+   la tarjeta; la de apariencia no la lleva porque no va a ninguna parte:
+   cambia un ajuste aquí mismo y ya enseña su valor a la derecha. */
+.account-row > svg {
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.account-row:hover > svg {
+  transform: translate(2px, -2px);
+}
+.account .notice {
+  margin-top: 25px;
+  text-align: left;
+}
+/* La guía remata la tarjeta apoyada en la palma: no es una fila más de la
+   lista, es la salida de esta pantalla, así que se lee como un pie firmado y
+   no como un ajuste pendiente. */
+.account-guide {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 24px;
+  padding: 6px 0 2px;
+  color: var(--text);
+}
+.account-guide > span {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-right: auto;
+  text-align: left;
+}
+.account-guide strong {
+  font-size: 13px;
+}
+.account-guide small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.account-guide > svg:first-child {
+  color: var(--green);
+  flex-shrink: 0;
+}
+.account-guide > svg:last-child {
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.account-guide:hover > svg:last-child {
+  transform: translate(2px, -2px);
+}
+.location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  margin: 10px 0 20px;
+}
+.timeline {
+  list-style: none;
+  padding: 8px 0 0;
+  margin: 0;
+}
+.timeline li {
+  position: relative;
+  padding: 0 0 20px 31px;
+  border-left: 1px solid #ccd9c6;
+  margin-left: 8px;
+}
+.timeline li:last-child {
+  border: 0;
+}
+.timeline li > span {
+  position: absolute;
+  left: -10px;
+  top: 0;
+  color: var(--green);
+  background: var(--surface);
+}
+.timeline strong {
+  display: block;
+  font-size: 12px;
+}
+.timeline small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+  font-size: 10px;
+}
+.timeline p {
+  font-size: 12px;
+  margin-top: 8px;
+}
+.evidence-image {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.evidence-preview {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.evidence-preview small {
+  color: var(--muted);
+}
+.evidence-preview .btn {
+  justify-self: start;
+}
+.admin-editor {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  margin-top: 16px;
+}
+.admin-editor > .btn {
+  margin-top: 16px;
+}
+.pop-shade {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  border: 0;
+  background: #10201a1f;
+  backdrop-filter: blur(1px);
+  cursor: default;
+}
+.notification-pop {
+  position: fixed;
+  right: clamp(20px, 3vw, 42px);
+  top: 76px;
+  width: 320px;
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  z-index: 50;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 46px #16241c26;
+  transform-origin: top right;
+  animation: pop-open 0.16s ease-out both;
+}
+@keyframes pop-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+.notification-pop p {
+  font-size: 12px;
+  margin: 10px 0;
+}
+.text-button {
+  border: 0;
+  background: none;
+  padding: 10px 0;
+  color: var(--green);
+  display: block;
+}
+.mobile-menu,
+.mobile-bottom {
+  display: none;
+}
+.skip-link {
+  position: fixed;
+  left: 10px;
+  top: -100px;
+  z-index: 200;
+  background: white;
+  padding: 12px;
+}
+.skip-link:focus {
+  top: 10px;
+}
+.dark .hero-copy {
+  color: #123e2b;
+}
+.dark .bottom-callout {
+  background: #29462f;
+  color: #deebd7;
+}
+.dark .case-art {
+  color: #2b4e34;
+}
+.dark .tag {
+  color: #b9d8a3;
+}
+.dark .badge {
+  filter: brightness(0.9);
+}
+@media (min-width: 1600px) {
+  .hero {
+    height: 340px;
+  }
+  .hero-copy {
+    padding: 36px 40px;
+  }
+  .hero h2 {
+    font-size: 48px;
+  }
+  .hero p {
+    font-size: 14px;
+  }
+  .main-content {
+    padding-top: 40px;
+  }
+}
+@media (max-width: 1150px) {
+  .sidebar {
+    width: 215px;
+    padding: 28px 14px 16px;
+  }
+  .main-shell {
+    margin-left: 215px;
+  }
+  .main-content {
+    padding: 27px 26px 0;
+  }
+  .topbar {
+    padding: 0 26px;
+  }
+  .hero {
+    height: 280px;
+  }
+  .hero h2 {
+    font-size: 35px;
+  }
+  .metric {
+    padding: 16px 13px;
+    grid-template-columns: 30px 1fr;
+    gap: 8px;
+  }
+  .metric-icon {
+    width: 30px;
+    height: 30px;
+  }
+  .metric-arrow {
+    display: none;
+  }
+  .dashboard-grid {
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+  }
+  .case-row {
+    gap: 8px;
+  }
+  .case-row > .badge {
+    font-size: 8px;
+  }
+  .case-row > .badge svg {
+    display: none;
+  }
+  .case-art {
+    width: 36px;
+    height: 40px;
+  }
+  .case-copy strong {
+    font-size: 10px;
+  }
+  .case-copy small {
+    font-size: 8px;
+  }
+  .report-layout {
+    grid-template-columns: 1fr;
+  }
+  .report-aside {
+    display: none;
+  }
+  .map-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .news-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .guide-link {
+    display: none;
+  }
+  .knowledge-layout {
+    grid-template-columns: 180px 1fr;
+    gap: 20px;
+  }
+  .insight-heading {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 800px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+    width: 250px;
+    z-index: 60;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .menu-shade {
+    position: fixed;
+    inset: 0;
+    background: #0005;
+    border: 0;
+    z-index: 55;
+  }
+  .main-shell {
+    margin-left: 0;
+    /* En el teléfono la cabecera vuelve al flujo y ocupa su propio alto. */
+    padding-top: 0;
+    /* La coraza ocupa la ventana entera y el contenido crece dentro: así el
+       zócalo de la marca cae al fondo aunque la pantalla se lea sin
+       desplazarse. El relleno inferior vale lo que mide la barra fija, de modo
+       que el zócalo cierra contra su canto en vez de dejar un hueco. */
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+  /* El ancho se declara porque al pasar la coraza a columna flexible el
+     contenido se volvió elemento flexible, y un elemento flexible solo se
+     estira al ancho de la columna si sus márgenes laterales no son automáticos
+     —y aquí lo son, de `margin: auto`, que es lo que lo centra en escritorio—.
+     Sin estirarse tomaba el ancho de su contenido: con la fila desplazable de
+     la guía dentro, 1226 px en una pantalla de 437. El `min-width` sostiene lo
+     mismo si algún día desaparecen esos márgenes. */
+  .main-content {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 22px 22px 0;
+  }
+  /* En móvil la barra deja de ser un rastro de navegación: nombra la sección
+     y ancla el territorio, como una cabecera de aplicación. */
+  /* En el teléfono sí hay cabecera: lleva marca, territorio y estado, así que
+     vuelve al flujo con fondo propio —opaco, sin desenfoque— para que el
+     contenido no se lea por detrás. */
+  .topbar {
+    position: sticky;
+    left: auto;
+    right: auto;
+    height: 64px;
+    /* 14 px deja el trazo del icono a la altura del texto de abajo. */
+    padding: 0 14px;
+    gap: 10px;
+    background: var(--bg);
+    pointer-events: auto;
+  }
+  /* Al desplazar, la cabecera se vuelve sólida y el desenfoque queda en una
+     franja fina justo debajo de ella: el contenido no se corta en seco, se
+     disuelve al entrar. La barra en sí nunca se difumina.
+     La animación la conduce el propio desplazamiento, sin escuchas en JS. */
+  @supports (animation-timeline: scroll()) {
+    /* La barra es siempre opaca. Antes se animaba de transparente a sólida y a
+       media animación dejaba leer el texto de debajo. Sobre el fondo de la
+       página una barra opaca se ve idéntica, así que no había nada que ganar. */
+    /* Dos capas para que el desenfoque crezca por tramos en vez de aparecer de
+       golpe: sin esto, el borde de la barra sólida corta el contenido en seco. */
+    .topbar:before,
+    .topbar:after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      opacity: 0;
+      pointer-events: none;
+      animation: topbar-filo linear both;
+      animation-timeline: scroll();
+      animation-range: 0 110px;
+    }
+    /* Capa cercana: arranca con el color exacto de la barra, de modo que no hay
+       salto donde termina, y lo va soltando. */
+    .topbar:after {
+      height: 34px;
+      backdrop-filter: blur(12px);
+      background: linear-gradient(
+        180deg,
+        var(--bg) 0%,
+        color-mix(in srgb, var(--bg) 45%, transparent) 52%,
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        180deg,
+        #000 0%,
+        #000 20%,
+        rgb(0 0 0 / 0.5) 62%,
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        180deg,
+        #000 0%,
+        #000 20%,
+        rgb(0 0 0 / 0.5) 62%,
+        transparent 100%
+      );
+    }
+    /* Capa lejana: un desenfoque leve que se extiende más abajo y remata la
+       transición sin dejar filo. */
+    .topbar:before {
+      height: 54px;
+      backdrop-filter: blur(4px);
+      mask-image: linear-gradient(
+        180deg,
+        #000 0%,
+        rgb(0 0 0 / 0.35) 52%,
+        transparent 100%
+      );
+      -webkit-mask-image: linear-gradient(
+        180deg,
+        #000 0%,
+        rgb(0 0 0 / 0.35) 52%,
+        transparent 100%
+      );
+    }
+    @keyframes topbar-filo {
+      to {
+        opacity: 1;
+      }
+    }
+  }
+  .mobile-menu {
+    display: flex;
+  }
+  /* Solo la marca: el territorio lo nombra el saludo de debajo, con el nombre
+     completo del Consejo, y aquí repetirlo le robaba el ancho que la marca
+     necesitaba para no recortarse. */
+  .identity {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    margin-right: auto;
+    margin-left: 4px;
+  }
+  .identity-brand {
+    font-family:
+      "Bricolage Grotesque Variable", "DM Sans Variable", Arial, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .identity-brand em {
+    font-style: normal;
+    color: #2f7150;
+  }
+  .dark .identity-brand em {
+    color: #8fcf9a;
+  }
+  /* El menú y los controles pasan a círculos sueltos, como la referencia. */
+  .mobile-menu {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--soft);
+  }
+  .topbar-actions {
+    gap: 6px;
+  }
+  .control-cluster {
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .control-cluster .icon-button {
+    width: 37px;
+    height: 37px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+  .net-pill {
+    display: inline-flex;
+    padding: 7px 11px 7px 9px;
+  }
+  .net-pill small {
+    display: none;
+  }
+  .theme-toggle {
+    display: none;
+  }
+  /* La bandeja de novedades sube desde el borde inferior, con el alcance del pulgar. */
+  .notification-pop {
+    position: fixed;
+    inset: auto 0 0;
+    width: auto;
+    max-height: 78dvh;
+    border-radius: 24px 24px 0 0;
+    border-width: 1px 0 0;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    transform-origin: bottom center;
+    animation-name: sheet-open;
+  }
+  @keyframes sheet-open {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+  .mobile-bottom {
+    display: flex;
+    justify-content: space-around;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    padding: 8px 6px calc(7px + env(safe-area-inset-bottom));
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    z-index: 40;
+  }
+  .mobile-bottom a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 9px;
+    color: var(--muted);
+    min-width: 48px;
+  }
+  .mobile-bottom a.active {
+    color: var(--green);
+  }
+  .mobile-bottom .add svg {
+    border-radius: 50%;
+    background: #18533a;
+    color: #fff;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    margin-top: -19px;
+    box-shadow: 0 0 0 5px var(--surface);
+  }
+  .mobile-bottom .add span {
+    margin-top: 0;
+  }
+  .hero {
+    height: 280px;
+  }
+  .hero-copy {
+    padding: 27px;
+  }
+  .metrics {
+    gap: 12px;
+  }
+  .metric {
+    padding: 18px;
+  }
+  .metric-icon {
+    width: 34px;
+    height: 34px;
+  }
+  .metric strong {
+    font-size: 27px;
+  }
+  .dashboard-grid {
+    gap: 18px;
+  }
+  /* Zócalo de la navegación: la marca se pega al canto superior de la barra
+     —de borde a borde, sobre su mismo fondo— en lugar de flotar en el hueco. */
+  .footer {
+    margin-top: 30px;
+    padding: 12px 22px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+  }
+  .knowledge-nav {
+    position: static;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  .knowledge-nav button {
+    white-space: nowrap;
+  }
+  .knowledge-layout {
+    display: block;
+  }
+  .knowledge-section {
+    margin-top: 20px;
+  }
+  .map-layout {
+    grid-template-columns: 1fr;
+  }
+  .leaflet-map {
+    height: 330px;
+  }
+  .map-list-scroll {
+    max-height: 400px;
+  }
+  .map-results .case-art {
+    display: flex !important;
+  }
+  .map-results .case-copy strong {
+    font-size: 12px;
+  }
+  .report-form {
+    padding: 23px;
+  }
+  .report-layout {
+    display: block;
+  }
+  .page-intro h1 {
+    font-size: 27px;
+  }
+  .page-intro {
+    align-items: flex-start;
+  }
+  .page-intro > .btn {
+    white-space: nowrap;
+  }
+  .case-copy strong {
+    font-size: 12px;
+  }
+  .case-copy small {
+    font-size: 10px;
+  }
+}
+@media (max-width: 580px) {
+  /* Más aire lateral y superior: a 375 px los 17 px anteriores dejaban el
+     contenido pegado al canto. */
+  .main-content {
+    padding: 26px 20px 0;
+  }
+  .greeting .eyebrow {
+    font-size: 8px;
+  }
+  .greeting h1 {
+    font-size: 30px;
+    letter-spacing: -1px;
+  }
+  .greeting p {
+    font-size: 11px;
+  }
+  .greeting {
+    margin-bottom: 26px;
+  }
+  .hero {
+    height: 270px;
+  }
+  .hero > img {
+    object-position: 58% 50%;
+  }
+  .hero-copy {
+    padding: 24px 22px;
+  }
+  .hero h2 {
+    font-size: 34px;
+  }
+  .hero-tag {
+    font-size: 7px;
+    letter-spacing: 0.8px;
+  }
+  .hero p {
+    font-size: 11px;
+  }
+  .hero-caption {
+    display: none;
+  }
+  .hero .btn {
+    font-size: 10px;
+  }
+  .metrics.four {
+    grid-template-columns: 1fr 1fr;
+  }
+  .metric p {
+    display: none;
+  }
+  .metric {
+    grid-template-columns: 32px 1fr;
+    padding: 17px 14px;
+  }
+  .metric small {
+    font-size: 10px;
+  }
+  .metric strong {
+    font-size: 25px;
+  }
+  .section-heading h2 {
+    font-size: 13px;
+  }
+  .section-heading a {
+    font-size: 10px;
+  }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .news-preview .news-art {
+    min-height: 130px;
+  }
+  .reports-panel {
+    padding: 20px 15px 0;
+  }
+  .case-row {
+    gap: 9px;
+    padding: 15px 0;
+  }
+  .case-art {
+    width: 39px;
+    height: 43px;
+  }
+  .case-copy strong {
+    font-size: 11px;
+  }
+  .case-copy small {
+    font-size: 9px;
+  }
+  .case-row .badge {
+    font-size: 8px;
+    padding: 3px 5px;
+  }
+  .case-row > svg {
+    display: none;
+  }
+  .bottom-callout {
+    padding: 18px 14px;
+    gap: 12px;
+  }
+  .bottom-callout strong {
+    font-size: 11px;
+  }
+  .bottom-callout small {
+    font-size: 9px;
+  }
+  .bottom-callout .icon-tile {
+    flex-shrink: 0;
+  }
+  .footer {
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 8px;
+  }
+  .page-intro {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .page-intro h1 {
+    font-size: 26px;
+  }
+  .page-intro p {
+    font-size: 12px;
+  }
+  .filters > * {
+    flex: 1;
+    min-width: 135px;
+  }
+  .filters .search {
+    flex-basis: 100%;
+  }
+  .panel {
+    padding: 18px;
+  }
+  .category-chart {
+    gap: 18px;
+  }
+  .donut {
+    width: 125px;
+    height: 125px;
+  }
+  .donut > span {
+    width: 95px;
+    height: 95px;
+  }
+  .legend {
+    font-size: 10px;
+  }
+  .bar-row {
+    grid-template-columns: 110px 1fr 18px;
+    font-size: 9px;
+  }
+  .insight-panel {
+    padding: 21px;
+  }
+  .insight-heading h2 {
+    font-size: 18px;
+  }
+  .subtle-note {
+    align-items: flex-start;
+  }
+  .news-grid {
+    grid-template-columns: 1fr;
+  }
+  .knowledge-section h2 {
+    font-size: 22px;
+  }
+  details {
+    padding: 15px;
+  }
+  summary {
+    font-size: 12px;
+  }
+  .category-grid {
+    gap: 10px;
+  }
+  .category {
+    padding: 16px;
+    min-height: 130px;
+  }
+  .category small {
+    font-size: 9px;
+  }
+  .steps li {
+    gap: 6px;
+    font-size: 9px;
+  }
+  .steps li:not(:last-child):after {
+    min-width: 6px;
+  }
+  .report-form {
+    padding: 20px;
+  }
+  .form-actions .btn {
+    font-size: 11px;
+  }
+  .success {
+    padding: 30px 20px;
+  }
+  .account {
+    padding: 25px 20px;
+  }
+  .map-results > .panel-heading h2 {
+    font-size: 15px;
+  }
+  .tag {
+    white-space: normal;
+  }
+  .topbar-actions .icon-button {
+    min-width: 31px;
+  }
+  .hero:before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      #eaf1dff5 0%,
+      #eaf1dfdd 45%,
+      transparent 90%
+    );
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.dark .btn.primary,
+.dark .sidebar-report,
+.dark .mobile-bottom .add svg {
+  background: #e5e5e1;
+  color: #161616;
+  border-color: #e5e5e1;
+}
+/* Lo que no significa nada por su color se queda neutro en tema oscuro: un
+   avatar, una etiqueta o un aviso no dicen más por ser verdes. */
+.dark .tag,
+.dark .bottom-callout {
+  background: #2d2d2d;
+  color: #e6e6e2;
+  border-color: #444;
+}
+/* El avatar en oscuro: aro fino del color del panel en lugar de tres píxeles
+   de gris, que sobre negro se leían como un cerco y no como un retrato. El
+   verde tenue lo mantiene reconocible como el símbolo de la persona. */
+.dark .avatar {
+  background: #253326;
+  color: #a8d3ab;
+  border-width: 2px;
+  border-color: var(--surface);
+}
+/* Lo que sí significa algo conserva su tono. Un estado, una categoría o una
+   portada se distinguen por el color antes que por el texto; aplanarlos a gris
+   obligaba a leer cada insignia para saber qué es. Los valores no son los del
+   tema claro: un pastel sobre fondo oscuro deslumbra, así que cada pareja se
+   rehace oscura de fondo y clara de tinta, conservando el matiz. */
+.dark .badge.en_proceso {
+  background: #3a2f18;
+  color: #e3b264;
+}
+.dark .badge.pendiente {
+  background: #2f3227;
+  color: #bcc39d;
+}
+.dark .badge.solucionado {
+  background: #22331f;
+  color: #93c88b;
+}
+.dark .badge.no_solucionado {
+  background: #3a2723;
+  color: #d69382;
+}
+.dark .badge.descartado {
+  background: #2c2b28;
+  color: #b3afa6;
+}
+.dark .badge.escalado {
+  background: #3a2e22;
+  color: #d4a476;
+}
+.dark .badge.bloqueado_conflicto {
+  background: #3a2723;
+  color: #d69382;
+}
+.dark .case-art {
+  background: linear-gradient(135deg, #24332a, #2f4a38);
+  color: #a2d3ae;
+}
+.dark .case-art.recursos_naturales {
+  background: #2c3320;
+  color: #bccf87;
+}
+.dark .case-art.conflictos_territoriales {
+  background: #342c1e;
+  color: #d2ac75;
+}
+.dark .metric-icon {
+  background: #24301f;
+  color: #8fb47e;
+}
+.dark .metric-icon.amber {
+  background: #322816;
+  color: #d3a25f;
+}
+.dark .metric-icon.blue {
+  background: #1f2b32;
+  color: #83abbe;
+}
+.dark .metric-icon.green {
+  background: #26311b;
+  color: #9dbb6c;
+}
+.dark .news-art {
+  background: #20291f;
+  color: #8fb08f;
+}
+/* Nada se pasa a blanco y negro por estar en tema oscuro: la portada de un
+   comunicado, la rueda de categorías y las barras llevan color porque el color
+   es lo que distingue una categoría de otra.
+   Las baldosas del mapa son la excepción parcial: vienen casi blancas y sobre
+   fondo oscuro deslumbran, así que se bajan de brillo conservando el color. */
+.dark .leaflet-tile-pane {
+  filter: brightness(0.86) contrast(1.06) saturate(0.95);
+}
+.dark .hero {
+  background: #252525;
+}
+.dark .hero:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #161616ee, #16161644);
+  z-index: 0;
+}
+.dark .hero-copy {
+  color: #f1f1ee;
+}
+.dark .hero-copy p {
+  color: #ddd;
+}
+.dark .cluster-marker span {
+  background: #ddd;
+  color: #161616;
+  border-color: #555;
+}
+.dark :focus-visible {
+  outline-color: #ccc;
+}
+.territorial-context {
+  margin-top: 28px;
+}
+.territorial-context h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.territorial-context p {
+  max-width: 760px;
+  font-size: 13px;
+  line-height: 1.8;
+  margin: 15px 0;
+}
+.territorial-context .text-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.voice-input {
+  border: 1px solid var(--line);
+  padding: 20px;
+  border-radius: 16px;
+  margin: 20px 0;
+  background: var(--surface);
+}
+.voice-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.voice-heading span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.voice-input > p {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+@media (max-width: 900px) {
+}
+@media (max-width: 700px) {
+}
+/* Access: centered identity on mobile, quiet landscape on wide screens. */
+/* La identidad va arriba a la izquierda y el resto se lee en una sola columna
+   descendente. Centrarlo todo convertía la pantalla en un cartel: cuatro
+   bloques del mismo ancho y ninguno con más peso que otro, de modo que había
+   que leerlos uno por uno para saber cuál era la acción principal. */
+/* «o» entre las dos vías de acceso: sin esta línea, el botón de Google se lee
+   como una segunda acción principal en vez de como la alternativa que es. */
+/* El botón de Google lleva su marca y su propio blanco, como en cualquier otro
+   sitio: se reconoce antes por la G que por el texto. */
+/* Sin sitio para dos columnas, el río queda arriba y el formulario emerge de
+   él: una lámina de papel levantada del agua, con el canto superior redondeado
+   y un filo de luz donde asoma.
+   Las dos versiones anteriores fallaban por lo mismo. La franja al 0,14 de
+   opacidad no era una fotografía sino una mancha; la tarjeta blanca flotando
+   sobre el velo era el login de cualquier producto del mundo. Esta sí pertenece
+   al proyecto: el territorio arriba, lo que la comunidad hace con él debajo. */
+@media (max-width: 900px) {
+  /* La bajada del río queda a la vista: dos líneas, no un párrafo. */
+  /* Tres renglones cortos, uno por idea. Ocultar los saltos pegaba las frases
+     entre sí: «Tu pueblo.Tu voz.Un mismo río.» */
+  /* La lámina sube sobre el agua. El filo claro del canto es el único gesto de
+     vidrio de la pantalla, y está donde se justifica: en el borde que emerge. */
+  /* El interruptor de tema se queda en su fila, junto a la marca. Flotando
+     sobre la fotografía quedaba bien en lo alto, pero al desplazar seguía ahí,
+     en vidrio claro sobre la lámina clara: invisible justo cuando estorbaba. */
+}
+@media (max-width: 420px) {
+}
+.report-success {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+/* Caída de hojas: la capa exterior desciende y la interior se balancea y gira.
+   Dos movimientos superpuestos son lo que la hacen parecer arrastrada por aire
+   y no una traslación recta. */
+.report-leaves {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.report-leaves span {
+  position: absolute;
+  top: -70px;
+  color: #4f8a52;
+  animation-name: leaf-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: both;
+}
+.report-leaves span:nth-child(3n) {
+  color: #b5a365;
+}
+.report-leaves span:nth-child(4n) {
+  color: #2f7150;
+}
+.report-leaves i {
+  display: block;
+  animation-name: leaf-sway;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.report-leaves svg {
+  fill: currentColor;
+  fill-opacity: 0.2;
+}
+/* Mientras el envío está en curso el ciclo se repite, más lento y más tenue. */
+.report-leaves.drifting {
+  z-index: 0;
+  opacity: 0.55;
+}
+.report-leaves.drifting span {
+  animation-iteration-count: infinite;
+}
+@keyframes leaf-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+  12% {
+    opacity: 0.85;
+  }
+  78% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 460px, 0);
+  }
+}
+@keyframes leaf-sway {
+  from {
+    transform: translateX(-26px) rotate(-38deg);
+  }
+  to {
+    transform: translateX(26px) rotate(42deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .report-leaves {
+    display: none;
+  }
+}
+.password-change,
+.writing-assistant {
+  margin: 24px 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.password-change summary,
+.writing-assistant summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.writing-assistant p {
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.remote-panel {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.outbox-row {
+  display: grid;
+  gap: 8px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.outbox-row .btn {
+  justify-self: start;
+}
+/* Los dos caminos que se confundían. Lo que espera señal sale solo y por eso
+   se dice en verde del territorio; lo que nunca salió pide una decisión y por
+   eso lleva el ámbar de lo pendiente. */
+.tag.delivery-en-cola {
+  background: #2f715018;
+  color: #2f7150;
+}
+.tag.delivery-sin-enviar {
+  background: #b9791218;
+  color: #9a6510;
+}
+.dark .tag.delivery-en-cola {
+  background: #8fcf9a1f;
+  color: #8fcf9a;
+}
+.dark .tag.delivery-sin-enviar {
+  background: #e0912c22;
+  color: #e5a850;
+}
+
+/* Acento de titular: una sola palabra por pantalla en el verde de la marca.
+   Es el mismo recurso de la bienvenida —«Tu territorio.»— traído adentro. */
+.greeting h1 em,
+.page-intro h1 em {
+  font-style: normal;
+  color: #2f7150;
+}
+.dark .greeting h1 em,
+.dark .page-intro h1 em {
+  color: #8fcf9a;
+}
+
+/* ── Ubicación del reporte ─────────────────────────────────────────────── */
+/* La ficha de la vereda elegida, su mapa y las salvedades sobre el punto. */
+.location-preview.located {
+  display: block;
+  text-align: left;
+  padding: 16px;
+}
+.located-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.located-head strong {
+  display: block;
+  font-size: 14px;
+}
+.located-head small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.located-reset {
+  margin-left: auto;
+  padding: 0;
+  white-space: nowrap;
+}
+/* El mapa necesita alto declarado: Leaflet parte del contenedor, y sin medida
+   dibuja sobre cero píxeles y no hay dónde tocar para corregir el punto. */
+.located-map {
+  height: 260px;
+  margin-top: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.located-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.located-note svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Portada breve de la raíz mientras se decide si mostrar la bienvenida. */
+.splash {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 16px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ── Asistencia de redacción ───────────────────────────────────────────── */
+.ia-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+}
+.ia-note {
+  display: block;
+  margin-top: 7px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.ia-note.error-text {
+  color: #b4513f;
+}
+.ia-undo {
+  padding: 0;
+}
+
+/* ── Editor de comunicados ─────────────────────────────────────────────── */
+.composer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.news-editor-list {
+  margin-top: 20px;
+}
+/* La fila lleva su menú al costado, y el menú se ancla a ella. */
+.news-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.news-editor-row > .account-row {
+  flex: 1;
+  min-width: 0;
+}
+.news-actions {
+  position: relative;
+  flex-shrink: 0;
+}
+.news-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+  padding: 10px 12px;
+  text-align: left;
+}
+.news-menu .text-button {
+  justify-content: flex-start;
+  padding: 8px 0;
+}
+.news-confirm {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.news-confirm > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.art-picker {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 18px;
+}
+.art-picker legend {
+  padding: 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.art-picker .news-art {
+  min-height: 92px;
+}
+.art-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.art-options .btn {
+  font-size: 11px;
+  padding: 8px 12px;
+}
+.art-options .btn[aria-pressed="true"] {
+  border-color: var(--green);
+  background: var(--soft);
+}
+/* Los dos mandos de la redacción son un par y se leen como tal: mismo ancho,
+   aunque una etiqueta sea más larga que la otra. Al contenido, uno salía
+   bastante más ancho que el otro y la fila quedaba coja. */
+.newsroom-actions .btn {
+  min-width: 194px;
+}
+@media (max-width: 420px) {
+  /* En el teléfono mandan los márgenes: se apilan a lo ancho de la columna. */
+  .newsroom-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+}
+/* El índice que producirá el texto, a la vista mientras se escribe. Se deduce
+   de los apartados —no se escribe aparte—, así que lo único que hacía falta
+   era enseñarlo antes de publicar y no después. */
+.outline-preview {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  background: var(--bg);
+}
+.outline-preview ol {
+  margin: 9px 0 10px;
+  padding-left: 19px;
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text);
+}
+.outline-preview .subtle-note {
+  display: block;
+}
+/* Al abrir el editor, en qué se está. Escribir algo que todavía no existe no
+   es lo mismo que tocar un comunicado que la comunidad ya está leyendo, y esa
+   diferencia tiene que verse antes de escribir, no después de guardar. */
+.editing-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 18px 0 6px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 12px;
+  color: var(--muted);
+}
+.editing-state > svg {
+  flex: none;
+  color: var(--green);
+}
+.editing-state > span:first-of-type {
+  flex: 1;
+  min-width: 180px;
+  color: var(--text);
+}
+/* La fotografía de portada va debajo del catálogo: primero se elige el lema,
+   después se decide si lleva foto detrás. */
+.cover-photo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.cover-photo .upload-box {
+  flex: 1;
+  min-width: 210px;
+  flex-direction: row;
+  justify-content: center;
+  padding: 13px 16px;
+  font-size: 12px;
+}
+.cover-photo .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font-size: 12px;
+}
+
+/* El relato del comunicado, que comparte fila con su columna lateral. */
+.bulletin-read {
+  min-width: 0;
+}
+/* La ficha del caso, bajo la fotografía. En el panel del Consejo es lo que hace
+   falta para decidir sin abrir nada más; en el detalle de un reporte, lo que
+   quien reportó necesita para hablar de él. En las dos, la columna quedaba
+   vacía por debajo de la foto mientras la de al lado bajaba tres pantallas. */
+.case-facts {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 13px;
+}
+.case-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.case-facts li > svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--green);
+}
+.case-facts strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--text);
+  font-weight: 600;
+}
+/* El teléfono se marca desde aquí: en el río, llamar a quien reportó es media
+   gestión, y copiarlo a mano de una pantalla a otra es como se pierde. */
+.case-facts a {
+  text-decoration: none;
+  color: inherit;
+}
+.case-facts a strong {
+  color: var(--green);
+}
+.case-facts a:hover strong {
+  text-decoration: underline;
+}
+/* Preguntar antes de tirar un borrador: se ve qué se está descartando
+   mientras se decide, en vez de una ventana del navegador encima. */
+.draft-confirm {
+  flex: 1;
+  min-width: 240px;
+  margin: 0;
+}
+.draft-confirm strong {
+  display: block;
+  margin-bottom: 4px;
+}
+.draft-confirm .draft-actions {
+  margin-top: 12px;
+}
+/* Quién administra: el buscador y la lista de todas las cuentas. */
+.council-roles {
+  position: relative;
+}
+/* El campo y su botón en la misma fila, alineados por abajo: la etiqueta
+   levanta el campo y sin esto el botón quedaba flotando a media altura. */
+.roles-search {
+  align-items: flex-end;
+  margin: 18px 0 6px;
+}
+.roles-search .field-label {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+}
+/* El rol se distingue del resto de etiquetas de la fila: es lo que se viene a
+   mirar a esta pantalla. */
+.tag.role-admin {
+  background: var(--soft);
+  color: var(--green);
+  border: 1px solid color-mix(in srgb, var(--green) 35%, transparent);
+}
+.council-roles .account-row {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.council-roles .account-row small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+/* La bandeja del Consejo sostiene su propio grabado de fondo. */
+.council-inbox {
+  position: relative;
+}
+/* Lo que este dispositivo guarda y nunca envió, al pie de la bandeja. Va
+   separado de la tabla de expedientes porque no lo es: nadie lo ha recibido
+   todavía, y mezclarlo arriba haría creer que el Consejo ya lo tiene. */
+.council-pending {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.council-pending h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.council-pending .subtle-note {
+  display: block;
+  margin-bottom: 6px;
+  max-width: 64ch;
+}
+.pending-row {
+  text-decoration: none;
+  color: inherit;
+  gap: 14px;
+}
+.pending-row > span:first-child {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.pending-row small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.pending-row:hover strong {
+  color: var(--green);
+}
+/* Retirar la cuenta no es un ajuste más: se abre a propósito y se avisa. El
+   contenido se lee a la izquierda aunque la ficha del perfil vaya centrada,
+   porque son instrucciones que hay que seguir, no una presentación. */
+.delete-account {
+  margin-top: 18px;
+  text-align: left;
+}
+.delete-account label {
+  display: block;
+  margin: 14px 0 6px;
+  font-size: 12px;
+}
+.delete-account summary {
+  color: #b4513f;
+  font-weight: 600;
+}
+/* La segunda tarjeta del territorio acompaña, no compite. */
+.secondary-card {
+  background: var(--bg);
+}
+/* Confirmación de borrador guardado: dice qué pasó y deja salir. */
+.draft-saved {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 25px 0;
+  padding: clamp(20px, 4vw, 30px);
+}
+.draft-saved h2 {
+  margin: 8px 0;
+  font-size: 19px;
+}
+.draft-saved p {
+  margin: 0 0 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  max-width: 52ch;
+}
+.draft-saved > div {
+  flex: 1;
+  min-width: 220px;
+}
+/* La tarjeta del borrador: lo único de la pantalla que todavía no es reporte. */
+.draft-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.draft-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--soft);
+  color: var(--green);
+}
+.draft-copy {
+  flex: 1;
+  min-width: 190px;
+}
+.draft-copy strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 15px;
+}
+.draft-copy p {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.draft-copy small {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.draft-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sync-status {
+  font-size: 12px;
+  margin-bottom: 12px;
+  color: var(--muted);
+}
+/* Una entrega no es un estado, es una noticia: ocurrió mientras nadie miraba
+   y se queda hasta que alguien la da por leída. Por eso lleva marco propio y
+   no el gris de los rengloncillos de estado. */
+.sync-status.delivered {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid #3f9a61;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+.sync-status.delivered .text-button {
+  padding: 0;
+  white-space: nowrap;
+}
+/* Cabecera de la campana: cuántos avisos esperan y cómo vaciarla de una vez. */
+.notification-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.notification-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+.notification-head .tag {
+  font-size: 9px;
+}
+.notification-head .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+/* El aviso sin leer lleva un filo verde a la izquierda: se distingue de los ya
+   vistos sin necesidad de leer la fecha. */
+/* El aviso: titular, detalle y, al pie, cuándo llegó con su acción al otro
+   extremo. Lo sin leer se marca en el canto. */
+.notice-row {
+  /* El filo de lo sin leer va dentro de la fila, transparente cuando ya se
+     leyó, para que todas alineen. Antes se sacaba con un margen negativo y la
+     fila sobresalía doce píxeles por la derecha, empujando su botón fuera. */
+  padding: 14px 0 14px 12px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.notice-row strong {
+  display: block;
+  font-size: 13px;
+}
+.notice-row p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.notice-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.notice-foot small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.notice-foot .text-button {
+  padding: 0;
+  white-space: nowrap;
+}
+.notice-row.unread {
+  border-left-color: var(--green);
+}
+
+/* Sin desplazamiento propio: la campana ya es un contenedor con su límite y
+   su barra, y anidar dos dejaba dos barras pegadas la una a la otra. */
+.notification-list {
+  display: grid;
+}
+.council-cases {
+  display: grid;
+  gap: 8px;
+  margin-top: 20px;
+}
+.council-cases .btn {
+  white-space: normal;
+  text-align: left;
+}
+.council-form {
+  margin-top: 24px;
+}
+.report-form input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+  accent-color: #16583f;
+}
+.remote-history {
+  margin: 18px 0;
+}
+.remote-history-note {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.remote-history ol {
+  list-style: none;
+  padding-left: 18px;
+  border-left: 2px solid var(--line);
+}
+.remote-history li {
+  padding: 8px 0 18px;
+  display: grid;
+  gap: 5px;
+}
+.remote-history time {
+  font-size: 12px;
+  color: var(--muted);
+}
+/* The access flow shares the welcome landscape, curved glass and explicit themes. */
+@media (max-width: 900px) {
+}
+
+/* Territorial Context Refinements */
+.territorial-context-card {
+  padding: 28px;
+  margin-top: 24px;
+  border-radius: 20px;
+}
+.territory-header h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 6px 0 12px;
+  letter-spacing: -0.01em;
+}
+.territory-intro {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.accent-text {
+  color: var(--green);
+  font-weight: 600;
+}
+.territorial-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: all 0.2s ease;
+  margin-top: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+.territorial-link-card:hover {
+  border-color: var(--green);
+  transform: translateY(-1px);
+}
+.link-card-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.link-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--soft);
+  color: var(--green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.link-card-info strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+.link-card-info small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.link-arrow {
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+.territorial-link-card:hover .link-arrow {
+  color: var(--green);
+  transform: translate(2px, -2px);
+}
+.territory-details {
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.territory-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 10px 0;
+  list-style: none;
+}
+.territory-summary::-webkit-details-marker {
+  display: none;
+}
+.summary-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.details-chevron {
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+.territory-details[open] .details-chevron {
+  transform: rotate(180deg);
+}
+.details-content {
+  margin-top: 14px;
+  padding-top: 10px;
+}
+.territory-note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.territory-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 20px;
+}
+.territory-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  transition: border-color 0.15s ease;
+}
+.territory-chip:hover {
+  border-color: var(--green);
+}
+.chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  opacity: 0.7;
+}
+
+/* Remote Panel Artwork & Desktop Refinements */
+.remote-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 28px;
+  margin-bottom: 24px;
+}
+.remote-panel-body {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+}
+@media (min-width: 768px) {
+  .remote-panel-body {
+    max-width: 62%;
+  }
+}
+.panel-artwork {
+  display: none;
+}
+@media (min-width: 768px) {
+  .panel-artwork {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 45%;
+    padding-right: 36px;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .panel-artwork-svg {
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    width: 320px;
+    height: 320px;
+    color: var(--line);
+    opacity: 0.7;
+  }
+  .panel-artwork-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1.45;
+    color: var(--text);
+    opacity: 0.25;
+    text-align: right;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* Rotating Voces del Consejo card indicators */
+.voice-indicators {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.voice-indicators button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.voice-indicators button.active {
+  background: var(--green);
+  width: 20px;
+  border-radius: 10px;
+}
+
+/* Panel de gestión del Consejo: filtros avanzados y tabla de expedientes (HU-15). */
+.council-filters {
+  margin-top: 20px;
+}
+/* La fotografía del expediente, que llega al abrirlo. Manda en la pantalla
+   porque es de lo que se decide: primero lo que se reportó, después lo que hay
+   que resolver sobre ello. */
+.evidence-view {
+  margin: 14px 0 4px;
+}
+.evidence-view .subtle-note {
+  display: block;
+  margin-top: 6px;
+}
+/* La evidencia se mira entera. Estaba recortada a una altura fija, y una foto
+   de teléfono en vertical perdía arriba y abajo justo lo que a veces decide:
+   el árbol del que se habla, o hasta dónde subió el agua. El tope en pantallas
+   evita que una foto alta empuje los mandos del expediente fuera de vista, y
+   el fondo rellena lo que sobra a los lados sin recortar nada. */
+.evidence-view .evidence-image {
+  height: auto;
+  max-height: 68vh;
+  object-fit: contain;
+  background: var(--soft);
+}
+/* Buscar vereda: acompaña al desplegable, no lo sustituye. Va más pequeño y
+   por encima, porque es una ayuda para llegar al que decide. */
+.vereda-filter {
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+/* La ficha del expediente comparte hoja con la del detalle de un reporte. Allí
+   sube sobre una banda verde y se recorta contra ella; aquí ya está dentro de
+   un panel, así que se le quita el salto, el fondo propio y el relleno. Dos
+   clases para ganarle en especificidad a la del módulo. */
+.council-inbox .council-detail {
+  margin-top: 6px;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+/* La gestión es el último apartado de la columna del relato y conviene que se
+   distinga de lo que se lee: lo de arriba se mira, esto se decide. */
+.council-inbox .council-detail select,
+.council-inbox .council-detail input,
+.council-inbox .council-detail textarea {
+  width: 100%;
+}
+/* La fotografía es el botón para agrandarla: se pulsa donde se mira. */
+.photo-open {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+/* Entera, nunca recortada: lo que falta a los lados lo rellena el fondo. */
+.photo-open > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68vh;
+  object-fit: contain;
+  background: var(--soft);
+  border-radius: 14px;
+}
+.photo-open > span {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: #0b1811cc;
+  color: #fff;
+  font-size: 11px;
+}
+/* A pantalla completa la fotografía manda y todo lo demás desaparece: es el
+   momento de mirar un detalle, no de decidir nada. */
+.photo-full {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  background: transparent;
+}
+.photo-full::backdrop {
+  background: #060d0af2;
+}
+.photo-full img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.photo-full .btn {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+}
+/* El buscador manda en la fila de filtros: es lo primero que se intenta
+   cuando la bandeja pasa de una pantalla, y los desplegables acompañan. */
+.council-search {
+  flex: 1;
+  min-width: 230px;
+}
+/* Los expedientes se leen como cualquier otro listado de reportes. Eran una
+   tabla de seis columnas: cabía más, pero en un teléfono se partía en trozos y
+   no se parecía a ninguna otra lista de la aplicación. */
+.council-cases {
+  margin-top: 6px;
+}
+.council-cases .case-copy small {
+  font-size: 10px;
+}
+.tag.priority-alta,
+.tag.priority-critica {
+  background: #f6e3d5;
+  color: #8a4013;
+}
+.dark .tag.priority-alta,
+.dark .tag.priority-critica {
+  background: #3a2a1d;
+  color: #f0c9a4;
+}
+.tag.priority-baja {
+  color: var(--muted);
+}
+/* En el teléfono la prioridad cede el sitio: el estado y la flecha son lo que
+   hace falta de un vistazo, y la prioridad se lee al abrir el expediente. */
+@media (max-width: 620px) {
+  .council-cases .case-row > .tag:first-of-type {
+    display: none;
+  }
+}
+
+/* Pantalla enfocada del expediente en el teléfono: sin barra de aplicación y a
+   sangre, para que su cabecera toque el borde superior. */
+@media (max-width: 800px) {
+  .main-shell.focused > .topbar {
+    display: none;
+  }
+  .main-shell.focused > .main-content {
+    padding: 0;
+  }
+  .main-shell.focused .report-page {
+    border: 0;
+    border-radius: 0;
+  }
+  /* A sangre contra el borde superior: se respeta la muesca del teléfono. */
+  .main-shell.focused .report-page > header {
+    padding-top: calc(16px + env(safe-area-inset-top));
+  }
+}
+
+/* Filigrana del territorio asomando en la esquina de las tarjetas. Va como
+   máscara sobre un color, así que hereda el tema sin necesitar una variante
+   oscura ni un archivo aparte. */
+.metric:before,
+.reports-panel:before,
+.newsroom:before,
+.management-metrics:before,
+.account:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  /* Cada forma lleva el color de lo que representa: la hoja verde, el agua
+     azul, el monte terroso. Al ir sobre máscara basta cambiar el fondo. */
+  background: var(--tinte, currentColor);
+  opacity: var(--filigrana, 0.16);
+  mask: var(--hoja) center / contain no-repeat;
+  -webkit-mask: var(--hoja) center / contain no-repeat;
+}
+/* El mismo 4,5 % pesa mucho más siendo claro sobre oscuro que al revés: una
+   marca tenue en tema claro se vuelve un dibujo evidente en tema oscuro. */
+.dark {
+  --filigrana: 0.2;
+}
+:root {
+  --hoja: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z'/%3E%3Cpath d='M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12'/%3E%3C/svg%3E");
+  --ola: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/%3E%3Cpath d='M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/%3E%3Cpath d='M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1'/%3E%3C/svg%3E");
+  --monte: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 3 4 8 5-5 5 15H2L8 3z'/%3E%3C/svg%3E");
+  --canoa: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 13h20c0 4-3.6 7-10 7S2 17 2 13z'/%3E%3Cpath d='M6 13V7l11 6'/%3E%3Cpath d='M2 21c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0'/%3E%3C/svg%3E");
+  /* Hoja de palma: la de verdad, con su nervio y sus foliolos, no la hoja
+     genérica de icono. Es el árbol que se ve desde cualquier orilla del río. */
+  --palma: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22V7.6'/%3E%3Cpath d='M12 7.6C10.8 4.2 8 2.4 3.6 2.2c.9 3.9 3.7 5.7 8.4 5.4Z'/%3E%3Cpath d='M12 7.6c1.2-3.4 4-5.2 8.4-5.4-.9 3.9-3.7 5.7-8.4 5.4Z'/%3E%3Cpath d='M12 13.4c-1.3-2.9-3.7-4.4-7.1-4.6.9 3.3 3.2 4.9 7.1 4.6Z'/%3E%3Cpath d='M12 13.4c1.3-2.9 3.7-4.4 7.1-4.6-.9 3.3-3.2 4.9-7.1 4.6Z'/%3E%3C/svg%3E");
+  /* Palafito sobre el agua: la casa del Pacífico levantada en pilotes. */
+  --palafito: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m2.5 9.5 9.5-6 9.5 6'/%3E%3Cpath d='M5.5 9.5v5h13v-5'/%3E%3Cpath d='M7.5 14.5v4M12 14.5v4M16.5 14.5v4'/%3E%3Cpath d='M10 14.5v-2.5h4v2.5'/%3E%3Cpath d='M2 20.5c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0'/%3E%3C/svg%3E");
+  /* Manglar: el árbol que se sostiene sobre sus propias raíces dentro del
+     agua. Es lo que sujeta la orilla, y donde queda todo lo que el río trae. */
+  --manglar: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3.6c-3.1 0-5.3 1.6-5.3 3.6s2.2 3.5 5.3 3.5 5.3-1.5 5.3-3.5S15.1 3.6 12 3.6Z'/%3E%3Cpath d='M12 10.7v3.6'/%3E%3Cpath d='M12 14.3c-1.9 0-3.2 1.7-3.7 4.5'/%3E%3Cpath d='M12 14.3c1.9 0 3.2 1.7 3.7 4.5'/%3E%3Cpath d='M12 14.3c-.7 1.7-.9 3.2-.8 4.5'/%3E%3Cpath d='M12 14.3c.7 1.7.9 3.2.8 4.5'/%3E%3Cpath d='M2 20.8c1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0 1.4-1 2.8-1 4.2 0 1.4 1 2.8 1 4.2 0'/%3E%3C/svg%3E");
+  /* Canalete: el remo del Pacífico, de pala ancha y puño en cruz. Quien lo
+     lleva marca el rumbo de la canoa, que es de lo que trata administrar. */
+  --canalete: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 3h6'/%3E%3Cpath d='M12 3v9.2'/%3E%3Cpath d='M12 12.2c-2.3 1.3-3.4 3.5-3.2 6.1.2 1.9 1.4 2.9 3.2 2.9s3-1 3.2-2.9c.2-2.6-.9-4.8-3.2-6.1Z'/%3E%3C/svg%3E");
+  /* Brújula: la aguja dentro de su caja. Lo que se mira cuando uno se pregunta
+     dónde está, que es justo de lo que trata la pantalla del mapa. */
+  --brujula: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m12 3.6 2.1 6.3 6.3 2.1-6.3 2.1-2.1 6.3-2.1-6.3L3.6 12l6.3-2.1z'/%3E%3C/svg%3E");
+  /* Atarraya: la red que se lanza y recoge de una vez lo que hay abajo. */
+  --atarraya: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 3.5h14l-2.6 17h-8.8L5 3.5Z'/%3E%3Cpath d='M7.4 9.2h9.2'/%3E%3Cpath d='M8.3 14.8h7.4'/%3E%3Cpath d='M10 3.5l1.2 17'/%3E%3Cpath d='M14 3.5l-1.2 17'/%3E%3C/svg%3E");
+  --brote: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 20h10'/%3E%3Cpath d='M10 20c5.5-2.5.8-6.4 3-10'/%3E%3Cpath d='M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z'/%3E%3Cpath d='M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z'/%3E%3C/svg%3E");
+}
+/* La tarjeta recorta el motivo contra su propio canto redondeado. */
+.metric {
+  overflow: hidden;
+}
+/* No todo es hoja: cada tarjeta lleva un elemento distinto del territorio —
+   hoja, corriente, monte y brote— para que la fila no se lea repetida. */
+.metric:nth-child(1):before {
+  --tinte: #3f9a61;
+}
+.metric:nth-child(2):before {
+  --hoja: var(--ola);
+  --tinte: #4a86b8;
+}
+.metric:nth-child(3):before {
+  --hoja: var(--monte);
+  --tinte: #8a7a4e;
+}
+.metric:nth-child(4):before {
+  --hoja: var(--brote);
+  --tinte: #56a86a;
+}
+.metric:before {
+  right: -10px;
+  bottom: -14px;
+  width: 78px;
+  height: 78px;
+  transform: rotate(-12deg);
+}
+.reports-panel,
+.newsroom {
+  position: relative;
+  overflow: hidden;
+}
+.reports-panel:before,
+.newsroom:before {
+  right: -26px;
+  top: -30px;
+  width: 150px;
+  height: 150px;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(18deg);
+}
+/* Cada panel con su propio elemento: el de reportes lleva la canoa, que no
+   aparece en ninguna otra tarjeta; la redacción conserva la hoja. */
+.reports-panel:before {
+  --hoja: var(--canoa);
+  --tinte: #4a86b8;
+  width: 170px;
+  height: 170px;
+  transform: rotate(-8deg);
+}
+.newsroom:before {
+  --tinte: #3f9a61;
+}
+/* «Mi cuenta» es la pantalla más personal de la aplicación: lleva la palma,
+   que es lo que se ve al levantar la vista desde cualquier orilla del río. */
+.account {
+  position: relative;
+  overflow: hidden;
+}
+.account:before {
+  --hoja: var(--palma);
+  --tinte: #3f9a61;
+  right: -24px;
+  bottom: -22px;
+  width: 168px;
+  height: 168px;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(-14deg);
+}
+/* Los paneles del Consejo llevaban tarjetas lisas mientras las del resto de la
+   aplicación tenían su filigrana. Cada uno con un elemento del río que no
+   aparece en ninguna otra: el manglar, el canalete y la atarraya. */
+.council-inbox,
+.council-roles,
+.admin-analysis {
+  position: relative;
+  overflow: hidden;
+}
+.council-inbox:before,
+.council-roles:before,
+.admin-analysis:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: var(--tinte, currentColor);
+  opacity: var(--filigrana-grande, 0.13);
+  mask: var(--hoja) center / contain no-repeat;
+  -webkit-mask: var(--hoja) center / contain no-repeat;
+}
+/* La bandeja: lo que sostiene la orilla y retiene lo que el río trae. */
+.council-inbox:before {
+  --hoja: var(--manglar);
+  --tinte: #4a86b8;
+  right: -28px;
+  top: -26px;
+  width: 168px;
+  height: 168px;
+  transform: rotate(11deg);
+}
+/* Quién administra: quien lleva el canalete marca el rumbo. */
+.council-roles:before {
+  --hoja: var(--canalete);
+  --tinte: #8a7a4e;
+  right: -14px;
+  bottom: -30px;
+  width: 138px;
+  height: 138px;
+  transform: rotate(-17deg);
+}
+/* El análisis recoge de una vez lo que hay debajo, como la atarraya. */
+.admin-analysis:before {
+  --hoja: var(--atarraya);
+  --tinte: #3f9a61;
+  right: -24px;
+  top: -28px;
+  width: 152px;
+  height: 152px;
+  transform: rotate(-7deg);
+}
+.dark {
+  --filigrana-grande: 0.17;
+}
+/* La fila del caso responde al puntero sin desplazar el texto. */
+.case-row {
+  border-radius: 10px;
+  transition: background 0.18s ease;
+}
+.case-row:hover .case-copy strong {
+  color: var(--green);
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-row {
+    transition: none;
+  }
+}
+
+/* Los puntos del banner van sobre fotografía: necesitan su propio contraste. */
+.banner-dots {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgb(6 47 41 / 0.42);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgb(255 255 255 / 0.22);
+}
+.banner-dots button {
+  background: rgb(255 255 255 / 0.5);
+}
+.banner-dots button.active {
+  background: #fff;
+}
+
+/* Pulso de la comunidad: cifras del territorio con el paisaje detrás. */
+.community-pulse {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  /* Aire arriba y abajo: solo tenía margen superior, así que al ir seguida de
+     otro panel las dos tarjetas quedaban pegadas canto con canto. Los márgenes
+     contiguos se funden, de modo que esto no duplica la separación cuando lo
+     que viene detrás ya trae la suya. */
+  margin: 22px 0 24px;
+  padding: 22px 24px;
+}
+.pulse-scene {
+  position: absolute !important;
+  inset: 0 0 0 auto !important;
+  width: min(48%, 420px) !important;
+  object-fit: cover;
+  z-index: -1;
+  opacity: 0.85;
+  /* La fotografía se disuelve hacia el texto en vez de cortarse. El degradado
+     recorre todo el ancho y arranca muy suave: terminando en el 62 % dejaba un
+     canto perceptible a media tarjeta, sobre todo en tema oscuro, donde el
+     contraste entre panel y fotografía es mayor. */
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(0 0 0 / 0.14) 34%,
+    rgb(0 0 0 / 0.55) 66%,
+    #000 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(0 0 0 / 0.14) 34%,
+    rgb(0 0 0 / 0.55) 66%,
+    #000 100%
+  );
+}
+/* En el tema oscuro el paisaje conserva su color: es la fotografía del
+   territorio, no una textura. Se apaga el brillo en lugar de la saturación,
+   así el verde del río sigue ahí y el texto encima se lee igual. */
+.dark .pulse-scene {
+  opacity: 0.58;
+  filter: brightness(0.55) saturate(1.05);
+}
+.pulse-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+.pulse-head > div {
+  min-width: 0;
+}
+.pulse-head .text-link {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pulse-head h2 {
+  font-size: 19px;
+  margin: 0;
+}
+.pulse-head p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 5px 0 0;
+}
+.pulse-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 34px;
+  margin: 20px 0 0;
+}
+.pulse-figures > div {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 2px 9px;
+}
+.pulse-figures svg {
+  color: #2f7150;
+}
+.dark .pulse-figures svg {
+  color: inherit;
+}
+.pulse-figures dd {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+.pulse-figures dt {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: var(--muted);
+}
+@media (max-width: 560px) {
+  .pulse-scene {
+    width: 52% !important;
+    opacity: 0.55;
+  }
+  .pulse-head p {
+    max-width: 22ch;
+  }
+  .pulse-figures {
+    gap: 12px 22px;
+  }
+}
+
+/* Tarjeta de comunicado como enlace: el cuerpo se recorta y la acción cierra. */
+.news-card {
+  display: block;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+.news-card:hover {
+  border-color: #b9cdb7;
+}
+.news-card:hover h2 {
+  color: var(--green);
+}
+.news-card .news-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Rótulo del comunicado: el tipo y, cuando lo hay, el aviso de anclado. */
+.news-kind {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.news-card .text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 550;
+}
+
+/* Lectura completa del comunicado. */
+.bulletin {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 34px);
+}
+.bulletin-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--green);
+  margin-bottom: 20px;
+}
+.bulletin .news-art {
+  min-height: 170px;
+  margin-bottom: 22px;
+}
+.bulletin-columns {
+  display: grid;
+  gap: 22px;
+}
+.meta-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.meta-card .btn {
+  margin-left: auto;
+}
+.bulletin-meta time {
+  font-size: 12px;
+  color: var(--muted);
+}
+.bulletin h1 {
+  font-size: clamp(24px, 3.6vw, 34px);
+  line-height: 1.18;
+  letter-spacing: -0.9px;
+  margin: 12px 0 18px;
+}
+.bulletin-body {
+  font-size: 15px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  max-width: 68ch;
+}
+.bulletin-body p {
+  white-space: pre-wrap;
+  margin: 0 0 18px;
+}
+/* Apartado dentro del comunicado: marca el ritmo de un texto largo sin
+   competir con el titular. */
+.bulletin-body h2 {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+  margin: 30px 0 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.bulletin-body h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+/* Una cita es la voz de otro dentro del comunicado: se separa con un filo
+   verde en el margen, no con comillas decorativas. */
+.bulletin-body blockquote {
+  margin: 0 0 18px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid color-mix(in oklab, var(--green) 55%, transparent);
+  font-size: 15.5px;
+  font-style: italic;
+  color: var(--text);
+}
+.bulletin-body ul {
+  margin: 0 0 18px;
+  padding-left: 18px;
+  list-style: none;
+}
+.bulletin-body li {
+  position: relative;
+  margin-bottom: 7px;
+}
+.bulletin-body li:before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 0.72em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--green) 70%, transparent);
+}
+.bulletin-body strong {
+  font-weight: 680;
+  color: var(--text);
+}
+.bulletin-foot {
+  margin: 28px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.sign {
+  display: grid;
+  gap: 7px;
+}
+.sign p {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  margin: 0;
+  font-family: "Caveat Variable", "Segoe Script", cursive;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+  color: var(--green);
+}
+/* La hoja remata la frase como el rasgo final de una rúbrica. */
+.sign p:after {
+  content: "";
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  margin-bottom: 2px;
+  background: currentColor;
+  opacity: 0.75;
+  mask: var(--hoja) center / contain no-repeat;
+}
+.sign span {
+  font-size: 9px;
+  line-height: 1.5;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* El riel y la firma solo existen donde hay una columna que los sostenga. */
+.bulletin-rail,
+.rail-sign {
+  display: none;
+}
+/* A partir de tableta el relato deja su ficha en una columna propia: el texto
+   conserva una medida cómoda y la pantalla deja de ser una columna estrecha
+   perdida en el centro. */
+@media (min-width: 900px) {
+  .bulletin .news-art {
+    min-height: 230px;
+  }
+  .bulletin h1 {
+    max-width: 22ch;
+  }
+  .bulletin-columns {
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    gap: 40px;
+  }
+  /* La columna se estira hasta el pie del comunicado: la ficha viaja pegada
+     arriba mientras se lee y la firma espera abajo, donde termina el texto. */
+  .bulletin-meta {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding-right: 18px;
+    border-right: 1px solid var(--line);
+  }
+  .meta-card {
+    position: sticky;
+    top: 92px;
+    align-self: start;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .meta-card .btn {
+    margin: 6px 0 0;
+  }
+  /* El riel completa la ficha: cuánto queda por leer y de qué territorio
+     habla el comunicado. Solo donde hay columna y altura para sostenerlo. */
+  .bulletin-rail {
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  /* Índice: una lista de apartados, no un menú. El filo verde a la izquierda
+     marca dónde va la lectura y se desplaza con ella. */
+  .rail-outline ol {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    border-left: 1px solid var(--line);
+  }
+  .rail-outline li {
+    margin: 0;
+  }
+  .rail-outline a {
+    display: block;
+    padding: 6px 0 6px 12px;
+    margin-left: -1px;
+    border-left: 2px solid transparent;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--muted);
+    transition:
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .rail-outline a:hover {
+    color: var(--text);
+  }
+  .rail-outline a[aria-current] {
+    color: var(--green);
+    font-weight: 600;
+    border-left-color: var(--green);
+  }
+  /* Firma: una frase de la comunidad escrita a mano y quién la sostiene. Se
+     lee como el pie de una carta, no como un eslogan sobre la lectura. */
+  .rail-sign {
+    display: block;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+  }
+  /* Medidor de lectura: la barra se llena con el avance real del documento. */
+  .rail-gauge {
+    display: block;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--line);
+    overflow: hidden;
+  }
+  .rail-gauge i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform-origin: left;
+    transform: scaleX(0);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--green), #7cc98c);
+  }
+  @supports (animation-timeline: scroll()) {
+    .rail-gauge i {
+      animation: leido linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+  /* Sin cronologías de desplazamiento el medidor mentiría: se retira. */
+  @supports not (animation-timeline: scroll()) {
+    .rail-gauge {
+      display: none;
+    }
+  }
+}
+@keyframes leido {
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rail-gauge i {
+    animation: none;
+    transform: scaleX(1);
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-card {
+    transition: none;
+  }
+}
+
+/* El comunicado anclado se leía en horizontal y a doble columna, atravesado
+   sobre la reja. Destacaba, sí, pero rompiendo el orden de lectura de la
+   página. Ahora es una tarjeta como las demás y lo anclado se dice con su
+   etiqueta, que además se entiende sin tener que compararla con nada. */
+@media (min-width: 900px) {
+  /* La búsqueda ocupa la fila con los filtros en vez de quedarse encogida. */
+  .filters > .search {
+    flex: 1;
+    min-width: 260px;
+  }
+}
+
+/* Galería del comunicado: las imágenes acompañan al texto, no lo interrumpen. */
+.bulletin-gallery {
+  display: grid;
+  gap: 18px;
+  margin: 26px 0 0;
+}
+.bulletin-gallery figure {
+  margin: 0;
+}
+.bulletin-gallery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+}
+.bulletin-gallery figcaption {
+  margin-top: 9px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.bulletin-gallery figure > button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 14px;
+}
+.bulletin-gallery figure > button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
+}
+@media (min-width: 760px) {
+  /* Dos por fila cuando hay varias; una sola conserva el ancho del texto. */
+  .bulletin-gallery:has(figure:nth-child(2)) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* La fotografía se guarda sin recomprimir; verla entera es lo que hace valer
+   esa decisión. El fondo se oscurece del todo para que no compita. */
+.photo-view {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: clamp(16px, 4vw, 40px);
+  background: rgb(6 20 17 / 0.94);
+  cursor: zoom-out;
+}
+.photo-view img {
+  max-width: min(100%, 1600px);
+  max-height: 82dvh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.photo-view p {
+  margin: 0;
+  max-width: 62ch;
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #cad8d1;
+}
+.photo-view .icon-button {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  color: #fff;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.12);
+}
+
+/* Barra de formato del comunicado.
+   Los estilos se marcan sobre el texto que el redactor ya escribió, así que la
+   barra vive pegada al cuadro y no flota como una herramienta aparte. */
+.body-field {
+  gap: 8px;
+}
+.format-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.format-bar > label {
+  font: inherit;
+  color: inherit;
+}
+.format-marks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+}
+.format-marks .icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.format-marks .icon-button:hover:not(:disabled) {
+  color: var(--green);
+  background: color-mix(in oklab, var(--green) 12%, transparent);
+}
+.format-marks .icon-button:disabled {
+  opacity: 0.4;
+}
+/* La vista previa se separa del resto con el verde de la marca: se nota de un
+   vistazo si el cuadro está en modo escritura o en modo lectura. */
+.format-preview-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 0 12px 0 8px;
+  border-left: 1px solid var(--line);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.format-preview-toggle[aria-pressed="true"] {
+  color: var(--green);
+  font-weight: 600;
+}
+.format-preview {
+  min-height: 210px;
+  margin: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  max-width: none;
+}
+.format-preview > :last-child {
+  margin-bottom: 0;
+}
+.format-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-bottom: 14px;
+}
+.format-foot small:last-child {
+  color: var(--muted);
+}
+
+/* Elección de la firma en el editor: se ve arriba como quedará y se escribe
+   debajo, para no tener que publicar y volver a comprobar. */
+.sign-picker .sign {
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+}
+.sign-field {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.sign-field .field-label {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+}
+.sign-field .btn {
+  white-space: nowrap;
+}
+
+/* Gestión de imágenes en el editor del Consejo. */
+.news-media {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  margin: 22px 0;
+  display: grid;
+  gap: 14px;
+}
+.news-media legend {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.news-media-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.news-media-list figure {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+.news-media-list img {
+  width: 100%;
+  height: 104px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+.news-media-list figcaption {
+  font-size: 11px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.news-media-list .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   El informe del observatorio.
+
+   «Exportar» no baja un archivo: arma un documento con el mismo diseño de la
+   pantalla y deja que el navegador lo convierta en PDF. Así el informe existe
+   sin conexión, sin biblioteca que descargar y sin una segunda versión del
+   diseño que mantener al día.
+
+   Sobre el papel manda otra lógica que en la pantalla: fondo blanco porque la
+   tinta cuesta, nada de mandos porque no se pueden pulsar, y cada sección
+   entera en su hoja porque un panel partido en dos no se lee.
+   ========================================================================== */
+.report-cover,
+.report-foot {
+  display: none;
+}
+.export-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+}
+.export-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm 16mm;
+  }
+  /* El tema oscuro no se imprime: sobre papel es tinta desperdiciada y letra
+     clara sobre blanco. Se reponen los valores del tema claro. */
+  .dark {
+    color-scheme: light;
+    --bg: #fff;
+    --surface: #fff;
+    --text: #17231d;
+    --muted: #55635b;
+    --line: #d9e0da;
+    --green: #174f3b;
+    --soft: #f1f5f0;
+    --shadow: none;
+  }
+  html,
+  body,
+  .workspace,
+  .main-shell,
+  .main-content {
+    background: #fff !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  /* Fuera todo lo que existe para ser pulsado. */
+  .sidebar,
+  .topbar,
+  .mobile-menu,
+  .mobile-bottom,
+  .skip-link,
+  .tabs,
+  .filters,
+  .export-actions,
+  .page-intro > div,
+  .footer,
+  .pagination,
+  .stats-caveat,
+  button[aria-label="Mes anterior"],
+  button[aria-label="Mes siguiente"],
+  .waiting-list a svg.lucide-chevron-right {
+    display: none !important;
+  }
+  .page-intro {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* Sobre el papel manda otro orden: primero lo que dicen las cifras y después
+     las cifras. En pantalla es al revés porque ahí se explora, no se lee. */
+  .main-content {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .report-cover {
+    order: 1;
+  }
+  .insight-panel {
+    order: 2;
+    display: block !important;
+    border: 0 !important;
+    padding: 0 0 6px !important;
+    margin: 0 0 16px !important;
+    break-after: auto;
+  }
+  .insight-panel .icon-tile,
+  .insight-panel .tag,
+  .insight-panel > p,
+  .insight-panel .reading-method,
+  .insight-panel .subtle-note,
+  .reading-ai > .btn,
+  .reading-ai > small,
+  .reading-narrative figcaption .text-button {
+    display: none !important;
+  }
+  /* Sobre el papel el párrafo redactado conserva su marco y su rótulo: quien
+     lea el informe debe saber cuál de los dos textos escribió una máquina. */
+  .reading-narrative {
+    background: none !important;
+    padding: 10px 0 0 !important;
+    border: 0 !important;
+    border-top: 1px dashed var(--line) !important;
+    border-radius: 0 !important;
+  }
+  .insight-heading {
+    display: block !important;
+    margin-bottom: 8px !important;
+  }
+  .insight-heading h2 {
+    font-size: 15px;
+  }
+  .metrics {
+    order: 3;
+  }
+  .stats-grid {
+    order: 4;
+  }
+  .waiting-panel {
+    order: 5;
+  }
+  .vereda-load {
+    order: 6;
+  }
+  [class*="container"] {
+    order: 7;
+  }
+  .report-foot {
+    order: 8;
+  }
+  /* Portada: la identidad de quien emite, el asunto y bajo qué filtros. Sin
+     esto una hoja suelta con cifras no prueba nada. */
+  .report-cover {
+    display: block;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid var(--green);
+  }
+  .report-mark strong {
+    display: block;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    color: var(--green);
+  }
+  .report-mark span {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .report-cover h2 {
+    margin: 14px 0 12px;
+    font-size: 23px;
+    font-weight: 650;
+    letter-spacing: -0.6px;
+  }
+  .report-meta {
+    display: grid;
+    grid-template-columns: repeat(5, auto);
+    justify-content: start;
+    gap: 0 26px;
+    margin: 0;
+  }
+  .report-meta dt {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .report-meta dd {
+    margin: 3px 0 0;
+    font-size: 11px;
+    font-weight: 550;
+  }
+  /* Los paneles pierden el relieve de pantalla: sobre papel el recuadro basta
+     y la sombra solo ensucia. */
+  .panel,
+  .metric,
+  .vereda-load,
+  .waiting-panel {
+    box-shadow: none !important;
+    border: 1px solid var(--line) !important;
+    background: #fff !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Las filigranas del territorio se quedan en la pantalla: a 300 puntos por
+     pulgada dejan de ser un susurro y compiten con las cifras. */
+  .metric:before,
+  .reports-panel:before,
+  .newsroom:before,
+  .management-metrics:before,
+  .insight-panel:before {
+    display: none !important;
+  }
+  .metrics {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 8px !important;
+  }
+  .metric {
+    padding: 12px !important;
+  }
+  .metric strong {
+    font-size: 21px;
+  }
+  .stats-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  .management-metrics {
+    grid-column: 1 / -1;
+  }
+  .management-metrics dd {
+    font-size: 19px;
+  }
+  /* La rueda y las barras llevan color: es lo que distingue una categoría de
+     otra, así que se le pide al navegador que no lo descarte al imprimir. */
+  .donut,
+  .bar-chart i,
+  .legend i,
+  .badge,
+  .waiting-bar,
+  .rate i {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  /* El calendario aporta el reparto del mes; el detalle de un día suelto, no. */
+  .calendar-results {
+    display: none !important;
+  }
+  .calendar-layout {
+    display: block !important;
+  }
+  .waiting-list a {
+    padding: 8px 0 !important;
+    margin: 0 !important;
+  }
+  .waiting-list b {
+    font-size: 18px;
+  }
+  /* Cada bloque grande empieza en hoja limpia. */
+  .waiting-panel,
+  .vereda-load {
+    break-before: page;
+    page-break-before: always;
+  }
+  .report-foot {
+    display: block;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    break-inside: avoid;
+  }
+  .report-foot p {
+    margin: 0 0 7px;
+    font-size: 9px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+/* La salvedad de la copia reducida, con la manera de pedir la original al
+   final de la misma frase: es lo que se hace después de leerla. */
+.evidence-full {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Retirar un expediente. Vive al pie de su ficha, separado de los mandos de
+   guardar por una línea: no es una variante de guardar, es lo contrario. */
+.council-retract {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.council-retract .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+}
+.council-retract.open {
+  padding: 16px;
+  border: 1px solid #dfb7a9;
+  background: #fff0e9;
+  border-radius: 12px;
+}
+.dark .council-retract.open {
+  border-color: #6d3a2c;
+  background: #2b1a15;
+}
+/* El botón que borra se ve distinto del que guarda. Es el mismo botón de
+   siempre con el color del aviso de error, que es el que esta aplicación usa
+   ya para lo que sale mal y para lo que no tiene vuelta atrás. */
+.btn.danger {
+  background: #a04432;
+  border-color: #a04432;
+  color: #fff;
+}
+.btn.danger:hover {
+  background: #8c3a2a;
+}
+.dark .btn.danger {
+  background: #8c3a2a;
+  border-color: #8c3a2a;
+  color: #ffe6de;
+}
+.btn.danger:disabled {
+  opacity: 0.55;
+}
+.council-retract.open h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+.council-retract.open p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.council-retract label {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+}
+.council-retract textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+/* El motivo por el que el Consejo retiró un reporte. Va entrecomillado porque
+   no lo escribió la aplicación: son las palabras de una persona del Consejo,
+   las mismas que le llegaron a quien reportó. */
+.removal-reason {
+  margin: 4px 0 18px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--line);
+  background: var(--soft);
+  border-radius: 0 10px 10px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+  max-width: 44ch;
+}
+/* Los mandos de la cabecera de una lista: la acción principal y, debajo, la de
+   volver a pedirla. Apiladas y a la derecha, para que el botón verde siga
+   alineado con el titular como en el resto de las pantallas. */
+.intro-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.intro-actions .text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  font-size: 12px;
+}
+/* De dónde sale lo que se está listando, cuando no es evidente. */
+.list-source {
+  margin: -6px 0 18px;
+  max-width: 68ch;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+@media (max-width: 720px) {
+  .intro-actions {
+    align-items: stretch;
+  }
+  .intro-actions .text-button {
+    justify-content: center;
+  }
+}

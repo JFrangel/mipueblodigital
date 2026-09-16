@@ -1,0 +1,18 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+test-results/
+playwright-report/
+*.log
+.npm-cache/
+.runtime/
+*-debug.log
+credentials/
+
+# El texto del trabajo de grado. Se queda en el disco, fuera del repositorio:
+# un trabajo sin sustentar publicado queda indexado, y los servicios antiplagio
+# rastrean GitHub.
+design/monografia-texto.txt

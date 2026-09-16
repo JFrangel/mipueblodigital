@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function active() {
+      return request.auth != null && exists(/databases/$(database)/documents/accounts/$(request.auth.uid)) && get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.active == true;
+    }
+    function admin() { return active() && request.auth.token.admin == true; }
+    match /accounts/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+    // El retrato vive aparte del documento de la cuenta: ese se lee en cada
+    // peticion autenticada y no debe arrastrar decenas de kilobytes de imagen.
+    // Se sirve por la API, que comprueba quien pide; desde el navegador, nada.
+    match /avatars/{uid} {
+      allow read, write: if false;
+    }
+    // Copia reducida de la fotografia de un reporte, por si el archivo externo
+    // no responde. Aparte del expediente porque este se lista de 25 en 25.
+    // Se sirve por la API, que comprueba dueno o rol; desde el navegador, nada.
+    match /incidentEvidence/{id} {
+      allow read, write: if false;
+    }
+    // Portada fotografica de un comunicado. Aparte del comunicado porque la
+    // redaccion lista cien de una vez y ninguno debe arrastrar la imagen en
+    // esa consulta. Se sirve por la API, que antes comprueba que este
+    // publicado; asi la portada de un borrador no se ve adivinando la
+    // direccion.
+    match /newsCovers/{id} {
+      allow read, write: if false;
+    }
+    match /incidents/{id} {
+      // Private cases, originals and internal notes are served by authenticated APIs.
+      // Server SDK bypasses rules; all authorization is also enforced in those APIs.
+      allow get, list: if false;
+      allow write: if false;
+    }
+    match /publicIncidents/{id} {
+      allow get, list: if active() && resource.data.published == true && resource.data.keys().hasOnly(['published','title','summary','category','vereda','status','createdAt','publishedAt']);
+      allow write: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

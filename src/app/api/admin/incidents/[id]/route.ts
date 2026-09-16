@@ -1,0 +1,183 @@
+import { createHash } from "node:crypto";
+import { ApiError, requireAdmin } from "@/server/admin-auth";
+import { readJson } from "@/server/request-body";
+import { statuses } from "@/data/catalog";
+import { publicationReady } from "@/domain/publication";
+import { DEFAULT_PRIORITY, isPriority } from "@/domain/priority";
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { uid, db } = await requireAdmin(request),
+      { id } = await params;
+    if (!/^[0-9a-f]{64}$/.test(id))
+      throw new ApiError(404, "Caso no encontrado.");
+    const input = (await readJson(request, 16000)) as Record<string, unknown>;
+    if (
+      !input ||
+      typeof input.mutationId !== "string" ||
+      !/^[0-9a-f-]{36}$/i.test(input.mutationId) ||
+      !Number.isInteger(input.version)
+    )
+      throw new ApiError(400, "Operación inválida.");
+    if (
+      typeof input.status !== "string" ||
+      !Object.hasOwn(statuses, input.status)
+    )
+      throw new ApiError(400, "Estado inválido.");
+    const fields = [
+      "publicNote",
+      "internalNote",
+      "assignee",
+      "publicTitle",
+      "publicSummary",
+      "publicVereda",
+    ] as const;
+    const text = Object.fromEntries(
+      fields.map((k) => [
+        k,
+        typeof input[k] === "string" ? (input[k] as string).trim() : "",
+      ]),
+    ) as Record<(typeof fields)[number], string>;
+    if (!text.publicNote && !text.internalNote)
+      throw new ApiError(
+        400,
+        "Deja un motivo público o interno para el historial.",
+      );
+    if (
+      text.publicNote.split(/\s+/).length > 30 ||
+      text.publicNote.length > 1000 ||
+      text.internalNote.length > 4000 ||
+      text.assignee.length > 100 ||
+      text.publicTitle.length > 120 ||
+      text.publicSummary.length > 1000 ||
+      text.publicSummary.split(/\s+/).length > 30 ||
+      text.publicVereda.length > 120
+    )
+      throw new ApiError(
+        400,
+        "Revisa los límites: notas públicas y resumen de hasta 30 palabras.",
+      );
+    if (
+      !["unreviewed", "sensitive", "safe"].includes(
+        String(input.sensitivity),
+      ) ||
+      !["private", "public"].includes(String(input.publication))
+    )
+      throw new ApiError(400, "Clasificación inválida.");
+    if (input.priority !== undefined && !isPriority(input.priority))
+      throw new ApiError(400, "Prioridad inválida.");
+    const priority = isPriority(input.priority)
+      ? input.priority
+      : DEFAULT_PRIORITY;
+    const command = {
+      ...text,
+      status: input.status,
+      priority,
+      sensitivity: input.sensitivity,
+      publication: input.publication,
+      version: input.version,
+    };
+    const hash = createHash("sha256")
+      .update(JSON.stringify(command))
+      .digest("hex");
+    const result = await db.runTransaction(async (tx) => {
+      const ref = db.doc(`incidents/${id}`),
+        event = ref.collection("events").doc(input.mutationId as string);
+      const [snapshot, previous] = await Promise.all([
+        tx.get(ref),
+        tx.get(event),
+      ]);
+      const old = snapshot.data();
+      if (!old) throw new ApiError(404, "Caso no encontrado.");
+      if (previous.exists) {
+        if (previous.data()?.hash !== hash)
+          throw new ApiError(
+            409,
+            "El identificador ya corresponde a otro cambio.",
+          );
+        return { version: old.version };
+      }
+      if (old.version !== input.version)
+        throw new ApiError(
+          409,
+          "Otra persona actualizó el caso. Recarga antes de guardar.",
+        );
+      const now = Date.now(),
+        at = new Date(now).toISOString();
+      const publicRef = db.doc(`publicIncidents/${id}`);
+      if (input.publication === "public") {
+        /* El resumen revisado no espera plazo: lo escribió una persona del
+           Consejo que antes leyó el caso. El plazo protege lo que consta sin
+           que nadie lo mire, y esto no es eso. */
+        if (!publicationReady(String(input.sensitivity)))
+          throw new ApiError(
+            409,
+            "Para compartir el resumen, la revisión de sensibilidad tiene que quedar en «Revisado · sin contenido sensible».",
+          );
+        if (!text.publicTitle || !text.publicSummary || !text.publicVereda)
+          throw new ApiError(
+            400,
+            "Escribe título, resumen y vereda públicos sin datos personales.",
+          );
+        tx.set(publicRef, {
+          published: true,
+          title: text.publicTitle,
+          summary: text.publicSummary,
+          vereda: text.publicVereda,
+          category: old.category,
+          status: input.status,
+          publishedAt: at,
+          createdAt: old.date,
+        });
+      } else tx.delete(publicRef);
+      tx.update(ref, {
+        status: input.status,
+        priority,
+        assignee: text.assignee,
+        sensitivity: input.sensitivity,
+        publication: input.publication,
+        version: old.version + 1,
+        updatedAt: at,
+      });
+      tx.create(event, { ...command, hash, actor: uid, at });
+      if (old.owner && (old.status !== input.status || text.publicNote))
+        tx.create(
+          db.doc(`notifications/${old.owner}/items/${id}-${input.mutationId}`),
+          {
+            incidentId: id,
+            type: "case_update",
+            title: "El Consejo actualizó tu reporte",
+            note: text.publicNote,
+            status: input.status,
+            at,
+            read: false,
+          },
+        );
+      tx.create(db.doc(`councilNotifications/${id}-${input.mutationId}`), {
+        incidentId: id,
+        type: "case_update",
+        title: "Caso actualizado por el Consejo",
+        /* En qué quedó, que es lo que el resto del Consejo necesita saber sin
+           abrir el expediente. */
+        note: `Pasa a ${statuses[String(input.status)] ?? String(input.status)}`,
+        actor: uid,
+        at,
+      });
+      return { version: old.version + 1 };
+    });
+    return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+  } catch (e) {
+    return Response.json(
+      {
+        error:
+          e instanceof ApiError ? e.message : "No se pudo guardar el cambio.",
+      },
+      {
+        status: e instanceof ApiError ? e.status : 503,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
+}
