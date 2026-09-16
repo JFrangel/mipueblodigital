@@ -92,18 +92,33 @@ export function VoiceInput({
      * vez; lo provisional se enseña aparte y se reemplaza en el evento
      * siguiente. El código declaraba `isFinal` en su tipo y no lo miraba.
      */
-    let cerrado = "";
+    /**
+     * Cada trozo en su sitio, nunca sumando.
+     *
+     * Este es el segundo intento, y el primero también se equivocaba. Junté
+     * todos los resultados de cada evento: en escritorio bien, en el teléfono
+     * repetido. Entonces pasé a **acumular** lo que llegaba marcado como
+     * cerrado, y el teléfono lo repitió igual, de otra manera:
+     *
+     *     hubohubohubohubo derrumbéhubo derrumbé enhubo derrumbé en la vía
+     *
+     * Porque Android no cierra una frase y pasa a la siguiente. **Reemite la
+     * misma frase creciendo, en el mismo índice, marcada como cerrada cada
+     * vez.** Sumar eso multiplica; lo que hay que hacer es reemplazar.
+     *
+     * Guardar cada trozo en la posición que el propio evento indica hace la
+     * operación idempotente: llegue una vez o llegue ocho, el resultado es el
+     * mismo. Y sirve igual para el escritorio, donde cada posición llega una
+     * sola vez.
+     */
+    const partes: string[] = [];
     current.onresult = (event) => {
-      let provisional = "";
       /* `resultIndex` está en la norma y lo mandan todos, pero si algún día
          llega sin él se empieza por el principio: peor es no transcribir. */
       const desde = event.resultIndex ?? 0;
-      for (let i = desde; i < event.results.length; i++) {
-        const trozo = event.results[i][0].transcript;
-        if (event.results[i].isFinal) cerrado += trozo;
-        else provisional += trozo;
-      }
-      const transcript = `${cerrado}${provisional}`.trim().slice(0, 12000);
+      for (let i = desde; i < event.results.length; i++)
+        partes[i] = event.results[i][0].transcript;
+      const transcript = partes.join("").trim().slice(0, 12000);
       setText(transcript);
       const result = [original.current.trim(), transcript]
         .filter(Boolean)
