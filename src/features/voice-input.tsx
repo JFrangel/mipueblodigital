@@ -8,6 +8,8 @@ type Recognition = {
   interimResults: boolean;
   onresult:
     | ((event: {
+        /** Desde dónde son nuevos los resultados de este evento. */
+        resultIndex: number;
         results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
       }) => void)
     | null;
@@ -75,11 +77,30 @@ export function VoiceInput({
     current.lang = "es-CO";
     current.continuous = true;
     current.interimResults = true;
+    /**
+     * Lo ya cerrado se guarda aquí, y no se vuelve a leer del evento.
+     *
+     * El manejador juntaba **todos** los resultados del evento cada vez. En un
+     * ordenador eso da el texto correcto, porque cada frase aparece una sola
+     * vez. En un teléfono no: Android cierra y reabre la sesión de
+     * reconocimiento por su cuenta mientras uno habla, y vuelve a entregar lo
+     * que ya había cerrado. El resultado era el dictado repitiéndose palabra
+     * por palabra, que es justo lo que se ve en el móvil.
+     *
+     * La forma correcta la da el propio evento: `resultIndex` dice desde dónde
+     * es nuevo, e `isFinal` dice qué está cerrado. Lo cerrado se acumula una
+     * vez; lo provisional se enseña aparte y se reemplaza en el evento
+     * siguiente. El código declaraba `isFinal` en su tipo y no lo miraba.
+     */
+    let cerrado = "";
     current.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0].transcript)
-        .join(" ")
-        .slice(0, 12000);
+      let provisional = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const trozo = event.results[i][0].transcript;
+        if (event.results[i].isFinal) cerrado += trozo;
+        else provisional += trozo;
+      }
+      const transcript = `${cerrado}${provisional}`.trim().slice(0, 12000);
       setText(transcript);
       const result = [original.current.trim(), transcript]
         .filter(Boolean)

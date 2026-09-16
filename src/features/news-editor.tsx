@@ -7,11 +7,7 @@ import { DEFAULT_NEWS_ART, newsArtCatalogue } from "@/domain/news-art";
 import { NewsArt } from "@/components/news-art";
 import { NewsBody } from "@/components/news-body";
 import { CouncilSign } from "@/components/council-sign";
-import {
-  councilSayings,
-  maxSayingLength,
-  sayingFor,
-} from "@/domain/signature";
+import { councilSayings, maxSayingLength, sayingFor } from "@/domain/signature";
 import { newsMarks, newsOutline } from "@/domain/news-format";
 import {
   Pin,
@@ -249,9 +245,7 @@ export function NewsEditor() {
     try {
       const list = await fetchNews();
       setItems(list);
-      setMessage(
-        `Lista actualizada: ${list.length} comunicados (máximo 100).`,
-      );
+      setMessage(`Lista actualizada: ${list.length} comunicados (máximo 100).`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error de conexión.");
     } finally {
@@ -783,7 +777,7 @@ export function NewsEditor() {
                 <input
                   aria-label="Subir la fotografía de portada"
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/*"
                   disabled={busy}
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null;
@@ -925,7 +919,8 @@ export function NewsEditor() {
               ))}
             </div>
             <label className="field-label">
-              Pie de la siguiente imagen <span className="muted">(opcional)</span>
+              Pie de la siguiente imagen{" "}
+              <span className="muted">(opcional)</span>
               <input
                 value={caption}
                 maxLength={160}
@@ -939,7 +934,7 @@ export function NewsEditor() {
               <input
                 aria-label="Añadir imagen al comunicado"
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/*"
                 disabled={busy}
                 onChange={(e) => void addImage(e.target.files)}
               />

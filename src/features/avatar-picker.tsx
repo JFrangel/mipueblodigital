@@ -109,7 +109,7 @@ export function AvatarPicker({
           <input
             ref={file}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             disabled={busy}
             onChange={(e) => void upload(e.target.files)}
           />

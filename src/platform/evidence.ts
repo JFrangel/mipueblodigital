@@ -28,32 +28,106 @@ export type PreparedEvidence = {
  * calidad alta. **No se amplía nunca**: agrandar una imagen no añade detalle,
  * solo inventa píxeles y engorda el archivo.
  */
+/**
+ * Los tres formatos que el servidor sabe verificar.
+ *
+ * No son los tres que un teléfono produce. Un iPhone fotografía en HEIC, y
+ * muchas galerías de Android —Google Fotos, Drive, «Recientes»— entregan el
+ * archivo con el tipo **vacío** aunque sea un JPEG perfecto.
+ */
+const ACEPTADOS = ["image/jpeg", "image/png", "image/webp"];
+
 export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
-    throw new Error("Usa una imagen JPG, PNG o WebP.");
   if (file.size === 0) throw new Error("El archivo está vacío.");
 
-  let bitmap: ImageBitmap;
+  /**
+   * Se decodifica **antes** de juzgar el tipo.
+   *
+   * Antes se hacía al revés: se miraba `file.type` y, si no era uno de los
+   * tres, se rechazaba. En un ordenador eso no falla nunca; en un teléfono
+   * falla todo el tiempo, y ese es el aparato con el que se reporta. Quien
+   * fotografiaba el muelle roto desde el móvil recibía «Usa una imagen JPG,
+   * PNG o WebP» teniendo delante exactamente eso.
+   *
+   * Si el navegador la decodifica, es una imagen. Esa es la prueba de verdad.
+   */
+  const bitmap = await decode(file);
   try {
-    bitmap = await createImageBitmap(file);
-  } catch {
-    throw new Error(
-      "La imagen está dañada o no se puede leer. Selecciona otra fotografía.",
-    );
-  }
-  try {
-    const pixels = bitmap.width * bitmap.height;
-    /* Cabe entera: el original gana siempre. */
-    if (pixels <= MAX_PIXELS && file.size <= MAX_BYTES)
+    const { width: ancho, height: alto } = medidas(bitmap);
+    const pixels = ancho * alto;
+    /* Cabe entera **y** el servidor sabe verificar su formato: el original
+       gana siempre. */
+    if (
+      ACEPTADOS.includes(file.type) &&
+      pixels <= MAX_PIXELS &&
+      file.size <= MAX_BYTES
+    )
       return {
         dataUrl: await readAsDataUrl(file),
         reduced: false,
         megapixels: round(pixels),
       };
+    /* Lo demás se recodifica a WebP. Si el tipo no era de los tres —un HEIC
+       del iPhone, o el vacío que entregan algunas galerías— la conversión no
+       es un apaño: es lo que hace que el servidor pueda comprobar que lo que
+       recibe es de verdad la imagen que dice ser. */
     const reducida = await shrink(bitmap, pixels);
     return { ...reducida, reduced: true };
   } finally {
-    bitmap.close();
+    if ("close" in bitmap) bitmap.close();
+    else URL.revokeObjectURL(bitmap.src);
+  }
+}
+
+/** Lo que se puede dibujar en un lienzo: da igual por qué camino se abrió. */
+export type Decodificada = ImageBitmap | HTMLImageElement;
+
+/**
+ * Las medidas reales de la imagen.
+ *
+ * Una `ImageBitmap` las lleva en `width`; una etiqueta de imagen las lleva en
+ * `naturalWidth`, porque su `width` es la de dibujado y una etiqueta suelta,
+ * sin estilos, puede darla en cero. Confundirlas aquí sale como una fotografía
+ * de un píxel.
+ */
+export const medidas = (imagen: Decodificada) =>
+  "naturalWidth" in imagen
+    ? { width: imagen.naturalWidth, height: imagen.naturalHeight }
+    : { width: imagen.width, height: imagen.height };
+
+/**
+ * Abrir la fotografía, por el camino que funcione.
+ *
+ * `createImageBitmap` es el camino bueno y el que falla. Reserva la imagen
+ * entera en memoria descomprimida —ancho × alto × 4 bytes— y las cámaras de
+ * hoy hacen fotos de cincuenta o cien megapíxeles: una de 108 son **432 MB**
+ * que un teléfono no va a dar. El navegador contesta con un error sin motivo,
+ * y quien reporta lee «la imagen está dañada» de una fotografía que está
+ * perfectamente bien y que puede ver en su galería.
+ *
+ * El respaldo es una etiqueta de imagen de toda la vida. El navegador la
+ * decodifica a su ritmo y puede submuestrearla mientras lo hace, así que
+ * aguanta lo que la otra no. Se intenta primero la rápida, porque para una
+ * fotografía normal es mejor, y solo se cae a esta cuando hace falta.
+ */
+export async function decode(file: File): Promise<Decodificada> {
+  try {
+    return await createImageBitmap(file);
+  } catch {
+    /* Sigue abajo: puede ser memoria, o un formato que esta vía no abre. */
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const imagen = new Image();
+    imagen.src = url;
+    await imagen.decode();
+    if (!imagen.naturalWidth) throw new Error("sin dimensiones");
+    return imagen;
+  } catch {
+    URL.revokeObjectURL(url);
+    throw new Error(
+      "No se pudo leer esa fotografía. Puede estar dañada, o ser un formato que este teléfono no abre: prueba con otra.",
+    );
   }
 }
 
@@ -82,12 +156,13 @@ function readAsDataUrl(file: Blob): Promise<string> {
  * un muelle roto que perder píxeles.
  */
 async function shrink(
-  bitmap: ImageBitmap,
+  bitmap: Decodificada,
   pixels: number,
 ): Promise<{ dataUrl: string; megapixels: number }> {
   const factor = pixels > MAX_PIXELS ? Math.sqrt(MAX_PIXELS / pixels) : 1;
-  const width = Math.max(1, Math.floor(bitmap.width * factor));
-  const height = Math.max(1, Math.floor(bitmap.height * factor));
+  const real = medidas(bitmap);
+  const width = Math.max(1, Math.floor(real.width * factor));
+  const height = Math.max(1, Math.floor(real.height * factor));
 
   const canvas = document.createElement("canvas");
   canvas.width = width;

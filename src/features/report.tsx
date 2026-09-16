@@ -517,7 +517,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                   <input
                     aria-label="Evidencia fotográfica"
                     type="file"
-                    accept="image/jpeg,image/png,image/webp"
+                    accept="image/*"
                     onChange={(e) => void upload(e.target.files)}
                   />
                 </span>

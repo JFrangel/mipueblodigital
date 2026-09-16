@@ -1,3 +1,4 @@
+import { decode, medidas } from "./evidence";
 /** Lado del cuadro y peso máximo del avatar ya preparado. */
 const SIDE = 256;
 const MAX_BYTES = 48 * 1024;
@@ -15,15 +16,12 @@ const MAX_BYTES = 48 * 1024;
  * dice: es mejor pedir otra fotografía que guardar uno ilegible.
  */
 export async function prepareAvatar(file: File): Promise<string> {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type))
-    throw new Error("Usa una imagen JPG, PNG o WebP.");
   if (file.size === 0) throw new Error("El archivo está vacío.");
-  let bitmap: ImageBitmap;
-  try {
-    bitmap = await createImageBitmap(file);
-  } catch {
-    throw new Error("La imagen está dañada o no se puede leer.");
-  }
+  /* Por el mismo camino que la evidencia, y por los mismos dos motivos: el
+     tipo que declara el archivo no es de fiar en un teléfono, y una fotografía
+     de cien megapíxeles no cabe en memoria descomprimida. Aquí da igual el
+     formato de origen, porque el retrato se recodifica entero a WebP. */
+  const bitmap = await decode(file);
   try {
     const canvas = document.createElement("canvas");
     canvas.width = SIDE;
@@ -32,11 +30,12 @@ export async function prepareAvatar(file: File): Promise<string> {
     if (!context) throw new Error("sin lienzo");
     /* Recorte cuadrado por el centro: es donde está la cara en casi todas las
        fotografías, y deformar la imagen para que quepa se ve peor que recortar. */
-    const side = Math.min(bitmap.width, bitmap.height);
+    const real = medidas(bitmap);
+    const side = Math.min(real.width, real.height);
     context.drawImage(
       bitmap,
-      (bitmap.width - side) / 2,
-      (bitmap.height - side) / 2,
+      (real.width - side) / 2,
+      (real.height - side) / 2,
       side,
       side,
       0,
@@ -56,7 +55,8 @@ export async function prepareAvatar(file: File): Promise<string> {
       ? new Error("No se pudo reducir la fotografía. Prueba con otra.")
       : new Error("No se pudo preparar la fotografía.");
   } finally {
-    bitmap.close();
+    if ("close" in bitmap) bitmap.close();
+    else URL.revokeObjectURL(bitmap.src);
   }
 }
 
