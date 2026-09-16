@@ -53,6 +53,7 @@ import { NewsArt, coverSource } from "./news-art";
 import { useLatestNews, voiceDate, voicePreview } from "@/data/latest-news";
 import { mergeMapCases, useCommunityReports } from "@/data/community-map";
 import { useReportLookup, type Removed } from "@/data/report-lookup";
+import { useOfflinePages } from "@/data/offline-pages";
 import { Toasts } from "./toasts";
 import { Knowledge } from "@/features/knowledge";
 import { Territory } from "@/features/territory";
@@ -183,6 +184,22 @@ export function Workspace({
     () => mergeMapCases(mineItems, community),
     [mineItems, community],
   );
+  /**
+   * Lo que habrá que poder abrir cuando no haya señal.
+   *
+   * El expediente de cada reporte que este teléfono guarda. Es una dirección
+   * que el service worker no puede precachear —no la conoce hasta que el
+   * reporte existe— y dentro de la aplicación se navega sin recargar, así que
+   * tampoco la ve pasar. Hay que pedirla a propósito, mientras hay red.
+   *
+   * Los comunicados hacen lo suyo donde vive su lista, sin pedirla dos veces.
+   */
+  const offlinePages = useMemo(
+    () =>
+      items.slice(0, 20).map((c) => `/reporte/${encodeURIComponent(c.id)}/`),
+    [items],
+  );
+  useOfflinePages(offlinePages, online);
   /* Lo que este dispositivo guarda y nunca envió. Es lo único suyo que la
      bandeja del Consejo no tiene ya: lo enviado está allí como expediente, y
      enseñarlo dos veces era lo que hacía dudar de qué se estaba mirando. */
@@ -208,12 +225,20 @@ export function Workspace({
       /* Volver a pedir la lista de la comunidad. Lo propio no lo lleva: se
          reconsulta solo al entrar y al recuperar la señal. */
       onRefresh={section === "historial" ? shared.reload : undefined}
+      /* Sin señal, «Mis reportes» enseña solo la copia de este aparato, pero
+         el rótulo sigue prometiendo «lo que el Consejo tiene a tu nombre». Con
+         un reporte hecho desde otro teléfono, la lista parecía completa y no lo
+         era. Decirlo cuesta una línea; callarlo, la confianza en la lista. */
       notice={
         section === "mis-reportes"
-          ? account.error
-          : session.uid
-            ? ""
-            : "Los reportes de la comunidad son de quienes la forman: hay que entrar para verlos."
+          ? !online
+            ? "Sin conexión: esto es lo que guarda este teléfono. Lo que el Consejo tiene a tu nombre se consulta al volver la señal."
+            : account.error
+          : !online
+            ? "Sin conexión: los reportes de la comunidad se consultan al volver la señal."
+            : session.uid
+              ? ""
+              : "Los reportes de la comunidad son de quienes la forman: hay que entrar para verlos."
       }
     />
   ) : null;
@@ -680,7 +705,15 @@ export function Workspace({
           {section === "mapa" && (
             <Territory items={territory} onSelect={setSelected} />
           )}
-          {section === "estadisticas" && <Statistics items={items} />}
+          {/* El observatorio cuenta el territorio, así que lee el territorio:
+              lo propio más lo que la comunidad puede ver. Contaba solo lo
+              guardado en este navegador, y presentaba bajo «OBSERVATORIO
+              COMUNITARIO» una tasa de solución calculada sobre los reportes de
+              un teléfono. Es el mismo error que ya se había corregido en el
+              mapa y en el historial, en la pantalla que faltaba. */}
+          {section === "estadisticas" && (
+            <Statistics items={territory} partial={!online} />
+          )}
           {section === "documentacion" && <Knowledge />}
           {section === "reportar" && <Report onSave={save} />}
           {section === "comunidad" && <CommunityFeed />}

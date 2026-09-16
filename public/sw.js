@@ -1,22 +1,29 @@
 /* Public shell only. Authenticated APIs, photographs and tokens are never cached. */
-const CACHE = "mi-pueblo-shell-v6";
+const CACHE = "mi-pueblo-shell-v8";
 /* Los comunicados del Consejo, guardados aparte del armazón.
    Es lo único de la API que se conserva, y por tres razones: no llevan sesión
    —la regla de abajo descarta cualquier petición con token—, no contienen
    datos de nadie, y son justo lo que hace falta poder leer cuando no hay
    señal. El resto de la API sigue sin tocar el disco. */
 const NEWS = "mi-pueblo-news-v1";
+/* Las pantallas de dirección variable: el expediente de un reporte y un
+   comunicado concreto. No se pueden precachear —no se sabe cuáles hasta que
+   existen—, así que la aplicación guarda las que hacen falta mientras hay
+   señal y aquí se sirven cuando no la hay. Sin esto, abrir sin red un reporte
+   que este mismo teléfono tiene guardado caía en la página de respaldo: el
+   caso estaba, y la pantalla para leerlo no. */
+const PAGES = "mi-pueblo-pages-v1";
 const esComunicado = pathname =>
   pathname === "/api/news/" || /^\/api\/news\/[^/]+\/$/.test(pathname);
 /* Lo imprescindible sin red: reportar, consultar lo propio y la página de
    respaldo. La fotografía entra aquí porque la usa /offline.html y pedirla en
    ese momento sería justo cuando no hay señal. */
-const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/brand/river-welcome.webp", "/brand/pwa-192.png", "/brand/pwa-512.png", "/brand/pwa-maskable-512.png"];
+const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/brand/emblem.svg", "/brand/river-welcome.webp", "/brand/pwa-192.png", "/brand/pwa-512.png", "/brand/pwa-maskable-512.png"];
 /* El resto de pantallas: sin ellas, navegar sin señal a cualquier otra parte
    caía en la página de respaldo aunque la aplicación pudiera dibujarlas. Van
    aparte y una por una porque addAll es todo o nada: que falte el mapa no debe
    dejar sin instalar el formulario de reportes. */
-const EXTRA = ["/mapa/", "/comunidad/", "/estadisticas/", "/cuenta/", "/documentacion/"];
+const EXTRA = ["/mapa/", "/comunidad/", "/historial/", "/estadisticas/", "/cuenta/", "/documentacion/"];
 async function fill(cache, routes) {
   await Promise.all(routes.map(async route => {
     try { await cache.add(route); } catch { /* Se intentará de nuevo en la próxima visita con red. */ }
@@ -40,12 +47,12 @@ self.addEventListener("install", event => event.waitUntil((async () => {
   await fill(cache, [...assets]);
 })()));
 self.addEventListener("activate", event => event.waitUntil((async () => {
-  for (const name of await caches.keys()) if ((name.startsWith("mi-pueblo-shell-") && name !== CACHE) || (name.startsWith("mi-pueblo-news-") && name !== NEWS)) await caches.delete(name);
+  for (const name of await caches.keys()) if ((name.startsWith("mi-pueblo-shell-") && name !== CACHE) || (name.startsWith("mi-pueblo-news-") && name !== NEWS) || (name.startsWith("mi-pueblo-pages-") && name !== PAGES)) await caches.delete(name);
   await self.clients.claim();
 })()));
 /* El worker nunca recibe el token de sesión: al volver la señal pide a una
-   pestaña abierta que vacíe la cola de reportes. Si no hay ninguna, el
-   navegador reintentará la sincronización más tarde. */
+   pestaña abierta que vacíe la cola de reportes. Sin pestañas abiertas,
+   el siguiente inicio de la aplicación reanuda la cola. */
 self.addEventListener("sync", event => {
   if (event.tag !== "mpd-outbox") return;
   event.waitUntil((async () => {
@@ -90,11 +97,21 @@ self.addEventListener("fetch", event => {
     })());
     return;
   }
-  if (url.pathname.startsWith("/_next/static/")) {
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/brand/")) {
     event.respondWith((async () => { const cache = await caches.open(CACHE), cached = await cache.match(request); if(cached) return cached; const response=await fetch(request);if(response.ok)await cache.put(request,response.clone());return response; })()); return;
   }
   if (request.mode === "navigate") event.respondWith((async () => {
     try { return await fetch(request); }
-    catch { const cache=await caches.open(CACHE); return await cache.match(url.pathname) || await cache.match("/offline.html"); }
+    catch {
+      /* Primero el armazón precacheado. Si la dirección es de las variables
+         —un expediente, un comunicado— la guardó la aplicación con señal. Se
+         busca por la ruta sin la consulta: `/reporte/abc/?desde=mapa` y
+         `/reporte/abc/` son la misma pantalla. */
+      const cache = await caches.open(CACHE);
+      const armazon = await cache.match(url.pathname);
+      if (armazon) return armazon;
+      const paginas = await caches.open(PAGES);
+      return await paginas.match(url.pathname) || await cache.match("/offline.html");
+    }
   })());
 });

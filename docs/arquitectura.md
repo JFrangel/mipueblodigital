@@ -453,7 +453,23 @@ la correspondencia. Exige autenticación reciente (300 s).
 
 La regla que lo garantiza es una línea: cualquier petición que lleve cabecera
 `authorization` sale del _service worker_ sin tocarse. Por ahí viajan
-expedientes, fotografías y cuentas.
+expedientes, fotografías y cuentas. Lo fijan cinco pruebas unitarias que
+ejecutan `sw.js` en una máquina virtual.
+
+**Las direcciones variables son un caso aparte.** El expediente de un reporte y
+un comunicado concreto llevan el identificador dentro, así que no se pueden
+precachear —no se conocen hasta que existen— y, como dentro de la aplicación se
+navega sin recargar, el _service worker_ tampoco las ve pasar. Sin nada más,
+abrir sin red un reporte que este mismo teléfono tenía guardado caía en la
+página de respaldo: el caso estaba y la pantalla para leerlo no.
+
+Las pide la propia aplicación mientras hay señal
+([`src/data/offline-pages.ts`](../src/data/offline-pages.ts)): los veinte
+últimos expedientes de este aparato y los ocho comunicados de cabecera, cada uno
+donde ya vive su lista para no pedirla dos veces. Lo que se guarda es el armazón
+de la pantalla, que no lleva ningún dato: el reporte lo pone después el almacén
+del navegador. Es a prueba de fallos —sin red o sin sitio, la aplicación
+funciona igual y no queda copia— y lo fijan dos pruebas de navegador.
 
 ### 9.2. La cola de envío
 
@@ -466,8 +482,9 @@ local, que si no seguiría diciendo «esperando señal» meses después.
 
 ### 9.3. Lo que no funciona sin señal
 
-El mapa (las teselas vienen de la red), las estadísticas del Consejo, la
-asistencia de IA y cualquier expediente que no esté ya en este aparato.
+Las teselas del mapa, que vienen de la red —la pantalla abre, pero sin el dibujo
+del terreno—, las estadísticas del Consejo, la asistencia de IA, entrar o crear
+una cuenta, y cualquier expediente que este aparato no tenga guardado.
 
 ---
 

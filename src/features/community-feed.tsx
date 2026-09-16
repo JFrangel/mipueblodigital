@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, WifiOff } from "lucide-react";
 import { newsKinds } from "@/domain/news";
 import { NewsArt, coverSource } from "@/components/news-art";
 import { plainNewsBody } from "@/domain/news-format";
+import { useOfflinePages } from "@/data/offline-pages";
+import { useOnline } from "@/data/network";
 import { TerritorialContext } from "./territorial-context";
 type PublicNews = {
   id: string;
@@ -18,6 +20,7 @@ type PublicNews = {
   cover?: string | null;
 };
 export function CommunityFeed() {
+  const online = useOnline();
   const [loading, setLoading] = useState(true),
     [error, setError] = useState("");
   const [items, setItems] = useState<PublicNews[]>([]),
@@ -26,6 +29,19 @@ export function CommunityFeed() {
     [attempt, setAttempt] = useState(0),
     /* De cuándo es lo que se está leyendo, si vino de la copia guardada. */
     [saved, setSaved] = useState("");
+  /* El armazón de cada comunicado, guardado mientras hay señal. La lista ya la
+     conserva el service worker, pero la pantalla que la lee vive en una
+     dirección que no puede precachear: sin esto, tocar un comunicado sin red
+     caía en la página de respaldo teniendo su texto guardado al lado. Se piden
+     los primeros, que son los que se abren. */
+  useOfflinePages(
+    useMemo(
+      () =>
+        items.slice(0, 8).map((n) => `/noticia/${encodeURIComponent(n.id)}/`),
+      [items],
+    ),
+    online,
+  );
   useEffect(() => {
     const controller = new AbortController();
     let alive = true;

@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import { MapPin, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { type Case, statuses, categories } from "@/data/catalog";
+import { type Case, statuses, categories, shortDate } from "@/data/catalog";
 import { clusterPoints, pageItems } from "@/domain/logic";
 import { veredaLoad } from "@/domain/vereda-load";
 import { veredaCatalogue } from "@/domain/territory";
@@ -172,6 +172,82 @@ export function Territory({
       clean();
     };
   }, [mapReady]);
+  /**
+   * Lo que hay en un punto, al tocarlo.
+   *
+   * Tocar un marcador acotaba la lista **de más abajo** y nada más. En un
+   * teléfono esa lista queda fuera de pantalla, así que tocar un punto no hacía
+   * nada visible: había que adivinar que algo había cambiado y bajar a mirar.
+   *
+   * Ahora el punto cuenta lo que tiene encima del propio mapa, y desde ahí se
+   * abre el expediente. Con varios reportes se enseñan los primeros y queda el
+   * paso a la lista completa, que es lo que hacía antes.
+   *
+   * Se arma con nodos, no pegando HTML: el título lo escribe quien reporta, y
+   * `textContent` es lo que impide que un reporte pueda meter etiquetas en el
+   * mapa de todos.
+   */
+  const vistaPrevia = useCallback(
+    (casos: Case[]) => {
+      const caja = document.createElement("div");
+      caja.className = "map-preview";
+
+      const titulo = document.createElement("p");
+      titulo.className = "map-preview-head";
+      titulo.textContent =
+        casos.length === 1
+          ? casos[0].vereda || "En el territorio"
+          : `${casos.length} reportes · ${casos[0].vereda || "el territorio"}`;
+      caja.append(titulo);
+
+      const lista = document.createElement("ul");
+      /* Cinco caben sin que el globo tape el mapa que se está mirando. */
+      for (const caso of casos.slice(0, 5)) {
+        const fila = document.createElement("li");
+        const boton = document.createElement("button");
+        boton.type = "button";
+
+        const estado = document.createElement("span");
+        estado.className = `badge ${caso.status}`;
+        estado.textContent = statuses[caso.status] ?? caso.status;
+
+        const nombre = document.createElement("strong");
+        nombre.textContent = caso.title;
+
+        const pie = document.createElement("small");
+        pie.textContent = `${
+          categories.find((c) => c.id === caso.category)?.name ??
+          "Otra situación"
+        } · ${shortDate(caso.date)}`;
+
+        boton.append(estado, nombre, pie);
+        boton.addEventListener("click", () => onSelect(caso));
+        fila.append(boton);
+        lista.append(fila);
+      }
+      caja.append(lista);
+
+      /* Lo que no cupo, y la salida a la lista de abajo: es lo que hacía este
+       marcador antes, y sigue haciendo falta cuando hay más de cinco. */
+      if (casos.length > 1) {
+        const todos = document.createElement("button");
+        todos.type = "button";
+        todos.className = "text-button";
+        todos.textContent =
+          casos.length > 5
+            ? `Ver los ${casos.length} en la lista`
+            : "Ver estos en la lista";
+        todos.addEventListener("click", () => {
+          setGroupIds(casos.map((i) => i.id));
+          setPage(1);
+          mapRef.current?.closePopup();
+        });
+        caja.append(todos);
+      }
+      return caja;
+    },
+    [onSelect],
+  );
   useEffect(() => {
     let disposed = false;
     let clean = () => {};
@@ -186,11 +262,17 @@ export function Territory({
             iconSize: [44, 44],
             iconAnchor: [22, 22],
           }),
-          title: `${g.items.length} reportes; abrir lista`,
+          title:
+            g.items.length === 1
+              ? g.items[0].title
+              : `${g.items.length} reportes aquí`,
         }).addTo(layer);
-        marker.on("click", () => {
-          setGroupIds(g.items.map((i) => i.id));
-          setPage(1);
+        marker.bindPopup(() => vistaPrevia(g.items), {
+          className: "map-preview-popup",
+          maxWidth: 268,
+          minWidth: 238,
+          closeButton: true,
+          autoPanPadding: [16, 16],
         });
       });
       clean = () => layer.remove();
@@ -199,7 +281,7 @@ export function Territory({
       disposed = true;
       clean();
     };
-  }, [groups, mapReady]);
+  }, [groups, mapReady, vistaPrevia]);
   return (
     <>
       <div className="page-intro">

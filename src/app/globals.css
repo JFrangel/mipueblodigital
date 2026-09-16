@@ -6209,3 +6209,77 @@ textarea {
     justify-content: center;
   }
 }
+/* La previsualización de un punto del mapa.
+   Tocar un marcador acotaba la lista de más abajo y nada más; en un teléfono
+   esa lista queda fuera de pantalla, así que tocar no hacía nada visible. Esto
+   es lo que el punto tiene encima, sin salir del mapa. */
+.map-preview-popup .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 10px 30px rgb(16 71 52 / 18%);
+}
+/* Leaflet calcula el ancho del globo y lo escribe en el elemento. Un
+   `width: auto` aquí se lo quitaba y el globo se encogía al ancho de la palabra
+   más larga: los títulos salían partidos en cuatro líneas. El ancho lo pone el
+   contenido, entre el mínimo de aquí y el máximo que declara el marcador. */
+.map-preview-popup .leaflet-popup-content {
+  margin: 13px 14px;
+}
+.map-preview {
+  min-width: 206px;
+}
+.map-preview-popup .leaflet-popup-tip {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.map-preview-popup .leaflet-popup-close-button {
+  color: var(--muted);
+  padding: 7px 8px 0 0;
+}
+.map-preview-head {
+  margin: 0 18px 9px 0;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.map-preview ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Cada reporte es un mando entero: el dedo acierta sin apuntar al título. */
+.map-preview li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+}
+.map-preview li button:hover {
+  border-color: #2f7150;
+}
+.map-preview li button strong {
+  display: block;
+  margin: 5px 0 2px;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text);
+}
+.map-preview li button small {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.map-preview > .text-button {
+  margin-top: 10px;
+  padding: 0;
+  font-size: 11.5px;
+}

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { seedCases } from "./seed-cases";
+import { sampleCase } from "../fixtures/cases";
 test("el listado del territorio abre el detalle del reporte", async ({
   page,
 }) => {
@@ -178,4 +179,50 @@ test("una dirección que no existe se explica y ofrece salida", async ({
   ).toBeVisible();
   await page.getByRole("link", { name: "Ir al inicio" }).click();
   await expect(page).toHaveURL(/\/inicio\//);
+});
+
+/**
+ * Tocar un punto del mapa.
+ *
+ * Acotaba la lista **de más abajo** y nada más. En un teléfono esa lista queda
+ * fuera de pantalla, así que tocar un punto no hacía nada visible: había que
+ * adivinar que algo había cambiado y bajar a mirar. Ahora el punto cuenta lo
+ * que tiene encima del propio mapa, y desde ahí se abre el expediente.
+ */
+test("un punto del mapa enseña lo que tiene y lleva al expediente", async ({
+  page,
+}) => {
+  await seedCases(page, [
+    sampleCase({
+      id: "LOCAL-MAPA-1",
+      title: "Luminaria apagada en el malecón",
+      status: "en_proceso",
+      delivery: "enviado",
+    }),
+    sampleCase({
+      id: "LOCAL-MAPA-2",
+      title: "Tablas sueltas en el muelle",
+      status: "pendiente",
+      delivery: "enviado",
+    }),
+  ]);
+  await page.goto("/mapa/");
+  await page.locator(".cluster-marker").first().click();
+
+  /* Lo que hay en ese punto, sin salir del mapa: cada reporte con su estado. */
+  const globo = page.locator(".map-preview");
+  await expect(globo).toBeVisible();
+  await expect(globo).toContainText("2 reportes");
+  await expect(
+    globo.getByText("Luminaria apagada en el malecón"),
+  ).toBeVisible();
+  await expect(globo.getByText("Tablas sueltas en el muelle")).toBeVisible();
+  await expect(globo.locator(".badge.en_proceso")).toBeVisible();
+
+  /* Y desde ahí se abre, que es lo que antes no se podía. */
+  await globo.getByText("Tablas sueltas en el muelle").click();
+  await expect(page).toHaveURL(/\/reporte\/LOCAL-MAPA-2\//);
+  await expect(
+    page.getByRole("heading", { name: "Tablas sueltas en el muelle" }),
+  ).toBeVisible();
 });

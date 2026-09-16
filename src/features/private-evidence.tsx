@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { PhotoView } from "@/components/photo-view";
 import { memberHeaders } from "@/data/remote-reports";
 import { firebaseClient } from "@/data/firebase/client";
+import { useOnline } from "@/data/network";
 
 type Photo = { url: string; reduced: boolean };
 type State = "cargando" | "lista" | "sin-foto" | "error";
@@ -42,6 +43,7 @@ async function fetchPhoto(id: string, full: boolean) {
 }
 
 export function PrivateEvidence({ id }: { id: string }) {
+  const online = useOnline();
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [state, setState] = useState<State>("cargando");
   /* Sube al pedir el original o al reintentar: es lo que vuelve a disparar la
@@ -93,9 +95,15 @@ export function PrivateEvidence({ id }: { id: string }) {
       {state === "sin-foto" && (
         <p className="subtle-note">Este reporte se envió sin fotografía.</p>
       )}
+      {/* La fotografía vive en el servidor y sin red no hay manera de traerla.
+          Decía «no se pudo traer» a secas, que suena a que se perdió: quien lo
+          lee sin señal no sabe si su prueba sigue existiendo. Son dos motivos
+          distintos y se dicen distinto. */}
       {state === "error" && (
         <p className="notice" role="alert">
-          No se pudo traer la fotografía.{" "}
+          {online
+            ? "No se pudo traer la fotografía del servidor."
+            : "Sin conexión no se puede traer la fotografía. Sigue guardada en el servidor del Consejo."}{" "}
           <button type="button" className="text-button" onClick={ask}>
             Reintentar
           </button>

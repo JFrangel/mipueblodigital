@@ -1,0 +1,60 @@
+.frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+}
+.left,
+.right {
+  position: absolute;
+  bottom: -45px;
+  width: clamp(80px, 15%, 130px);
+  opacity: 0;
+  animation: unfurl 3.6s ease-out both;
+}
+.left {
+  left: -20px;
+  --entry: -75%;
+  --turn: -14deg;
+}
+.right {
+  right: -20px;
+  --entry: 75%;
+  --turn: 14deg;
+  animation-delay: 120ms;
+}
+.right svg {
+  transform: scaleX(-1);
+}
+.frame svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.sending .left,
+.sending .right {
+  animation-duration: 2.8s;
+  animation-iteration-count: 1;
+}
+@keyframes unfurl {
+  0% {
+    opacity: 0;
+    transform: translateX(var(--entry)) rotate(var(--turn));
+  }
+  20%,
+  70% {
+    opacity: 0.6;
+    transform: translateX(0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(var(--entry)) rotate(var(--turn));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    display: none;
+  }
+}

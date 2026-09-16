@@ -15,59 +15,20 @@ import {
   House,
 } from "lucide-react";
 import { statuses } from "@/data/catalog";
-/**
- * Marca de Mi Pueblo Digital: un palafito al amanecer.
- *
- * Hubo antes una hoja sobre tres corrientes, que decía «naturaleza» y podía ser
- * de cualquier sitio. Y hubo un paisaje entero —monte, palma, casa, sol, agua—
- * que a cuarenta y dos píxeles se volvía una mancha: cinco planos no caben ahí.
- *
- * Queda una silueta. La casa levantada sobre pilotes es lo que no tiene ningún
- * otro sitio, y se recorta **entera contra el cielo** para que sobreviva al
- * tamaño pequeño; solo las patas entran en el agua, que es justo lo que hace a
- * un palafito. El sol detrás es la hora a la que se sale a trabajar.
- */
+/** Palafito, árbol ribereño y río: emblema vectorial compartido con la PWA. */
 export function Logo() {
   return (
     <span className="brand">
-      <svg
+      {/* SVG local: mantiene detalle y nitidez sin transformación del optimizador. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/emblem.svg"
         width="42"
         height="42"
-        viewBox="0 0 64 64"
+        alt=""
         aria-hidden="true"
         className="brand-mark"
-      >
-        <defs>
-          <linearGradient id="mpd-cielo" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#f7cf95" />
-            <stop offset="1" stopColor="#e79350" />
-          </linearGradient>
-          <linearGradient id="mpd-agua" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#17513f" />
-            <stop offset="1" stopColor="#0b2b21" />
-          </linearGradient>
-        </defs>
-        <rect width="64" height="64" rx="19" fill="url(#mpd-cielo)" />
-        <circle cx="32" cy="25" r="12" fill="#fff0cd" opacity=".92" />
-        <g fill="#103527">
-          <path d="M12 30 32 15l20 15v1.8H12Z" />
-          <path d="M18 31.8h28V44H18Z" />
-          <path d="M20.6 44h3.4v9h-3.4Zm9.7 0h3.4v9h-3.4Zm9.7 0h3.4v9h-3.4Z" />
-        </g>
-        <path d="M0 47h64v17H0Z" fill="url(#mpd-agua)" />
-        <g stroke="#69c4a8" strokeLinecap="round" fill="none">
-          <path
-            d="M9 52.5c5-2.4 10.2-2.4 15.2 0 5 2.4 10.2 2.4 15.2 0 3.3-1.6 6.8-2.1 10-1.6"
-            strokeWidth="2.6"
-            opacity=".9"
-          />
-          <path
-            d="M14 58.5c4.3-1.9 8.8-1.9 13.1 0 4.3 1.9 8.8 1.9 13.1 0"
-            strokeWidth="2.1"
-            opacity=".55"
-          />
-        </g>
-      </svg>
+      />
       <span className="brand-word">
         Mi Pueblo<em>Digital</em>
       </span>

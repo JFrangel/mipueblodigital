@@ -26,7 +26,14 @@ import { useToday } from "@/data/today";
 import { useSession } from "@/data/session";
 import { CouncilStatistics } from "./council-statistics";
 const colors = ["#174d3d", "#709c75", "#cfad63", "#9bc5c7", "#c8d1cb"];
-export function Statistics({ items }: { items: Case[] }) {
+export function Statistics({
+  items,
+  partial = false,
+}: {
+  items: Case[];
+  /** Sin señal no se pudo traer lo de la comunidad: las cifras van cortas. */
+  partial?: boolean;
+}) {
   const [category, setCategory] = useState("all"),
     [from, setFrom] = useState(""),
     [until, setUntil] = useState(""),
@@ -230,10 +237,17 @@ export function Statistics({ items }: { items: Case[] }) {
             <option key={v}>{v}</option>
           ))}
         </select>
-        <span className="tag">
-          {selected.length} registros en el periodo
-        </span>
+        <span className="tag">{selected.length} registros en el periodo</span>
       </div>
+      {/* Una cifra que no puede ser cierta no se enseña como si lo fuera. Sin
+          señal aquí solo está lo que guarda este teléfono, y un observatorio
+          comunitario calculado sobre un aparato no es un observatorio. */}
+      {partial && (
+        <p className="notice" role="status">
+          Sin conexión. Estas cifras cuentan solo lo que guarda este teléfono,
+          no el territorio entero: vuelve a abrirlas cuando haya señal.
+        </p>
+      )}
       {from && until && from > until && (
         <p className="errors" role="alert">
           La fecha inicial debe ser anterior o igual a la final.

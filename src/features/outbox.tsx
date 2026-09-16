@@ -75,9 +75,11 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       document.removeEventListener("visibilitychange", tick);
     };
   }, [owner]);
-  const pending = items.filter((i) => i.state !== "confirmed");
+  // La sesión puede cambiar antes de que termine la lectura de IndexedDB.
+  const ownItems = items.filter((i) => i.owner === owner);
+  const pending = ownItems.filter((i) => i.state !== "confirmed");
   /* Entregas ocurridas sin que nadie mirara: son una novedad, no un estado. */
-  const delivered = pendingAnnouncements(items);
+  const delivered = pendingAnnouncements(ownItems);
   if (compact) {
     /* La entrega manda sobre todo lo demás: es lo único que pasó mientras no
        se miraba. Antes este renglón decía «envíos confirmados» para siempre,
@@ -100,7 +102,9 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
           </button>
         </div>
       );
-    const text = pending.length ? `${pending.length} envío(s) pendiente(s)` : "";
+    const text = pending.length
+      ? `${pending.length} envío(s) pendiente(s)`
+      : "";
     if (!text && online && !error) return null;
     return (
       <div className="sync-status" role="status" aria-live="polite">
@@ -127,18 +131,15 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
             : `${pending.length} reportes esperan señal`}
         </h2>
         <p>
-          Ya los enviaste: <strong>salen solos</strong> en cuanto haya red o al
-          abrir la aplicación con tu sesión, sin que tengas que hacer nada. Un
-          borrador es lo contrario —espera a que tú lo mandes— y vive en Mis
-          reportes.
+          Están guardados en este dispositivo: <strong>se enviarán</strong> en
+          cuanto haya red o al abrir la aplicación con tu sesión, sin que tengas
+          que hacer nada. Un borrador es lo contrario —espera a que tú lo
+          mandes— y vive en Mis reportes.
         </p>
         {/* El permiso se ofrece aquí, donde se entiende para qué sirve, y no
             con una ventana del navegador nada más entrar. */}
         {alerts === "default" && (
-          <button
-            className="btn"
-            onClick={() => void askDeliveryAlerts()}
-          >
+          <button className="btn" onClick={() => void askDeliveryAlerts()}>
             <BellRing size={17} /> Avisarme cuando salgan
           </button>
         )}
@@ -164,12 +165,32 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <circle cx="160" cy="40" r="110" stroke="currentColor" strokeWidth="1" />
-          <circle cx="160" cy="40" r="150" stroke="currentColor" strokeWidth="1" />
-          <circle cx="160" cy="40" r="190" stroke="currentColor" strokeWidth="1" strokeDasharray="6 6" />
+          <circle
+            cx="160"
+            cy="40"
+            r="110"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <circle
+            cx="160"
+            cy="40"
+            r="150"
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+          <circle
+            cx="160"
+            cy="40"
+            r="190"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeDasharray="6 6"
+          />
         </svg>
         <span className="panel-artwork-text">
-          CONEXIÓN Y<br />RESGUARDO.
+          CONEXIÓN Y<br />
+          RESGUARDO.
         </span>
       </div>
       {pending.map((item) => (
@@ -185,7 +206,13 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
                 void retryOutgoing(item.key, item.owner)
                   /* Reintento a la vista: el resultado aparece en esta misma
                      fila, así que no hay nada que anunciar por el sistema. */
-                  .then(() => syncOutbox(item.owner, () => true, false))
+                  .then(() =>
+                    syncOutbox(
+                      item.owner,
+                      () => getSession().uid === item.owner,
+                      false,
+                    ),
+                  )
                   .catch(() => {
                     setError("No se pudo reintentar.");
                     toast("No se pudo reintentar el envío.", "error");
@@ -200,8 +227,8 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       {/* Los límites, al pie y en pequeño: importan cuando uno lleva varios
           reportes acumulados sin señal, no antes. */}
       <p className="subtle-note">
-        {pending.length} de {OUTBOX_LIMIT} reportes y{" "}
-        {megabytes.toFixed(1)} de 50 MB guardados en este teléfono.{" "}
+        {pending.length} de {OUTBOX_LIMIT} reportes y {megabytes.toFixed(1)} de
+        50 MB guardados en este teléfono.{" "}
         {online ? "Hay conexión." : "Ahora mismo no hay conexión."} No borres
         los datos del navegador mientras haya envíos pendientes.
       </p>

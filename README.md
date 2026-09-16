@@ -65,6 +65,8 @@ ahí, desde el propio Panel del Consejo.
 | Documento                                                                 | Para quién                              |
 | ------------------------------------------------------------------------- | --------------------------------------- |
 | [Arquitectura](docs/arquitectura.md)                                      | Quien va a tocar el código o sostenerlo |
+| [Empaquetado Android](docs/empaquetado-android.md)                        | Quien compile y publique la aplicación  |
+| [Auditoría del modo sin conexión](docs/auditoria-offline-2026-09-16.md)   | Quien dude de qué funciona sin señal    |
 | [Manual del ciudadano](docs/manual-ciudadano.md)                          | Quien reporta                           |
 | [Manual operativo del Consejo](docs/manual-consejo.md)                    | Quien gestiona                          |
 | [Plan de salida a producción](docs/plan-produccion-2026-09-14.md)         | Quien coordina el piloto                |
