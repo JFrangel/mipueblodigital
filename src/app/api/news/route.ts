@@ -28,7 +28,12 @@ export async function GET() {
       { items },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch {
+  } catch (error) {
+    /* A quien lee no se le cuenta el motivo —no le sirve y puede decir de más—
+       pero al registro del servidor sí. Sin esto, un 503 en producción no deja
+       rastro ninguno: la respuesta es la misma tanto si falta una credencial
+       como si el módulo no cargó, y no hay manera de saber cuál de las dos. */
+    console.error("GET /api/news falló:", error);
     return Response.json(
       {
         error:

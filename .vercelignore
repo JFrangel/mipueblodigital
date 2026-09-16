@@ -1,28 +1,39 @@
 # Qué NO se sube a Vercel.
 #
-# Sin este archivo, el despliegue intentaba subir el árbol entero: 1,9 GB de
-# caché de compilación y 192 MB de runtime local, y el subidor abortaba con un
-# «Upload aborted» que no dice nada de su causa. Vercel compila allí desde el
-# código; de aquí solo necesita viajar lo que entra en esa compilación.
+# **Este archivo REEMPLAZA a `.gitignore` para el despliegue.** No lo
+# complementa: en cuanto existe, lo que `.gitignore` protegía deja de estar
+# protegido salvo que se repita aquí. Se aprendió mal: los primeros despliegues
+# subieron `.env` y la carpeta `credentials/` con la clave privada de Firebase,
+# y además Next cargó ese `.env` en el servidor, donde
+# GOOGLE_APPLICATION_CREDENTIALS apunta a una ruta de Windows que allí no
+# existe. Toda ruta que tocara Firestore respondía 503.
 #
-# **Cada ruta va anclada con una barra al principio.** Sin ella, `firebase/`
-# no significa «la carpeta firebase de la raíz» sino «cualquier carpeta que se
-# llame así», y se llevó por delante `src/data/firebase/`: la compilación murió
-# con doce errores de módulo no encontrado, ninguno de los cuales menciona este
+# **Cada línea va anclada con una barra al principio.** Sin ella, `firebase/`
+# no significa «la carpeta firebase de la raíz» sino «cualquiera que se llame
+# así», y se llevó por delante `src/data/firebase/`: la compilación murió con
+# doce errores de módulo no encontrado, ninguno de los cuales menciona este
 # archivo.
 
-# Lo que se compila allí, o pesa y no hace falta
+# --- Secretos. Vercel tiene los suyos en su propio almacén ---
+.env
+.env.*
+!.env.example
+/credentials/
+
+# --- Lo que se compila allí, o pesa y no hace falta ---
 /.next/
 /node_modules/
 /.runtime/
 /out/
+/.npm-cache/
+*.tsbuildinfo
 
-# El empaquetado Android: se compila en el equipo, no en el servidor web
+# --- El empaquetado Android: se compila en el equipo, no en el servidor web ---
 /android/
 /capacitor/
 /capacitor.config.ts
 
-# Trabajo del proyecto que no participa en la compilación
+# --- Trabajo del proyecto que no participa en la compilación ---
 /design/
 /docs/
 /tests/
@@ -32,8 +43,9 @@
 /playwright-report/
 /.github/
 /.claude/
+*.log
 
-# Configuración de las herramientas de desarrollo
+# --- Configuración de las herramientas de desarrollo ---
 /playwright.config.ts
 /vitest.config.ts
 /eslint.config.mjs
