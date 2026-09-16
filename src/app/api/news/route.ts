@@ -1,10 +1,7 @@
-import { adminServices } from "@/server/admin-auth";
-import { applicationDefault } from "firebase-admin/app";
+import { adminServices, credentialsReady } from "@/server/admin-auth";
 export async function GET() {
   try {
-    // Fail before Firestore starts background retries when local credentials are absent.
-    if (!process.env.FIRESTORE_EMULATOR_HOST)
-      await applicationDefault().getAccessToken();
+    await credentialsReady();
     const { db } = adminServices();
     const result = await db
       .collection("news")

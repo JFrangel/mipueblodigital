@@ -1,5 +1,4 @@
-import { adminServices } from "@/server/admin-auth";
-import { applicationDefault } from "firebase-admin/app";
+import { adminServices, credentialsReady } from "@/server/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -25,8 +24,7 @@ export async function GET(
   try {
     const { id } = await params;
     if (!/^[a-zA-Z0-9-]{1,80}$/.test(id)) return missing();
-    if (!process.env.FIRESTORE_EMULATOR_HOST)
-      await applicationDefault().getAccessToken();
+    await credentialsReady();
     const { db } = adminServices();
     const news = (await db.doc(`news/${id}`).get()).data();
     if (!news || news.status !== "published") return missing();

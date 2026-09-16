@@ -1,4 +1,9 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
+import {
+  applicationDefault,
+  cert,
+  getApps,
+  initializeApp,
+} from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -11,6 +16,27 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * ¿Hay con qué autenticarse, antes de tocar Firestore?
+ *
+ * Existe para fallar pronto: sin credenciales, Firestore no falla, se queda
+ * reintentando en segundo plano y la petición se cuelga hasta agotar el tiempo.
+ *
+ * Lo comprobaban las rutas públicas de comunicados llamando a
+ * `applicationDefault()`, que busca **un archivo** en el disco o el metadato de
+ * Google Cloud. En el equipo de desarrollo eso es exactamente la credencial que
+ * hay; en un servidor de despliegue no existe ninguno de los dos, y la
+ * credencial viaja en `FIREBASE_SERVICE_ACCOUNT_KEY`. Así que el guardia
+ * rechazaba la instalación buena: las cuatro rutas respondían 503 con «Could
+ * not load the default credentials», que señala a otra cosa.
+ *
+ * Ahora conoce las tres maneras: el emulador, la variable y el archivo.
+ */
+export async function credentialsReady() {
+  if (process.env.FIRESTORE_EMULATOR_HOST) return;
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) return;
+  await applicationDefault().getAccessToken();
+}
 export function adminServices() {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) throw new ApiError(503, "Firebase no está configurado.");
@@ -28,9 +54,23 @@ export function adminServices() {
             { credential: cert(credentials), projectId },
             "mi-pueblo-server",
           );
-        } catch {
-          // Si falla, continúa con inicialización estándar
+        } catch (error) {
+          /* Este `catch` era mudo, y costó tres despliegues averiguar por qué
+             el servidor no se autenticaba: la credencial fallaba aquí, se caía
+             al camino de abajo —que en un servidor sin archivo de credenciales
+             no puede funcionar— y lo único que se veía era «Could not load the
+             default credentials», que señala a otra cosa. Nunca el valor, que
+             es una llave privada: solo si llegó y qué le pasó. */
+          console.error(
+            `No se pudo usar FIREBASE_SERVICE_ACCOUNT_KEY (${rawKey.length} caracteres):`,
+            error instanceof Error ? error.message : error,
+          );
         }
+      } else {
+        console.error(
+          "FIREBASE_SERVICE_ACCOUNT_KEY no llegó al servidor. Sin ella solo " +
+            "queda la credencial por defecto, que fuera de Google Cloud no existe.",
+        );
       }
       return initializeApp({ projectId }, "mi-pueblo-server");
     })();

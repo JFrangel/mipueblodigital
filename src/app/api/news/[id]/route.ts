@@ -1,5 +1,4 @@
-import { adminServices } from "@/server/admin-auth";
-import { applicationDefault } from "firebase-admin/app";
+import { adminServices, credentialsReady } from "@/server/admin-auth";
 import { newsMediaRequest } from "@/server/evidence";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
@@ -18,8 +17,7 @@ export async function GET(
     );
   try {
     // Fallar antes de que Firestore inicie reintentos si faltan credenciales.
-    if (!process.env.FIRESTORE_EMULATOR_HOST)
-      await applicationDefault().getAccessToken();
+    await credentialsReady();
     const { db } = adminServices();
     const snapshot = await db.doc(`news/${id}`).get();
     const n = snapshot.data();
