@@ -6311,3 +6311,43 @@ textarea {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   El desplazamiento en un teléfono
+
+   La barra superior lleva dos capas con desenfoque de fondo, animadas por el
+   propio desplazamiento. En un ordenador es un efecto bonito y gratis; en un
+   teléfono cuesta **un repintado de pantalla completa en cada fotograma**, y
+   eso es exactamente la sensación de que la lista va blanda, como si
+   arrastrara.
+
+   Se quitan donde se toca con el dedo. El degradado se queda, que es lo que
+   hace casi todo el trabajo visual; lo que se va es el desenfoque, que es lo
+   que cuesta. En el escritorio no cambia nada.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  .topbar:before {
+    display: none;
+  }
+  .topbar:after {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  /* Los puntos del banner flotan sobre una fotografía que se desplaza con el
+     resto: el mismo desenfoque, el mismo coste. Se compensa el contraste que
+     daba el desenfoque oscureciendo un poco su fondo. */
+  .banner-dots {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: rgb(6 47 41 / 0.62);
+  }
+}
+
+/* Las listas largas son lo que más se desplaza. Decirle al navegador que cada
+   fila es una caja independiente le permite no rehacer el resto al repintar
+   una, que es de donde sale buena parte del tirón. */
+.case-row,
+.news-card,
+.notice-row {
+  contain: layout paint style;
+}
