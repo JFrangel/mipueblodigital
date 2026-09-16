@@ -28,6 +28,10 @@ export default function robots(): MetadataRoute.Robots {
         "/mapa/",
         "/inicio/",
         "/reportar/",
+        /* La descarga del APK: es una compilación de prueba, no la aplicación
+           publicada, y no tiene por qué aparecer en un buscador. Quien la
+           necesita llega por el enlace que se le pasa. */
+        "/descargas/",
       ],
     },
   };
