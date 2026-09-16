@@ -6351,23 +6351,30 @@ textarea {
 .notice-row {
   contain: layout paint style;
 }
-/* La cámara como segunda salida bajo el selector de archivos: un mando de
-   texto, no otra caja grande. La entrada de archivo va escondida, como la de
-   arriba, porque quien la pulsa es la etiqueta. */
-.camera-shortcut {
-  display: block;
-  margin-top: -6px;
-  margin-bottom: 14px;
+/* Las dos maneras alternativas de traer la fotografía, bajo el cuadro: mandos
+   de texto, no otras cajas grandes, porque el camino principal sigue siendo el
+   de arriba. Las entradas de archivo van escondidas: quien las abre es la
+   etiqueta que las envuelve. */
+.upload-alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  /* Separadas del cuadro de arriba: son otra cosa, no su pie. Pegadas parecían
+     parte del recuadro de puntos. */
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+.upload-alternatives label {
   cursor: pointer;
 }
-.camera-shortcut input[type="file"] {
+.upload-alternatives input[type="file"] {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
   pointer-events: none;
 }
-.camera-shortcut .text-button {
+.upload-alternatives .text-button {
   display: inline-flex;
   align-items: center;
   gap: 7px;

@@ -10,7 +10,14 @@ import { firebaseClient } from "@/data/firebase/client";
 import { VoiceInput } from "./voice-input";
 import { WritingAssistant } from "./writing-assistant";
 import { readDraft, writeDraft } from "@/data/local-store";
-import { ArrowLeft, ArrowRight, Camera, Check, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  Files,
+  Save,
+} from "lucide-react";
 import { categories, type Case } from "@/data/catalog";
 import {
   catalogueNotice,
@@ -522,24 +529,48 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                   />
                 </span>
               </label>
-              {/* La cámara, como segunda salida y no como principal.
-                  Elegir de la galería falla en algunos teléfonos por un motivo
-                  que la aplicación no puede arreglar: Android entrega una
-                  referencia a la foto y al ir a leerla ya no sirve, sobre todo
-                  si la foto vive en la nube. Una foto recién tomada está en el
-                  aparato y siempre se puede leer. */}
-              <label className="field-label camera-shortcut">
-                <span className="text-button">
-                  <Camera size={15} /> O toma una foto ahora con la cámara
-                </span>
-                <input
-                  aria-label="Tomar fotografía con la cámara"
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => void upload(e.target.files)}
-                />
-              </label>
+              {/**
+               * Las otras dos maneras de traer la fotografía.
+               *
+               * El cuadro de arriba abre el **selector de fotos** de Android, y
+               * ahí está el problema: entrega una referencia a la imagen que a
+               * veces ya no sirve cuando se va a leer. Pasa con fotos que viven
+               * en la nube, y con algunas galerías sin más. La aplicación no
+               * puede arreglarlo desde dentro.
+               *
+               * Lo que sí puede es ofrecer los dos caminos que no dependen de
+               * ese selector:
+               *
+               * - La **cámara**, que deja la foto recién hecha en el aparato.
+               * - El **explorador de archivos**, que entrega una ruta de verdad
+               *   en lugar de una referencia prestada. Va sin `accept` a
+               *   propósito: es lo que hace que Android abra el explorador y no
+               *   vuelva a abrir el selector de fotos.
+               */}
+              <div className="upload-alternatives">
+                <label>
+                  <span className="text-button">
+                    <Camera size={15} /> Tomar una foto ahora
+                  </span>
+                  <input
+                    aria-label="Tomar fotografía con la cámara"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => void upload(e.target.files)}
+                  />
+                </label>
+                <label>
+                  <span className="text-button">
+                    <Files size={15} /> Buscar en mis archivos
+                  </span>
+                  <input
+                    aria-label="Buscar la fotografía en los archivos"
+                    type="file"
+                    onChange={(e) => void upload(e.target.files)}
+                  />
+                </label>
+              </div>
               {preparing && <p role="status">Preparando fotografía…</p>}
               {photos[0] && (
                 <div className="evidence-preview">

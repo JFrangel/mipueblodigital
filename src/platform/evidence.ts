@@ -57,8 +57,8 @@ const ACEPTADOS = ["image/jpeg", "image/png", "image/webp"];
  * útil es decir qué hacer. Y hay dos cosas que hacer, las dos sencillas.
  */
 const NO_SE_PUDO_LEER =
-  "Tu teléfono no dejó leer esa fotografía. Pasa con algunas galerías, y con fotos que están guardadas en la nube. " +
-  "Prueba a tomarla con la cámara desde aquí, que es lo que nunca falla; o ábrela primero en la galería y vuelve a elegirla.";
+  "Tu teléfono no dejó leer esa fotografía: la galería la entrega de una manera que este navegador no puede abrir. " +
+  "Usa «Buscar en mis archivos» o «Tomar una foto ahora», aquí abajo: por esos dos caminos sí llega.";
 
 async function formatoReal(file: File): Promise<string> {
   /* Devuelve el tipo si lo reconoce, y "" si leyó la cabecera y no es una
