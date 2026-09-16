@@ -1,0 +1,33 @@
+# Qué NO se sube a Vercel.
+#
+# Sin este archivo, el despliegue intentaba subir el árbol entero: 1,9 GB de
+# caché de compilación y 192 MB de runtime local, y el subidor abortaba sin
+# decir por qué. Vercel compila allí desde el código; de aquí solo necesita
+# viajar lo que entra en esa compilación.
+
+# Lo que se compila allí, o pesa y no hace falta
+.next/
+node_modules/
+.runtime/
+out/
+
+# El empaquetado Android: se compila en el equipo, no en el servidor web
+android/
+capacitor/
+capacitor.config.ts
+
+# Trabajo del proyecto que no participa en la compilación
+design/
+docs/
+tests/
+scripts/
+firebase/
+test-results/
+playwright-report/
+.github/
+.claude/
+
+# Configuración de las herramientas de desarrollo
+playwright.config.ts
+vitest.config.ts
+eslint.config.mjs
