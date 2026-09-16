@@ -60,11 +60,9 @@ test("el borrador conserva foto, punto y texto para enviarlo después", async ({
       mimeType: "image/jpeg",
       buffer: Buffer.from("esto no es una imagen"),
     });
-  await expect(
-    page.getByText(
-      "La imagen está dañada o no se puede leer. Selecciona otra fotografía.",
-    ),
-  ).toBeVisible();
+  /* El mensaje dice ahora qué archivo era. Se comprobó que adivinar el motivo
+     desde aquí no funciona: hacen falta los datos del archivo que falló. */
+  await expect(page.getByText(/No se pudo leer esa fotografía/)).toBeVisible();
 
   await page
     .getByLabel("Evidencia fotográfica", { exact: true })

@@ -6,7 +6,12 @@ test("dictado se revisa y añade sin reemplazar el relato", async ({ page }) => 
       onresult?: (event: unknown) => void;
       onend?: () => void;
       start() {
+        /* Como lo manda el navegador de verdad: `resultIndex` dice desde dónde
+           es nuevo lo que llega. Sin él, el doble no representaba la API y
+           dejaba pasar justo el fallo que se arregló —que en el teléfono se
+           repetían las palabras—. */
         this.onresult?.({
+          resultIndex: 0,
           results: [
             { isFinal: true, 0: { transcript: "El muelle está dañado." } },
           ],

@@ -12,6 +12,7 @@ import "@fontsource-variable/caveat";
 import "@fontsource-variable/bricolage-grotesque/wght.css";
 import "./globals.css";
 import { PwaRegistration } from "@/features/pwa";
+import { NativeShell } from "@/features/native-shell";
 export const metadata: Metadata = {
   title: "Mi Pueblo Digital · Río Satinga",
   description:
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="es">
       <body>
         <PwaRegistration />
+        <NativeShell />
         {children}
       </body>
     </html>

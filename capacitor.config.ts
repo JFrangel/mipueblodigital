@@ -56,6 +56,33 @@ const config: CapacitorConfig = {
        el teléfono se presta, y ese es justamente el riesgo del territorio. */
     webContentsDebuggingEnabled: false,
   },
+  plugins: {
+    /**
+     * Entrar con Google, de verdad.
+     *
+     * `signInWithPopup` abre una ventana del navegador, y Google **rechaza el
+     * acceso desde vistas web incrustadas**: Android lo manda al navegador del
+     * sistema, la sesión queda allí —en otras galletas, en otro sitio— y a la
+     * aplicación no vuelve nunca. No es que se vea raro: no funciona.
+     *
+     * El acceso nativo usa la cuenta que ya está puesta en el teléfono, sin
+     * salir de la aplicación, y devuelve una credencial con la que se firma en
+     * Firebase. Es además lo que la gente espera: elegir su cuenta de una
+     * lista, no teclear una contraseña.
+     */
+    FirebaseAuthentication: {
+      skipNativeAuth: false,
+      providers: ["google.com"],
+    },
+    SplashScreen: {
+      /* Lo que se ve mientras la ventana alcanza la aplicación. Sin esto, el
+         arranque es un rectángulo blanco y luego, de golpe, una página. */
+      launchAutoHide: false,
+      backgroundColor: "#f5f7f2",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+    },
+  },
 };
 
 export default config;

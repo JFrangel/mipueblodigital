@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "104601230062",
+    "project_id": "mipueblo-662d2",
+    "storage_bucket": "mipueblo-662d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104601230062:android:afc3281bd8906fa6a771ff",
+        "android_client_info": {
+          "package_name": "co.riosatinga.mipueblodigital"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104601230062-1mnjn1fq8kefqbk6onjlebdf1mj7ed8n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "co.riosatinga.mipueblodigital",
+            "certificate_hash": "f0700a4db6f250cb9379fa8f46be14b8de01eb7b"
+          }
+        },
+        {
+          "client_id": "104601230062-ujl58bqu2fh8ov0e6i4gprbf9ghvtqc4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAD2_nYzkMMRmmNoN1b88oy0Imkwtdxr0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104601230062-ujl58bqu2fh8ov0e6i4gprbf9ghvtqc4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

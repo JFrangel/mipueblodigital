@@ -31,6 +31,7 @@ import {
   type User,
 } from "firebase/auth";
 import { firebaseClient } from "@/data/firebase/client";
+import { entrarConGoogleNativo, esNativo } from "@/platform/native";
 import { GoogleMark } from "@/components/google-mark";
 import { Logo } from "@/components/ui";
 import { registrationError, authError } from "@/domain/auth";
@@ -140,7 +141,12 @@ export function Access() {
     setError("");
     setMessage("");
     try {
-      await signInWithPopup(firebaseClient().auth, new GoogleAuthProvider());
+      /* Dentro de la aplicación instalada, el acceso nativo; en el navegador,
+         la ventana de siempre. Ver src/platform/native.ts: no es una
+         preferencia, es que la ventana no funciona ahí. */
+      if (esNativo()) await entrarConGoogleNativo();
+      else
+        await signInWithPopup(firebaseClient().auth, new GoogleAuthProvider());
       setPassword("");
     } catch (error) {
       setError(authError(error));
@@ -213,220 +219,224 @@ export function Access() {
           son dos bloques, no uno. Antes el borde del vidrio cruzaba por mitad
           del subtítulo y lo partía en dos fondos distintos. */}
       <section className={styles.intro}>
-          <span className={styles.eyebrow}>ACCESO A MI PUEBLO</span>
-          <h1 className={styles.title}>
-            {user ? (
-              "Ya estás en casa."
-            ) : registering ? (
-              <>
-                Hagamos <em>comunidad.</em>
-              </>
-            ) : (
-              <>
-                Tu comunidad, <em>más cerca.</em>
-              </>
-            )}
-          </h1>
-          <p className={styles.lead}>
-            {user
-              ? "Continúa donde lo dejaste."
-              : registering ? "Crea tu cuenta para reportar y seguir los cambios de tu territorio." : "Inicia sesión para acompañar lo que pasa en tu territorio."}
-          </p>
-      </section>
-      <section className={styles.panel}>
-          {farewell && (
-            <p className={styles.notice} role="status">
-              {farewell === "eliminada"
-                ? "Tu cuenta fue eliminada y tus expedientes quedaron sin datos personales. Gracias por haber cuidado el territorio con nosotros."
-                : "Tu acceso fue retirado, pero la eliminación no terminó por completo. El equipo responsable del Consejo debe finalizarla."}
-            </p>
-          )}
-          {offline && (
-            <p className={styles.notice} role="status">
-              <WifiOff size={16} /> Sin conexión. Necesitas internet para
-              iniciar sesión.
-            </p>
-          )}
-          {!ready ? (
-            <p role="status">Comprobando conexión…</p>
-          ) : user ? (
+        <span className={styles.eyebrow}>ACCESO A MI PUEBLO</span>
+        <h1 className={styles.title}>
+          {user ? (
+            "Ya estás en casa."
+          ) : registering ? (
             <>
-              <p>
-                Conectado como <strong>{user.email}</strong>.
-              </p>
-              <p className={styles.notice}>
-                Ya puedes reportar. Verificar el correo es opcional.
-              </p>
-              <Link className={styles.primary} href="/inicio/">
-                Continuar a mi comunidad
-                <i aria-hidden="true">
-                  <ArrowRight size={19} />
-                </i>
-              </Link>
-              <button
-                className={styles.quiet}
-                disabled={busy}
-                onClick={async () => {
-                  setBusy(true);
-                  try {
-                    await signOut(firebaseClient().auth);
-                  } catch {
-                    setError("No se pudo cerrar la sesión.");
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-              >
-                Cerrar sesión
-              </button>
+              Hagamos <em>comunidad.</em>
             </>
           ) : (
-            <form onSubmit={login}>
-              {registering && (
-                <label className={styles.field}>
-                  Tu nombre
-                  <input
-                    autoComplete="name"
-                    required
-                    minLength={2}
-                    maxLength={80}
-                    disabled={busy}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-              )}
+            <>
+              Tu comunidad, <em>más cerca.</em>
+            </>
+          )}
+        </h1>
+        <p className={styles.lead}>
+          {user
+            ? "Continúa donde lo dejaste."
+            : registering
+              ? "Crea tu cuenta para reportar y seguir los cambios de tu territorio."
+              : "Inicia sesión para acompañar lo que pasa en tu territorio."}
+        </p>
+      </section>
+      <section className={styles.panel}>
+        {farewell && (
+          <p className={styles.notice} role="status">
+            {farewell === "eliminada"
+              ? "Tu cuenta fue eliminada y tus expedientes quedaron sin datos personales. Gracias por haber cuidado el territorio con nosotros."
+              : "Tu acceso fue retirado, pero la eliminación no terminó por completo. El equipo responsable del Consejo debe finalizarla."}
+          </p>
+        )}
+        {offline && (
+          <p className={styles.notice} role="status">
+            <WifiOff size={16} /> Sin conexión. Necesitas internet para iniciar
+            sesión.
+          </p>
+        )}
+        {!ready ? (
+          <p role="status">Comprobando conexión…</p>
+        ) : user ? (
+          <>
+            <p>
+              Conectado como <strong>{user.email}</strong>.
+            </p>
+            <p className={styles.notice}>
+              Ya puedes reportar. Verificar el correo es opcional.
+            </p>
+            <Link className={styles.primary} href="/inicio/">
+              Continuar a mi comunidad
+              <i aria-hidden="true">
+                <ArrowRight size={19} />
+              </i>
+            </Link>
+            <button
+              className={styles.quiet}
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await signOut(firebaseClient().auth);
+                } catch {
+                  setError("No se pudo cerrar la sesión.");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </>
+        ) : (
+          <form onSubmit={login}>
+            {registering && (
               <label className={styles.field}>
-                Correo electrónico
+                Tu nombre
                 <input
-                  type="email"
-                  inputMode="email"
-                  placeholder="tu@correo.com"
-                  disabled={busy}
-                  spellCheck={false}
-                  autoCapitalize="none"
-                  autoComplete="username"
+                  autoComplete="name"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  minLength={2}
+                  maxLength={80}
+                  disabled={busy}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 />
               </label>
-              <div className={`${styles.field} ${styles.password}`}>
-                <label className={styles.field}>
-                  Contraseña
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    autoComplete={
-                      registering ? "new-password" : "current-password"
-                    }
-                    placeholder="Tu contraseña"
-                    disabled={busy}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className={styles.reveal}
-                  aria-label={
-                    showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+            )}
+            <label className={styles.field}>
+              Correo electrónico
+              <input
+                type="email"
+                inputMode="email"
+                placeholder="tu@correo.com"
+                disabled={busy}
+                spellCheck={false}
+                autoCapitalize="none"
+                autoComplete="username"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </label>
+            <div className={`${styles.field} ${styles.password}`}>
+              <label className={styles.field}>
+                Contraseña
+                <input
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={
+                    registering ? "new-password" : "current-password"
                   }
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((value) => !value)}
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}{" "}
-                </button>
-              </div>
-              {registering && (
-                <label className={styles.field}>
-                  Confirmar contraseña
-                  <input
-                    aria-label="Confirmar contraseña"
-                    type="password"
-                    autoComplete="new-password"
-                    required
-                    disabled={busy}
-                    value={confirmation}
-                    onChange={(e) => setConfirmation(e.target.value)}
-                  />
-                  <small>Usa al menos 12 caracteres.</small>
-                </label>
-              )}
+                  placeholder="Tu contraseña"
+                  disabled={busy}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </label>
               <button
-                className={styles.primary}
-                disabled={!configured || busy || offline}
-              >
-                {busy
-                  ? "Conectando…"
-                  : registering
-                    ? "Crear cuenta"
-                    : "Iniciar sesión"}
-                <i aria-hidden="true">
-                  <ArrowRight size={19} />
-                </i>
-              </button>
-              <button
-                className={styles.quiet}
                 type="button"
-                disabled={!configured || busy || offline}
-                onClick={reset}
+                className={styles.reveal}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((value) => !value)}
               >
-                Olvidé mi contraseña
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}{" "}
               </button>
-              {/* Separador: hasta aquí el acceso con contraseña; de aquí en
+            </div>
+            {registering && (
+              <label className={styles.field}>
+                Confirmar contraseña
+                <input
+                  aria-label="Confirmar contraseña"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  disabled={busy}
+                  value={confirmation}
+                  onChange={(e) => setConfirmation(e.target.value)}
+                />
+                <small>Usa al menos 12 caracteres.</small>
+              </label>
+            )}
+            <button
+              className={styles.primary}
+              disabled={!configured || busy || offline}
+            >
+              {busy
+                ? "Conectando…"
+                : registering
+                  ? "Crear cuenta"
+                  : "Iniciar sesión"}
+              <i aria-hidden="true">
+                <ArrowRight size={19} />
+              </i>
+            </button>
+            <button
+              className={styles.quiet}
+              type="button"
+              disabled={!configured || busy || offline}
+              onClick={reset}
+            >
+              Olvidé mi contraseña
+            </button>
+            {/* Separador: hasta aquí el acceso con contraseña; de aquí en
                   adelante, la otra vía. Sin él los dos botones se leen como
                   alternativas del mismo peso. */}
-              <span className={styles.or} aria-hidden="true">
-                o
-              </span>
-              <button
-                type="button"
-                className={styles.google}
-                disabled={busy || offline || !configured}
-                onClick={google}
-              >
-                <GoogleMark /> Continuar con Google
-              </button>
-              <button
-                type="button"
-                className={styles.quiet}
-                disabled={busy}
-                onClick={() => {
-                  setRegistering(!registering);
-                  setError("");
-                  setMessage("");
-                  setPassword("");
-                  setConfirmation("");
-                }}
-              >
-                {registering ? "Ya tengo una cuenta" : "Crear una cuenta"}
-              </button>
-            </form>
-          )}
-          {error && (
-            <p className={styles.errors} role="alert">
-              {error}
-            </p>
-          )}
-          {message && (
-            <p role="status" className={styles.notice}>
-              {message}
-            </p>
-          )}
-          {/* El nombre anterior, «Explorar la demostración», dejó de ser cierto
+            <span className={styles.or} aria-hidden="true">
+              o
+            </span>
+            <button
+              type="button"
+              className={styles.google}
+              disabled={busy || offline || !configured}
+              onClick={google}
+            >
+              <GoogleMark /> Continuar con Google
+            </button>
+            <button
+              type="button"
+              className={styles.quiet}
+              disabled={busy}
+              onClick={() => {
+                setRegistering(!registering);
+                setError("");
+                setMessage("");
+                setPassword("");
+                setConfirmation("");
+              }}
+            >
+              {registering ? "Ya tengo una cuenta" : "Crear una cuenta"}
+            </button>
+          </form>
+        )}
+        {error && (
+          <p className={styles.errors} role="alert">
+            {error}
+          </p>
+        )}
+        {message && (
+          <p role="status" className={styles.notice}>
+            {message}
+          </p>
+        )}
+        {/* El nombre anterior, «Explorar la demostración», dejó de ser cierto
               al retirar los reportes fabricados: lo que hay detrás es la
               aplicación de verdad, vacía hasta que alguien reporte. */}
-          <Link href="/inicio/" className={styles.guest}>
-            Entrar sin iniciar sesión
-            <small>
-              Puedes ver el territorio y preparar un reporte. Enviarlo al
-              Consejo necesita una cuenta.
-            </small>
-          </Link>
+        <Link href="/inicio/" className={styles.guest}>
+          Entrar sin iniciar sesión
+          <small>
+            Puedes ver el territorio y preparar un reporte. Enviarlo al Consejo
+            necesita una cuenta.
+          </small>
+        </Link>
       </section>
       <footer className={styles.foot}>
-        <span>Mi Pueblo Digital · Gran Consejo Comunitario del Río Satinga</span>
+        <span>
+          Mi Pueblo Digital · Gran Consejo Comunitario del Río Satinga
+        </span>
       </footer>
     </main>
   );

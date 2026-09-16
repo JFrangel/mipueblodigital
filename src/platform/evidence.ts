@@ -37,8 +37,33 @@ export type PreparedEvidence = {
  */
 const ACEPTADOS = ["image/jpeg", "image/png", "image/webp"];
 
+/**
+ * Qué es el archivo de verdad, mirando sus primeros bytes.
+ *
+ * No se le pregunta al archivo qué dice ser: en un teléfono miente o calla. Se
+ * mira su firma, que es lo que mira también el servidor.
+ */
+async function formatoReal(file: File): Promise<string> {
+  const cabeza = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+  const empieza = (...bytes: number[]) =>
+    bytes.every((b, i) => cabeza[i] === b);
+  const texto = (desde: number, largo: number) =>
+    String.fromCharCode(...cabeza.slice(desde, desde + largo));
+  if (empieza(0xff, 0xd8, 0xff)) return "image/jpeg";
+  if (empieza(0x89, 0x50, 0x4e, 0x47)) return "image/png";
+  if (texto(0, 4) === "RIFF" && texto(8, 4) === "WEBP") return "image/webp";
+  /* Lo que fotografía un iPhone por defecto. Ningún navegador de Android lo
+     abre, y decirlo por su nombre permite explicar qué hacer. */
+  if (texto(4, 4) === "ftyp" && /hei|mif1|msf1|avif/.test(texto(8, 4)))
+    return texto(8, 4).startsWith("avi") ? "image/avif" : "image/heic";
+  return "";
+}
+
 export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
-  if (file.size === 0) throw new Error("El archivo está vacío.");
+  if (file.size === 0)
+    throw new Error(
+      "Ese archivo llegó vacío. Suele pasar con fotos que están solo en la nube: ábrela primero en la galería para que se descargue, y vuelve a intentarlo.",
+    );
 
   /**
    * Se decodifica **antes** de juzgar el tipo.
@@ -51,14 +76,44 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
    *
    * Si el navegador la decodifica, es una imagen. Esa es la prueba de verdad.
    */
-  const bitmap = await decode(file);
+  const formato = await formatoReal(file);
+  const bitmap = await decode(file).catch(async (error) => {
+    /**
+     * Tercer camino: mandarla sin abrirla.
+     *
+     * Decodificar aquí servía para **medir** —cuántos megapíxeles tiene, si
+     * hay que reducirla— no para validarla: de eso se encarga el servidor, que
+     * la abre entera con una biblioteca de verdad. Así que si el navegador no
+     * puede con ella pero sus primeros bytes dicen que es una imagen de las
+     * que el servidor sabe verificar, y cabe, se manda tal cual.
+     *
+     * Es lo que salva el caso que no se puede prever desde aquí: un teléfono
+     * concreto, una galería concreta, un códec que a ese navegador le falta.
+     * Rechazar significaba que el reporte no existe.
+     */
+    if (ACEPTADOS.includes(formato) && file.size <= MAX_BYTES) return null;
+    if (formato === "image/heic" || formato === "image/avif")
+      throw new Error(
+        "Tu teléfono guarda las fotos en un formato que este navegador no abre (HEIC). En Ajustes → Cámara → Formatos, elige «Más compatible», o comparte la foto desde la galería y se convertirá sola.",
+      );
+    throw error;
+  });
+
+  /* Sin abrir, pero comprobada por su firma y por su peso: viaja el original. */
+  if (!bitmap)
+    return {
+      dataUrl: await readAsDataUrl(file),
+      reduced: false,
+      megapixels: 0,
+    };
+
   try {
     const { width: ancho, height: alto } = medidas(bitmap);
     const pixels = ancho * alto;
     /* Cabe entera **y** el servidor sabe verificar su formato: el original
        gana siempre. */
     if (
-      ACEPTADOS.includes(file.type) &&
+      ACEPTADOS.includes(formato || file.type) &&
       pixels <= MAX_PIXELS &&
       file.size <= MAX_BYTES
     )
@@ -126,7 +181,7 @@ export async function decode(file: File): Promise<Decodificada> {
   } catch {
     URL.revokeObjectURL(url);
     throw new Error(
-      "No se pudo leer esa fotografía. Puede estar dañada, o ser un formato que este teléfono no abre: prueba con otra.",
+      `No se pudo leer esa fotografía (${file.type || "sin tipo"}, ${Math.round(file.size / 1024)} kB). Puede estar dañada o ser de un formato que este teléfono no abre: prueba con otra.`,
     );
   }
 }

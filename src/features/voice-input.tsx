@@ -95,7 +95,10 @@ export function VoiceInput({
     let cerrado = "";
     current.onresult = (event) => {
       let provisional = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      /* `resultIndex` está en la norma y lo mandan todos, pero si algún día
+         llega sin él se empieza por el principio: peor es no transcribir. */
+      const desde = event.resultIndex ?? 0;
+      for (let i = desde; i < event.results.length; i++) {
         const trozo = event.results[i][0].transcript;
         if (event.results[i].isFinal) cerrado += trozo;
         else provisional += trozo;
