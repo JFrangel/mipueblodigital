@@ -47,6 +47,30 @@ describe("unir los trozos del dictado", () => {
     expect(texto).not.toMatch(/hubohubo|hubo un hubo/);
   });
 
+  /**
+   * Tercera secuencia del teléfono. Aquí el reconocimiento **reescribe** lo que
+   * ya había dicho al crecer: pone la mayúscula inicial. Comparando literal,
+   * «esto es» y «Esto es una» son frases distintas y se suman.
+   */
+  it("la mayúscula que añade al crecer no crea una frase nueva", () => {
+    expect(
+      unir(["esto es", "Esto es", "Esto es una", "Esto es una prueba"]),
+    ).toBe("Esto es una prueba");
+  });
+
+  /** Y lo mismo con las tildes: «derrumbé» pasó a «derrumbe» al cerrarse. */
+  it("una tilde corregida tampoco", () => {
+    expect(
+      unir(["hubo derrumbé en la vía", "hubo derrumbe en la vía ayer"]),
+    ).toBe("hubo derrumbe en la vía ayer");
+  });
+
+  it("ni una coma añadida", () => {
+    expect(unir(["hubo derrumbe", "Hubo derrumbe, en la vía"])).toBe(
+      "Hubo derrumbe, en la vía",
+    );
+  });
+
   it("lo provisional más corto no borra lo que ya se llevaba", () => {
     expect(unir(["el muelle está roto", "el muelle"])).toBe(
       "el muelle está roto",
