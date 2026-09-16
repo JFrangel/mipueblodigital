@@ -38,8 +38,9 @@ export function NativeShell() {
       await StatusBar.setBackgroundColor({ color: "#104734" }).catch(
         () => undefined,
       );
-      /* La pantalla de arranque se retira cuando hay algo que enseñar, no
-         antes: el hueco entre las dos es justo el rectángulo blanco. */
+      /* La pantalla de arranque se retira en cuanto hay algo que enseñar. Se
+         retira sola a los dos segundos de todos modos: esto solo la adelanta
+         cuando la aplicación arranca antes, que es casi siempre. */
       await SplashScreen.hide().catch(() => undefined);
     })();
     return () => {

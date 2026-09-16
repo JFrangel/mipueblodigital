@@ -55,6 +55,15 @@ const config: CapacitorConfig = {
     /* La ventana no guarda contraseñas ni rellena formularios por su cuenta:
        el teléfono se presta, y ese es justamente el riesgo del territorio. */
     webContentsDebuggingEnabled: false,
+    /**
+     * Que el *service worker* pueda contestar dentro de la ventana.
+     *
+     * Todo el trabajo sin conexión de esta aplicación lo sostiene el service
+     * worker, y en una ventana de Android no gobierna las peticiones por su
+     * cuenta: hay que decirlo. Sin esto, la aplicación instalada se queda sin
+     * red aunque el navegador de ese mismo teléfono funcione perfectamente.
+     */
+    resolveServiceWorkerRequests: true,
   },
   plugins: {
     /**
@@ -75,10 +84,21 @@ const config: CapacitorConfig = {
       providers: ["google.com"],
     },
     SplashScreen: {
-      /* Lo que se ve mientras la ventana alcanza la aplicación. Sin esto, el
-         arranque es un rectángulo blanco y luego, de golpe, una página. */
-      launchAutoHide: false,
-      backgroundColor: "#f5f7f2",
+      /**
+       * Lo que se ve mientras la ventana alcanza la aplicación.
+       *
+       * **Se retira sola pase lo que pase.** La puse para que la escondiera la
+       * aplicación al estar lista, y sin conexión la aplicación no llegaba a
+       * arrancar: el emblema se quedaba ahí para siempre, sin decir nada, y no
+       * había manera de salir de él. Una pantalla de arranque que puede
+       * atrapar a alguien es peor que no tenerla.
+       *
+       * Dos segundos: lo suficiente para tapar el arranque, poco para que
+       * estorbe. La aplicación la esconde antes si termina antes.
+       */
+      launchAutoHide: true,
+      launchShowDuration: 2000,
+      backgroundColor: "#123f39",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },
