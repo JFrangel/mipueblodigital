@@ -30,7 +30,9 @@ test("bienvenida, tema oscuro y navegación", async ({ page }) => {
   ]);
   await page.goto("/bienvenida/");
   await expect(
-    page.getByRole("heading", { name: "Tu voz. Tu territorio. Nuestra comunidad." }),
+    page.getByRole("heading", {
+      name: "Tu voz. Tu territorio. Nuestra comunidad.",
+    }),
   ).toBeVisible();
   // El HTML estático se pinta antes de hidratar: el primer clic puede perderse.
   await expect(async () => {
@@ -123,7 +125,9 @@ test("acceso presenta formulario sin simular una sesión", async ({ page }) => {
     0,
   );
 });
-test("mapa filtra por estado y comunidad presenta fuentes", async ({ page }) => {
+test("mapa filtra por estado y comunidad presenta fuentes", async ({
+  page,
+}) => {
   await seedCases(page);
   await page.goto("/mapa/");
   const listado = page.locator(".map-results .case-row");
@@ -148,7 +152,9 @@ test("mapa filtra por estado y comunidad presenta fuentes", async ({ page }) => 
   await expect(page.getByText("Cargando comunicados…")).toHaveCount(0);
   const cards = page.locator(".news-card");
   await expect(cards.first()).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Tipo de noticia" })).toBeVisible();
+  await expect(
+    page.getByRole("combobox", { name: "Tipo de noticia" }),
+  ).toBeVisible();
   // Todo comunicado se publica con una portada del catálogo.
   expect(await page.locator(".news-card .news-art").count()).toBe(
     await cards.count(),
@@ -224,6 +230,9 @@ test("el tema oscuro conserva el color de las gráficas y del mapa", async ({
 test("el asistente de análisis no existe para quien no es del Consejo", async ({
   page,
 }) => {
+  /* Hace falta algo que contar: sin sesión y sin reportes, la pantalla
+     dice que no puede saberlo en vez de enseñar ceros. */
+  await seedCases(page);
   await page.goto("/estadisticas/");
   // La lectura nombra expedientes y señala a quién le falta responsable: es
   // material de trabajo del Consejo, no del listado público.
@@ -256,6 +265,9 @@ test("la redacción con IA se cierra en el servidor, no solo en la interfaz", as
 test("el informe se arma con la portada y el cierre del Consejo", async ({
   page,
 }) => {
+  /* Hace falta algo que contar: sin sesión y sin reportes, la pantalla
+     dice que no puede saberlo en vez de enseñar ceros. */
+  await seedCases(page);
   await page.goto("/estadisticas/");
   const portada = page.locator(".report-cover");
   const cierre = page.locator(".report-foot");
@@ -280,6 +292,7 @@ test("el informe se arma con la portada y el cierre del Consejo", async ({
 test("la portada del informe declara el filtro con el que se emitió", async ({
   page,
 }) => {
+  await seedCases(page);
   await page.goto("/estadisticas/");
   await page
     .getByRole("combobox", { name: "Vereda estadística" })

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { openDetails } from "./report-flow";
+import { seedCases } from "./seed-cases";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import sharp from "sharp";
@@ -159,6 +160,9 @@ test("documentación y análisis explican límites", async ({ page }) => {
       exact: true,
     }),
   ).toBeVisible();
+  /* Con algo que contar: sin sesión y sin reportes, la pantalla dice que
+     no puede saberlo en vez de enseñar ceros. */
+  await seedCases(page);
   await page.goto("/estadisticas/");
   // Los límites de la lectura se declaran donde todos los ven, no solo el
   // Consejo: la salvedad acompaña a las cifras públicas.

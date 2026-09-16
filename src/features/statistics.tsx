@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Sparkles,
   ArrowDownToLine,
+  BarChart3,
   FileText,
   CheckCircle2,
   ChevronRight,
@@ -29,10 +30,13 @@ const colors = ["#174d3d", "#709c75", "#cfad63", "#9bc5c7", "#c8d1cb"];
 export function Statistics({
   items,
   partial = false,
+  signed = true,
 }: {
   items: Case[];
   /** Sin señal no se pudo traer lo de la comunidad: las cifras van cortas. */
   partial?: boolean;
+  /** Sin sesión no hay territorio que contar: no es que valga cero. */
+  signed?: boolean;
 }) {
   const [category, setCategory] = useState("all"),
     [from, setFrom] = useState(""),
@@ -132,6 +136,52 @@ export function Statistics({
     a.click();
     URL.revokeObjectURL(url);
   }
+  /**
+   * Sin sesión no se enseñan ceros.
+   *
+   * Los reportes del territorio son de quienes forman la comunidad, así que
+   * sin entrar no llega ninguno y la pantalla mostraba «0 registros en el
+   * periodo» y «Tasa de solución 0 %». Eso no es lo que pasa: lo que pasa es
+   * que el sistema **no puede saberlo**, y un cero dicho con esa seguridad
+   * afirma que el territorio no tiene casos abiertos.
+   *
+   * Es la misma regla que el inicio ya seguía —allí las cifras salen como «—»
+   * y el texto invita a entrar— y la que sigue el historial de la comunidad.
+   * Aquí faltaba.
+   *
+   * Con reportes guardados en el aparato sí se cuentan, porque existen y son de
+   * quien mira; lo que se dice entonces es que son **de este teléfono**, no del
+   * territorio. Esconder lo que la persona sí tiene sería el error contrario.
+   */
+  if (!signed && !items.length)
+    return (
+      <>
+        <div className="page-intro">
+          <div>
+            <span className="eyebrow">OBSERVATORIO COMUNITARIO</span>
+            <h1>Datos para cuidar mejor.</h1>
+            <p>Una lectura transparente de los reportes y su seguimiento.</p>
+          </div>
+        </div>
+        <section className="panel account-empty">
+          <BarChart3 size={36} />
+          <h2>Las cifras son de la comunidad</h2>
+          <p role="status">
+            Los reportes del territorio los ve quien forma parte de la
+            comunidad. Entra con tu cuenta y aquí verás cuántos hay, en qué
+            estado están y cuánto se tarda en atenderlos.
+          </p>
+          <div className="account-actions">
+            <Link className="btn primary" href="/acceso/">
+              Iniciar sesión
+            </Link>
+            <Link className="btn" href="/documentacion/">
+              Cómo funciona
+            </Link>
+          </div>
+        </section>
+      </>
+    );
   return (
     <>
       <div className="page-intro">
@@ -242,11 +292,18 @@ export function Statistics({
       {/* Una cifra que no puede ser cierta no se enseña como si lo fuera. Sin
           señal aquí solo está lo que guarda este teléfono, y un observatorio
           comunitario calculado sobre un aparato no es un observatorio. */}
-      {partial && (
+      {partial ? (
         <p className="notice" role="status">
           Sin conexión. Estas cifras cuentan solo lo que guarda este teléfono,
           no el territorio entero: vuelve a abrirlas cuando haya señal.
         </p>
+      ) : (
+        !signed && (
+          <p className="notice" role="status">
+            Sin sesión. Estas cifras son solo de los reportes guardados en este
+            teléfono. Entra con tu cuenta para ver los del territorio.
+          </p>
+        )
       )}
       {from && until && from > until && (
         <p className="errors" role="alert">

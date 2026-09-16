@@ -43,6 +43,27 @@ const ACEPTADOS = ["image/jpeg", "image/png", "image/webp"];
  * No se le pregunta al archivo qué dice ser: en un teléfono miente o calla. Se
  * mira su firma, que es lo que mira también el servidor.
  */
+/**
+ * El archivo que el teléfono entrega y luego no deja leer.
+ *
+ * `NotReadableError` — «The requested file could not be read, typically due to
+ * permission problems…». No es un formato raro ni un archivo corrupto: es que
+ * los **bytes no están**. Android entrega una referencia a la fotografía y
+ * cuando se va a leer ya no sirve. Pasa sobre todo con fotos que viven en la
+ * nube y no en el aparato, y con las que se eligen desde «Recientes» o desde
+ * otra aplicación que retira el permiso al salir.
+ *
+ * No hay nada que la aplicación pueda arreglar por su cuenta, así que lo único
+ * útil es decir qué hacer. Y hay dos cosas que hacer, las dos sencillas.
+ */
+const NO_SE_PUDO_LEER =
+  "Tu teléfono no dejó leer esa fotografía. Suele pasar con fotos que están guardadas en la nube y no en el aparato. " +
+  "Ábrela primero en tu galería para que se descargue y vuelve a elegirla, o toma una nueva con la cámara desde aquí.";
+
+const ilegible = (error: unknown) =>
+  error instanceof DOMException &&
+  (error.name === "NotReadableError" || error.name === "NotFoundError");
+
 async function formatoReal(file: File): Promise<string> {
   const cabeza = new Uint8Array(await file.slice(0, 16).arrayBuffer());
   const empieza = (...bytes: number[]) =>
@@ -76,8 +97,14 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
    *
    * Si el navegador la decodifica, es una imagen. Esa es la prueba de verdad.
    */
-  const formato = await formatoReal(file);
+  /* Leer los primeros bytes es además la primera prueba de que el archivo se
+     puede leer: si falla aquí, no hay nada que decodificar ni que mandar. */
+  const formato = await formatoReal(file).catch((error) => {
+    if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
+    throw error;
+  });
   const bitmap = await decode(file).catch(async (error) => {
+    if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
     /**
      * Tercer camino: mandarla sin abrirla.
      *
@@ -102,7 +129,10 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
   /* Sin abrir, pero comprobada por su firma y por su peso: viaja el original. */
   if (!bitmap)
     return {
-      dataUrl: await readAsDataUrl(file),
+      dataUrl: await readAsDataUrl(file).catch((error) => {
+        if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
+        throw error;
+      }),
       reduced: false,
       megapixels: 0,
     };
@@ -118,7 +148,10 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
       file.size <= MAX_BYTES
     )
       return {
-        dataUrl: await readAsDataUrl(file),
+        dataUrl: await readAsDataUrl(file).catch((error) => {
+          if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
+          throw error;
+        }),
         reduced: false,
         megapixels: round(pixels),
       };

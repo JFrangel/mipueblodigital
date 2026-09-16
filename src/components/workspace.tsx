@@ -712,7 +712,11 @@ export function Workspace({
               un teléfono. Es el mismo error que ya se había corregido en el
               mapa y en el historial, en la pantalla que faltaba. */}
           {section === "estadisticas" && (
-            <Statistics items={territory} partial={!online} />
+            <Statistics
+              items={territory}
+              partial={!online}
+              signed={!!session.uid}
+            />
           )}
           {section === "documentacion" && <Knowledge />}
           {section === "reportar" && <Report onSave={save} />}

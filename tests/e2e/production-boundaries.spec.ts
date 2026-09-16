@@ -49,12 +49,13 @@ test("una instalación sin reportes no inventa ninguno", async ({ page }) => {
   await expect(page.locator(".map-results .empty")).toBeVisible();
   await expect(page.locator(".vereda-load")).toHaveCount(0);
 
+  /* Y sin sesión tampoco inventa el cero, que es otra manera de inventar: el
+     territorio no vale cero, es que desde aquí no se puede saber. */
   await page.goto("/estadisticas/");
-  const total = page.locator(".metrics .metric").first();
-  await expect(total).toContainText("0");
-  await expect(page.locator(".waiting-panel")).toContainText(
-    "Ningún caso abierto",
-  );
+  await expect(
+    page.getByRole("heading", { name: "Las cifras son de la comunidad" }),
+  ).toBeVisible();
+  await expect(page.locator(".metrics .metric")).toHaveCount(0);
 
   await page.goto("/inicio/");
   // Y ninguno de los títulos que solían venir de fábrica.

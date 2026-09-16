@@ -126,6 +126,9 @@ test("lo que nunca salió lo dice y se puede retomar como borrador", async ({
 });
 
 test("calendario navega a mes vacío y filtra periodo", async ({ page }) => {
+  /* Con algo que contar: sin sesión y sin reportes, la pantalla dice que
+     no puede saberlo en vez de enseñar ceros. */
+  await seedCases(page);
   await page.goto("/estadisticas/");
   await page.screenshot({
     path: "test-results/estadisticas-calendario.png",

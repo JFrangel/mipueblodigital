@@ -513,7 +513,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                       ? "Fotografía adjunta · cambiar"
                       : "Añadir una fotografía"}
                   </strong>
-                  <small>JPG, PNG o WebP · hasta 10 MB</small>
+                  <small>Hasta 10 MB</small>
                   <input
                     aria-label="Evidencia fotográfica"
                     type="file"
@@ -521,6 +521,24 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                     onChange={(e) => void upload(e.target.files)}
                   />
                 </span>
+              </label>
+              {/* La cámara, como segunda salida y no como principal.
+                  Elegir de la galería falla en algunos teléfonos por un motivo
+                  que la aplicación no puede arreglar: Android entrega una
+                  referencia a la foto y al ir a leerla ya no sirve, sobre todo
+                  si la foto vive en la nube. Una foto recién tomada está en el
+                  aparato y siempre se puede leer. */}
+              <label className="field-label camera-shortcut">
+                <span className="text-button">
+                  <Camera size={15} /> O toma una foto ahora con la cámara
+                </span>
+                <input
+                  aria-label="Tomar fotografía con la cámara"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={(e) => void upload(e.target.files)}
+                />
               </label>
               {preparing && <p role="status">Preparando fotografía…</p>}
               {photos[0] && (
