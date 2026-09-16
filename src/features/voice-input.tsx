@@ -24,6 +24,38 @@ type VoiceWindow = Window & {
   webkitSpeechRecognition?: new () => Recognition;
 };
 
+/**
+ * Juntar los trozos del dictado sin repetirlos.
+ *
+ * Es el tercer intento, y los dos anteriores fallaron por suponer cómo entrega
+ * Android el reconocimiento. Lo que llegó del teléfono:
+ *
+ *     hubohubohubohubo derrumbéhubo derrumbé enhubo derrumbé en la vía
+ *     hubohubohubohubohubo unhubo unhubo un derrumbé yhubo un derrumbé y ocurrió
+ *
+ * Los dos son la misma frase creciendo. A veces la reemite en la misma
+ * posición, a veces en posiciones nuevas —por eso ni juntarlas todas ni
+ * guardarlas por posición bastaba—, pero en los dos casos **lo nuevo empieza
+ * por lo viejo**.
+ *
+ * Así que la regla no mira posiciones ni banderas: mira el texto. Si un trozo
+ * empieza por lo que ya se lleva, es la misma frase más larga y reemplaza; si
+ * no, es frase nueva y se añade. Un ordenador, que entrega trozos distintos,
+ * cae siempre por el segundo camino y se comporta igual que siempre.
+ */
+export function unir(partes: readonly string[]): string {
+  let texto = "";
+  for (const parte of partes) {
+    const trozo = (parte ?? "").trim();
+    if (!trozo) continue;
+    if (!texto) texto = trozo;
+    else if (trozo.startsWith(texto)) texto = trozo;
+    else if (texto.startsWith(trozo)) continue;
+    else texto = `${texto} ${trozo}`;
+  }
+  return texto;
+}
+
 export function VoiceInput({
   value,
   onChange,
@@ -93,7 +125,7 @@ export function VoiceInput({
      * siguiente. El código declaraba `isFinal` en su tipo y no lo miraba.
      */
     /**
-     * Cada trozo en su sitio, nunca sumando.
+     * Cada trozo en su sitio.
      *
      * Este es el segundo intento, y el primero también se equivocaba. Junté
      * todos los resultados de cada evento: en escritorio bien, en el teléfono
@@ -118,7 +150,7 @@ export function VoiceInput({
       const desde = event.resultIndex ?? 0;
       for (let i = desde; i < event.results.length; i++)
         partes[i] = event.results[i][0].transcript;
-      const transcript = partes.join("").trim().slice(0, 12000);
+      const transcript = unir(partes).slice(0, 12000);
       setText(transcript);
       const result = [original.current.trim(), transcript]
         .filter(Boolean)

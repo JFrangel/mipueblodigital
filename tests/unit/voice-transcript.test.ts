@@ -1,91 +1,65 @@
 import { describe, expect, it } from "vitest";
+import { unir } from "../../src/features/voice-input";
 
 /**
- * El dictado repetía las palabras en el teléfono. Dos veces.
+ * El dictado repetía las palabras en el teléfono. Tres versiones hicieron falta.
  *
- * La primera versión juntaba todos los resultados de cada evento: bien en un
- * ordenador, repetido en el móvil. La segunda acumulaba lo que llegaba marcado
- * como cerrado, y el móvil lo repitió igual, de otra manera.
+ * La primera juntaba todos los resultados de cada evento. La segunda acumulaba
+ * lo marcado como cerrado. La tercera los guardaba por posición. Las tres
+ * suponían **cómo** entrega Android el reconocimiento, y las tres se
+ * equivocaron de una manera distinta.
  *
- * Porque Android no cierra una frase y pasa a la siguiente: **reemite la misma
- * frase creciendo, en el mismo índice, marcada como cerrada cada vez**. Estas
- * pruebas reproducen esa secuencia, que es la que ninguna de las dos primeras
- * versiones aguantaba.
+ * Estas pruebas no suponen nada: usan las dos secuencias que llegaron de un
+ * teléfono de verdad. Con una transcripción de escritorio las tres versiones
+ * anteriores pasaban tan campantes, y por eso el fallo llegó a producción dos
+ * veces.
  */
+describe("unir los trozos del dictado", () => {
+  it("un ordenador entrega trozos distintos y se suman", () => {
+    expect(unir(["uno", "dos", "tres"])).toBe("uno dos tres");
+  });
 
-/** Lo que hace `onresult`, aislado de React y del navegador. */
-function transcriptor() {
-  const partes: string[] = [];
-  return (evento: {
-    resultIndex: number;
-    results: { isFinal: boolean; 0: { transcript: string } }[];
-  }) => {
-    const desde = evento.resultIndex ?? 0;
-    for (let i = desde; i < evento.results.length; i++)
-      partes[i] = evento.results[i][0].transcript;
-    return partes.join("").trim();
-  };
-}
-
-const frase = (transcript: string, isFinal: boolean) => ({
-  isFinal,
-  0: { transcript },
-});
-
-describe("la transcripción del dictado", () => {
-  it("enseña lo provisional y lo reemplaza al cerrarse", () => {
-    const leer = transcriptor();
-    expect(leer({ resultIndex: 0, results: [frase("el muelle", false)] })).toBe(
-      "el muelle",
-    );
+  /** Primera secuencia del teléfono: la frase crece en la misma posición. */
+  it("una frase reemitida creciendo no se multiplica", () => {
     expect(
-      leer({ resultIndex: 0, results: [frase("el muelle está roto", true)] }),
-    ).toBe("el muelle está roto");
+      unir([
+        "hubo",
+        "hubo derrumbe",
+        "hubo derrumbe en",
+        "hubo derrumbe en la",
+        "hubo derrumbe en la vía",
+      ]),
+    ).toBe("hubo derrumbe en la vía");
   });
 
-  /**
-   * El caso que llegó del teléfono, tal cual:
-   *
-   *     hubohubohubohubo derrumbéhubo derrumbé enhubo derrumbé en la vía
-   */
-  it("una frase que crece reemitida como cerrada no se multiplica", () => {
-    const leer = transcriptor();
-    let texto = "";
-    for (const trozo of [
+  /** Segunda secuencia: la misma frase, pero repartida en posiciones nuevas. */
+  it("y tampoco cuando cada versión llega en su propia posición", () => {
+    const texto = unir([
       "hubo",
       "hubo",
-      "hubo derrumbe",
-      "hubo derrumbe en",
-      "hubo derrumbe en la",
-      "hubo derrumbe en la vía",
-    ])
-      texto = leer({ resultIndex: 0, results: [frase(trozo, true)] });
-    expect(texto).toBe("hubo derrumbe en la vía");
-    expect(texto).not.toMatch(/hubohubo/);
+      "hubo",
+      "hubo un",
+      "hubo un",
+      "hubo un derrumbe y",
+      "hubo un derrumbe y ocurrió",
+    ]);
+    expect(texto).toBe("hubo un derrumbe y ocurrió");
+    expect(texto).not.toMatch(/hubohubo|hubo un hubo/);
   });
 
-  it("no repite lo ya cerrado cuando el teléfono lo reenvía", () => {
-    const leer = transcriptor();
-    leer({ resultIndex: 0, results: [frase("el muelle está roto", true)] });
-    const texto = leer({
-      resultIndex: 1,
-      results: [
-        frase("el muelle está roto", true),
-        frase(" desde la creciente", true),
-      ],
-    });
-    expect(texto).toBe("el muelle está roto desde la creciente");
-    expect(texto).not.toContain("el muelle está roto el muelle está roto");
+  it("lo provisional más corto no borra lo que ya se llevaba", () => {
+    expect(unir(["el muelle está roto", "el muelle"])).toBe(
+      "el muelle está roto",
+    );
   });
 
-  it("aguanta una sesión larga sin duplicar nada", () => {
-    const leer = transcriptor();
-    let texto = "";
-    const acumulado: { isFinal: boolean; 0: { transcript: string } }[] = [];
-    ["uno ", "dos ", "tres ", "cuatro"].forEach((parte, i) => {
-      acumulado.push(frase(parte, true));
-      texto = leer({ resultIndex: i, results: [...acumulado] });
-    });
-    expect(texto).toBe("uno dos tres cuatro");
+  it("dos frases de verdad distintas sí se suman", () => {
+    expect(unir(["el muelle está roto", "desde la creciente"])).toBe(
+      "el muelle está roto desde la creciente",
+    );
+  });
+
+  it("los huecos no dejan espacios sueltos", () => {
+    expect(unir(["", "  ", "una cosa", ""])).toBe("una cosa");
   });
 });
