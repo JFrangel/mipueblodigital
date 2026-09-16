@@ -57,14 +57,12 @@ const ACEPTADOS = ["image/jpeg", "image/png", "image/webp"];
  * útil es decir qué hacer. Y hay dos cosas que hacer, las dos sencillas.
  */
 const NO_SE_PUDO_LEER =
-  "Tu teléfono no dejó leer esa fotografía. Suele pasar con fotos que están guardadas en la nube y no en el aparato. " +
-  "Ábrela primero en tu galería para que se descargue y vuelve a elegirla, o toma una nueva con la cámara desde aquí.";
-
-const ilegible = (error: unknown) =>
-  error instanceof DOMException &&
-  (error.name === "NotReadableError" || error.name === "NotFoundError");
+  "Tu teléfono no dejó leer esa fotografía. Pasa con algunas galerías, y con fotos que están guardadas en la nube. " +
+  "Prueba a tomarla con la cámara desde aquí, que es lo que nunca falla; o ábrela primero en la galería y vuelve a elegirla.";
 
 async function formatoReal(file: File): Promise<string> {
+  /* Devuelve el tipo si lo reconoce, y "" si leyó la cabecera y no es una
+     imagen. Que no se pueda leer es otra cosa y la dice lanzando. */
   const cabeza = new Uint8Array(await file.slice(0, 16).arrayBuffer());
   const empieza = (...bytes: number[]) =>
     bytes.every((b, i) => cabeza[i] === b);
@@ -87,52 +85,57 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
     );
 
   /**
-   * Se decodifica **antes** de juzgar el tipo.
+   * Ningún paso previo puede impedir que la fotografía se envíe.
    *
-   * Antes se hacía al revés: se miraba `file.type` y, si no era uno de los
-   * tres, se rechazaba. En un ordenador eso no falla nunca; en un teléfono
-   * falla todo el tiempo, y ese es el aparato con el que se reporta. Quien
-   * fotografiaba el muelle roto desde el móvil recibía «Usa una imagen JPG,
-   * PNG o WebP» teniendo delante exactamente eso.
+   * Es la lección de tres intentos. Cada comprobación que se puso por delante
+   * —el tipo que declara el archivo, la firma de sus primeros bytes, que el
+   * navegador consiga decodificarla— falla en algún teléfono, y al fallar
+   * rechazaba fotografías perfectas. Ese rechazo significa que el reporte no
+   * existe: alguien fue hasta el sitio, tomó la foto, escribió el relato, y se
+   * quedó sin poder mandarlo.
    *
-   * Si el navegador la decodifica, es una imagen. Esa es la prueba de verdad.
+   * Así que todo lo de aquí es **información, no permiso**. Lo único que de
+   * verdad hace falta es leer los bytes, y de validarlos se encarga el
+   * servidor, que abre la imagen entera con una biblioteca de verdad.
+   *
+   * `formatoReal` mira la firma con `slice().arrayBuffer()`, que en algunos
+   * Android falla justo donde `FileReader` funciona: si no se consigue, se
+   * sigue sin ella.
    */
-  /* Leer los primeros bytes es además la primera prueba de que el archivo se
-     puede leer: si falla aquí, no hay nada que decodificar ni que mandar. */
-  const formato = await formatoReal(file).catch((error) => {
-    if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
-    throw error;
-  });
+  /* `null` es «no se pudo mirar», que no es lo mismo que «se miró y no es una
+     imagen». Con lo primero se sigue adelante; con lo segundo, no. */
+  const formato = await formatoReal(file).catch(() => null);
   const bitmap = await decode(file).catch(async (error) => {
-    if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
-    /**
-     * Tercer camino: mandarla sin abrirla.
-     *
-     * Decodificar aquí servía para **medir** —cuántos megapíxeles tiene, si
-     * hay que reducirla— no para validarla: de eso se encarga el servidor, que
-     * la abre entera con una biblioteca de verdad. Así que si el navegador no
-     * puede con ella pero sus primeros bytes dicen que es una imagen de las
-     * que el servidor sabe verificar, y cabe, se manda tal cual.
-     *
-     * Es lo que salva el caso que no se puede prever desde aquí: un teléfono
-     * concreto, una galería concreta, un códec que a ese navegador le falta.
-     * Rechazar significaba que el reporte no existe.
-     */
-    if (ACEPTADOS.includes(formato) && file.size <= MAX_BYTES) return null;
+    /* Lo único que no tiene remedio desde aquí: un formato que este navegador
+       no sabe abrir y que el servidor tampoco aceptaría. Se dice qué tocar. */
     if (formato === "image/heic" || formato === "image/avif")
       throw new Error(
-        "Tu teléfono guarda las fotos en un formato que este navegador no abre (HEIC). En Ajustes → Cámara → Formatos, elige «Más compatible», o comparte la foto desde la galería y se convertirá sola.",
+        "Tu teléfono guarda las fotos en un formato que este navegador no abre (HEIC). En Ajustes → Cámara → Formatos, elige «Más compatible», o toma la foto con la cámara desde aquí.",
+      );
+    /**
+     * No se pudo abrir. ¿Se manda igual?
+     *
+     * Sí, en dos casos: cuando la firma dice que es una imagen de las que el
+     * servidor sabe verificar —entonces el navegador es el que no puede, no el
+     * archivo— y cuando **no se pudo mirar la firma**, porque entonces no hay
+     * base para rechazarla y equivocarse ahí cuesta un reporte entero.
+     *
+     * No, cuando la firma se leyó y dice que eso no es una imagen. Ahí sí se
+     * sabe, y mandarlo sería hacerle esperar a alguien por un rechazo seguro.
+     */
+    const esImagen = formato === null || ACEPTADOS.includes(formato);
+    if (esImagen && file.size <= MAX_BYTES) return null;
+    if (formato === "")
+      throw new Error(
+        "Ese archivo no es una fotografía. Elige una imagen, o tómala con la cámara desde aquí.",
       );
     throw error;
   });
 
-  /* Sin abrir, pero comprobada por su firma y por su peso: viaja el original. */
+  /* Sin abrir. El servidor comprobará que es lo que dice ser. */
   if (!bitmap)
     return {
-      dataUrl: await readAsDataUrl(file).catch((error) => {
-        if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
-        throw error;
-      }),
+      dataUrl: await readAsDataUrl(file),
       reduced: false,
       megapixels: 0,
     };
@@ -143,15 +146,12 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
     /* Cabe entera **y** el servidor sabe verificar su formato: el original
        gana siempre. */
     if (
-      ACEPTADOS.includes(formato || file.type) &&
+      ACEPTADOS.includes(formato ?? file.type) &&
       pixels <= MAX_PIXELS &&
       file.size <= MAX_BYTES
     )
       return {
-        dataUrl: await readAsDataUrl(file).catch((error) => {
-          if (ilegible(error)) throw new Error(NO_SE_PUDO_LEER);
-          throw error;
-        }),
+        dataUrl: await readAsDataUrl(file),
         reduced: false,
         megapixels: round(pixels),
       };
@@ -213,8 +213,11 @@ export async function decode(file: File): Promise<Decodificada> {
     return imagen;
   } catch {
     URL.revokeObjectURL(url);
+    /* Que no se pueda abrir aquí no significa que no se pueda mandar: quien
+       llama decide. El mensaje lleva el tipo y el tamaño por si llega a verse,
+       para no tener que adivinar qué archivo era. */
     throw new Error(
-      `No se pudo leer esa fotografía (${file.type || "sin tipo"}, ${Math.round(file.size / 1024)} kB). Puede estar dañada o ser de un formato que este teléfono no abre: prueba con otra.`,
+      `Este teléfono no pudo abrir esa imagen (${file.type || "sin tipo"}, ${Math.round(file.size / 1024)} kB).`,
     );
   }
 }
@@ -223,12 +226,21 @@ function round(pixels: number) {
   return Math.round((pixels / 1_000_000) * 10) / 10;
 }
 
+/**
+ * Leer el archivo entero, que es el único paso sin alternativa.
+ *
+ * Todo lo demás —mirar la firma, decodificar para medir— se puede saltar. Esto
+ * no: sin los bytes no hay reporte. Así que aquí, y solo aquí, es donde el
+ * fallo es terminal y donde tiene sentido explicar qué hacer.
+ *
+ * `FileReader` es además la vía más compatible que hay en Android; los métodos
+ * modernos del `Blob` fallan en teléfonos donde este funciona.
+ */
 function readAsDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () =>
-      reject(new Error("No se pudo leer el archivo. Vuelve a adjuntarlo."));
+    reader.onerror = () => reject(new Error(NO_SE_PUDO_LEER));
     reader.onabort = () =>
       reject(new Error("La lectura de la imagen fue cancelada."));
     reader.readAsDataURL(file);

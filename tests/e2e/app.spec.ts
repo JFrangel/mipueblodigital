@@ -61,9 +61,10 @@ test("el borrador conserva foto, punto y texto para enviarlo después", async ({
       mimeType: "image/jpeg",
       buffer: Buffer.from("esto no es una imagen"),
     });
-  /* El mensaje dice ahora qué archivo era. Se comprobó que adivinar el motivo
-     desde aquí no funciona: hacen falta los datos del archivo que falló. */
-  await expect(page.getByText(/No se pudo leer esa fotografía/)).toBeVisible();
+  /* Se rechaza aquí porque la firma del archivo se pudo leer y dice que no es
+     una imagen. Cuando la firma no se puede leer se manda igual, que es lo que
+     salva a las fotografías reales de los teléfonos que no las dejan abrir. */
+  await expect(page.getByText(/no es una fotografía/)).toBeVisible();
 
   await page
     .getByLabel("Evidencia fotográfica", { exact: true })
