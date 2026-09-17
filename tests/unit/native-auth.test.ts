@@ -7,7 +7,12 @@ import {expect,it,vi,beforeEach} from 'vitest';
    se queda igual, que es justo lo que se reportó. */
 const state=vi.hoisted(()=>({nativo:true,credencial:{idToken:'token-de-google'} as {idToken?:string}|null,plugin:{entrar:vi.fn(),salir:vi.fn()},web:{arma:vi.fn((t?:string)=>({credencial:t})),entrar:vi.fn(),salir:vi.fn()},push:{baja:vi.fn()},orden:[] as string[]}));
 vi.mock('@capacitor/core',()=>({Capacitor:{isNativePlatform:()=>state.nativo}}));
-vi.mock('@capacitor-firebase/authentication',()=>({FirebaseAuthentication:{signInWithGoogle:async()=>{state.plugin.entrar();return{credential:state.credencial}},signOut:state.plugin.salir}}));
+/* El doble imita al complemento de verdad: un proxy que contesta a cualquier
+   propiedad, `then` incluida. Sin esto, devolver el complemento desde una
+   función async cuelga la promesa para siempre en el teléfono y ninguna prueba
+   se entera. Ver el comentario de modulo() en native.ts. */
+const comoCapacitor=<T extends object>(impl:T):T=>new Proxy(impl,{get:(o,p)=>p in o?o[p as keyof T]:()=>new Promise(()=>{}),has:()=>true});
+vi.mock('@capacitor-firebase/authentication',()=>({FirebaseAuthentication:comoCapacitor({signInWithGoogle:async()=>{state.plugin.entrar();return{credential:state.credencial}},signOut:state.plugin.salir})}));
 vi.mock('firebase/auth',()=>({GoogleAuthProvider:{credential:state.web.arma},signInWithCredential:state.web.entrar,signOut:async(a:unknown)=>{state.web.salir(a);state.orden.push('web')}}));
 vi.mock('../../src/data/firebase/client',()=>({firebaseClient:()=>({auth:'auth-web'})}));
 vi.mock('../../src/platform/push',()=>({darDeBaja:async()=>{state.push.baja();state.orden.push('baja')}}));

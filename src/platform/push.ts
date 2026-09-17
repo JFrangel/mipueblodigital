@@ -21,12 +21,19 @@ const VAPID = () => process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "";
 /**
  * El complemento nativo, cargado solo cuando hace falta.
  *
+ * **Se devuelve el módulo, no el complemento, y eso no es estilo.** Los
+ * complementos de Capacitor son proxies que contestan a cualquier propiedad, así
+ * que parecen «thenables». Devolver uno desde una función `async` hace que el
+ * motor le llame `.then()` al resolver el valor de retorno; el puente contesta
+ * «FirebaseMessaging.then() is not implemented on android», la promesa no se
+ * resuelve **nunca**, y el `await` de quien llamó se queda colgado para siempre
+ * sin que nada parezca roto. Se desestructura en cada uso.
+ *
  * En el navegador no se baja nunca: no tiene nada que hacer ahí, y son unos
  * cuantos kilobytes que no pinta nadie. Es el mismo reparto que `native.ts`
  * hace con el acceso de Google.
  */
-const complemento = async () =>
-  (await import("@capacitor-firebase/messaging")).FirebaseMessaging;
+const modulo = () => import("@capacitor-firebase/messaging");
 
 /**
  * ¿Este aparato puede recibir avisos, en principio?
@@ -66,7 +73,7 @@ export async function disponible(): Promise<boolean> {
  * canal con nombre.
  */
 async function crearCanal(
-  FirebaseMessaging: Awaited<ReturnType<typeof complemento>>,
+  FirebaseMessaging: Awaited<ReturnType<typeof modulo>>["FirebaseMessaging"],
 ) {
   await FirebaseMessaging.createChannel({
     id: "consejo",
@@ -92,7 +99,7 @@ async function crearCanal(
 export async function activado(): Promise<boolean> {
   try {
     if (esNativo()) {
-      const FirebaseMessaging = await complemento();
+      const { FirebaseMessaging } = await modulo();
       return (await FirebaseMessaging.checkPermissions()).receive === "granted";
     }
     return (
@@ -122,7 +129,7 @@ async function pedirToken(): Promise<
   { token: string; platform: Plataforma } | Resultado
 > {
   if (esNativo()) {
-    const FirebaseMessaging = await complemento();
+    const { FirebaseMessaging } = await modulo();
     const { receive } = await FirebaseMessaging.requestPermissions();
     if (receive !== "granted") return "denegado";
     await crearCanal(FirebaseMessaging);
@@ -200,7 +207,7 @@ export async function darDeBaja(): Promise<void> {
   try {
     let token: string | null = null;
     if (esNativo()) {
-      const FirebaseMessaging = await complemento();
+      const { FirebaseMessaging } = await modulo();
       token = (await FirebaseMessaging.getToken()).token || null;
       await FirebaseMessaging.deleteToken();
     } else {

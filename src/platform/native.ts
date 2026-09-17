@@ -19,11 +19,18 @@ import { firebaseClient } from "@/data/firebase/client";
 export const esNativo = () => Capacitor.isNativePlatform();
 
 /**
- * El complemento, cargado solo aquí y solo cuando hace falta: en el navegador
- * no se baja nunca, porque no tiene nada que hacer.
+ * El módulo del complemento, cargado solo aquí y solo cuando hace falta: en el
+ * navegador no se baja nunca, porque no tiene nada que hacer.
+ *
+ * **Se devuelve el módulo, no el complemento, y eso no es estilo.** Los
+ * complementos de Capacitor son proxies que contestan a cualquier propiedad, así
+ * que parecen «thenables». Devolver uno desde una función `async` hace que el
+ * motor le llame `.then()` al resolver el valor de retorno; el puente contesta
+ * «FirebaseAuthentication.then() is not implemented on android», la promesa no
+ * se resuelve **nunca** y el `await` de quien llamó se queda colgado para
+ * siempre, sin nada roto a la vista. Se desestructura en cada uso.
  */
-const complemento = async () =>
-  (await import("@capacitor-firebase/authentication")).FirebaseAuthentication;
+const modulo = () => import("@capacitor-firebase/authentication");
 
 /**
  * Entrar con Google desde la aplicación instalada.
@@ -41,7 +48,7 @@ const complemento = async () =>
  * también en la capa web, que es la que manda aquí.
  */
 export async function entrarConGoogleNativo() {
-  const FirebaseAuthentication = await complemento();
+  const { FirebaseAuthentication } = await modulo();
   const { credential } = await FirebaseAuthentication.signInWithGoogle();
   const idToken = credential?.idToken;
   /* Sin identificador no hay nada que firmar, y seguir adelante devolvería a
@@ -82,7 +89,7 @@ export async function cerrarSesion() {
   await (await import("./push")).darDeBaja();
   await signOut(firebaseClient().auth);
   if (!esNativo()) return;
-  await complemento()
-    .then((FirebaseAuthentication) => FirebaseAuthentication.signOut())
+  await modulo()
+    .then(({ FirebaseAuthentication }) => FirebaseAuthentication.signOut())
     .catch(() => undefined);
 }

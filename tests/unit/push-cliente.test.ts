@@ -51,8 +51,33 @@ vi.mock("../../src/data/firebase/client", () => ({
   firebaseClient: () => ({ auth: { currentUser: state.usuario }, db: {} }),
 }));
 
+
+/**
+ * Un doble que se comporta como un complemento de Capacitor de verdad.
+ *
+ * Los complementos son proxies que contestan a **cualquier** propiedad, `then`
+ * incluida. Eso los hace parecer «thenables»: devolver uno desde una función
+ * `async` hace que el motor le llame `.then()` al resolver el valor de retorno,
+ * y el puente nativo no lo implementa —la promesa no se resuelve nunca y el
+ * `await` de quien llamó se queda colgado para siempre, sin nada roto a la
+ * vista—.
+ *
+ * Eso pasó de verdad, y ningún doble de objeto plano lo veía. Aquí `then` es
+ * una función que no resuelve nada, igual que el puente: si alguien vuelve a
+ * escribir ese patrón, la prueba se queda colgada y falla por tiempo.
+ */
+function comoCapacitor<T extends object>(impl: T): T {
+  return new Proxy(impl, {
+    get: (obj, prop) =>
+      prop in obj
+        ? obj[prop as keyof T]
+        : () => new Promise(() => {}),
+    has: () => true,
+  });
+}
+
 vi.mock("@capacitor-firebase/messaging", () => ({
-  FirebaseMessaging: {
+  FirebaseMessaging: comoCapacitor({
     requestPermissions: async () => {
       state.preguntas += 1;
       return { receive: state.permisoNativo };
@@ -65,7 +90,7 @@ vi.mock("@capacitor-firebase/messaging", () => ({
     createChannel: async (c: { id: string; name: string }) => {
       state.canales.push(c);
     },
-  },
+  }),
 }));
 
 vi.mock("firebase/messaging", () => ({
