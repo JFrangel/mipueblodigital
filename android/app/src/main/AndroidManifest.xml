@@ -9,6 +9,24 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- Los avisos que llegan con la aplicación cerrada.
+             La silueta tiene que ser blanca sobre transparente: con un icono a
+             color Android enseña un cuadrado blanco, que es lo que hace que una
+             aplicación parezca rota en la barra de arriba. La genera
+             scripts/iconos-android.mjs desde public/brand/notify-mark.svg. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_notify" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/mpd_aviso" />
+        <!-- El canal lo crea src/platform/push.ts con su nombre en español.
+             Sin esta línea, los avisos caen en uno que la gente ve en los
+             ajustes del teléfono como «Miscellaneous». -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/mpd_canal_avisos" />
+
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"

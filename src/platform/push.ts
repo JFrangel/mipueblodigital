@@ -48,6 +48,34 @@ export async function disponible(): Promise<boolean> {
   }
 }
 
+/**
+ * El canal donde caen los avisos en Android, con nombre en español.
+ *
+ * Android agrupa las notificaciones por canal y enseña esos grupos en los
+ * ajustes del teléfono, para que la gente pueda silenciar unos y no otros. Sin
+ * crear el nuestro, los avisos van a uno que el sistema rotula «Miscellaneous»:
+ * en inglés, en una aplicación que es toda en español, y sin decir de qué son.
+ *
+ * El identificador es el mismo que declara el manifiesto en
+ * `mpd_canal_avisos`; si los dos dejaran de coincidir, los avisos caerían otra
+ * vez en el canal anónimo sin que nada fallara.
+ *
+ * Importancia 4: aparece encima de lo que se esté mirando. Aquí se justifica
+ * —quien reporta un derrumbe está esperando la respuesta— y quien no lo quiera
+ * así puede bajarlo desde los ajustes, que es justo para lo que sirve tener un
+ * canal con nombre.
+ */
+async function crearCanal(
+  FirebaseMessaging: Awaited<ReturnType<typeof complemento>>,
+) {
+  await FirebaseMessaging.createChannel({
+    id: "consejo",
+    name: "Avisos del Consejo",
+    description: "El estado de tus reportes y lo que el Consejo publica.",
+    importance: 4,
+  }).catch(() => undefined);
+}
+
 /** El token de este aparato en el navegador, con la clave y el service worker. */
 async function tokenWeb(): Promise<string | null> {
   const { getMessaging, getToken } = await import("firebase/messaging");
@@ -69,6 +97,7 @@ async function pedirToken(): Promise<
     const FirebaseMessaging = await complemento();
     const { receive } = await FirebaseMessaging.requestPermissions();
     if (receive !== "granted") return "denegado";
+    await crearCanal(FirebaseMessaging);
     const { token } = await FirebaseMessaging.getToken();
     return token ? { token, platform: "android" } : "no-disponible";
   }

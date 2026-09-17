@@ -105,6 +105,34 @@ usa esa dirección; para la aplicación es un dominio como cualquier otro.
 
 ---
 
+## 4 bis. Los avisos al teléfono
+
+`scripts/iconos-android.mjs` genera, además de los iconos del cajón y las
+pantallas de arranque, **la silueta del aviso** en cinco densidades
+(`ic_stat_notify`, 24 a 96 px).
+
+Sale de `public/brand/notify-mark.svg` y no del emblema, y eso tiene su razón:
+de un icono de notificación Android solo usa la transparencia, y el emblema es
+una escena entera dentro de un recorte redondeado —su canal alfa es un
+rectángulo lleno, 87 % de píxeles opacos—. Sacar la silueta de ahí daba
+exactamente el cuadrado blanco que hace que una aplicación parezca rota en la
+barra de arriba. El palafito de `notify-mark.svg` es esa misma imagen reducida
+a lo que sobrevive a 24 dp.
+
+**Si cambia el emblema hay que volver a ejecutar el guion**, y si cambia la
+marca, dibujar también esta silueta: no se deriva de la otra.
+
+El manifiesto declara tres cosas para FCM: la silueta, el color con que se tiñe
+(`@color/mpd_aviso`, en `values/avisos.xml`) y el identificador del canal. El
+canal en sí lo crea `src/platform/push.ts` al apuntar el aparato, que es donde
+puede llevar nombre y descripción en español; si el identificador de los dos
+sitios dejara de coincidir, los avisos caerían en un canal que el sistema
+rotula «Miscellaneous» y nada fallaría a la vista.
+
+El permiso `POST_NOTIFICATIONS` lo añade el propio complemento.
+
+---
+
 ## 5. Lo que hay que probar en un teléfono de verdad
 
 Ninguna de estas cosas la puede acreditar una prueba de escritorio. Están aquí
@@ -120,6 +148,10 @@ para que no se declaren hechas por haber compilado:
 - El botón físico de atrás, que en una ventana web no siempre hace lo que se
   espera.
 - Recuperación de contraseña en el dominio definitivo.
+- **Los avisos**: que salga la pregunta del permiso al enviar el primer
+  reporte, que la notificación aparezca con la aplicación cerrada y con la
+  silueta del palafito —no un cuadrado blanco—, que tocarla abra el expediente
+  y no la portada, y que el interruptor de Mi cuenta la apague de verdad.
 
 ---
 
@@ -134,7 +166,8 @@ para que no se declaren hechas por haber compilado:
 | Órdenes `cap:sync`, `cap:open`, `cap:apk`            | hecho                     |
 | Llave de firma fuera del repositorio                 | hecho                     |
 | JDK 21, SDK y variables del equipo                   | hecho                     |
-| **APK de depuración compilado** (3,93 MB)            | **hecho**                 |
+| **APK de depuración compilado** (7,83 MB)            | **hecho**                 |
+| Avisos al teléfono: silueta, color y canal           | hecho                     |
 | **Probar en un teléfono**                            | **pendiente**             |
 | **APK de publicación, firmado**                      | **pendiente de la llave** |
 | **Dominio, identificador y firma confirmados**       | **pendiente del Consejo** |

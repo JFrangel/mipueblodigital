@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lo que Android necesita saber de los avisos antes de que la aplicación
+  arranque: de qué color tiñe el icono en la bandeja de notificaciones y a qué
+  canal van los que llegan sin decirlo.
+
+  El canal en sí lo crea `src/platform/push.ts` al apuntar el aparato, que es
+  donde puede llevar su nombre y su descripción en español. Sin este
+  identificador aquí, Android manda los avisos a un canal propio que la gente ve
+  en los ajustes del teléfono como «Miscellaneous».
+-->
+<resources>
+    <!-- El verde del Consejo, el mismo de la barra de estado y del manifiesto
+         web. Tiñe la silueta del palafito en la bandeja. -->
+    <color name="mpd_aviso">#16583F</color>
+    <string name="mpd_canal_avisos" translatable="false">consejo</string>
+</resources>

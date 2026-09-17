@@ -145,4 +145,33 @@ await sharp({
   .png()
   .toFile(`${res}/drawable/splash.png`);
 console.log(`  ${ARRANQUES.length + 1} pantallas de arranque`);
+
+/* El icono del aviso en la barra de estado.
+
+   Va de su propio archivo y no del emblema. De un icono de notificación
+   Android solo usa la transparencia, y el emblema es una escena entera dentro
+   de un recorte redondeado: su canal alfa es un rectángulo lleno. Se comprobó
+   midiéndolo —87 % de píxeles opacos—, así que sacar de ahí una silueta daba
+   exactamente el cuadrado blanco que hace que una aplicación parezca rota.
+   `notify-mark.svg` es esa misma imagen, el palafito sobre el río, reducida a
+   lo que sobrevive a 24 dp.
+
+   Y los tamaños son los de notificación, que son la mitad de los del cajón. */
+const AVISO = [
+  ["mdpi", 24],
+  ["hdpi", 36],
+  ["xhdpi", 48],
+  ["xxhdpi", 72],
+  ["xxxhdpi", 96],
+];
+for (const [densidad, lado] of AVISO) {
+  const carpeta = `${res}/drawable-${densidad}`;
+  await mkdir(carpeta, { recursive: true });
+  await sharp("public/brand/notify-mark.svg")
+    .resize(lado, lado)
+    .png()
+    .toFile(`${carpeta}/ic_stat_notify.png`);
+}
+console.log(`  icono de aviso en ${AVISO.length} densidades`);
+
 console.log("\nListo. Recompila con: npm run cap:apk");

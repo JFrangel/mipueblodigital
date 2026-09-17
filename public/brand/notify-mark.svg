@@ -1,0 +1,25 @@
+<!--
+  El palafito, para la barra de estado de Android.
+
+  El emblema de la aplicación es una escena entera —cielo, agua, árboles, la
+  casa— dentro de un recorte redondeado, y de ahí no se puede sacar una
+  silueta: su canal alfa es un rectángulo lleno, así que Android pintaría un
+  cuadrado blanco. Por eso este archivo existe aparte.
+
+  Un icono de notificación se ve a 24 dp y Android solo usa su transparencia:
+  tiene que ser un trazo grueso, plano y reconocible de un vistazo. Es el
+  palafito sobre el agua, que es la imagen del emblema reducida a lo que
+  sobrevive a ese tamaño.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+     stroke-linejoin="round">
+  <!-- El techo a dos aguas. -->
+  <path d="M3 10.5 12 4l9 6.5" />
+  <!-- Las paredes y el piso de la casa. -->
+  <path d="M6.5 11v4.5h11V11" />
+  <!-- Los pilotes que la levantan del río. -->
+  <path d="M9 15.5v4.5M15 15.5v4.5" />
+  <!-- El agua por debajo. -->
+  <path d="M2 20.5q2.5-2 5 0t5 0 5 0 5 0" />
+</svg>

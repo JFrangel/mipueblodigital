@@ -29,6 +29,7 @@ const state = vi.hoisted(() => ({
      destiempo es el fallo que hay que evitar: en Android 13 en adelante un «no»
      obliga a entrar en los ajustes del sistema para deshacerlo. */
   preguntas: 0,
+  canales: [] as Array<{ id: string; name: string }>,
 }));
 
 vi.mock("../../src/platform/native", () => ({ esNativo: () => state.nativo }));
@@ -61,6 +62,9 @@ vi.mock("@capacitor-firebase/messaging", () => ({
     deleteToken: async () => {
       state.borradoNativo += 1;
     },
+    createChannel: async (c: { id: string; name: string }) => {
+      state.canales.push(c);
+    },
   },
 }));
 
@@ -92,6 +96,7 @@ beforeEach(() => {
   state.borradoNativo = 0;
   state.borradoWeb = 0;
   state.preguntas = 0;
+  state.canales = [];
   process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY = "clave-vapid";
   vi.stubGlobal("Notification", {
     permission: "granted",
@@ -269,4 +274,24 @@ it("refrescar sin sesión no hace nada", async () => {
   await refrescar();
   expect(state.preguntas).toBe(0);
   expect(state.llamadas).toEqual([]);
+});
+
+/* ── El canal de Android ──────────────────────────────────────────────── */
+
+/* Sin canal propio, Android mete los avisos en uno que la gente ve en los
+   ajustes del teléfono como «Miscellaneous»: en inglés, en una aplicación que
+   es toda en español, y sin decir de qué son. El identificador tiene que ser el
+   mismo que declara el manifiesto. */
+it("el APK crea el canal con su nombre en español", async () => {
+  await registrar();
+  expect(state.canales).toHaveLength(1);
+  expect(state.canales[0].id).toBe("consejo");
+  expect(state.canales[0].name).toBe("Avisos del Consejo");
+});
+
+/* En el navegador no hay canales que crear, y pedirlo revienta. */
+it("en el navegador no se crea ningún canal", async () => {
+  state.nativo = false;
+  await registrar();
+  expect(state.canales).toEqual([]);
 });
