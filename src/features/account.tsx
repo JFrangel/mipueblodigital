@@ -24,8 +24,11 @@ import {
   ArrowUpRight,
   Pencil,
   Camera,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
+import { darDeBaja, disponible, registrar } from "@/platform/push";
 import { updateSession, useSession } from "@/data/session";
 import { AvatarMark } from "@/components/ui";
 
@@ -55,6 +58,16 @@ export function Account({
     "comprobando" | "activa" | "inactiva"
   >("comprobando");
   const [busy, setBusy] = useState(false);
+  /**
+   * Los avisos al teléfono: `null` mientras no se sabe, y también cuando este
+   * aparato no puede recibirlos.
+   *
+   * La fila solo existe donde puede funcionar. Un interruptor que no hace nada
+   * es peor que no tener el interruptor: la persona cree que lo activó y se
+   * queda esperando un aviso que no va a llegar. Y `null` de partida evita que
+   * la fila parpadee al entrar en la pantalla.
+   */
+  const [avisos, setAvisos] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -104,6 +117,43 @@ export function Account({
       alive = false;
     };
   }, [session.uid]);
+  useEffect(() => {
+    let vivo = true;
+    void disponible().then((puede) => {
+      if (!vivo) return;
+      setAvisos(puede ? Notification.permission === "granted" : null);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  /** Encender o apagar los avisos de este aparato. */
+  async function cambiarAvisos() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (avisos) {
+        await darDeBaja();
+        setAvisos(false);
+        toast("Ya no recibirás avisos en este aparato.");
+        return;
+      }
+      const salida = await registrar();
+      setAvisos(salida === "ok");
+      toast(
+        salida === "ok"
+          ? "Te avisaremos en este aparato."
+          : salida === "denegado"
+            ? "El teléfono tiene los avisos bloqueados para esta aplicación. Se activan desde los ajustes del sistema."
+            : "Este aparato no pudo quedar apuntado. Revisa la conexión.",
+        salida === "ok" ? undefined : "error",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function action(run: () => Promise<void>, success: string) {
     if (busy) return;
     setBusy(true);
@@ -256,25 +306,25 @@ export function Account({
             {/* Solo cuando hace falta. El perfil se activa solo al entrar; que
                 el botón estuviera siempre hacía dudar de si había que pulsarlo. */}
             {membership === "inactiva" && (
-            <button
-              className="btn"
-              disabled={busy}
-              onClick={() =>
-                void action(async () => {
-                  await user.reload();
-                  const token = await user.getIdToken(true);
-                  const response = await fetch("/api/account/activate/", {
-                    method: "POST",
-                    headers: { Authorization: `Bearer ${token}` },
-                    signal: AbortSignal.timeout(15000),
-                  });
-                  if (!response.ok) throw new Error("activation-failed");
-                  setMembership("activa");
-                }, "Tu perfil ciudadano está activo. Ya puedes enviar reportes al Consejo.")
-              }
-            >
-              Activar mi perfil
-            </button>
+              <button
+                className="btn"
+                disabled={busy}
+                onClick={() =>
+                  void action(async () => {
+                    await user.reload();
+                    const token = await user.getIdToken(true);
+                    const response = await fetch("/api/account/activate/", {
+                      method: "POST",
+                      headers: { Authorization: `Bearer ${token}` },
+                      signal: AbortSignal.timeout(15000),
+                    });
+                    if (!response.ok) throw new Error("activation-failed");
+                    setMembership("activa");
+                  }, "Tu perfil ciudadano está activo. Ya puedes enviar reportes al Consejo.")
+                }
+              >
+                Activar mi perfil
+              </button>
             )}
             {/* Con Google, el correo ya viene comprobado por Google y la
                 contraseña se gestiona allí: ofrecer aquí esas dos cosas es
@@ -301,7 +351,10 @@ export function Account({
                 onClick={() =>
                   void action(
                     () =>
-                      sendPasswordResetEmail(firebaseClient().auth, user.email!),
+                      sendPasswordResetEmail(
+                        firebaseClient().auth,
+                        user.email!,
+                      ),
                     "Solicitud de cambio de contraseña enviada.",
                   )
                 }
@@ -351,6 +404,20 @@ export function Account({
         <span>{dark ? <Moon size={20} /> : <Sun size={20} />}Apariencia</span>
         <strong>{dark ? "Oscuro" : "Claro"}</strong>
       </button>
+      {/* Solo donde puede funcionar: ver el comentario de `avisos` arriba. */}
+      {avisos !== null && (
+        <button
+          className="account-row"
+          disabled={busy}
+          onClick={() => void cambiarAvisos()}
+        >
+          <span>
+            {avisos ? <Bell size={20} /> : <BellOff size={20} />}
+            Avisos en este teléfono
+          </span>
+          <strong>{avisos ? "Activados" : "Desactivados"}</strong>
+        </button>
+      )}
       <Link className="account-row" href="/mis-reportes/">
         <span>Mis reportes</span>
         <ArrowUpRight size={16} />
