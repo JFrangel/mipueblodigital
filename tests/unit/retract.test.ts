@@ -14,6 +14,20 @@ const state = vi.hoisted(() => ({
   acta: false,
   escrito: [] as Array<{ op: string; path: string; data?: unknown }>,
   evidencia: [] as string[],
+  avisos: [] as Array<{
+    destino: unknown;
+    aviso: { title: string; body: string; url: string };
+  }>,
+}));
+
+vi.mock("../../src/server/push", () => ({
+  avisar: async (
+    _db: unknown,
+    destino: unknown,
+    aviso: { title: string; body: string; url: string },
+  ) => {
+    state.avisos.push({ destino, aviso });
+  },
 }));
 
 vi.mock("../../src/server/admin-auth", () => ({
@@ -96,6 +110,7 @@ const retirar = (reason: string, codigo = id) =>
   );
 
 beforeEach(() => {
+  state.avisos = [];
   state.acta = false;
   state.escrito = [];
   state.evidencia = [];
@@ -204,4 +219,40 @@ it("un expediente que no existe se dice y no se inventa un acta", async () => {
   );
   expect(respuesta.status).toBe(404);
   expect(state.escrito).toHaveLength(0);
+});
+
+/**
+ * El motivo también suena en el teléfono.
+ *
+ * Es el aviso que más falta hace de los cuatro: a quien reportó le desaparece
+ * el expediente de la lista, y sin esto se entera cuando vuelva a abrir la
+ * aplicación —o no se entera—. Lleva el motivo tal cual, por lo mismo que lo
+ * lleva el de la bandeja: enterarse de que retiraron tu reporte sin saber por
+ * qué es peor que no enterarse.
+ */
+it("el motivo también le suena en el teléfono a quien reportó", async () => {
+  const motivo = "Está repetido con el expediente del muelle.";
+  await retirar(motivo);
+  await new Promise((r) => setTimeout(r, 0));
+  expect(state.avisos).toHaveLength(1);
+  expect(state.avisos[0].destino).toEqual({ uid: "uid-de-quien-reporto" });
+  expect(state.avisos[0].aviso.title).toBe("El Consejo retiró tu reporte");
+  expect(state.avisos[0].aviso.body).toBe(motivo);
+});
+
+/* El expediente ya no existe, así que su dirección daría un 404: el aviso
+   lleva a la lista, que es donde la persona puede ver que ya no está. */
+it("el aviso de retirada no lleva a un expediente que ya no existe", async () => {
+  await retirar("Está repetido con el expediente del muelle.");
+  await new Promise((r) => setTimeout(r, 0));
+  expect(state.avisos[0].aviso.url).toBe("/mis-reportes/");
+});
+
+/* La idempotencia alcanza al teléfono: un reintento de red no vuelve a sonar. */
+it("repetir la retirada no vuelve a sonar el teléfono", async () => {
+  state.acta = true;
+  state.incidente = undefined;
+  await retirar("Está repetido con el expediente del muelle.");
+  await new Promise((r) => setTimeout(r, 0));
+  expect(state.avisos).toHaveLength(0);
 });

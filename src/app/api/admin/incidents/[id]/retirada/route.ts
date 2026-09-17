@@ -1,6 +1,7 @@
 import { ApiError, requireAdmin } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
 import { evidenceRequest } from "@/server/evidence";
+import { avisar } from "@/server/push";
 export const runtime = "nodejs";
 
 /** Cuántos documentos se borran por lote al limpiar lo que cuelga del caso. */
@@ -126,6 +127,24 @@ export async function POST(
       return Response.json(
         { removed: true, complete: true },
         { headers: { "Cache-Control": "no-store" } },
+      );
+    /* El motivo, también en el teléfono. Es el aviso que más falta hace de
+       los cuatro: a quien reportó le desaparece el expediente de la lista, y
+       sin esto se entera cuando vuelva a abrir la aplicación —o no se entera—.
+       Lleva el motivo tal cual, por lo mismo que lo lleva el de la bandeja.
+
+       Va antes de la limpieza y con `void`: el expediente ya está retirado, y
+       que falle barrer sus actuaciones no puede dejar a la persona sin saberlo.
+       Y lleva a «Mis reportes», no al expediente, que ya no existe. */
+    if (result.owner)
+      void avisar(
+        db,
+        { uid: result.owner },
+        {
+          title: "El Consejo retiró tu reporte",
+          body: reason,
+          url: "/mis-reportes/",
+        },
       );
     /* Lo que no cabe en la transacción: la subcolección de actuaciones no se
        borra en cascada, la fotografía vive fuera de Firestore, y los avisos
