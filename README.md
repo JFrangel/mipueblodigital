@@ -81,7 +81,7 @@ salidas y variantes en el lenguaje del territorio.
 ## Antes de abrirla a la comunidad
 
 Lo que falta no es código. Está detallado en
-[Límites conocidos](docs/arquitectura.md#13-límites-conocidos); en resumen:
+[Límites conocidos](docs/arquitectura.md#14-límites-conocidos); en resumen:
 
 1. Validar el catálogo territorial con el Consejo. Cinco veredas no tienen punto
    documentado; sus reportes se gestionan igual, pero no se dibujan.

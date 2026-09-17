@@ -4,7 +4,7 @@ Referencia técnica completa del sistema de gestión de incidencias del **Gran
 Consejo Comunitario Río Satinga** (Olaya Herrera, Nariño).
 
 Este documento describe **lo que el código hace hoy**, con la ruta del archivo
-que lo hace. Cuando algo no está resuelto, se dice en [§13](#13-límites-conocidos)
+que lo hace. Cuando algo no está resuelto, se dice en [§14](#14-límites-conocidos)
 en lugar de omitirlo. Los manuales de uso viven aparte:
 [del ciudadano](manual-ciudadano.md) y [del Consejo](manual-consejo.md).
 
@@ -21,10 +21,11 @@ en lugar de omitirlo. Los manuales de uso viven aparte:
 7. [Privacidad: las tres proyecciones](#7-privacidad-las-tres-proyecciones)
 8. [Ciclo de vida de un reporte](#8-ciclo-de-vida-de-un-reporte)
 9. [Sin conexión](#9-sin-conexión)
-10. [La interfaz](#10-la-interfaz)
-11. [Configuración](#11-configuración)
-12. [Verificación y operación](#12-verificación-y-operación)
-13. [Límites conocidos](#13-límites-conocidos)
+10. [Los avisos al teléfono](#10-los-avisos-al-teléfono)
+11. [La interfaz](#11-la-interfaz)
+12. [Configuración](#12-configuración)
+13. [Verificación y operación](#13-verificación-y-operación)
+14. [Límites conocidos](#14-límites-conocidos)
 
 ---
 
@@ -101,7 +102,7 @@ tests/
   e2e/            60 pruebas de navegador (Playwright)
   fixtures/       Casos de muestra; el producto no lleva datos inventados
 docs/             Esta documentación
-scripts/          Utilidades de operación (§12.3)
+scripts/          Utilidades de operación (§13.3)
 firebase/         Reglas de Firestore
 ```
 
@@ -488,7 +489,121 @@ una cuenta, y cualquier expediente que este aparato no tenga guardado.
 
 ---
 
-## 10. La interfaz
+## 10. Los avisos al teléfono
+
+La campana de dentro de la aplicación es el registro de lo que pasó; el aviso
+que suena con la aplicación cerrada es el golpecito en el hombro. Sin el
+segundo, cada respuesta del Consejo hay que ir a buscarla, y en un territorio
+donde la señal va y viene eso significa enterarse tarde o no enterarse.
+
+### 10.1. El registro de aparatos
+
+`pushTokens/{uid}/devices/{token}` → `{ platform, at, agent }`.
+
+Anidado bajo la persona y no en una colección plana con un campo `uid`, por dos
+razones prácticas: mandarle un aviso a alguien es **listar una subcolección**,
+sin índices ni consultas cruzadas, y borrar su cuenta es borrar el subárbol,
+que es lo que `anonymize.ts` hace junto a sus avisos. El token de un teléfono y
+su cadena de user-agent duran tanto como el aparato y apuntan a una persona:
+quien pide la eliminación pide también que eso se vaya.
+
+La clave del documento es el propio token, así que volver a registrar el mismo
+aparato reescribe en vez de acumular filas. **Ningún cliente escribe aquí**: se
+pasa siempre por `/api/push/` con el SDK de servidor, y `firestore.rules` lo
+deniega explícitamente —con su comprobación en `tests/integration/rules.mjs`,
+que se ejecuta con `npm run test:rules`—.
+
+Lo que esta forma **no** resuelve: un mismo token puede quedar anotado bajo dos
+personas —el teléfono que se presta, si la baja al cerrar sesión no llegó a
+salir—. Cerrarlo exigiría una consulta de grupo de colecciones con su índice, y
+este proyecto no despliega índices. La defensa es la baja al cerrar sesión.
+
+### 10.2. Quién recibe qué
+
+Mandar todo es ruido, y el ruido enseña a la gente a ignorar el aviso.
+
+| Cuándo                         | A quién     | Abre            |
+| ------------------------------ | ----------- | --------------- |
+| Entra un reporte nuevo         | Al Consejo  | `/reporte/{id}/` |
+| Su reporte cambia de estado    | Al vecino   | `/reporte/{id}/` |
+| Le retiran su reporte          | Al vecino   | `/mis-reportes/` |
+| Alguien pide borrar su cuenta  | Al Consejo  | `/admin/`        |
+
+**No** se avisa a quien reporta de que su propio reporte se recibió: acaba de
+mandarlo. **No** se avisa al Consejo de los cambios que hacen entre ellos: eso
+está en la bandeja compartida, y avisar a cinco de lo que hizo la sexta es spam.
+
+El teléfono suena **exactamente** cuando la bandeja registra algo: la condición
+se calcula una sola vez dentro de la transacción y la usan las dos escrituras.
+Si se escribieran por separado podrían separarse, y nadie lo notaría hasta tener
+a la comunidad quejándose de que suena porque sí.
+
+El envío va **fuera de la transacción y con `void`**, como el respaldo de la
+fotografía: un recibo confirmado es un recibo confirmado aunque el aviso no
+salga. `avisar()` nunca lanza. Si FCM está caído, el aviso sigue en la bandeja
+de dentro: la información no se pierde, llega más tarde.
+
+El aviso de eliminación **no nombra a quien la pidió**. Se lee en la pantalla de
+bloqueo de un teléfono que puede estar prestado; el Consejo lo verá en el panel,
+con su control de acceso delante.
+
+### 10.3. Una puerta, dos mundos
+
+`src/platform/push.ts` esconde si debajo hay complemento nativo o SDK web:
+`disponible()`, `activado()`, `registrar()`, `refrescar()`, `darDeBaja()`.
+
+Dos trampas que costaron encontrarse, y que están ahí por eso:
+
+- **El WebView de Android no implementa la API `Notification`.** Leer
+  `Notification.permission` dentro del APK revienta, y dentro de una promesa se
+  traga sin más. Por eso existe `activado()`: cada mundo se pregunta con lo suyo.
+- **Los complementos de Capacitor son proxies que contestan a cualquier
+  propiedad, `then` incluida.** Devolver uno desde una función `async` hace que
+  el motor le llame `.then()`, el puente conteste «no implementado en android», y
+  la promesa **no se resuelve nunca**: el `await` de quien llamó se cuelga para
+  siempre sin error visible. Por eso las dos puertas nativas devuelven el módulo
+  y desestructuran en cada uso, y por eso los dobles de prueba imitan ese proxy.
+
+### 10.4. El ciclo de vida del token
+
+1. **Al conceder el permiso**, que se pide tras enviar el primer reporte: el
+   único momento en que la persona ya sabe qué le vamos a mandar y por qué le
+   interesa. Android 13 en adelante no da segundas oportunidades fáciles.
+2. **En cada arranque con sesión**, `refrescar()` lo reapunta si ya hay permiso.
+   Los tokens rotan solos y uno viejo deja de recibir sin avisar. **Nunca
+   pregunta.**
+3. **Al cerrar sesión se da de baja**, y antes de cerrarla: darlo de baja
+   necesita la sesión para firmar la petición. En el río los teléfonos se
+   prestan.
+4. **Desde Mi cuenta** se puede apagar, y eso borra el token del registro: no es
+   un silencio local, el servidor deja de mandar.
+
+### 10.5. Qué pasa cuando falta algo
+
+| Situación                   | Qué hace                                                   |
+| --------------------------- | ---------------------------------------------------------- |
+| Sin `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | El navegador no ofrece avisos. **El APK sigue igual.** |
+| Navegador sin soporte       | No se ofrece el interruptor.                                |
+| Permiso denegado            | Se dice, y se manda a los ajustes del sistema.              |
+| Sin sesión                  | Se dice que entre, no que revise la conexión.               |
+| FCM caído o token muerto    | Silencio; el aviso sigue en la bandeja de dentro.           |
+
+Los tokens que FCM declara `registration-token-not-registered` se borran del
+registro. Cualquier otro fallo es pasajero y **no** borra: hacerlo dejaría a la
+persona sin avisos para siempre por una caída de un minuto.
+
+### 10.6. En Android
+
+El manifiesto declara la silueta (`ic_stat_notify`), el color con que se tiñe y
+el identificador del canal. De un icono de notificación Android **solo usa la
+transparencia**, así que no se puede derivar del emblema —que es una escena
+dentro de un recorte redondeado, con el alfa lleno al 87 %—: tiene su propio
+dibujo en `public/brand/notify-mark.svg`. El canal lo crea `push.ts` al apuntar
+el aparato, que es donde puede llevar nombre y descripción en español.
+
+---
+
+## 11. La interfaz
 
 ### 10.1. Rutas
 
@@ -523,7 +638,7 @@ desborda a lo ancho**.
 
 ---
 
-## 11. Configuración
+## 12. Configuración
 
 Todo está en [`.env.example`](../.env.example), con una regla que conviene
 repetir: **nada que empiece por `NEXT_PUBLIC_` es secreto**, viaja al navegador.
@@ -544,7 +659,7 @@ sesión sin ningún mensaje.
 
 ---
 
-## 12. Verificación y operación
+## 13. Verificación y operación
 
 ### 12.1. Las cinco comprobaciones
 
@@ -590,7 +705,7 @@ es borrar la base de pruebas antes de abrir, y no avisa a nadie.
 
 ---
 
-## 13. Límites conocidos
+## 14. Límites conocidos
 
 Lo que hoy no está resuelto. Está aquí para que nadie lo descubra en el piloto.
 
