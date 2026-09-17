@@ -156,7 +156,9 @@ export function Account({
           ? "Te avisaremos en este aparato."
           : salida === "denegado"
             ? "El teléfono tiene los avisos bloqueados para esta aplicación. Se activan desde los ajustes del sistema."
-            : "Este aparato no pudo quedar apuntado. Revisa la conexión.",
+            : salida === "sin-sesion"
+              ? "Inicia sesión para recibir avisos sobre tus reportes."
+              : "Este aparato no pudo quedar apuntado. Revisa la conexión.",
         salida === "ok" ? undefined : "error",
       );
     } finally {

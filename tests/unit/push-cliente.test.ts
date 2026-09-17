@@ -215,7 +215,9 @@ it("sin sesión no se apunta nada, y no se pregunta nada", async () => {
       return "granted";
     },
   });
-  expect(await registrar()).toBe("no-disponible");
+  /* Y se distingue de «no se pudo»: el mensaje de Mi cuenta manda a entrar, no
+     a revisar la conexión. */
+  expect(await registrar()).toBe("sin-sesion");
   expect(state.llamadas).toEqual([]);
   /* Sin esto, quien abre la aplicación sin sesión vería el diálogo del permiso
      antes de que nadie descubra que no hay a quién apuntar el aparato. */

@@ -4,7 +4,7 @@ import { firebaseClient } from "@/data/firebase/client";
 import { memberHeaders } from "@/data/remote-reports";
 
 /** Qué pasó al intentar apuntar este aparato. */
-export type Resultado = "ok" | "denegado" | "no-disponible";
+export type Resultado = "ok" | "denegado" | "sin-sesion" | "no-disponible";
 
 /** Dónde corre esto, en los términos que entiende el registro del servidor. */
 type Plataforma = "android" | "web";
@@ -160,8 +160,10 @@ async function contarAlServidor(ruta: string, cuerpo: unknown) {
  * al abrir la aplicación.
  */
 export async function registrar(): Promise<Resultado> {
-  /* Un aviso es de alguien. Sin sesión no hay a quién apuntarlo. */
-  if (!firebaseClient().auth.currentUser) return "no-disponible";
+  /* Un aviso es de alguien. Sin sesión no hay a quién apuntarlo, y se dice
+     aparte: mandar a alguien a revisar la conexión cuando lo que le falta es
+     entrar es mandarlo a buscar donde no es. */
+  if (!firebaseClient().auth.currentUser) return "sin-sesion";
   try {
     const salida = await pedirToken();
     if (typeof salida === "string") return salida;
