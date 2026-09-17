@@ -98,6 +98,22 @@ it("el alta guarda el aparato de quien pregunta", async () => {
   expect(state.guardados[0]).toEqual(["ana", "tok-1", "android", "Pixel"]);
 });
 
+/* La baja ya fijaba esto y el alta no, que es la mitad que más importa: si el
+   cuerpo pudiera decir de quién es un token, cualquiera apuntaría su teléfono a
+   nombre de otra persona y le leería los avisos. La ruta lo hace bien; sin esta
+   prueba, dejar de hacerlo bien no rompía nada. */
+it("el alta ignora un uid puesto en el cuerpo", async () => {
+  await registro(
+    pide("/api/push/registro", {
+      token: "tok-1",
+      platform: "android",
+      uid: "otro",
+    }),
+  );
+  /* El uid es el de la sesión, no el que venía en el cuerpo. */
+  expect(state.guardados[0]).toEqual(["ana", "tok-1", "android", "Pixel"]);
+});
+
 /* Una plataforma que no es ninguna de las dos no se guarda: el registro se usa
    luego para decidir cómo se dibuja el aviso. */
 it("rechaza una plataforma desconocida", async () => {
