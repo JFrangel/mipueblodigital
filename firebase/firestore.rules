@@ -39,6 +39,12 @@ service cloud.firestore {
       allow get, list: if active() && resource.data.published == true && resource.data.keys().hasOnly(['published','title','summary','category','vereda','status','createdAt','publishedAt']);
       allow write: if false;
     }
+    // Los aparatos que reciben avisos. Se escriben solo desde /api/push/,
+    // con el SDK de servidor. Aqui se deniega explicitamente para que quien
+    // lea estas reglas no tenga que deducirlo de la regla comodin de abajo.
+    match /pushTokens/{uid}/devices/{token} {
+      allow read, write: if false;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
