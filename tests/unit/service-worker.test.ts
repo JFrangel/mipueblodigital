@@ -141,6 +141,9 @@ describe("avisos que llegan con la aplicación cerrada", () => {
     expect(w.mostradas[0][1]).toMatchObject({
       body: "Ahora está en «En proceso»",
       data: { url: "/reporte/abc/" },
+      /* Un aviso por pantalla: tres cambios del mismo expediente dejan uno, no
+         tres apilados. La etiqueta es lo que lo consigue. */
+      tag: "/reporte/abc/",
     });
   });
 
