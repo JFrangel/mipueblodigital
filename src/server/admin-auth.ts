@@ -136,12 +136,28 @@ export async function requireMember(request: Request) {
  * se abre esa escritura, esta puerta hay que cerrarla**, o cualquiera se
  * nombraría administrador.
  *
- * Al entrar por el documento se traslada el rol a la reivindicación, de modo
- * que las dos acaben diciendo lo mismo sin que nadie tenga que intervenir.
+ * El traslado va en las dos direcciones, para que las dos fuentes acaben
+ * diciendo lo mismo sin que nadie intervenga: quien entra por el documento se
+ * lleva el rol a la reivindicación, y quien entra por la reivindicación lo deja
+ * escrito en el documento. Lo segundo dejó de ser cosmético desde que los
+ * avisos push resuelven el Consejo por ese campo.
  */
 export async function requireAdmin(request: Request) {
   const member = await requireMember(request);
-  if (member.identity.admin === true) return member;
+  if (member.identity.admin === true) {
+    /* El reflejo, en la dirección contraria. Los avisos push resuelven el
+       Consejo por el campo `role` (`src/server/push-tokens.ts`), así que una
+       reivindicación sin su reflejo —sellada por el guion, o por una escritura
+       que falló antes de que esto se arreglara— dejaba a esa persona sin
+       recibir ni un aviso, sin ningún síntoma. Se escribe solo cuando falta, y
+       si la escritura falla la siguiente petición del panel lo reintenta. */
+    if (member.account.role !== "admin")
+      await member.db
+        .doc(`accounts/${member.uid}`)
+        .set({ role: "admin" }, { merge: true })
+        .catch(() => undefined);
+    return member;
+  }
   if (member.account.role === "admin") {
     try {
       await adminServices().auth.setCustomUserClaims(member.uid, {

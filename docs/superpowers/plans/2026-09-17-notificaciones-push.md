@@ -233,6 +233,15 @@ Ambas son POST. La baja no usa DELETE porque hay proxies que quitan el cuerpo de
 un DELETE, que es la misma razón por la que `/api/admin/incidents/[id]/retirada`
 es POST.
 
+`readJson` no es genérica y pide dos argumentos, `(request, maximum)`: el
+segundo es el tope de bytes, y es la única defensa contra un cuerpo enorme antes
+de tocar Firestore. 2000 basta para un token, igual que en
+`src/app/api/admin/roles/route.ts`.
+
+La forma del token la comprueba `guardar`/`olvidarUno` en
+`src/server/push-tokens.ts` y lanza un `ApiError` de 400, así que estas rutas
+solo tienen que exigir que no venga vacío.
+
 - [ ] **Step 1: Write the failing test**
 
 Create `tests/unit/push-api.test.ts`:
@@ -309,9 +318,10 @@ const PLATAFORMAS: Plataforma[] = ["android", "web"];
 export async function POST(request: Request) {
   try {
     const { uid, db } = await requireMember(request);
-    const input = await readJson<{ token?: unknown; platform?: unknown }>(
-      request,
-    );
+    const input = (await readJson(request, 2000)) as {
+      token?: unknown;
+      platform?: unknown;
+    };
     const token = typeof input.token === "string" ? input.token.trim() : "";
     const plataforma = input.platform as Plataforma;
     if (!token) throw new ApiError(400, "Falta el token del aparato.");
@@ -357,7 +367,7 @@ import { olvidarUno } from "@/server/push-tokens";
 export async function POST(request: Request) {
   try {
     const { uid, db } = await requireMember(request);
-    const input = await readJson<{ token?: unknown }>(request);
+    const input = (await readJson(request, 2000)) as { token?: unknown };
     const token = typeof input.token === "string" ? input.token.trim() : "";
     if (!token) throw new ApiError(400, "Falta el token del aparato.");
     await olvidarUno(db, uid, token);

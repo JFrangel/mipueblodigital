@@ -4,14 +4,13 @@
  *   node scripts/conceder-admin.mjs alguien@ejemplo.com
  *   node scripts/conceder-admin.mjs alguien@ejemplo.com --retirar
  *
- * Para qué existe: el rol **no es un campo de Firestore**, es una
- * reivindicación del token (`admin`). Escribir «admin» a mano en la consola de
- * la base no hace administrador a nadie, porque la aplicación —y el servidor—
- * leen la reivindicación, no el documento.
+ * Para qué existe: el rol es, ante todo, una reivindicación del token
+ * (`admin`), y solo puede ponerla el SDK de servidor. El campo `role` del
+ * documento de la cuenta es el segundo camino de `requireAdmin` —vale, y por
+ * eso este guion lo escribe también—, pero quien manda es la reivindicación.
  *
- * Y solo puede ponerla el SDK de servidor. De ahí este guion: es el que
- * concede el **primer** administrador. A partir de ahí, el propio Panel del
- * Consejo permite designar a los demás sin volver aquí.
+ * De ahí este guion: es el que concede el **primer** administrador. A partir de
+ * ahí, el propio Panel del Consejo permite designar a los demás sin volver aquí.
  *
  * Necesita las credenciales privadas del proyecto, las mismas que usa el
  * servidor: GOOGLE_APPLICATION_CREDENTIALS (ruta al JSON) o
@@ -66,13 +65,15 @@ if (!usuario) {
   process.exit(1);
 }
 
-await auth.setCustomUserClaims(usuario.uid, retirar ? {} : { admin: true });
-/* El `role` del documento no lo lee nadie —quien decide es la reivindicación—,
-   pero se deja al día para que la consola no contradiga a la aplicación. */
+/* El `role` del documento sí lo lee alguien: los avisos push resuelven el
+   Consejo por ese campo (`src/server/push-tokens.ts`). Por eso se escribe antes
+   que la reivindicación y sin tragarse el fallo —si se quedara atrás, a esta
+   persona no le llegaría ni un aviso y nada lo delataría—, y con `set(merge)`,
+   que no exige que el documento de la cuenta ya exista. */
 await db
   .doc(`accounts/${usuario.uid}`)
-  .update({ role: retirar ? "citizen" : "admin" })
-  .catch(() => undefined);
+  .set({ role: retirar ? "citizen" : "admin" }, { merge: true });
+await auth.setCustomUserClaims(usuario.uid, retirar ? {} : { admin: true });
 await db.collection("councilRoleEvents").add({
   actor: "script",
   target: usuario.uid,

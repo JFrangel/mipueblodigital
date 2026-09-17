@@ -1,5 +1,6 @@
 import type { Firestore } from "firebase-admin/firestore";
 import { evidenceRequest } from "./evidence";
+import { coleccionDeAparatos } from "./push-tokens";
 
 /**
  * Anonimización de expedientes tras una solicitud de eliminación (HU-19.5).
@@ -22,6 +23,7 @@ const MAX_BATCHES = 20;
 export type AnonymizationResult = {
   incidents: number;
   notifications: number;
+  devices: number;
   evidence: boolean;
   complete: boolean;
 };
@@ -98,6 +100,12 @@ export async function anonymizeAccount(
     db,
     db.collection(`notifications/${uid}/items`),
   );
+  /* Los aparatos que recibían avisos se van con la bandeja. El token de un
+     teléfono y su cadena de user-agent son un identificador que dura tanto como
+     el aparato y apunta a esta persona: dejarlos sería lo contrario de lo que
+     promete la eliminación, y además su teléfono seguiría sonando con cada
+     reporte nuevo. */
+  const devices = await deleteAll(db, coleccionDeAparatos(db, uid));
   await deleteAll(
     db,
     db.collection("incidentIntake").where("owner", "==", uid),
@@ -113,5 +121,5 @@ export async function anonymizeAccount(
       { merge: true },
     );
 
-  return { incidents, notifications, evidence, complete };
+  return { incidents, notifications, devices, evidence, complete };
 }

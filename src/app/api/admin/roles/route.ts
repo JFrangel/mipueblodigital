@@ -110,16 +110,18 @@ export async function POST(request: Request) {
           "Es la última cuenta con el rol. Concédeselo antes a otra persona.",
         );
     }
-    await auth.setCustomUserClaims(target.uid, grant ? { admin: true } : {});
-    /* El documento de la cuenta guarda un `role` que nadie lee: quien decide es
-       la reivindicación. Se mantiene al día de todos modos para que la consola
-       de la base no diga una cosa mientras la aplicación hace otra —mirar ahí
-       y creer que editando ese campo se concede el rol es un malentendido que
-       cuesta una tarde—. */
+    /* El `role` del documento ya no es un espejo decorativo: los avisos push
+       resuelven el Consejo por ese campo (`src/server/push-tokens.ts`), porque
+       hacerlo por la reivindicación obligaría a recorrer `listUsers()` en cada
+       envío. Así que se escribe **antes** de sellar la reivindicación y sin
+       tragarse el fallo: si se quedara atrás, quien recibe el rol no recibiría
+       ni un aviso —o quien lo pierde los seguiría recibiendo— y nada lo
+       delataría. Es `set(merge)` y no `update()`, que reventaba si el
+       documento de la cuenta todavía no existía. */
     await db
       .doc(`accounts/${target.uid}`)
-      .update({ role: grant ? "admin" : "citizen" })
-      .catch(() => undefined);
+      .set({ role: grant ? "admin" : "citizen" }, { merge: true });
+    await auth.setCustomUserClaims(target.uid, grant ? { admin: true } : {});
     await db.collection("councilRoleEvents").add({
       actor,
       target: target.uid,

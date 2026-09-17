@@ -45,8 +45,15 @@ Cinco piezas, cada una con un trabajo y un límite claro.
 
 Anidado bajo el identificador de la persona a propósito. Mandarle un aviso es
 listar una subcolección —sin índices ni consultas cruzadas— y borrar su cuenta
-es borrar el subárbol, justo al lado de donde `src/server/anonymize.ts` ya borra
-sus avisos.
+es borrar el subárbol, que `src/server/anonymize.ts` borra junto a sus avisos:
+el token y el user-agent de un aparato son un identificador que dura tanto como
+el teléfono, y quien ejerce HU-19.5 pide también que eso se vaya.
+
+Lo que esta forma **no** resuelve: el mismo token puede quedar anotado bajo dos
+personas —el teléfono prestado, si la baja al cerrar sesión no llegó a salir—,
+porque la clave es el token pero el espacio de nombres es el uid. Cerrarlo en el
+servidor exigiría una consulta de grupo de colecciones con su índice, y este
+proyecto no despliega índices; queda anotado en el módulo.
 
 Una persona tiene varios aparatos —el teléfono, el de la casa, el del navegador
 del locutorio— y todos cuentan. La clave del documento es el propio token, así
@@ -90,8 +97,15 @@ existen**. Esto último no es un detalle: FCM responde
 aplicación o formateó el teléfono, y sin limpiarlos el registro se llena de
 aparatos fantasma que se arrastran en cada envío.
 
-El Consejo se resuelve consultando `accounts` por `role == "admin"`, que es como
-ya se identifica en `src/server/admin-auth.ts`.
+El Consejo se resuelve consultando `accounts` por `role == "admin"` y
+descartando las cuentas que no estén vivas (`active !== true` o `deleted`). Dos
+precisiones que cuestan avisos indebidos si se olvidan: `role` es el **segundo**
+de los dos caminos de `src/server/admin-auth.ts` —el primero es la
+reivindicación del token, y se lee el segundo para no recorrer `listUsers()` en
+cada envío, de modo que conceder el rol tiene que escribir ese campo sin
+tragarse el fallo—; y ni la solicitud de eliminación ni la anonimización quitan
+el rol, solo dejan `active: false`, así que sin ese filtro una cuenta que el
+Consejo ya cortó seguiría recibiendo el título y la vereda de cada reporte.
 
 `sendEachForMulticast` acepta 500 tokens por llamada; se trocea por si algún día
 hacen falta más.

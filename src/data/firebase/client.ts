@@ -9,6 +9,12 @@ function initializeClient() {
     authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    /* `getToken()` de `firebase/messaging` lo busca en las opciones de la
+       aplicación: sin él los avisos del navegador fallan al pedirse, aunque la
+       clave VAPID esté puesta. No entra en la comprobación de abajo a
+       propósito: que falte tiene que apagar los avisos web, como hace la clave
+       VAPID, no tumbar la sesión ni el APK. */
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   };
   if (
     !config.apiKey ||

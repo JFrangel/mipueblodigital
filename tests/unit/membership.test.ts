@@ -12,6 +12,7 @@ const state = vi.hoisted(() => ({
   admin: false,
   role: "citizen",
   sellado: vi.fn(),
+  reflejado: vi.fn(),
 }));
 
 vi.mock("firebase-admin/app", () => ({
@@ -31,12 +32,14 @@ vi.mock("firebase-admin/auth", () => ({
 }));
 vi.mock("firebase-admin/firestore", () => ({
   getFirestore: () => ({
-    doc: () => ({
+    doc: (ruta: string) => ({
       get: async () => ({
         exists: state.exists,
         data: () =>
           state.exists ? { active: state.active, role: state.role } : undefined,
       }),
+      set: async (campos: Record<string, unknown>, opciones: unknown) =>
+        state.reflejado(ruta, campos, opciones),
     }),
   }),
 }));
@@ -54,6 +57,7 @@ beforeEach(() => {
   state.admin = false;
   state.role = "citizen";
   state.sellado.mockClear();
+  state.reflejado.mockClear();
   process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = "prueba";
 });
 
@@ -88,6 +92,32 @@ it("el rol escrito en la cuenta vale, y se sella en el token", async () => {
     uid: "vecina",
   });
   expect(state.sellado).toHaveBeenCalledWith("vecina", { admin: true });
+});
+
+/**
+ * Y al revés. Los avisos push resuelven el Consejo leyendo el campo `role`
+ * (`src/server/push-tokens.ts`), así que una reivindicación sin su reflejo
+ * —sellada por el guion, o por una escritura que falló— dejaba a esa persona
+ * sin recibir ni un aviso y sin ningún síntoma.
+ */
+it("la reivindicación sin reflejo se escribe en la cuenta, y solo si falta", async () => {
+  state.exists = true;
+  state.active = true;
+  state.admin = true;
+  state.role = "citizen";
+  await expect(requireAdmin(request())).resolves.toMatchObject({
+    uid: "vecina",
+  });
+  expect(state.reflejado).toHaveBeenCalledWith(
+    "accounts/vecina",
+    { role: "admin" },
+    { merge: true },
+  );
+
+  state.reflejado.mockClear();
+  state.role = "admin";
+  await requireAdmin(request());
+  expect(state.reflejado).not.toHaveBeenCalled();
 });
 
 it("perfil activo pasa, y el rol sigue siendo cosa aparte", async () => {

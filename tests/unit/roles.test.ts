@@ -47,6 +47,7 @@ const state = vi.hoisted(() => ({
   claims: vi.fn(),
   registrado: vi.fn(),
   sincronizado: vi.fn(),
+  falloAlSincronizar: false,
 }));
 
 vi.mock("../../src/server/admin-auth", () => ({
@@ -80,9 +81,10 @@ function fakeDb() {
   return {
     doc: () => ({
       get: async () => ({ data: () => ({ active: state.active }) }),
-      /* Devuelve promesa: la ruta encadena un `.catch` sobre la escritura. */
-      update: async (campos: Record<string, unknown>) =>
-        state.sincronizado(campos),
+      set: async (campos: Record<string, unknown>, opciones: unknown) => {
+        if (state.falloAlSincronizar) throw new Error("Firestore no responde");
+        return state.sincronizado(campos, opciones);
+      },
     }),
     collection: () => ({ add: state.registrado }),
   };
@@ -104,6 +106,7 @@ beforeEach(() => {
   state.claims.mockClear();
   state.registrado.mockClear();
   state.sincronizado.mockClear();
+  state.falloAlSincronizar = false;
 });
 
 it("concede el rol y lo deja registrado", async () => {
@@ -111,9 +114,25 @@ it("concede el rol y lo deja registrado", async () => {
   expect(response.status).toBe(200);
   expect(state.claims).toHaveBeenCalledWith("vecino", { admin: true });
   expect(state.registrado.mock.calls[0][0].actor).toBe("presidenta");
-  /* El campo de la base no lo lee nadie, pero se deja al día: mirarlo y creer
-     que editándolo se concede el rol es el malentendido que motivó todo esto. */
-  expect(state.sincronizado).toHaveBeenCalledWith({ role: "admin" });
+  /* El campo de la base sí lo lee alguien: los avisos push resuelven el Consejo
+     por él. Se escribe con `merge` —el documento puede no existir— y sin
+     tragarse el fallo, que es lo que comprueba la prueba siguiente. */
+  expect(state.sincronizado).toHaveBeenCalledWith(
+    { role: "admin" },
+    { merge: true },
+  );
+});
+
+/* Si el reflejo se queda atrás, la persona entra al panel del Consejo y no
+   recibe un solo aviso, sin error en ninguna parte. Antes se tragaba con un
+   `.catch(() => undefined)`; ahora se dice. */
+it("si el campo de la cuenta no se puede escribir, el rol no se concede a medias", async () => {
+  state.falloAlSincronizar = true;
+  const response = await POST(
+    peticion({ email: "vecino@rio.test", admin: true }),
+  );
+  expect(response.status).toBe(503);
+  expect(state.claims).not.toHaveBeenCalled();
 });
 
 it("no concede a una cuenta que todavía no ha entrado", async () => {

@@ -88,12 +88,20 @@ beforeEach(() => {
   store.set("notifications/ana/items/uno-received", { read: false });
   store.set("incidentIntake/uno", { owner: "ana", hash: "abc" });
   store.set("incidentLimits/ana", { day: "2026-09-14", count: 3 });
+  store.set("pushTokens/ana/devices/tok-1", { platform: "android", agent: "Pixel" });
+  store.set("pushTokens/ana/devices/tok-2", { platform: "web", agent: "Chrome" });
+  store.set("pushTokens/beto/devices/tok-3", { platform: "android", agent: "Moto" });
 });
 
 describe("anonimización de cuenta", () => {
   it("retira los datos personales y conserva la trazabilidad comunitaria", async () => {
     const result = await anonymizeAccount(db, "ana", "anon-1");
-    expect(result).toMatchObject({ incidents: 1, notifications: 1, complete: true });
+    expect(result).toMatchObject({
+      incidents: 1,
+      notifications: 1,
+      devices: 2,
+      complete: true,
+    });
     const incident = store.get("incidents/uno")!;
     expect(incident.owner).toBe("anon-1");
     expect(incident.phone).toBe("");
@@ -109,6 +117,11 @@ describe("anonimización de cuenta", () => {
     expect(store.has("notifications/ana/items/uno-received")).toBe(false);
     expect(store.has("incidentIntake/uno")).toBe(false);
     expect(store.has("incidentLimits/ana")).toBe(false);
+    /* El token de un aparato y su user-agent son un identificador que dura
+       tanto como el teléfono: se van con lo demás, o el aviso de cada reporte
+       nuevo seguiría llegando a quien pidió que se le borrara. */
+    expect(store.has("pushTokens/ana/devices/tok-1")).toBe(false);
+    expect(store.has("pushTokens/ana/devices/tok-2")).toBe(false);
     expect(store.get("accounts/ana")).toMatchObject({ active: false, deleted: true, avatar: null });
     expect(calls.evidence[0]).toContain("owner_uid=eq.ana");
   });
@@ -119,6 +132,7 @@ describe("anonimización de cuenta", () => {
       owner: "beto",
       phone: "3007654321",
     });
+    expect(store.has("pushTokens/beto/devices/tok-3")).toBe(true);
   });
 
   it("repetirla no cambia el resultado", async () => {
