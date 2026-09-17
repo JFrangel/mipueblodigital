@@ -1,14 +1,15 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 /**
- * Cuándo suena el teléfono al cambiar el estado de un expediente, y cuándo no.
+ * Cuándo suena el teléfono, y cuándo no, en las dos rutas que no tenían banco
+ * propio: el cambio de estado de un expediente y la solicitud de eliminación de
+ * cuenta.
  *
- * Esta ruta era la única de las cuatro sin banco de pruebas propio, y es la del
- * enganche más delicado: el aviso de la bandeja solo se escribe si el caso tiene
- * dueño **y** algo cambió para él —el estado, o una nota pública—, así que el
- * teléfono tiene que sonar exactamente en esos mismos casos. Uno que suena
- * cuando la bandeja no recibe nada es ruido, y el ruido enseña a la gente a
- * ignorar el aviso.
+ * La del cambio de estado es la del enganche más delicado de los cuatro. El
+ * aviso de la bandeja solo se escribe si el caso tiene dueño **y** algo cambió
+ * para él —el estado, o una nota pública—, así que el teléfono tiene que sonar
+ * exactamente en esos mismos casos. Uno que suena cuando la bandeja no registra
+ * nada es ruido, y el ruido enseña a la gente a ignorar el aviso.
  *
  * Lo que no se prueba aquí es Firestore. Se prueba quién recibe qué.
  */
@@ -16,8 +17,9 @@ const id = "c".repeat(64);
 
 const state = vi.hoisted(() => ({
   caso: {} as Record<string, unknown>,
-  /* Los cambios ya aplicados, por identificador de mutación. */
-  eventos: new Map<string, Record<string, unknown>>(),
+  /* Documentos que ya existen: los cambios aplicados y las solicitudes de
+     eliminación anteriores. Sirve para probar los reintentos. */
+  existentes: new Map<string, Record<string, unknown>>(),
   escrito: [] as Array<{ path: string; data?: unknown }>,
   avisos: [] as Array<{
     destino: unknown;
@@ -35,6 +37,60 @@ vi.mock("../../src/server/push", () => ({
   },
 }));
 
+vi.mock("../../src/server/anonymize", () => ({
+  anonymizeAccount: async () => ({
+    complete: true,
+    incidents: 0,
+    notifications: 0,
+    devices: 0,
+    evidence: 0,
+  }),
+}));
+
+/**
+ * La misma base de datos de mentira para las dos rutas.
+ *
+ * Va en una declaración de función y no en una constante a propósito: las
+ * fábricas de `vi.mock` se elevan por encima del resto del módulo, y una
+ * constante todavía no existiría cuando se evalúan.
+ */
+function baseDeDatos() {
+  return {
+    doc: (path: string) => ({
+      path,
+      set: async (data: unknown) => {
+        state.escrito.push({ path, data });
+      },
+      collection: (name: string) => ({
+        doc: (docId: string) => ({ path: `${path}/${name}/${docId}` }),
+      }),
+    }),
+    runTransaction: async (fn: (t: unknown) => unknown) => {
+      const escrituras: Array<() => void> = [];
+      const resultado = await fn({
+        get: async (ref: { path: string }) => {
+          if (ref.path === `incidents/${id}`) return { data: () => state.caso };
+          const doc = state.existentes.get(ref.path);
+          return { exists: !!doc, data: () => doc };
+        },
+        create: (ref: { path: string }, data: Record<string, unknown>) =>
+          escrituras.push(() => {
+            state.escrito.push({ path: ref.path, data });
+            state.existentes.set(ref.path, data);
+          }),
+        set: (ref: { path: string }, data: Record<string, unknown>) =>
+          escrituras.push(() => state.escrito.push({ path: ref.path, data })),
+        update: (ref: { path: string }, data: Record<string, unknown>) =>
+          escrituras.push(() => state.escrito.push({ path: ref.path, data })),
+        delete: (ref: { path: string }) =>
+          escrituras.push(() => state.escrito.push({ path: ref.path })),
+      });
+      escrituras.forEach((w) => w());
+      return resultado;
+    },
+  };
+}
+
 vi.mock("../../src/server/admin-auth", () => ({
   ApiError: class extends Error {
     constructor(
@@ -44,44 +100,24 @@ vi.mock("../../src/server/admin-auth", () => ({
       super(message);
     }
   },
+  adminServices: () => ({
+    auth: {
+      updateUser: async () => undefined,
+      revokeRefreshTokens: async () => undefined,
+    },
+  }),
+  requireIdentity: async () => ({
+    identity: { uid: "vecina-luz", admin: false },
+    db: baseDeDatos(),
+  }),
   requireAdmin: async () => ({
     uid: "consejo-ana",
-    db: {
-      doc: (path: string) => ({
-        path,
-        collection: (name: string) => ({
-          doc: (docId: string) => ({ path: `${path}/${name}/${docId}` }),
-        }),
-      }),
-      runTransaction: async (fn: (t: unknown) => unknown) => {
-        const escrituras: Array<() => void> = [];
-        const resultado = await fn({
-          get: async (ref: { path: string }) => {
-            if (ref.path === `incidents/${id}`)
-              return { data: () => state.caso };
-            const evento = state.eventos.get(ref.path);
-            return { exists: !!evento, data: () => evento };
-          },
-          create: (ref: { path: string }, data: Record<string, unknown>) =>
-            escrituras.push(() => {
-              state.escrito.push({ path: ref.path, data });
-              state.eventos.set(ref.path, data);
-            }),
-          set: (ref: { path: string }, data: Record<string, unknown>) =>
-            escrituras.push(() => state.escrito.push({ path: ref.path, data })),
-          update: (ref: { path: string }, data: Record<string, unknown>) =>
-            escrituras.push(() => state.escrito.push({ path: ref.path, data })),
-          delete: (ref: { path: string }) =>
-            escrituras.push(() => state.escrito.push({ path: ref.path })),
-        });
-        escrituras.forEach((w) => w());
-        return resultado;
-      },
-    },
+    db: baseDeDatos(),
   }),
 }));
 
 import { PATCH } from "../../src/app/api/admin/incidents/[id]/route";
+import { POST as solicitarBorrado } from "../../src/app/api/account/deletion/route";
 
 const cambiar = (extra: Record<string, unknown> = {}) =>
   PATCH(
@@ -111,7 +147,7 @@ const cambiar = (extra: Record<string, unknown> = {}) =>
   );
 
 beforeEach(() => {
-  state.eventos.clear();
+  state.existentes.clear();
   state.escrito = [];
   state.avisos = [];
   state.caso = {
@@ -123,6 +159,8 @@ beforeEach(() => {
     title: "Derrumbe en la vía",
   };
 });
+
+/* ── El expediente cambia de estado ───────────────────────────────────── */
 
 it("un cambio de estado le suena al vecino dueño del reporte", async () => {
   expect((await cambiar()).status).toBe(200);
@@ -142,8 +180,8 @@ it("al Consejo no le suena lo que acaba de hacer uno de ellos", async () => {
 });
 
 /* El aviso de la bandeja solo se escribe si algo cambió para el vecino. El
-   teléfono tiene que seguir esa misma condición, ni más ni menos: guardar el
-   caso con el mismo estado y sin nota no es novedad para nadie de fuera. */
+   teléfono sigue esa misma condición, ni más ni menos: guardar el caso con el
+   mismo estado y una nota interna no es novedad para nadie de fuera. */
 it("guardar sin cambiar nada para el vecino no suena", async () => {
   await cambiar({ status: "pendiente" });
   expect(state.avisos).toEqual([]);
@@ -157,7 +195,8 @@ it("una nota pública suena aunque el estado no cambie", async () => {
 });
 
 /* Sin nota, el cuerpo dice en qué quedó el caso. Un aviso que solo dice «tu
-   reporte cambió» obliga a abrir la aplicación para saber a qué. */
+   reporte cambió» obliga a abrir la aplicación para saber a qué, que es justo
+   lo que el aviso venía a evitar. */
 it("sin nota, el aviso dice en qué estado quedó", async () => {
   await cambiar();
   expect(state.avisos[0].aviso.body).toContain("En proceso");
@@ -184,4 +223,45 @@ it("la respuesta no lleva el identificador del vecino", async () => {
   const cuerpo = await (await cambiar()).json();
   expect(JSON.stringify(cuerpo)).not.toContain("vecina-luz");
   expect(cuerpo).toEqual({ version: 1 });
+});
+
+/* ── Alguien pide borrar su cuenta ────────────────────────────────────── */
+
+const pedirBorrado = () =>
+  solicitarBorrado(
+    new Request("http://localhost/api/account/deletion/", { method: "POST" }),
+  );
+
+/* Una solicitud de eliminación tiene plazos legales y el Consejo es quien
+   responde por ellos. Enterarse al abrir el panel, cuando se abra, no sirve. */
+it("una solicitud de eliminación le suena al Consejo", async () => {
+  expect((await pedirBorrado()).status).toBe(200);
+  expect(state.avisos).toHaveLength(1);
+  expect(state.avisos[0].destino).toEqual({ consejo: true });
+  expect(state.avisos[0].aviso.title).toBe(
+    "Solicitud de eliminación de cuenta",
+  );
+  expect(state.avisos[0].aviso.url).toBe("/admin/");
+});
+
+/* El aviso no dice de quién es la solicitud. El Consejo lo verá en el panel,
+   con su control de acceso delante; una notificación se lee en la pantalla de
+   bloqueo, y ahí no va el nombre de quien pidió irse. */
+it("el aviso de eliminación no nombra a quien la pidió", async () => {
+  await pedirBorrado();
+  const texto = JSON.stringify(state.avisos[0].aviso);
+  expect(texto).not.toContain("vecina-luz");
+});
+
+/* Esta ruta se reintenta a propósito cuando algo quedó a medias, y el reintento
+   no es una solicitud nueva. */
+it("reintentar una solicitud a medias no vuelve a sonar", async () => {
+  state.existentes.set("accountDeletionRequests/vecina-luz", {
+    owner: "vecina-luz",
+    state: "pending",
+    pseudonym: "anon-ya-asignado",
+    requestedAt: "2026-09-01T00:00:00.000Z",
+  });
+  await pedirBorrado();
+  expect(state.avisos).toEqual([]);
 });

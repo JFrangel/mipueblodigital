@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { adminServices, ApiError, requireIdentity } from "@/server/admin-auth";
 import { anonymizeAccount } from "@/server/anonymize";
+import { avisar } from "@/server/push";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
 
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
     const at = new Date().toISOString();
     const ref = db.doc(`accountDeletionRequests/${uid}`);
     // El seudónimo se conserva solo mientras dura el proceso; al terminar se retira.
-    const pseudonym = await db.runTransaction(async (tx) => {
+    const { pseudonym, nuevo } = await db.runTransaction(async (tx) => {
       const previous = (await tx.get(ref)).data();
       if (previous?.state === "completed")
         throw new ApiError(
@@ -53,8 +54,30 @@ export async function POST(request: Request) {
         at,
         requestId: uid,
       });
-      return assigned as string;
+      /* `nuevo` separa la primera solicitud del reintento. Esta ruta se
+         vuelve a llamar a propósito cuando algo quedó a medias, y un reintento
+         no es una solicitud nueva: el Consejo no tiene por qué enterarse dos
+         veces de lo mismo. */
+      return { pseudonym: assigned as string, nuevo: !previous };
     });
+
+    /* Al Consejo, que es quien responde por los plazos de una eliminación.
+       Enterarse al abrir el panel, cuando se abra, no sirve.
+
+       El aviso no dice de quién es. El Consejo lo verá en el panel, con su
+       control de acceso delante; una notificación se lee en la pantalla de
+       bloqueo de un teléfono que puede estar prestado, y ahí no va el nombre de
+       quien pidió irse. */
+    if (nuevo)
+      void avisar(
+        db,
+        { consejo: true },
+        {
+          title: "Solicitud de eliminación de cuenta",
+          body: "Entra al panel del Consejo para atenderla.",
+          url: "/admin/",
+        },
+      );
 
     // El acceso se corta antes de tocar los datos; una caída del proveedor de
     // identidad no debe impedir que la anonimización avance.
