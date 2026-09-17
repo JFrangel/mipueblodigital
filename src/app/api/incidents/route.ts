@@ -10,6 +10,7 @@ import {
 import { validateReport } from "@/domain/logic";
 import { DEFAULT_PRIORITY } from "@/domain/priority";
 import { categories } from "@/data/catalog";
+import { avisar } from "@/server/push";
 import { isCatalogued, isInsideTerritory } from "@/domain/territory";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
@@ -171,8 +172,14 @@ export async function POST(request: Request) {
           "La cuenta fue desactivada antes de confirmar el envío.",
         );
       const existing = (await tx.get(ref)).data();
-      if (existing) return { id, receivedAt: existing.date };
+      /* Un aviso nulo distingue el recibo repetido del primero, y con eso la
+         idempotencia alcanza también al teléfono: reenviar el mismo reporte no
+         vuelve a sonar. Se quita de la respuesta más abajo. */
+      if (existing) return { id, receivedAt: existing.date, aviso: null };
       const date = new Date().toISOString();
+      /* Qué llegó y de dónde. Lo leen el aviso de la bandeja del Consejo y el
+         que suena en el teléfono, y por eso se escribe una sola vez. */
+      const queYDonde = `${categories.find((c) => c.id === data.category)?.name ?? "Otra situación"} en ${data.vereda}`;
       tx.create(ref, {
         ...data,
         id,
@@ -203,7 +210,7 @@ export async function POST(request: Request) {
         /* Qué llegó y de dónde. El aviso decía que había algo nuevo sin decir
            qué, y para enterarse había que ir a buscarlo a la bandeja. No lleva
            el relato: eso es del expediente, y un aviso no es el sitio. */
-        note: `${categories.find((c) => c.id === data.category)?.name ?? "Otra situación"} en ${data.vereda}`,
+        note: queYDonde,
         at: date,
       });
       tx.create(db.doc(`notifications/${uid}/items/${id}-received`), {
@@ -214,7 +221,17 @@ export async function POST(request: Request) {
         read: false,
       });
       tx.update(intake, { state: "received", receivedAt: date });
-      return { id, receivedAt: date };
+      return {
+        id,
+        receivedAt: date,
+        /* El mismo texto que la bandeja, no una copia suya: si cambia lo que
+           dice el aviso, cambia en los dos sitios a la vez o en ninguno. */
+        aviso: {
+          title: "Nuevo reporte recibido",
+          body: queYDonde,
+          url: `/reporte/${id}/`,
+        },
+      };
     });
     /* Respaldo de la fotografía junto al expediente, fuera de la transacción y
        sin poder tumbar el recibo: el original ya está guardado y verificado, y
@@ -234,7 +251,13 @@ export async function POST(request: Request) {
           : undefined,
       )
       .catch(() => undefined);
-    return Response.json(receipt, { status: 200, headers });
+    /* Que el Consejo se entere sin abrir la aplicación. Fuera de la
+       transacción y con `void` por lo mismo que el respaldo de la fotografía:
+       un recibo confirmado es un recibo confirmado aunque el aviso no salga. Y
+       no viaja en la respuesta, que no es asunto de quien reporta. */
+    const { aviso, ...recibo } = receipt;
+    if (aviso) void avisar(db, { consejo: true }, aviso);
+    return Response.json(recibo, { status: 200, headers });
   } catch (error) {
     return failure(error);
   }
