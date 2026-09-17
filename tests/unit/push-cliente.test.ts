@@ -23,6 +23,12 @@ const state = vi.hoisted(() => ({
   llamadas: [] as Array<{ url: string; cuerpo: unknown; cabeceras: unknown }>,
   borradoNativo: 0,
   borradoWeb: 0,
+  /* Cuántas veces se abrió el diálogo del permiso. Comprobar que el aparato no
+     se apunta no basta: registrar() se traga los errores, así que preguntar a
+     destiempo y fallar se ve exactamente igual que no preguntar. Y preguntar a
+     destiempo es el fallo que hay que evitar: en Android 13 en adelante un «no»
+     obliga a entrar en los ajustes del sistema para deshacerlo. */
+  preguntas: 0,
 }));
 
 vi.mock("../../src/platform/native", () => ({ esNativo: () => state.nativo }));
@@ -46,7 +52,10 @@ vi.mock("../../src/data/firebase/client", () => ({
 
 vi.mock("@capacitor-firebase/messaging", () => ({
   FirebaseMessaging: {
-    requestPermissions: async () => ({ receive: state.permisoNativo }),
+    requestPermissions: async () => {
+      state.preguntas += 1;
+      return { receive: state.permisoNativo };
+    },
     checkPermissions: async () => ({ receive: state.permisoNativo }),
     getToken: async () => ({ token: state.tokenNativo }),
     deleteToken: async () => {
@@ -82,10 +91,14 @@ beforeEach(() => {
   state.llamadas = [];
   state.borradoNativo = 0;
   state.borradoWeb = 0;
+  state.preguntas = 0;
   process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY = "clave-vapid";
   vi.stubGlobal("Notification", {
     permission: "granted",
-    requestPermission: async () => "granted",
+    requestPermission: async () => {
+      state.preguntas += 1;
+      return "granted";
+    },
   });
   vi.stubGlobal("navigator", {
     serviceWorker: { ready: Promise.resolve({}) },
@@ -162,10 +175,20 @@ it("permiso denegado se dice, y no se apunta nada", async () => {
 });
 
 /* Un aviso es de alguien. Sin sesión no hay a quién apuntar el aparato. */
-it("sin sesión no se apunta nada", async () => {
+it("sin sesión no se apunta nada, y no se pregunta nada", async () => {
   state.usuario = null;
+  vi.stubGlobal("Notification", {
+    permission: "default",
+    requestPermission: async () => {
+      state.preguntas += 1;
+      return "granted";
+    },
+  });
   expect(await registrar()).toBe("no-disponible");
   expect(state.llamadas).toEqual([]);
+  /* Sin esto, quien abre la aplicación sin sesión vería el diálogo del permiso
+     antes de que nadie descubra que no hay a quién apuntar el aparato. */
+  expect(state.preguntas).toBe(0);
 });
 
 /* ── Soltar el aparato ────────────────────────────────────────────────── */
@@ -185,8 +208,21 @@ it("en el navegador la baja borra el token web", async () => {
 });
 
 /* Cerrar sesión llama a esto. Si lanzara, quien cierra sesión vería un error
-   por algo que no le importa, o peor, se quedaría sin cerrarla. */
-it("la baja no lanza aunque todo falle", async () => {
+   por algo que no le importa, o peor, se quedaría sin cerrarla.
+
+   Se prueba con la sesión ya caída, que es el caso real: `memberHeaders` revienta
+   al firmar la petición, después de haber borrado el token del aparato. La
+   versión anterior de esta prueba apagaba el soporte del navegador, y así la
+   función salía antes de llegar al `catch`: no probaba nada. */
+it("la baja no lanza aunque falle avisar al servidor", async () => {
+  state.usuario = null;
+  await expect(darDeBaja()).resolves.toBeUndefined();
+  expect(state.borradoNativo).toBe(1);
+  expect(state.llamadas).toEqual([]);
+});
+
+/* Y tampoco lanza cuando el aparato no puede recibir avisos en absoluto. */
+it("la baja no lanza en un navegador sin soporte", async () => {
   state.nativo = false;
   state.soportado = false;
   await expect(darDeBaja()).resolves.toBeUndefined();
@@ -212,21 +248,25 @@ it("refrescar no pregunta ni apunta si no hay permiso", async () => {
   vi.stubGlobal("Notification", {
     permission: "default",
     requestPermission: async () => {
-      throw new Error("no debe preguntar");
+      state.preguntas += 1;
+      return "granted";
     },
   });
   await refrescar();
+  expect(state.preguntas).toBe(0);
   expect(state.llamadas).toEqual([]);
 });
 
 it("refrescar tampoco pregunta en el APK", async () => {
   state.permisoNativo = "prompt";
   await refrescar();
+  expect(state.preguntas).toBe(0);
   expect(state.llamadas).toEqual([]);
 });
 
 it("refrescar sin sesión no hace nada", async () => {
   state.usuario = null;
   await refrescar();
+  expect(state.preguntas).toBe(0);
   expect(state.llamadas).toEqual([]);
 });
