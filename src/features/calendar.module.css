@@ -182,6 +182,8 @@
   margin: 8px 0 18px;
 }
 .results ul {
+  /* Sin estiramiento al llegar al tope de la lista. Ver globals.css. */
+  overscroll-behavior: none;
   list-style: none;
   padding: 0;
   max-height: 330px;

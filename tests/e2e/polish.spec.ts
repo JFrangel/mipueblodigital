@@ -303,3 +303,43 @@ test("la portada del informe declara el filtro con el que se emitió", async ({
   await expect(page.locator(".report-cover")).toContainText("Alto Satinga");
   await page.emulateMedia({ media: "screen" });
 });
+
+/**
+ * Sin el estiramiento del final, en todas partes.
+ *
+ * Android 12 cambió el rebote por una deformación: al llegar al tope el
+ * contenido se estira como una gelatina. Se apaga con `overscroll-behavior`,
+ * pero solo sirve en el elemento que de verdad scrollea, así que hay que
+ * ponerlo en el documento **y** en cada contenedor con desplazamiento propio.
+ *
+ * Esta prueba existe porque es de las que se pierden en silencio: alguien
+ * reordena una regla, se lleva una línea por delante, y el defecto vuelve sin
+ * que nada falle.
+ */
+test("ninguna superficie se estira al llegar al tope", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/inicio/");
+  const documento = await page.evaluate(() => [
+    getComputedStyle(document.documentElement).overscrollBehaviorY,
+    getComputedStyle(document.body).overscrollBehaviorY,
+  ]);
+  expect(documento).toEqual(["none", "none"]);
+
+  /* Y todo lo que scrollee por dentro, mire donde mire. `contain` no vale
+     aquí: evita que el scroll salte al padre, pero el contenedor se sigue
+     estirando por su cuenta. */
+  await page.goto("/comunidad/");
+  const propios = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("*")]
+      .filter((el) => {
+        const e = getComputedStyle(el);
+        const desplaza = (v: string) => v === "auto" || v === "scroll";
+        return desplaza(e.overflowY) || desplaza(e.overflowX);
+      })
+      .map((el) => [
+        el.className || el.tagName,
+        getComputedStyle(el).overscrollBehaviorY,
+      ]),
+  );
+  expect(propios.filter(([, v]) => v !== "none")).toEqual([]);
+});
