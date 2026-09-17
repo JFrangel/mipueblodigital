@@ -115,3 +115,44 @@ self.addEventListener("fetch", event => {
     }
   })());
 });
+/* Los avisos que llegan con la aplicación cerrada.
+   La carga la manda src/server/push.ts y llega como JSON. No se importan los
+   scripts de Firebase a propósito: chocarían con la política de contenido que
+   la aplicación ya tiene puesta, y añadirían ochenta kilobytes a un archivo
+   que hoy se puede leer entero. Leerla a mano son diez líneas.
+   Si la carga viene rota se avisa igual, con el nombre de la aplicación: algo
+   llegó, y callarse es peor que decirlo sin detalle. Lo que no puede pasar es
+   que este oyente reviente, porque se llevaría por delante el modo sin
+   conexión, que es lo que más falta hace aquí. */
+self.addEventListener("push", event => {
+  let carga = {};
+  try { carga = event.data ? event.data.json() : {}; } catch { carga = {}; }
+  const aviso = carga.notification || {};
+  const url = (carga.data && carga.data.url) || "/inicio/";
+  event.waitUntil(self.registration.showNotification(aviso.title || "Mi Pueblo Digital", {
+    body: aviso.body || "",
+    icon: "/brand/pwa-192.png",
+    badge: "/brand/pwa-192.png",
+    data: { url },
+    /* Un aviso por pantalla: si llegan tres cambios del mismo expediente, el
+       último sustituye a los anteriores en vez de apilar tres avisos. */
+    tag: url,
+  }));
+});
+/* Tocar el aviso lleva al expediente, no a la portada. Si ya hay una pestaña de
+   la aplicación abierta se reutiliza —abrir una segunda igual es lo que hace
+   que la gente acabe con seis pestañas de lo mismo—: si ya está en esa
+   pantalla se enfoca, y si está en otra se lleva. */
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const destino = (event.notification.data && event.notification.data.url) || "/inicio/";
+  event.waitUntil((async () => {
+    const abiertas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const cliente of abiertas) {
+      if (new URL(cliente.url).pathname === destino) return cliente.focus();
+    }
+    const alguna = abiertas[0];
+    if (alguna && alguna.navigate) { await alguna.focus(); return alguna.navigate(destino); }
+    return self.clients.openWindow(destino);
+  })());
+});
