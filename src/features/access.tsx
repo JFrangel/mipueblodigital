@@ -22,7 +22,6 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
-  signOut,
   createUserWithEmailAndPassword,
   updateProfile,
   sendEmailVerification,
@@ -31,7 +30,7 @@ import {
   type User,
 } from "firebase/auth";
 import { firebaseClient } from "@/data/firebase/client";
-import { entrarConGoogleNativo, esNativo } from "@/platform/native";
+import { cerrarSesion, entrarConGoogleNativo, esNativo } from "@/platform/native";
 import { GoogleMark } from "@/components/google-mark";
 import { Logo } from "@/components/ui";
 import { registrationError, authError } from "@/domain/auth";
@@ -277,7 +276,7 @@ export function Access() {
               onClick={async () => {
                 setBusy(true);
                 try {
-                  await signOut(firebaseClient().auth);
+                  await cerrarSesion();
                 } catch {
                   setError("No se pudo cerrar la sesión.");
                 } finally {

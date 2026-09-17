@@ -6,10 +6,9 @@ import {
   GoogleAuthProvider,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
-  signOut,
   type User,
 } from "firebase/auth";
-import { firebaseClient } from "@/data/firebase/client";
+import { cerrarSesion } from "@/platform/native";
 import { toast } from "@/data/toasts";
 import { outgoingFor } from "@/data/outbox";
 import { AlertTriangle } from "lucide-react";
@@ -66,7 +65,7 @@ export function DeleteAccount({ user }: { user: User }) {
       setDone(true);
       // HU-19.6: cerrar sesión y devolver a la pantalla de acceso. El resultado
       // viaja en la dirección porque esta pantalla desaparece al cerrar sesión.
-      await signOut(firebaseClient().auth).catch(() => undefined);
+      await cerrarSesion().catch(() => undefined);
       router.push(`/acceso/?cuenta=${data.complete ? "eliminada" : "parcial"}`);
     } catch (error) {
       const dicho =

@@ -32,6 +32,10 @@ export function authError(error: unknown) {
       "La contraseña no cumple los requisitos del servicio.",
     "auth/password-does-not-meet-requirements":
       "La contraseña no cumple los requisitos del servicio.",
+    /* Lo lanza el acceso nativo de Android cuando Google elige la cuenta pero
+       no devuelve con qué firmar. Ver src/platform/native.ts. */
+    "mpd/sin-credencial-google":
+      "Google no entregó los datos de la cuenta. Vuelve a intentarlo; si sigue igual, entra con tu correo y contraseña.",
   };
   return (
     messages[code] ||

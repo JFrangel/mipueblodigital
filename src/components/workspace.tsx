@@ -78,8 +78,7 @@ import { NewsDetail } from "@/features/news-detail";
 import { TerritoryPulse } from "./territory-pulse";
 import { useSession } from "@/data/session";
 import { useOnline } from "@/data/network";
-import { signOut } from "firebase/auth";
-import { firebaseClient } from "@/data/firebase/client";
+import { cerrarSesion } from "@/platform/native";
 const nav = [
   { id: "inicio", label: "Inicio", Icon: Home },
   { id: "mis-reportes", label: "Mis reportes", Icon: Files },
@@ -307,7 +306,7 @@ export function Workspace({
   }
   async function leave() {
     try {
-      await signOut(firebaseClient().auth);
+      await cerrarSesion();
       router.push("/acceso/");
     } catch {
       setStorageError("No se pudo cerrar la sesión en este dispositivo.");

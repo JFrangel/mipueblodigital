@@ -1,5 +1,11 @@
 "use client";
 import { Capacitor } from "@capacitor/core";
+import {
+  GoogleAuthProvider,
+  signInWithCredential,
+  signOut,
+} from "firebase/auth";
+import { firebaseClient } from "@/data/firebase/client";
 
 /**
  * ¿Corre dentro de la aplicación instalada, o en un navegador?
@@ -13,17 +19,61 @@ import { Capacitor } from "@capacitor/core";
 export const esNativo = () => Capacitor.isNativePlatform();
 
 /**
- * Entrar con Google desde la aplicación instalada.
- *
- * Usa la cuenta que ya está puesta en el teléfono, sin salir de la aplicación,
- * y firma en Firebase con lo que devuelve. Es además lo que la gente espera:
- * elegir su cuenta de una lista, no teclear una contraseña.
- *
- * El complemento se carga solo aquí y solo cuando hace falta: en el navegador
+ * El complemento, cargado solo aquí y solo cuando hace falta: en el navegador
  * no se baja nunca, porque no tiene nada que hacer.
  */
+const complemento = async () =>
+  (await import("@capacitor-firebase/authentication")).FirebaseAuthentication;
+
+/**
+ * Entrar con Google desde la aplicación instalada.
+ *
+ * **Dentro del teléfono hay dos Firebase, y no se conocen.** El complemento
+ * firma en el Firebase nativo de Android; el resto de esta aplicación —la
+ * sesión, los reportes, la cuenta, la bandeja del Consejo— lee el Firebase de
+ * JavaScript que vive en la ventana web. Son dos almacenes distintos.
+ *
+ * Firmar solo en el nativo produce el fallo más desconcertante posible: el
+ * selector de cuentas abre, la persona elige la suya, todo va bien por dentro y
+ * **la pantalla no se mueve**, porque la capa que la pinta no se ha enterado de
+ * nada. Así que se hace el trayecto entero: el complemento elige la cuenta del
+ * teléfono y devuelve un identificador, y con ese identificador se firma
+ * también en la capa web, que es la que manda aquí.
+ */
 export async function entrarConGoogleNativo() {
-  const { FirebaseAuthentication } =
-    await import("@capacitor-firebase/authentication");
-  await FirebaseAuthentication.signInWithGoogle();
+  const FirebaseAuthentication = await complemento();
+  const { credential } = await FirebaseAuthentication.signInWithGoogle();
+  const idToken = credential?.idToken;
+  /* Sin identificador no hay nada que firmar, y seguir adelante devolvería a
+     la persona a la misma pantalla quieta de antes. Mejor decirlo. */
+  if (!idToken)
+    throw Object.assign(
+      new Error("Google no devolvió el identificador de la cuenta."),
+      { code: "mpd/sin-credencial-google" },
+    );
+  await signInWithCredential(
+    firebaseClient().auth,
+    GoogleAuthProvider.credential(idToken),
+  );
+}
+
+/**
+ * Cerrar la sesión, en todas las capas que la tengan abierta.
+ *
+ * Existe por lo mismo que la función de arriba: dentro de la aplicación
+ * instalada hay dos sesiones, y cerrar solo la de la ventana deja la cuenta
+ * puesta en la capa nativa. Recordarlo en cada botón de salir es pedir que
+ * algún día se olvide —hay cuatro—, así que la regla vive en un solo sitio.
+ *
+ * La sesión web se cierra primero y es la que cuenta: es la que lee la
+ * aplicación. Si luego falla el aviso a la capa nativa no se dice nada, porque
+ * a esas alturas la sesión **ya está cerrada** y avisar de un fallo sería
+ * mentir sobre lo que acaba de pasar.
+ */
+export async function cerrarSesion() {
+  await signOut(firebaseClient().auth);
+  if (!esNativo()) return;
+  await complemento()
+    .then((FirebaseAuthentication) => FirebaseAuthentication.signOut())
+    .catch(() => undefined);
 }

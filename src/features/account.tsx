@@ -6,10 +6,10 @@ import {
   updateProfile,
   sendPasswordResetEmail,
   sendEmailVerification,
-  signOut,
   type User,
 } from "firebase/auth";
 import { firebaseClient } from "@/data/firebase/client";
+import { cerrarSesion } from "@/platform/native";
 import { toast } from "@/data/toasts";
 import { PasswordChange } from "./password-change";
 import { DeleteAccount } from "./delete-account";
@@ -314,7 +314,7 @@ export function Account({
               disabled={busy}
               onClick={() =>
                 void action(
-                  () => signOut(firebaseClient().auth),
+                  () => cerrarSesion(),
                   "La sesión se cerró en este dispositivo.",
                 )
               }
