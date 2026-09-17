@@ -3087,9 +3087,14 @@ textarea {
     position: sticky;
     left: auto;
     right: auto;
-    height: 64px;
+    /* La barra de estado se dibuja encima de la aplicación, no al lado. La
+       cabecera crece lo que mida y se lo guarda de relleno, de modo que su
+       color llega hasta arriba del todo y el contenido no se sube debajo del
+       reloj. En una pantalla sin muesca el inset vale cero y mide lo de
+       siempre. */
+    height: calc(64px + env(safe-area-inset-top));
     /* 14 px deja el trazo del icono a la altura del texto de abajo. */
-    padding: 0 14px;
+    padding: env(safe-area-inset-top) 14px 0;
     gap: 10px;
     background: var(--bg);
     pointer-events: auto;
@@ -3258,7 +3263,10 @@ textarea {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70px;
+    /* El alto crece con la barra de gestos en vez de repartirse con ella: con
+       `height` fijo y `box-sizing: border-box`, el relleno de abajo se comía
+       los iconos en los teléfonos que la tienen. */
+    height: calc(70px + env(safe-area-inset-bottom));
     padding: 8px 6px calc(7px + env(safe-area-inset-bottom));
     background: var(--surface);
     border-top: 1px solid var(--line);

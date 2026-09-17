@@ -83,6 +83,18 @@ const config: CapacitorConfig = {
       skipNativeAuth: false,
       providers: ["google.com"],
     },
+    /**
+     * Las barras del sistema.
+     *
+     * Capacitor decide si la ventana va a pantalla completa mirando el meta
+     * `viewport-fit` de la página, y la página tarda en llegar. Esta pista dice
+     * de antemano lo que va a encontrar, para que el arranque no dé el salto
+     * de dibujar primero con barras y recolocarlo todo un instante después.
+     * Lo que manda sigue siendo la página; esto solo evita el tirón.
+     */
+    SystemBars: {
+      initialViewportFitValueHint: "cover",
+    },
     SplashScreen: {
       /**
        * Lo que se ve mientras la ventana alcanza la aplicación.

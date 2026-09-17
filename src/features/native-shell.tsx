@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { esNativo } from "@/platform/native";
+import { getTheme, subscribeTheme } from "@/data/theme";
 
 /**
  * Lo que convierte una ventana web en algo que se siente una aplicación.
@@ -9,7 +10,7 @@ import { esNativo } from "@/platform/native";
  * Dentro del APK, Mi Pueblo Digital es una ventana a la aplicación publicada.
  * Eso es deliberado —las rutas del servidor no caben en un teléfono— pero sin
  * nada más se nota, y se nota en detalles concretos: arranca con un rectángulo
- * blanco y de golpe aparece una página, la barra de estado es de otro color, y
+ * blanco y de golpe aparece una página, el reloj de arriba no se lee, y
  * el botón de atrás del teléfono cierra la aplicación entera en vez de volver
  * a la pantalla anterior.
  *
@@ -26,25 +27,39 @@ export function NativeShell() {
        aquí y no en el servidor porque solo aquí se sabe dónde corre. */
     document.documentElement.classList.add("app-nativa");
     let vivo = true;
+    /* Se guarda aparte porque el tema puede cambiar mucho antes de que el
+       complemento termine de cargarse. */
+    let vestir: ((oscuro: boolean) => void) | undefined;
     void (async () => {
       const [{ StatusBar, Style }, { SplashScreen }] = await Promise.all([
         import("@capacitor/status-bar"),
         import("@capacitor/splash-screen"),
       ]);
       if (!vivo) return;
-      /* La barra de estado, del color del Consejo y con los iconos claros
-         encima. En su color de fábrica parecía de otra aplicación. */
-      await StatusBar.setStyle({ style: Style.Dark }).catch(() => undefined);
-      await StatusBar.setBackgroundColor({ color: "#104734" }).catch(
-        () => undefined,
-      );
+      /**
+       * Los iconos de la barra de estado, del color contrario a lo que hay
+       * debajo.
+       *
+       * La aplicación llega hasta el borde de arriba, así que detrás del reloj
+       * está el fondo que pinta la cabecera y no un color propio de la barra.
+       * Antes se fijaban claros de una vez y con el tema claro el reloj
+       * quedaba blanco sobre blanco, ilegible. Ahora se eligen por tema, y se
+       * vuelven a elegir cada vez que cambia.
+       */
+      vestir = (oscuro) =>
+        void StatusBar.setStyle({
+          style: oscuro ? Style.Dark : Style.Light,
+        }).catch(() => undefined);
+      vestir(getTheme());
       /* La pantalla de arranque se retira en cuanto hay algo que enseñar. Se
          retira sola a los dos segundos de todos modos: esto solo la adelanta
          cuando la aplicación arranca antes, que es casi siempre. */
       await SplashScreen.hide().catch(() => undefined);
     })();
+    const dejarTema = subscribeTheme(() => vestir?.(getTheme()));
     return () => {
       vivo = false;
+      dejarTema();
     };
   }, []);
 
