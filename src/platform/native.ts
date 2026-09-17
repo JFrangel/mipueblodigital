@@ -65,12 +65,21 @@ export async function entrarConGoogleNativo() {
  * puesta en la capa nativa. Recordarlo en cada botón de salir es pedir que
  * algún día se olvide —hay cuatro—, así que la regla vive en un solo sitio.
  *
- * La sesión web se cierra primero y es la que cuenta: es la que lee la
+ * Antes de nada se suelta el aparato de los avisos. En el río los teléfonos
+ * se prestan, y un token que se queda anotado hace que la siguiente persona que
+ * entre reciba los avisos de la anterior: el estado de sus reportes, el motivo
+ * por el que le retiraron uno. No es limpieza, es de quién lee qué. Va primero
+ * porque darlo de baja necesita la sesión para firmar la petición; después ya no
+ * habría con qué.
+ *
+ * La sesión web se cierra a continuación y es la que cuenta: es la que lee la
  * aplicación. Si luego falla el aviso a la capa nativa no se dice nada, porque
  * a esas alturas la sesión **ya está cerrada** y avisar de un fallo sería
  * mentir sobre lo que acaba de pasar.
  */
 export async function cerrarSesion() {
+  /* Nunca lanza —ver push.ts—, así que no puede impedir cerrar la sesión. */
+  await (await import("./push")).darDeBaja();
   await signOut(firebaseClient().auth);
   if (!esNativo()) return;
   await complemento()

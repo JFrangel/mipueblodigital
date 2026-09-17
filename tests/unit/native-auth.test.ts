@@ -5,13 +5,14 @@ import {expect,it,vi,beforeEach} from 'vitest';
    de la aplicación. Estas pruebas fijan que se firme —y se salga— en las dos.
    Sin esto el fallo es mudo: el selector abre, la cuenta se elige y la pantalla
    se queda igual, que es justo lo que se reportó. */
-const state=vi.hoisted(()=>({nativo:true,credencial:{idToken:'token-de-google'} as {idToken?:string}|null,plugin:{entrar:vi.fn(),salir:vi.fn()},web:{arma:vi.fn((t?:string)=>({credencial:t})),entrar:vi.fn(),salir:vi.fn()}}));
+const state=vi.hoisted(()=>({nativo:true,credencial:{idToken:'token-de-google'} as {idToken?:string}|null,plugin:{entrar:vi.fn(),salir:vi.fn()},web:{arma:vi.fn((t?:string)=>({credencial:t})),entrar:vi.fn(),salir:vi.fn()},push:{baja:vi.fn()},orden:[] as string[]}));
 vi.mock('@capacitor/core',()=>({Capacitor:{isNativePlatform:()=>state.nativo}}));
 vi.mock('@capacitor-firebase/authentication',()=>({FirebaseAuthentication:{signInWithGoogle:async()=>{state.plugin.entrar();return{credential:state.credencial}},signOut:state.plugin.salir}}));
-vi.mock('firebase/auth',()=>({GoogleAuthProvider:{credential:state.web.arma},signInWithCredential:state.web.entrar,signOut:state.web.salir}));
+vi.mock('firebase/auth',()=>({GoogleAuthProvider:{credential:state.web.arma},signInWithCredential:state.web.entrar,signOut:async(a:unknown)=>{state.web.salir(a);state.orden.push('web')}}));
 vi.mock('../../src/data/firebase/client',()=>({firebaseClient:()=>({auth:'auth-web'})}));
+vi.mock('../../src/platform/push',()=>({darDeBaja:async()=>{state.push.baja();state.orden.push('baja')}}));
 import {cerrarSesion,entrarConGoogleNativo} from '../../src/platform/native';
-beforeEach(()=>{state.nativo=true;state.credencial={idToken:'token-de-google'};for(const f of [state.plugin.entrar,state.plugin.salir,state.web.arma,state.web.entrar,state.web.salir])f.mockClear()});
+beforeEach(()=>{state.nativo=true;state.credencial={idToken:'token-de-google'};state.orden=[];for(const f of [state.plugin.entrar,state.plugin.salir,state.web.arma,state.web.entrar,state.web.salir,state.push.baja])f.mockClear()});
 
 it('el acceso nativo firma también en el SDK web',async()=>{
   await entrarConGoogleNativo();
@@ -40,4 +41,32 @@ it('en el navegador solo cierra la sesión web',async()=>{
   await cerrarSesion();
   expect(state.web.salir).toHaveBeenCalledWith('auth-web');
   expect(state.plugin.salir).not.toHaveBeenCalled();
+});
+
+/**
+ * Salir suelta también el aparato.
+ *
+ * En el río los teléfonos se prestan. Si al cerrar sesión el token se queda
+ * anotado, la siguiente persona que entre en ese aparato recibe los avisos de
+ * la anterior: el estado de sus reportes, el motivo por el que le retiraron
+ * uno. No es un detalle de limpieza, es de quién lee qué.
+ */
+it('cerrar sesión suelta el aparato',async()=>{
+  await cerrarSesion();
+  expect(state.push.baja).toHaveBeenCalled();
+});
+
+/* El orden importa: dar de baja el aparato necesita la sesión para firmar la
+   petición contra la API. Después de cerrarla ya no habría con qué. */
+it('el aparato se suelta antes de cerrar la sesión',async()=>{
+  await cerrarSesion();
+  expect(state.orden).toEqual(['baja','web']);
+});
+
+/* También en el navegador: ahí el aparato es la pestaña, y el token queda
+   apuntado igual. */
+it('en el navegador también se suelta',async()=>{
+  state.nativo=false;
+  await cerrarSesion();
+  expect(state.push.baja).toHaveBeenCalled();
 });

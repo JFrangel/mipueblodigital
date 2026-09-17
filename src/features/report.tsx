@@ -28,6 +28,7 @@ import { VeredaPreview, type Point } from "./vereda-preview";
 import { validateReport } from "@/domain/logic";
 import { CategoryIcon } from "@/components/ui";
 import { LeafFall } from "./leaf-fall";
+import { registrar } from "@/platform/push";
 const blank = { category: "", vereda: "", description: "", phone: "" };
 /** Para comparar nombres como se teclean: sin tildes y en minúsculas. */
 const plain = (text: string) =>
@@ -200,6 +201,20 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         photo: photos[0],
       }).catch(() => undefined);
       setDone(true);
+      /**
+       * El único momento en que pedir el permiso de avisos tiene sentido.
+       *
+       * Acaba de mandar algo y le importa la respuesta: ahí entiende para qué
+       * sirve y dice que sí. Pedirlo al abrir la aplicación es pedirlo a
+       * ciegas, y en Android 13 en adelante un «no» dicho a destiempo obliga a
+       * entrar en los ajustes del sistema para deshacerlo.
+       *
+       * Con `void` porque el reporte ya está enviado y esto no puede retrasar
+       * la confirmación. Si el reporte se quedó en la cola por falta de señal,
+       * el permiso se concede igual y el aparato se apunta en el siguiente
+       * arranque con red: de eso se encarga `refrescar()`.
+       */
+      void registrar();
       await writeDraft(null, uid).catch(() => undefined);
     } catch (error) {
       /* La respuesta a «¿se envió?» tiene que ser la primera palabra. El
