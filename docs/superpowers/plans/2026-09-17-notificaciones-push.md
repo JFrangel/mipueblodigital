@@ -226,7 +226,7 @@ git commit -m "El registro de aparatos que reciben avisos"
 - Create: `tests/unit/push-api.test.ts`
 
 **Interfaces:**
-- Consumes: `guardar`, `olvidarUno` de `src/server/push-tokens`; `requireMember`, `ApiError` de `src/server/admin-auth`; `readJson` de `src/server/request-body`.
+- Consumes: `guardar`, `olvidarUno` de `src/server/push-tokens`; `requireMember` (alta) y `requireIdentity` (baja), `ApiError` de `src/server/admin-auth`; `readJson` de `src/server/request-body`.
 - Produces: `POST /api/push/registro` con cuerpo `{ token: string, platform: "android" | "web" }` → `{ ok: true }`; `POST /api/push/baja` con cuerpo `{ token: string }` → `{ ok: true }`.
 
 Ambas son POST. La baja no usa DELETE porque hay proxies que quitan el cuerpo de
@@ -241,6 +241,12 @@ de tocar Firestore. 2000 basta para un token, igual que en
 La forma del token la comprueba `guardar`/`olvidarUno` en
 `src/server/push-tokens.ts` y lanza un `ApiError` de 400, así que estas rutas
 solo tienen que exigir que no venga vacío.
+
+La baja no exige cuenta habilitada y el alta sí. A quien ya no puede entrar no
+se le apunta un aparato nuevo, pero soltar el suyo tiene que seguir
+funcionando: si no, el token se queda anotado en un teléfono prestado hasta que
+FCM lo declare muerto. Es el mismo motivo por el que `/api/account/deletion`
+usa `requireIdentity`.
 
 - [ ] **Step 1: Write the failing test**
 
