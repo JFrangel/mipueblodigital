@@ -28,7 +28,12 @@ import {
   BellOff,
 } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
-import { darDeBaja, disponible, registrar } from "@/platform/push";
+import {
+  activado,
+  darDeBaja,
+  disponible,
+  registrar,
+} from "@/platform/push";
 import { updateSession, useSession } from "@/data/session";
 import { AvatarMark } from "@/components/ui";
 
@@ -119,10 +124,15 @@ export function Account({
   }, [session.uid]);
   useEffect(() => {
     let vivo = true;
-    void disponible().then((puede) => {
-      if (!vivo) return;
-      setAvisos(puede ? Notification.permission === "granted" : null);
-    });
+    void (async () => {
+      /* Se pregunta por la puerta y no por `Notification`: el WebView de
+         Android no trae esa API, y leerla ahí dejaba esta fila sin aparecer en
+         la aplicación instalada mientras en el navegador salía bien. Ver
+         push.ts. */
+      const puede = await disponible();
+      const encendido = puede && (await activado());
+      if (vivo) setAvisos(puede ? encendido : null);
+    })();
     return () => {
       vivo = false;
     };

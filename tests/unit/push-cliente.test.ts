@@ -79,6 +79,7 @@ vi.mock("firebase/messaging", () => ({
 }));
 
 import {
+  activado,
   darDeBaja,
   disponible,
   refrescar,
@@ -294,4 +295,42 @@ it("en el navegador no se crea ningún canal", async () => {
   state.nativo = false;
   await registrar();
   expect(state.canales).toEqual([]);
+});
+
+/* ── El WebView de Android no trae la API `Notification` ──────────────── */
+
+/**
+ * Y eso no es un detalle teórico: es el fallo que se vio en el emulador.
+ *
+ * La fila de Mi cuenta preguntaba `Notification.permission` sin mirar dónde
+ * corría. En el navegador salía bien; dentro del APK reventaba, la promesa se
+ * tragaba el error y la fila sencillamente no aparecía. Ninguna prueba lo veía
+ * porque todas simulan ese objeto: por eso estas tres lo quitan.
+ */
+it("el APK sabe si están activados sin la API del navegador", async () => {
+  vi.stubGlobal("Notification", undefined);
+  state.permisoNativo = "granted";
+  expect(await activado()).toBe(true);
+});
+
+it("el APK sabe que están apagados sin la API del navegador", async () => {
+  vi.stubGlobal("Notification", undefined);
+  state.permisoNativo = "denied";
+  expect(await activado()).toBe(false);
+});
+
+it("refrescar funciona en el APK sin la API del navegador", async () => {
+  vi.stubGlobal("Notification", undefined);
+  await refrescar();
+  expect(state.llamadas[0].cuerpo).toEqual({
+    token: "tok-nativo",
+    platform: "android",
+  });
+});
+
+/* En el navegador sigue leyéndose de donde se lee siempre. */
+it("en el navegador pregunta a la API del navegador", async () => {
+  state.nativo = false;
+  vi.stubGlobal("Notification", { permission: "denied" });
+  expect(await activado()).toBe(false);
 });

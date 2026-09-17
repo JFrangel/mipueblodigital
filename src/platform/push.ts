@@ -76,6 +76,34 @@ async function crearCanal(
   }).catch(() => undefined);
 }
 
+/**
+ * ¿Están encendidos los avisos en este aparato ahora mismo?
+ *
+ * **El WebView de Android no implementa la API `Notification`.** Leer
+ * `Notification.permission` ahí no devuelve otra cosa: revienta, y dentro de una
+ * promesa se traga sin más. Es lo que dejaba la fila de Mi cuenta sin aparecer
+ * en el APK mientras en el navegador salía bien, y ninguna prueba lo veía porque
+ * todas simulan ese objeto.
+ *
+ * Así que cada mundo se pregunta con lo suyo, que es exactamente para lo que
+ * existe este módulo: el complemento en la aplicación instalada, la API del
+ * navegador en el navegador.
+ */
+export async function activado(): Promise<boolean> {
+  try {
+    if (esNativo()) {
+      const FirebaseMessaging = await complemento();
+      return (await FirebaseMessaging.checkPermissions()).receive === "granted";
+    }
+    return (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** El token de este aparato en el navegador, con la clave y el service worker. */
 async function tokenWeb(): Promise<string | null> {
   const { getMessaging, getToken } = await import("firebase/messaging");
@@ -150,12 +178,7 @@ export async function registrar(): Promise<Resultado> {
 export async function refrescar(): Promise<void> {
   if (!firebaseClient().auth.currentUser) return;
   try {
-    if (esNativo()) {
-      const FirebaseMessaging = await complemento();
-      const { receive } = await FirebaseMessaging.checkPermissions();
-      if (receive !== "granted") return;
-    } else if (!(await disponible()) || Notification.permission !== "granted")
-      return;
+    if (!(await disponible()) || !(await activado())) return;
     await registrar();
   } catch {
     /* Un arranque no se rompe por esto. */
