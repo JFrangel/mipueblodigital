@@ -3,6 +3,7 @@ import { ApiError, requireAdmin } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
 import { statuses } from "@/data/catalog";
 import { publicationReady } from "@/domain/publication";
+import { avisar } from "@/server/push";
 import { DEFAULT_PRIORITY, isPriority } from "@/domain/priority";
 export async function PATCH(
   request: Request,
@@ -97,7 +98,8 @@ export async function PATCH(
             409,
             "El identificador ya corresponde a otro cambio.",
           );
-        return { version: old.version };
+        /* Un reintento de red. Ya se avisó la primera vez. */
+        return { version: old.version, aviso: null };
       }
       if (old.version !== input.version)
         throw new ApiError(
@@ -142,7 +144,14 @@ export async function PATCH(
         updatedAt: at,
       });
       tx.create(event, { ...command, hash, actor: uid, at });
-      if (old.owner && (old.status !== input.status || text.publicNote))
+      /* Si esto cambió algo para quien reportó. Se calcula una sola vez y la
+         usan el aviso de la bandeja y el que suena en el teléfono: si los dos
+         no coinciden, el teléfono suena por cosas que la bandeja no registra,
+         que es la definición de ruido. */
+      const novedad = Boolean(
+        old.owner && (old.status !== input.status || text.publicNote),
+      );
+      if (novedad)
         tx.create(
           db.doc(`notifications/${old.owner}/items/${id}-${input.mutationId}`),
           {
@@ -165,9 +174,38 @@ export async function PATCH(
         actor: uid,
         at,
       });
-      return { version: old.version + 1 };
+      return {
+        version: old.version + 1,
+        aviso: novedad
+          ? {
+              uid: String(old.owner),
+              title: "El Consejo actualizó tu reporte",
+              /* La nota si la hay; si no, en qué quedó. Un aviso que solo dice
+                 «tu reporte cambió» obliga a abrir la aplicación para saber a
+                 qué, que es justo lo que el aviso venía a evitar. */
+              body:
+                text.publicNote ||
+                `Ahora está en «${statuses[String(input.status)] ?? String(input.status)}»`,
+              url: `/reporte/${id}/`,
+            }
+          : null,
+      };
     });
-    return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+    /* Al vecino, que es quien está esperando respuesta. Al Consejo no: el
+       cambio lo acaba de hacer uno de ellos y está en la bandeja compartida.
+
+       El aviso no viaja en la respuesta —lleva dentro de quién es el caso, y
+       eso no es asunto del panel—, así que se aparta antes de contestar. */
+    const { aviso, ...respuesta } = result;
+    if (aviso)
+      void avisar(
+        db,
+        { uid: aviso.uid },
+        { title: aviso.title, body: aviso.body, url: aviso.url },
+      );
+    return Response.json(respuesta, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (e) {
     return Response.json(
       {
