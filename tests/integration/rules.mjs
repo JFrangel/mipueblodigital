@@ -63,8 +63,21 @@ try {
   await assertFails(getDoc(doc(alice, "councilNotifications/secret")));
   await assertFails(getDoc(doc(alice, "notifications/bob/items/secret")));
   await assertFails(getDoc(doc(anon, "publicIncidents/leaked")));
+  /* Los aparatos que reciben avisos. El token de un teléfono es un
+     identificador que dura tanto como el aparato, y con él se sabe cuándo
+     alguien cambió de móvil. Solo lo escribe /api/push/ con el SDK de
+     servidor; desde el navegador no se lee ni se escribe, ni el propio dueño.
+     Se comprueba también con el dueño porque la regla está anidada bajo su uid
+     y es justo ahí donde una regla mal escrita se abriría sola. */
+  await assertFails(getDoc(doc(alice, "pushTokens/alice/devices/tok-1")));
+  await assertFails(getDoc(doc(alice, "pushTokens/bob/devices/tok-1")));
+  await assertFails(getDoc(doc(anon, "pushTokens/alice/devices/tok-1")));
+  await assertFails(getDoc(doc(admin, "pushTokens/alice/devices/tok-1")));
+  await assertFails(
+    setDoc(doc(alice, "pushTokens/alice/devices/tok-1"), { platform: "web" }),
+  );
   console.log(
-    "PASS: aislamiento por autor, administrador activo, cuenta desactivada, proyección pública y rechazo a escrituras directas.",
+    "PASS: aislamiento por autor, administrador activo, cuenta desactivada, proyección pública, aparatos de avisos y rechazo a escrituras directas.",
   );
 } finally {
   await env.cleanup();

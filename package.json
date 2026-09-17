@@ -13,7 +13,8 @@
     "seed:noticias": "node scripts/sembrar-noticias.mjs",
     "cap:sync": "cap sync android",
     "cap:open": "cap open android",
-    "cap:apk": "cd android && gradlew.bat assembleRelease"
+    "cap:apk": "cd android && gradlew.bat assembleRelease",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-mi-pueblo \"node tests/integration/rules.mjs\""
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "^8.5.1",
