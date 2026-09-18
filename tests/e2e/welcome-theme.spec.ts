@@ -19,3 +19,47 @@ test("login y registro comparten tema sin perder controles",async({page})=>{
  await page.getByRole("button",{name:"Activar tema oscuro"}).click();const submit=page.getByRole("button",{name:"Crear cuenta",exact:true});await submit.hover();expect(await submit.evaluate(e=>getComputedStyle(e).color)).toBe("rgb(255, 255, 255)");
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+/**
+ * Quien ya tiene cuenta viene a entrar, no a que le cuenten la aplicación.
+ *
+ * Antes tenía que pasar por «Comenzar», llegar a Inicio y buscar el acceso
+ * desde ahí o desde Mi cuenta. El enlace va en segundo plano a propósito: la
+ * puerta principal de esta pantalla sigue siendo conocer el proyecto sin
+ * registrarse.
+ *
+ * Se comprueba el contraste en los dos temas porque la primera versión llevaba
+ * un blanco copiado del área oscura de arriba, y sobre la tarjeta clara no se
+ * leía.
+ */
+test("la bienvenida ofrece entrar, y se lee en los dos temas",async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto("/bienvenida/");
+ const entrar=page.getByRole("link",{name:"Inicia sesión"});
+ await expect(entrar).toBeVisible();
+ await expect(entrar).toHaveAttribute("href","/acceso/");
+ /* La pregunta que lo acompaña no puede ser del color del fondo. Se compara
+    contra el texto de al lado, que sí se sabe legible en las dos pantallas. */
+ const legible=async()=>{
+  const pregunta=page.locator("p").filter({hasText:"¿Ya tienes cuenta?"});
+  const [color,vecino]=await Promise.all([
+   pregunta.evaluate(el=>getComputedStyle(el).color),
+   page.locator("p").filter({hasText:"Haz visible lo que pasa"}).evaluate(el=>getComputedStyle(el).color),
+  ]);
+  /* `color-mix` no resuelve a `rgb(0-255)` sino a `color(srgb 0-1 …)`, y
+     comparar las dos notaciones a pelo hace fallar la prueba por unidades, no
+     por color. Se normaliza a 0-255. */
+  const canal=(c:string)=>{
+   const n=c.match(/[\d.]+/g)!.slice(0,3).map(Number);
+   return c.startsWith("color(")?n.map(v=>v*255):n;
+  };
+  const [a,b]=[canal(color),canal(vecino)];
+  /* Mismo tono que el texto vecino, solo más apagado: si alguien vuelve a
+     copiar un color del área contraria, estos tres canales se separan. */
+  return a.every((v,i)=>Math.abs(v-b[i])<12);
+ };
+ expect(await legible()).toBe(true);
+ await page.getByRole("button",{name:"Activar tema oscuro"}).click();
+ await expect(page.getByRole("button",{name:"Activar tema claro"})).toBeVisible();
+ expect(await legible()).toBe(true);
+});

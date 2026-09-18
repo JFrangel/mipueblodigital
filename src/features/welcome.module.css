@@ -274,6 +274,22 @@
   color: var(--paper);
 }
 .offline svg { flex-shrink: 0; }
+/* El acceso para quien ya tiene cuenta. Sin cápsula ni borde: la jerarquía de
+   esta pantalla es «Comenzar» primero, y esto es la salida lateral de quien no
+   necesita que le cuenten nada.
+   El color va atado a `--paper` y no fijado a mano: ese token cambia con el
+   tema —#eaf1ec en oscuro, #214e40 en claro— y la primera versión llevaba un
+   blanco copiado del área de arriba que sobre la tarjeta clara no se leía. */
+.ya {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+}
+.ya a {
+  color: var(--paper);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
 .title { color: #f6faf7; }
 .link strong { color: #f6faf7; }
 .light .stage { --paper: #214e40; --paper-dim: #dbe7df; --leaf-400: #246a40; --leaf-300: #235f3e; }

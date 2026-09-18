@@ -139,6 +139,17 @@ export function Welcome() {
               También puedes reportar <b>sin conexión</b>
             </span>
           </p>
+          {/* Quien ya tiene cuenta no viene a conocer la aplicación: viene a
+              entrar. Antes tenía que pasar por «Comenzar», llegar a Inicio y
+              buscar el acceso desde ahí, o desde Mi cuenta. Va debajo y en
+              segundo plano a propósito: la puerta principal de esta pantalla
+              sigue siendo conocer el proyecto sin tener que registrarse. */}
+          <p className={styles.ya}>
+            ¿Ya tienes cuenta?{" "}
+            <Link href="/acceso/" onClick={markVisited}>
+              Inicia sesión
+            </Link>
+          </p>
         </section>
 
         <footer className={styles.foot}>
