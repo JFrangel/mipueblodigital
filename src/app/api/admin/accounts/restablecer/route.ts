@@ -67,8 +67,14 @@ export async function POST(request: Request) {
         active: true,
         deleted: false,
         restoredAt: at,
-        restoredBy: actor,
-        /* `role` no se toca. La eliminación rechaza a las cuentas del Consejo
+        /* Aquí **no** va quién lo hizo. Este es el único documento que su dueña
+           puede leer desde el navegador (`accounts/{uid}`, `allow get`), y esta
+           aplicación ya decidió en su bandeja de novedades que a una persona se
+           le cuenta lo que le pasó a lo suyo, no quién de dentro lo movió. La
+           constancia vive donde tiene que vivir: en la solicitud y en
+           `accountRestoreEvents`, que ninguna regla deja leer a nadie.
+
+           Y `role` tampoco. La eliminación rechaza a las cuentas del Consejo
            (403), así que por aquí solo pasan ciudadanas; escribirlo sería la
            única forma de que un fallo lo convirtiera en otra cosa. */
       },

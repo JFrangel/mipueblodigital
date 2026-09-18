@@ -397,3 +397,22 @@ it("la eliminación sigue anonimizando, antes y después de un restablecimiento"
   expect(state.anonimizado).toBe(2);
   expect(state.docs.get("accounts/vecina")).toMatchObject({ active: false });
 });
+
+/**
+ * `accounts/{uid}` es el único documento que su dueña puede leer desde el
+ * navegador —las reglas lo declaran `allow get` al dueño y niegan todo lo
+ * demás—, así que lo que se escriba ahí se lo lleva ella. Quién de dentro le
+ * reabrió la cuenta no es asunto suyo, por la misma razón por la que su bandeja
+ * de novedades le cuenta lo que le pasó a su reporte y no quién lo movió. La
+ * constancia va donde nadie la lee desde fuera.
+ */
+it("el nombre de quien administra no acaba en el documento de la cuenta", async () => {
+  cuentaCerrada();
+  await restablecer(pide({ email: "vecina@rio.co" }));
+  expect(state.docs.get("accounts/vecina")).not.toHaveProperty("restoredBy");
+  /* Y sí consta en los dos sitios que ninguna regla deja leer. */
+  expect(state.docs.get("accountDeletionRequests/vecina")).toMatchObject({
+    restoredBy: "quien-administra",
+  });
+  expect(state.añadidos[0]).toMatchObject({ coleccion: "accountRestoreEvents" });
+});
