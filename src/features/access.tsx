@@ -30,7 +30,12 @@ import {
   type User,
 } from "firebase/auth";
 import { firebaseClient } from "@/data/firebase/client";
-import { cerrarSesion, entrarConGoogleNativo, esNativo } from "@/platform/native";
+import { useSearchParams } from "next/navigation";
+import {
+  cerrarSesion,
+  entrarConGoogleNativo,
+  esNativo,
+} from "@/platform/native";
 import { GoogleMark } from "@/components/google-mark";
 import { Logo } from "@/components/ui";
 import { registrationError, authError } from "@/domain/auth";
@@ -65,6 +70,9 @@ export function Access() {
     [busy, setBusy] = useState(false),
     [ready, setReady] = useState(false),
     [configured, setConfigured] = useState(false);
+  /* Quien llega aquí desde el formulario, porque intentó enviar sin sesión.
+     Lo dice la dirección: ver report.tsx. */
+  const vieneDelReporte = useSearchParams().get("volver") === "reporte";
   useEffect(() => {
     try {
       const { auth } = firebaseClient();
@@ -262,10 +270,20 @@ export function Access() {
               Conectado como <strong>{user.email}</strong>.
             </p>
             <p className={styles.notice}>
-              Ya puedes reportar. Verificar el correo es opcional.
+              {vieneDelReporte
+                ? "Tu reporte quedó guardado como borrador y te espera tal como lo dejaste."
+                : "Ya puedes reportar. Verificar el correo es opcional."}
             </p>
-            <Link className={styles.primary} href="/inicio/">
-              Continuar a mi comunidad
+            {/* Volver a donde estaba, no a la portada. Quien llegó aquí porque
+                intentó enviar un reporte sin sesión venía haciendo algo, y
+                dejarlo en Inicio le obliga a buscar otra vez el camino. */}
+            <Link
+              className={styles.primary}
+              href={vieneDelReporte ? "/reportar/" : "/inicio/"}
+            >
+              {vieneDelReporte
+                ? "Volver a mi reporte"
+                : "Continuar a mi comunidad"}
               <i aria-hidden="true">
                 <ArrowRight size={19} />
               </i>

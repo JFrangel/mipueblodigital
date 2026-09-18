@@ -10,6 +10,8 @@ import { firebaseClient } from "@/data/firebase/client";
 import { VoiceInput } from "./voice-input";
 import { WritingAssistant } from "./writing-assistant";
 import { readDraft, writeDraft } from "@/data/local-store";
+import { adoptar, marcar } from "@/data/borrador-huerfano";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -74,6 +76,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
     [sensitive, setSensitive] = useState(false);
   /* Punto marcado a mano sobre el mapa; nulo si se deja el de la vereda. */
   const [point, setPoint] = useState<Point | null>(null);
+  const router = useRouter();
   const draftOwner = useRef<string | undefined>(undefined);
   /* El borrador es por cuenta: cambiar de sesión descarta el de la anterior. */
   useEffect(() => {
@@ -93,7 +96,23 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       setSensitive(false);
       setPoint(null);
       setEvidence(null);
-      void readDraft(owner)
+      /* Si esta persona acaba de entrar tras haberlo intentado sin sesión,
+         su borrador estaba suelto y ahora pasa a su nombre. Va antes de leer,
+         porque lo que se lee después tiene que ser ya el suyo. */
+      void (owner ? adoptar(owner) : Promise.resolve(false))
+        .then((adoptado) => {
+          if (adoptado && active && current === generation) {
+            /* Un aviso que se queda, no uno flotante que se va a los tres
+               segundos. Lo que hay que hacer ahora es enviarlo, y el botón de
+               enviar está justo debajo de este texto: un borrador completo
+               vuelve al último paso, que es el de revisar y mandar. */
+            setMessage(
+              "Tu reporte quedó guardado mientras entrabas. Revísalo y dale a enviar.",
+            );
+            toast("Aquí está tu reporte, tal como lo dejaste.");
+          }
+          return readDraft(owner);
+        })
         .then((saved) => {
           if (active && current === generation && saved) {
             setData(saved);
@@ -148,10 +167,30 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       const { auth } = firebaseClient();
       await auth.authStateReady();
       const uid = auth.currentUser?.uid;
-      if (!uid)
-        throw new Error(
-          "Inicia sesión antes de preparar envíos para el Consejo.",
+      /**
+       * Sin sesión no se pierde nada de lo escrito.
+       *
+       * Antes esto lanzaba un error y ahí se quedaba: el formulario seguía en
+       * pantalla, pero lo escrito solo vivía en la memoria de esa pestaña. Quien
+       * se iba a entrar —que es lo que el propio mensaje le pedía— volvía con
+       * todo en blanco, incluida la fotografía. Pedirle a alguien que escriba
+       * dos veces lo que acaba de pasarle en el río es la mejor forma de que no
+       * lo escriba una tercera.
+       *
+       * Ahora se guarda, se dice, y se le lleva a entrar con el borrador
+       * esperándole al volver. Queda suelto —todavía no tiene dueño— y lo
+       * adopta el efecto de arriba; ver borrador-huerfano.ts para por qué esa
+       * adopción va atada a este flujo y no a cualquier borrador suelto.
+       */
+      if (!uid) {
+        await writeDraft({ ...data, photos, sensitive, ...(point ?? {}) });
+        marcar();
+        toast(
+          "Guardamos tu reporte como borrador. Entra a tu cuenta y lo enviamos.",
         );
+        router.push("/acceso/?volver=reporte");
+        return;
+      }
       const entry = await enqueue(uid, {
         ...data,
         photo: photos[0],
