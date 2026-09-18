@@ -156,6 +156,11 @@ hr {
 .acceso-necesario {
   position: relative;
   overflow: hidden;
+  /* Los bloques de esta pantalla no se separan con `gap`: cada uno lleva su
+     propio margen inferior, y `.page-intro` marca el ritmo con 28 px. Sin
+     esto, la tarjeta quedaba pegada a lo que viniera debajo —en el mapa, al
+     titular de la pantalla— como si fueran la misma cosa. */
+  margin-bottom: 28px;
   display: grid;
   justify-items: start;
   gap: 13px;
