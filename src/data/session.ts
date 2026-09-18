@@ -22,6 +22,15 @@ export type Session = {
   avatar: string;
   passwordProvider: boolean;
   googleProvider: boolean;
+  /**
+   * Cuándo volvió a abrirse esta cuenta, si es que estuvo cerrada.
+   *
+   * Quien pidió eliminar su cuenta y el Consejo se la restableció entra a una
+   * cuenta **vacía**: sus reportes se anonimizaron y eso no se deshace. Sin
+   * decirlo, eso parece una avería. Con esta fecha, la portada lo explica una
+   * vez. Nulo en el caso normal, que es el de todo el mundo.
+   */
+  restoredAt: string | null;
 };
 
 export const avatars = ["person", "tree", "river", "home"] as const;
@@ -37,6 +46,7 @@ const signedOut: Session = {
   avatar: "person",
   passwordProvider: false,
   googleProvider: false,
+  restoredAt: null,
 };
 
 let current: Session = signedOut;
@@ -90,14 +100,21 @@ async function describe(user: User): Promise<Session> {
      esas mismas reglas prohíben a cualquier cliente escribirla: el servidor
      vuelve a comprobarlo en cada operación, así que esto decide qué se
      muestra, nunca qué se puede hacer. */
-  if (!admin)
-    try {
-      const { db } = firebaseClient();
-      const account = await getDoc(doc(db, "accounts", user.uid));
-      admin = account.data()?.role === "admin";
-    } catch {
-      /* Sin red, o sin permiso, sigue valiendo el rol ciudadano. */
-    }
+  /* De la misma lectura sale si esta cuenta estuvo cerrada y el Consejo la
+     reabrió, que es lo que explica en la portada por qué está vacía. Se lee
+     siempre —también con la reivindicación puesta— porque ese dato no depende
+     del rol, y atarlo a `!admin` sería dejarlo a merced de un `if` que está
+     aquí por otro motivo. */
+  let restoredAt: string | null = null;
+  try {
+    const { db } = firebaseClient();
+    const account = (await getDoc(doc(db, "accounts", user.uid))).data();
+    admin ||= account?.role === "admin";
+    restoredAt =
+      typeof account?.restoredAt === "string" ? account.restoredAt : null;
+  } catch {
+    /* Sin red, o sin permiso, sigue valiendo el rol ciudadano. */
+  }
   return {
     ready: true,
     configured: true,
@@ -113,6 +130,7 @@ async function describe(user: User): Promise<Session> {
     googleProvider: user.providerData.some(
       (p) => p.providerId === "google.com",
     ),
+    restoredAt,
   };
 }
 

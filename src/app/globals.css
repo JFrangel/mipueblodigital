@@ -177,6 +177,52 @@ hr {
   border: 1px solid var(--line);
   color: var(--green);
 }
+/* La cuenta que volvió a abrirse. Comparte el icono y el fondo de la tarjeta
+   de acceso —es de la misma familia: algo que explica el estado de tu cuenta
+   antes de que te preguntes qué pasó— pero va en fila, con la explicación al
+   lado del icono y el botón de cerrar al final. No pide nada: solo cuenta. */
+.cuenta-restablecida {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: clamp(20px, 3.4vw, 26px);
+  background: linear-gradient(152deg, var(--soft) 0%, var(--surface) 64%);
+}
+.cuenta-restablecida > div {
+  flex: 1;
+  min-width: 0;
+}
+.cuenta-restablecida h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
+.cuenta-restablecida p {
+  margin: 0 0 8px;
+  max-width: 54ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.cuenta-restablecida p:last-child {
+  margin-bottom: 0;
+}
+.cuenta-restablecida > .acceso-icono {
+  flex-shrink: 0;
+}
+/* En el teléfono el icono y el texto no caben uno al lado del otro sin dejar
+   el párrafo en una columna de cuatro palabras. */
+@media (max-width: 560px) {
+  .cuenta-restablecida {
+    flex-wrap: wrap;
+  }
+  .cuenta-restablecida > div {
+    flex-basis: 100%;
+  }
+}
 .acceso-necesario h2 {
   margin: 0;
   font-size: 17px;
@@ -4403,6 +4449,43 @@ textarea {
   display: block;
   font-size: 11px;
   color: var(--muted);
+}
+/* Una cuenta cerrada. No es un aviso de error —nadie se equivocó, esa persona
+   lo pidió— así que no lleva el rojo de lo que sale mal: lleva el gris de lo
+   que está apagado, que es lo que es. */
+.tag.role-cerrada {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--line);
+}
+/* Lo que devuelve volver a abrir una cuenta, y lo que no, antes de pulsar.
+   Mismo sitio y misma forma que la confirmación de retirar un expediente, en
+   verde y no en rojo: aquí no se destruye nada, se deshace un cierre. */
+.account-restore {
+  margin: 4px 0 14px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--green) 30%, transparent);
+  background: var(--soft);
+  border-radius: 12px;
+}
+.account-restore h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--green);
+}
+.account-restore p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.restore-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 /* La bandeja del Consejo sostiene su propio grabado de fondo. */
 .council-inbox {

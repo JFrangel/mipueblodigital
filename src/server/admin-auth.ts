@@ -117,7 +117,12 @@ export async function requireMember(request: Request) {
   if (account.data()?.active !== true)
     throw new ApiError(
       403,
-      "Tu cuenta está deshabilitada. Contacta al Consejo Comunitario.",
+      /* Y dentro de la segunda, dos más. Que la cuenta la cerrara su propia
+         dueña cambia lo que hace a continuación: no es un trámite pendiente
+         con el Consejo, es algo que ella pidió y que solo el Consejo deshace. */
+      account.data()?.deleted === true
+        ? "Esta cuenta está cerrada porque pediste eliminarla. Si quieres volver a usarla, acércate al Consejo Comunitario del Río Satinga y pide que te la restablezcan."
+        : "Tu cuenta está deshabilitada. Contacta al Consejo Comunitario.",
     );
   return { uid: identity.uid, db, identity, account: account.data() ?? {} };
 }

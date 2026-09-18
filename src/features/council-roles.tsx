@@ -1,6 +1,6 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Check, Search, ShieldCheck, UserMinus } from "lucide-react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Check, DoorOpen, Search, ShieldCheck, UserMinus } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
 import { useSession } from "@/data/session";
 import { toast } from "@/data/toasts";
@@ -12,6 +12,8 @@ type Person = {
   admin: boolean;
   /** Nulo si nunca entró: a esa cuenta todavía no se le puede conceder. */
   lastSignIn: string | null;
+  /** Su dueña pidió eliminarla. Solo el Consejo puede volver a abrirla. */
+  cerrada: boolean;
 };
 
 /** Para buscar como se teclea: sin tildes y en minúsculas. */
@@ -42,6 +44,8 @@ export function CouncilRoles() {
   const [busy, setBusy] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  /** El uid de la cuenta cuya reapertura se está confirmando, si hay alguna. */
+  const [abriendo, setAbriendo] = useState<string | null>(null);
   const list = useRef<HTMLDivElement>(null);
 
   const request = useCallback(
@@ -99,6 +103,46 @@ export function CouncilRoles() {
       })
       .catch((e: unknown) => {
         const dicho = e instanceof Error ? e.message : "No se pudo guardar.";
+        setError(dicho);
+        toast(dicho, "error");
+      })
+      .finally(() => setBusy(false));
+  }
+
+  /**
+   * Volver a abrir una cuenta cerrada.
+   *
+   * La lista se vuelve a pedir al terminar en vez de retocarla aquí: el estado
+   * de la puerta lo sabe el registro de identidad, no esta pantalla, y una fila
+   * que dijera «abierta» porque el botón se pulsó —y no porque el servidor lo
+   * confirmara— sería exactamente la clase de mentira cómoda que este proyecto
+   * evita en todas partes.
+   */
+  function restablecer(person: Person) {
+    setBusy(true);
+    setError("");
+    setMessage("");
+    (async () => {
+      const { headers } = await memberHeaders();
+      const response = await fetch("/api/admin/accounts/restablecer/", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email: person.email }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      return data.message as string;
+    })()
+      .then(async (dicho) => {
+        setAbriendo(null);
+        toast(`${person.name || person.email} ya puede entrar.`);
+        setMessage(dicho);
+        setPeople(await request());
+      })
+      .catch((e: unknown) => {
+        const dicho =
+          e instanceof Error ? e.message : "No se pudo restablecer la cuenta.";
         setError(dicho);
         toast(dicho, "error");
       })
@@ -175,22 +219,36 @@ export function CouncilRoles() {
           </p>
         )}
         {shown.map((person) => (
-          <div className="news-editor-row" key={person.uid}>
-            <span className="account-row">
-              <span>
-                <strong>{person.name || person.email}</strong>
-                {person.name && <small>{person.email}</small>}
+          <Fragment key={person.uid}>
+            <div className="news-editor-row">
+              <span className="account-row">
+                <span>
+                  <strong>{person.name || person.email}</strong>
+                  {person.name && <small>{person.email}</small>}
+                </span>
+                {/* El rol, dicho en la fila. Antes la lista era solo de
+                    administradores y la etiqueta sobraba; con todas las cuentas
+                    delante, sin ella no se distingue quién es quién. */}
+                {person.cerrada && (
+                  <span className="tag role-cerrada">Cerrada</span>
+                )}
+                {person.admin && <span className="tag role-admin">Admin</span>}
+                {person.uid === account && <span className="tag">Tú</span>}
               </span>
-              {/* El rol, dicho en la fila. Antes la lista era solo de
-                  administradores y la etiqueta sobraba; con todas las cuentas
-                  delante, sin ella no se distingue quién es quién. */}
-              {person.admin && <span className="tag role-admin">Admin</span>}
-              {person.uid === account && <span className="tag">Tú</span>}
-            </span>
-            {/* Nadie se retira a sí mismo: si te equivocas y eras el único, el
-                Consejo se queda fuera de su propio panel. */}
-            {person.uid !== account &&
-              (person.admin ? (
+              {/* Una cuenta cerrada no admite roles —el servidor los rechaza—,
+                  así que lo único que cabe hacer con ella es volver a abrirla.
+                  Ofrecer aquí «Hacer admin» sería un botón que va a fallar. */}
+              {person.cerrada ? (
+                <button
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => setAbriendo(person.uid)}
+                >
+                  <DoorOpen size={15} /> Restablecer
+                </button>
+              ) : /* Nadie se retira a sí mismo: si te equivocas y eras el
+                     único, el Consejo se queda fuera de su propio panel. */
+              person.uid === account ? null : person.admin ? (
                 <button
                   className="text-button"
                   disabled={busy || admins < 2}
@@ -216,8 +274,45 @@ export function CouncilRoles() {
                 >
                   <ShieldCheck size={15} /> Hacer admin
                 </button>
-              ))}
-          </div>
+              )}
+            </div>
+            {/* Lo que devuelve y lo que no, delante de quien va a pulsar. Si
+                esta pantalla dejara de decirlo, el Consejo acabaría prometiendo
+                unos reportes que este servidor ya no tiene. */}
+            {abriendo === person.uid && (
+              <div className="account-restore">
+                <h4>
+                  <DoorOpen size={16} /> Volver a abrir esta cuenta
+                </h4>
+                <p>
+                  Se le abre a <strong>{person.name || person.email}</strong> con
+                  su mismo correo. Puede entrar y reportar desde hoy.
+                </p>
+                <p>
+                  <strong>Lo que reportó antes no vuelve.</strong> Se anonimizó
+                  cuando pidió eliminar la cuenta y eso no se deshace: sus
+                  reportes siguen contando para el territorio, pero sin su
+                  nombre y sin su relato.
+                </p>
+                <div className="restore-actions">
+                  <button
+                    className="btn primary"
+                    disabled={busy}
+                    onClick={() => restablecer(person)}
+                  >
+                    <DoorOpen size={16} /> Restablecer
+                  </button>
+                  <button
+                    className="text-button"
+                    disabled={busy}
+                    onClick={() => setAbriendo(null)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </Fragment>
         ))}
       </div>
       <p className="subtle-note">

@@ -9,6 +9,8 @@ import { expect, it, vi, beforeEach } from "vitest";
 const state = vi.hoisted(() => ({
   exists: false,
   active: false,
+  /** Su dueña pidió eliminarla, que no es lo mismo que estar deshabilitada. */
+  deleted: false,
   admin: false,
   role: "citizen",
   sellado: vi.fn(),
@@ -36,7 +38,9 @@ vi.mock("firebase-admin/firestore", () => ({
       get: async () => ({
         exists: state.exists,
         data: () =>
-          state.exists ? { active: state.active, role: state.role } : undefined,
+          state.exists
+            ? { active: state.active, deleted: state.deleted, role: state.role }
+            : undefined,
       }),
       set: async (campos: Record<string, unknown>, opciones: unknown) =>
         state.reflejado(ruta, campos, opciones),
@@ -54,6 +58,7 @@ const request = () =>
 beforeEach(() => {
   state.exists = false;
   state.active = false;
+  state.deleted = false;
   state.admin = false;
   state.role = "citizen";
   state.sellado.mockClear();
@@ -76,6 +81,28 @@ it("cuenta deshabilitada remite al Consejo, no a activarla de nuevo", async () =
   expect((error as ApiError).status).toBe(403);
   expect((error as ApiError).message).toContain("Consejo");
   expect((error as ApiError).message).not.toContain("Mi cuenta");
+});
+
+/**
+ * Y dentro de esa, dos más. Que la cuenta la cerrara su propia dueña cambia lo
+ * que hace a continuación: no es un trámite pendiente con el Consejo, es algo
+ * que ella pidió y que solo el Consejo deshace. Leer «tu cuenta está
+ * deshabilitada» después de haber pedido eliminarla es que la aplicación no
+ * recuerde lo que uno mismo le dijo.
+ */
+it("la cuenta que su dueña cerró se dice distinto", async () => {
+  state.exists = true;
+  state.active = false;
+  state.deleted = true;
+  const error = await requireMember(request()).catch((e: ApiError) => e);
+  expect((error as ApiError).message).toContain("pediste eliminarla");
+  expect((error as ApiError).message).toContain("restablezcan");
+
+  /* Y no al revés: una cuenta que el Consejo apagó no le dice a nadie que
+     pidió irse. Sin esto, decir siempre lo mismo pasaría la prueba de arriba. */
+  state.deleted = false;
+  const otro = await requireMember(request()).catch((e: ApiError) => e);
+  expect((otro as ApiError).message).not.toContain("pediste");
 });
 
 /**

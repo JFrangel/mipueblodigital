@@ -43,6 +43,12 @@ async function everyone() {
       name: user.displayName ?? "",
       admin: user.customClaims?.admin === true,
       lastSignIn: user.metadata.lastSignInTime || null,
+      /* Si su puerta está cerrada. Se lee del propio registro de identidad
+         —que es quien la cierra— y no del documento de la cuenta, para que lo
+         que enseña el panel sea el estado real de la puerta y no su reflejo.
+         Sin esto, una persona que pide volver no se distingue en la lista de
+         una que nunca se fue. */
+      cerrada: user.disabled === true,
     }))
     /* Quien administra primero, y el resto por nombre: la pregunta de esta
        pantalla es quién tiene el rol, no quién se registró antes. */

@@ -28,6 +28,28 @@ export function authError(error: unknown) {
       "No se pudo conectar. Revisa tu conexión y vuelve a intentarlo.",
     "auth/too-many-requests":
       "Hay demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+    /**
+     * Quien pidió eliminar su cuenta y cambió de idea.
+     *
+     * Sin esta entrada caía en el texto de reserva de abajo, que le echa la
+     * culpa a sus datos y la manda a recuperar la contraseña: un correo que sí
+     * llega, un formulario que sí funciona y una puerta que sigue cerrada.
+     *
+     * **Y sí, decirlo revela que esa cuenta existe.** Pero el código lo manda
+     * el servicio de identidad y viaja en la respuesta: cualquiera que mire la
+     * red lo lee igual, diga lo que diga esta pantalla. Callarlo no esconde
+     * nada de quien sabe buscarlo; solo deja a ciegas a la persona a la que
+     * esto le está pasando de verdad.
+     *
+     * Lo cual **no** vale para `auth/email-already-in-use`, que se lleva el
+     * texto de reserva a propósito: ese sale del formulario de registro, donde
+     * cualquiera puede teclear el correo de otra persona sin saber nada de
+     * ella. Ahí un mensaje distinto sí abre una puerta que no existía, y por
+     * eso `tests/unit/auth.test.ts` exige que diga lo mismo que un correo
+     * desconocido.
+     */
+    "auth/user-disabled":
+      "Esta cuenta está cerrada. Si quieres volver a usarla, acércate al Consejo Comunitario del Río Satinga y pide que te la restablezcan.",
     "auth/weak-password":
       "La contraseña no cumple los requisitos del servicio.",
     "auth/password-does-not-meet-requirements":

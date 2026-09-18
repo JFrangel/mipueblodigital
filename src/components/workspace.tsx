@@ -74,6 +74,7 @@ import { useAccountReports } from "@/data/account-reports";
 import { mergeAccountReports, orphanedReports } from "@/domain/account-reports";
 import { deliveryOf } from "@/domain/delivery";
 import { DraftCard } from "@/features/draft-card";
+import { CuentaRestablecida } from "@/features/cuenta-restablecida";
 import { Account } from "@/features/account";
 import { CommunityFeed } from "@/features/community-feed";
 import { NewsDetail } from "@/features/news-detail";
@@ -621,6 +622,10 @@ export function Workspace({
               {storageError}
             </p>
           )}
+          {/* Quien vuelve tras haber cerrado su cuenta entra a una cuenta
+              vacía, y sin decirlo eso parece una avería. Va lo primero de la
+              portada: es lo que explica todo lo demás que va a encontrar. */}
+          {section === "inicio" && <CuentaRestablecida />}
           {/* El borrador se enseña donde uno mira: al entrar y en sus reportes. */}
           {(section === "inicio" || section === "mis-reportes") && (
             <DraftCard />

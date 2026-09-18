@@ -30,7 +30,20 @@ export async function POST(request: Request) {
     const ref = db.doc(`accountDeletionRequests/${uid}`);
     // El seudónimo se conserva solo mientras dura el proceso; al terminar se retira.
     const { pseudonym, nuevo } = await db.runTransaction(async (tx) => {
-      const previous = (await tx.get(ref)).data();
+      const anterior = (await tx.get(ref)).data();
+      /**
+       * Un restablecimiento cierra la vida anterior de la cuenta.
+       *
+       * Lo que quedó apuntado de aquella no es el comienzo de esta, y tratarlo
+       * como si lo fuera rompe tres cosas a la vez, ninguna a la vista: el
+       * `completed` de entonces impediría **para siempre** volver a eliminar
+       * —el derecho no se gasta por haberlo ejercido una vez—, la fecha de la
+       * solicitud sería la de hace meses y los plazos del Consejo se contarían
+       * desde un día que ya pasó, y el seudónimo viejo volvería a unir bajo un
+       * mismo nombre los expedientes de dos vidas distintas, que es justo lo
+       * que el seudónimo existe para evitar.
+       */
+      const previous = anterior?.state === "restored" ? undefined : anterior;
       if (previous?.state === "completed")
         throw new ApiError(
           409,
@@ -47,10 +60,26 @@ export async function POST(request: Request) {
         },
         { merge: true },
       );
-      tx.set(db.doc(`accounts/${uid}`), { active: false, deletionRequestedAt: at }, { merge: true });
+      tx.set(
+        db.doc(`accounts/${uid}`),
+        {
+          active: false,
+          deletionRequestedAt: at,
+          /* Y se borra la marca del restablecimiento anterior, si lo hubo: es
+             la que hace salir «tu cuenta volvió a abrirse» al entrar, y no
+             puede sobrevivir a que esa cuenta se vuelva a cerrar. */
+          restoredAt: null,
+        },
+        { merge: true },
+      );
       tx.set(db.doc(`councilNotifications/deletion-${uid}`), {
         type: "account_deletion",
         title: "Solicitud de eliminación de cuenta",
+        /* Dónde se atiende. La eliminación se hace sola y el Consejo no tiene
+           nada que aprobar; lo que sí puede llegar después es que esa persona
+           cambie de idea y se acerque a pedir que se la abran. Sin esta línea,
+           la Novedad era un aviso sin ninguna puerta detrás. */
+        note: "Si esa persona pide volver, se le restablece desde Quién administra.",
         at,
         requestId: uid,
       });
