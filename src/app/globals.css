@@ -185,14 +185,14 @@ hr {
   position: relative;
   overflow: hidden;
   margin-bottom: 28px;
-  display: flex;
-  align-items: flex-start;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 4px 15px;
   padding: clamp(20px, 3.4vw, 26px);
   background: linear-gradient(152deg, var(--soft) 0%, var(--surface) 64%);
 }
 .cuenta-restablecida > div {
-  flex: 1;
   min-width: 0;
 }
 .cuenta-restablecida h2 {
@@ -214,13 +214,23 @@ hr {
   flex-shrink: 0;
 }
 /* En el teléfono el icono y el texto no caben uno al lado del otro sin dejar
-   el párrafo en una columna de cuatro palabras. */
+   el párrafo en una columna de cuatro palabras. El texto baja, y el icono y la
+   equis se quedan arriba, cada uno en su esquina: las tres celdas se dicen a
+   mano porque la colocación automática mandaba la equis a una tercera fila,
+   sola y a la izquierda, como si fuera un botón más de la tarjeta. */
 @media (max-width: 560px) {
-  .cuenta-restablecida {
-    flex-wrap: wrap;
+  .cuenta-restablecida > .acceso-icono {
+    grid-row: 1;
+    grid-column: 1;
   }
   .cuenta-restablecida > div {
-    flex-basis: 100%;
+    grid-row: 2;
+    grid-column: 1 / -1;
+    margin-top: 12px;
+  }
+  .cuenta-restablecida > .icon-button {
+    grid-row: 1;
+    grid-column: 3;
   }
 }
 .acceso-necesario h2 {
@@ -4454,9 +4464,10 @@ textarea {
    lo pidió— así que no lleva el rojo de lo que sale mal: lleva el gris de lo
    que está apagado, que es lo que es. */
 .tag.role-cerrada {
-  background: transparent;
+  background: var(--surface);
   color: var(--muted);
-  border: 1px dashed var(--line);
+  border: 1px solid var(--line);
+  font-weight: 600;
 }
 /* Lo que devuelve volver a abrir una cuenta, y lo que no, antes de pulsar.
    Mismo sitio y misma forma que la confirmación de retirar un expediente, en
@@ -4486,6 +4497,31 @@ textarea {
   align-items: center;
   gap: 14px;
   flex-wrap: wrap;
+}
+/* En el teléfono no caben en una línea el nombre, el correo, la etiqueta y el
+   botón: «Cerrada» se quedaba cortada por debajo de «Restablecer», y es
+   justamente el dato por el que el Consejo entra a esta pantalla a buscar. La
+   fila se parte, y la raya que separa unas cuentas de otras pasa al envoltorio
+   para que no quede en medio de una. */
+@media (max-width: 560px) {
+  .council-roles .news-editor-row {
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--line);
+  }
+  .council-roles .news-editor-row > .account-row {
+    flex-basis: 100%;
+    border-bottom: 0;
+    padding-bottom: 8px;
+  }
+  .council-roles .news-editor-row > .text-button {
+    margin-bottom: 16px;
+  }
+  /* Y el nombre deja de pelearse con el correo por el mismo renglón. */
+  .council-roles .account-row > span {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
 }
 /* La bandeja del Consejo sostiene su propio grabado de fondo. */
 .council-inbox {

@@ -63,9 +63,13 @@ vi.mock("../../src/server/admin-auth", () => ({
         email === state.identidad.email
           ? { uid: state.identidad.uid, disabled: state.identidad.disabled }
           : null,
-      updateUser: async (uid: string, cambios: unknown) => {
+      updateUser: async (uid: string, cambios: { disabled?: boolean }) => {
         state.identidadEscrita.push([uid, cambios]);
-        state.identidad.disabled = false;
+        /* Aplicando lo que le piden, no lo que espera la prueba. Devolvía
+           siempre `false` y con eso una cuenta recién eliminada parecía
+           abierta: el doble contestaba lo que hacía falta para pasar. */
+        if (typeof cambios.disabled === "boolean")
+          state.identidad.disabled = cambios.disabled;
       },
       revokeRefreshTokens: async () => undefined,
     },
@@ -127,6 +131,14 @@ vi.mock("../../src/server/request-body", () => ({
 vi.mock("../../src/server/anonymize", () => ({
   anonymizeAccount: async () => {
     state.anonimizado += 1;
+    /* Y deja la cuenta como la deja la de verdad: `deleted: true` lo escribe
+       la anonimización, no la ruta. Sin eso, una cuenta eliminada en la prueba
+       no se parecía a una cuenta eliminada. */
+    state.docs.set("accounts/vecina", {
+      ...state.docs.get("accounts/vecina"),
+      active: false,
+      deleted: true,
+    });
     return { incidents: 2, notifications: 0, devices: 0, evidence: true, complete: true };
   },
 }));
@@ -347,4 +359,41 @@ it("reintentar la misma solicitud no avisa dos veces", async () => {
   });
   await eliminar(pideBaja());
   expect(state.avisos).toHaveLength(1);
+});
+
+/* ── Y HU-19 se queda como estaba ─────────────────────────────────────── */
+
+/**
+ * Restablecer devuelve la puerta y **nada más**.
+ *
+ * No hay copia de la fotografía ni del relato en ninguna parte, y el seudónimo
+ * se tiró a propósito al completar la eliminación. Aquí eso deja de ser un
+ * argumento y pasa a ser comprobable: si alguien intentara alguna vez «mejorar»
+ * el restablecimiento devolviéndole sus reportes a la persona, se caería esta
+ * prueba, que es exactamente lo que tiene que pasar.
+ */
+it("restablecer no toca ningún expediente", async () => {
+  cuentaCerrada();
+  await restablecer(pide({ email: "vecina@rio.co" }));
+  const rutas = state.escrituras.map((e) => e.ruta);
+  expect(rutas).toEqual([
+    "accounts/vecina",
+    "accountDeletionRequests/vecina",
+    "councilNotifications/deletion-vecina",
+  ]);
+  expect(rutas.some((r) => r.startsWith("incidents/"))).toBe(false);
+  expect(state.anonimizado).toBe(0);
+});
+
+/* Y la eliminación sigue anonimizando lo mismo que antes: lo que cambió de esa
+   ruta es a quién avisa y con qué fecha, nunca qué destruye. */
+it("la eliminación sigue anonimizando, antes y después de un restablecimiento", async () => {
+  await eliminar(pideBaja());
+  expect(state.anonimizado).toBe(1);
+  expect(state.docs.get("accounts/vecina")).toMatchObject({ active: false });
+
+  await restablecer(pide({ email: "vecina@rio.co" }));
+  await eliminar(pideBaja());
+  expect(state.anonimizado).toBe(2);
+  expect(state.docs.get("accounts/vecina")).toMatchObject({ active: false });
 });

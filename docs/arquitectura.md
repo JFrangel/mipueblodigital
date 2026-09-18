@@ -157,6 +157,7 @@ La columna de la derecha es la que importa para las copias de seguridad: **lo
 | `communityAnnouncements/{id}`                          | uuid                 | Avisos a toda la comunidad                                                                                              | El Consejo                                               |
 | `councilRoleEvents/{id}`                               | uuid                 | Quién dio o quitó el rol, y cuándo                                                                                      | `POST /api/admin/roles`                                  |
 | `accountDeletionRequests/{uid}`                        | uid                  | Estado de una solicitud de eliminación                                                                                  | `POST /api/account/deletion`                             |
+| `accountRestoreEvents/{id}`                           | uuid                 | Quién volvió a abrir qué cuenta, y cuándo                                                                                   | `POST /api/admin/accounts/restablecer`                   |
 | `writingAiLimits`, `readingAiLimits`, `serverAiLimits` | uid                  | Cupos de la asistencia de IA                                                                                            | Las rutas de IA                                          |
 
 **El identificador de un expediente es el sha256 de su contenido.** De ahí sale
@@ -290,7 +291,8 @@ permisos que no se tienen.
 | `/api/admin/incidents`               | GET               | Consejo | La bandeja completa                                                                                                                      |
 | `/api/admin/incidents/{id}`          | PATCH             | Consejo | Cambia estado, prioridad, responsable, sensibilidad y publicación. Exige motivo, control de versión optimista y deja evento de auditoría |
 | `/api/admin/incidents/{id}/retirada` | POST              | Consejo | Retira un expediente con su motivo ([§8.4](#84-retirada))                                                                                |
-| `/api/admin/roles`                   | GET, POST         | Consejo | Listado de cuentas y designación                                                                                                         |
+| `/api/admin/roles`                   | GET, POST         | Consejo | Listado de cuentas y designación. Cada cuenta dice si su puerta está cerrada                                                              |
+| `/api/admin/accounts/restablecer`   | POST              | Consejo | Vuelve a abrir una cuenta que su dueña cerró ([§8.6](#86-volver-después-de-haberse-ido))                                                 |
 | `/api/admin/statistics`              | GET               | Consejo | Cifras agregadas del territorio                                                                                                          |
 | `/api/admin/analysis`                | POST              | Consejo | Lectura asistida de la bandeja                                                                                                           |
 | `/api/admin/news`                    | GET               | Consejo | Los comunicados, incluidos los borradores                                                                                                |
@@ -437,6 +439,41 @@ pero deja de apuntar a una persona: el dueño pasa a ser un seudónimo aleatorio
 el relato y el teléfono se retiran, y la fotografía original se borra. El
 seudónimo se descarta al terminar, de modo que el registro final no reconstruye
 la correspondencia. Exige autenticación reciente (300 s).
+
+### 8.6. Volver después de haberse ido
+
+`POST /api/admin/accounts/restablecer`. Quien pidió eliminar su cuenta puede
+cambiar de idea, y hasta ahora no tenía a dónde ir: el servicio de identidad
+contesta `auth/user-disabled` y la aplicación caía en su texto de reserva, que
+le echaba la culpa a sus datos y la mandaba a recuperar la contraseña. Un correo
+que sí llega, un formulario que sí funciona y una puerta que sigue cerrada.
+
+Ahora la puerta lo dice y la manda al Consejo —en persona: la aplicación no
+tiene por dónde recibir la petición de alguien que, justamente, no puede
+entrar— y el Consejo la reabre desde **Quién administra**, que es donde ya
+administra a las personas. No desde Novedades: una Novedad se marca leída y se
+va hacia abajo entre otras cincuenta, y esta petición puede llegar meses después.
+
+**Devuelve la puerta, no los datos.** La eliminación destruye: no hay copia de la
+fotografía ni del relato en ninguna parte, y el seudónimo se tiró a propósito. La
+cuenta vuelve a abrirse **vacía**, con el mismo correo y el mismo identificador,
+y lo que aquella persona contó sigue contando para el territorio sin su nombre.
+Se dice delante de quien administra antes de pulsar, en la portada de quien
+vuelve, y en la respuesta de la ruta.
+
+La ruta escribe Firestore y **después** abre la identidad. Al revés, un fallo a
+mitad de camino dejaría a esa persona entrando a una aplicación que le contesta
+403 en todo, porque [§5.1](#51-los-tres-niveles) mira `accounts.active`: la
+puerta abierta y la casa cerrada. Es la misma razón por la que la eliminación
+retira el acceso antes de tocar los datos, mirada del otro lado.
+
+Y levanta el registro de la solicitud a `state: "restored"`. Sin eso, esa
+persona no podría volver a eliminar su cuenta **nunca** —el derecho no se gasta
+por haberlo ejercido una vez—, la segunda solicitud llevaría la fecha de la
+primera y no avisaría al Consejo. Es el fallo que no da la cara, y por eso tiene
+sus propias pruebas en `tests/unit/restablecer.test.ts`.
+
+Diseño completo: `docs/superpowers/specs/2026-09-18-restablecer-cuenta-design.md`.
 
 ---
 
