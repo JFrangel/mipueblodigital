@@ -9,8 +9,12 @@ import { openDetails } from "./report-flow";
  * quien hacía caso al mensaje y se iba a entrar volvía con todo en blanco,
  * incluida la fotografía. Pedirle a alguien que escriba dos veces lo que acaba
  * de pasarle en el río es la mejor forma de que no lo escriba una tercera.
+ *
+ * Va a la **bandeja de envíos** y no a un borrador, y eso tiene su razón: el
+ * borrador es uno solo, así que el segundo reporte pisaba al primero sin
+ * avisar. La bandeja es una lista y admite varios.
  */
-test("enviar sin sesión guarda el borrador y lleva al acceso", async ({
+test("enviar sin sesión deja el reporte esperando y lleva al acceso", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -35,30 +39,32 @@ test("enviar sin sesión guarda el borrador y lleva al acceso", async ({
   }).toPass({ timeout: 15000 });
   await enviar.click();
 
-  /* Lo que importa: acaba en el acceso, y el acceso sabe a qué vino. */
+  /* Acaba en el acceso, y el acceso sabe a qué vino. */
   await page.waitForURL(/\/acceso\//, { timeout: 20000 });
   await expect(page).toHaveURL(/volver=reporte/);
 
-  /* Y el borrador quedó guardado en el aparato, suelto porque todavía no tiene
-     dueño. Se mira en IndexedDB, que es donde vive. */
-  const guardado = await page.evaluate(
+  /* Y el reporte quedó en la bandeja de este dispositivo, a nombre de nadie
+     porque todavía no lo tiene. Se mira en IndexedDB, que es donde vive. */
+  const esperando = await page.evaluate(
     () =>
-      new Promise<string>((resolve) => {
-        const abrir = indexedDB.open("mi-pueblo");
+      new Promise<string[]>((resolve) => {
+        const abrir = indexedDB.open("mi-pueblo-outbox");
         abrir.onsuccess = () => {
           const db = abrir.result;
           const pedir = db
-            .transaction("drafts", "readonly")
-            .objectStore("drafts")
-            .get("current");
+            .transaction("reports", "readonly")
+            .objectStore("reports")
+            .getAll();
           pedir.onsuccess = () =>
-            resolve(String(pedir.result?.description ?? ""));
-          pedir.onerror = () => resolve("");
+            resolve(
+              (pedir.result as Array<{ owner: string }>).map((e) => e.owner),
+            );
+          pedir.onerror = () => resolve([]);
         };
-        abrir.onerror = () => resolve("");
+        abrir.onerror = () => resolve([]);
       }),
   );
-  expect(guardado).toContain("El muelle de tablas");
+  expect(esperando).toContain("sin-cuenta");
 });
 
 /**

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { BellRing } from "lucide-react";
+import Link from "next/link";
 import { getSession, useSession } from "@/data/session";
 import {
   markDeliveriesSeen,
@@ -8,6 +9,7 @@ import {
   pendingAnnouncements,
   retryOutgoing,
   OUTBOX_LIMIT,
+  SIN_CUENTA,
   type Outgoing,
 } from "@/data/outbox";
 import { onFlushRequest, syncOutbox } from "@/data/sync-outbox";
@@ -21,7 +23,16 @@ const labels: Record<Outgoing["state"], string> = {
 };
 export function Outbox({ compact = false }: { compact?: boolean }) {
   const session = useSession();
-  const owner = session.uid;
+  /**
+   * Sin cuenta, la bandeja también tiene dueño: uno de mentira.
+   *
+   * Quien prepara un reporte sin haber entrado no lo pierde —el servidor exige
+   * sesión para recibirlo, pero eso no puede costarle lo que acaba de
+   * escribir—. Queda aquí, a nombre de nadie, y se ve: una bandeja que guarda
+   * algo en secreto no es una bandeja, es un agujero.
+   */
+  const anonima = !session.uid;
+  const owner = session.uid ?? SIN_CUENTA;
   const [items, setItems] = useState<Outgoing[]>([]),
     [online, setOnline] = useState(true),
     [error, setError] = useState("");
@@ -41,7 +52,9 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       }
     };
     const flush = () => {
-      if (!navigator.onLine) return;
+      /* Sin cuenta no hay a dónde enviar: el servidor exige sesión. Esperan
+         aquí hasta que la persona entre, y entonces pasan a su nombre. */
+      if (anonima || !navigator.onLine) return;
       void syncOutbox(owner, () => active && getSession().uid === owner).catch(
         () => {
           if (active)
@@ -74,7 +87,7 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       window.removeEventListener("outbox-change", refresh);
       document.removeEventListener("visibilitychange", tick);
     };
-  }, [owner]);
+  }, [owner, anonima]);
   // La sesión puede cambiar antes de que termine la lectura de IndexedDB.
   const ownItems = items.filter((i) => i.owner === owner);
   const pending = ownItems.filter((i) => i.state !== "confirmed");
@@ -126,30 +139,49 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       <div className="remote-panel-body">
         <span className="eyebrow">ESTE DISPOSITIVO</span>
         <h2>
-          {pending.length === 1
-            ? "Un reporte espera señal"
-            : `${pending.length} reportes esperan señal`}
+          {anonima
+            ? pending.length === 1
+              ? "Un reporte espera a que entres"
+              : `${pending.length} reportes esperan a que entres`
+            : pending.length === 1
+              ? "Un reporte espera señal"
+              : `${pending.length} reportes esperan señal`}
         </h2>
-        <p>
-          Están guardados en este dispositivo: <strong>se enviarán</strong> en
-          cuanto haya red o al abrir la aplicación con tu sesión, sin que tengas
-          que hacer nada. Un borrador es lo contrario —espera a que tú lo
-          mandes— y vive en Mis reportes.
-        </p>
+        {anonima ? (
+          <p>
+            Están guardados en este dispositivo y no se han perdido. Los
+            reportes de este Consejo llevan nombre, así que{" "}
+            <strong>hace falta tu cuenta para enviarlos</strong>: al entrar
+            pasan a tu nombre y salen solos, sin que tengas que escribirlos otra
+            vez. Puedes seguir preparando más mientras tanto.
+          </p>
+        ) : (
+          <p>
+            Están guardados en este dispositivo: <strong>se enviarán</strong> en
+            cuanto haya red o al abrir la aplicación con tu sesión, sin que
+            tengas que hacer nada. Un borrador es lo contrario —espera a que tú
+            lo mandes— y vive en Mis reportes.
+          </p>
+        )}
+        {anonima && (
+          <Link className="btn primary" href="/acceso/?volver=reporte">
+            Entrar y enviarlos
+          </Link>
+        )}
         {/* El permiso se ofrece aquí, donde se entiende para qué sirve, y no
             con una ventana del navegador nada más entrar. */}
-        {alerts === "default" && (
+        {!anonima && alerts === "default" && (
           <button className="btn" onClick={() => void askDeliveryAlerts()}>
             <BellRing size={17} /> Avisarme cuando salgan
           </button>
         )}
-        {alerts === "granted" && (
+        {!anonima && alerts === "granted" && (
           <p className="subtle-note">
             Te avisaremos cuando un reporte en espera salga con la aplicación en
             segundo plano. Cerrada del todo, el envío aguarda a que la abras.
           </p>
         )}
-        {alerts === "denied" && (
+        {!anonima && alerts === "denied" && (
           <p className="subtle-note">
             Los avisos están bloqueados para este sitio. Puedes permitirlos
             desde los ajustes del navegador; la bandeja sigue contando aquí lo
@@ -198,30 +230,33 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
           <strong>{item.title}</strong>
           <span>{labels[item.state]}</span>
           {item.error && item.state !== "confirmed" && <p>{item.error}</p>}
-          {(item.state === "attention" || item.state === "queued") && (
-            <button
-              className="btn"
-              disabled={!online}
-              onClick={() =>
-                void retryOutgoing(item.key, item.owner)
-                  /* Reintento a la vista: el resultado aparece en esta misma
+          {/* Sin cuenta no hay a dónde reintentar: lo que falta no es la red,
+              es la sesión, y el botón de entrar ya está arriba. */}
+          {!anonima &&
+            (item.state === "attention" || item.state === "queued") && (
+              <button
+                className="btn"
+                disabled={!online}
+                onClick={() =>
+                  void retryOutgoing(item.key, item.owner)
+                    /* Reintento a la vista: el resultado aparece en esta misma
                      fila, así que no hay nada que anunciar por el sistema. */
-                  .then(() =>
-                    syncOutbox(
-                      item.owner,
-                      () => getSession().uid === item.owner,
-                      false,
-                    ),
-                  )
-                  .catch(() => {
-                    setError("No se pudo reintentar.");
-                    toast("No se pudo reintentar el envío.", "error");
-                  })
-              }
-            >
-              Reintentar ahora
-            </button>
-          )}
+                    .then(() =>
+                      syncOutbox(
+                        item.owner,
+                        () => getSession().uid === item.owner,
+                        false,
+                      ),
+                    )
+                    .catch(() => {
+                      setError("No se pudo reintentar.");
+                      toast("No se pudo reintentar el envío.", "error");
+                    })
+                }
+              >
+                Reintentar ahora
+              </button>
+            )}
         </div>
       ))}
       {/* Los límites, al pie y en pequeño: importan cuando uno lleva varios

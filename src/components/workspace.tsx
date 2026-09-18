@@ -50,6 +50,7 @@ import { summarize, pageItems } from "@/domain/logic";
 import { Logo, AvatarMark } from "./ui";
 import { CaseList } from "./case-list";
 import { AccesoNecesario } from "./acceso-necesario";
+import { usePendientesSinCuenta } from "@/data/sin-cuenta";
 import { NewsArt, coverSource } from "./news-art";
 import { useLatestNews, voiceDate, voicePreview } from "@/data/latest-news";
 import { mergeMapCases, useCommunityReports } from "@/data/community-map";
@@ -108,6 +109,9 @@ export function Workspace({
     [storageError, setStorageError] = useState("");
   const dark = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
   const session = useSession();
+  /* Los que esperan a nombre de nadie: si la bandeja ya los está enseñando con
+     su botón de entrar, la tarjeta de «esto es tuyo» sobra. Ver sin-cuenta.ts. */
+  const esperandoSinCuenta = usePendientesSinCuenta();
   /* La campana de la barra contaba solo lo personal. Un miembro del Consejo que
      no estuviera dentro de su panel no se enteraba de que había llegado un
      reporte: la cifra vivía en la pestaña que justamente no estaba mirando. */
@@ -633,18 +637,19 @@ export function Workspace({
             key={session.uid ?? "anonimo"}
             compact={section !== "mis-reportes"}
           />
-          {section === "mis-reportes" && !session.uid && (
-            <AccesoNecesario
-              icono={Files}
-              titulo="Tus reportes están a nombre de tu cuenta"
-              cifras={["Registrados", "En proceso", "Solucionados"]}
-            >
-              Entra y aquí verás lo que el Consejo tiene a tu nombre, en qué
-              estado va cada uno y lo que este dispositivo todavía no ha
-              enviado. Mientras tanto no hay nada que enseñar, porque no sabemos
-              de quién sería.
-            </AccesoNecesario>
-          )}
+          {section === "mis-reportes" &&
+            !session.uid &&
+            esperandoSinCuenta === 0 && (
+              <AccesoNecesario
+                icono={Files}
+                titulo="Tus reportes están a nombre de tu cuenta"
+                cifras={["Registrados", "En proceso", "Solucionados"]}
+              >
+                Entra y aquí verás lo que el Consejo tiene a tu nombre, en qué
+                estado va cada uno y lo que este dispositivo todavía no ha
+                enviado.
+              </AccesoNecesario>
+            )}
           {section === "mis-reportes" && session.uid && (
             <TerritoryPulse
               title="Tus reportes"
@@ -721,14 +726,13 @@ export function Workspace({
                   reportes de la comunidad y propios. */}
               {!session.uid && (
                 <AccesoNecesario
+                  compacta
                   icono={Map}
-                  titulo="Los puntos son de quienes forman la comunidad"
-                  cifras={["Reportes en el mapa"]}
+                  titulo="Los puntos son de la comunidad"
                 >
-                  El territorio se ve sin entrar. Los puntos no: son reportes de
-                  vecinas y vecinos, y algunos todavía no son públicos. Entra y
-                  verás los tuyos y los que la comunidad puede ver, cada uno
-                  donde ocurrió.
+                  El territorio se ve sin entrar; los puntos no. Entra y verás
+                  los tuyos y los que la comunidad puede ver, cada uno donde
+                  ocurrió.
                 </AccesoNecesario>
               )}
               <Territory items={territory} onSelect={setSelected} />

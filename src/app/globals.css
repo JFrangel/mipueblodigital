@@ -6490,3 +6490,38 @@ textarea {
   padding: 0;
   font-size: 12px;
 }
+
+/* La tarjeta compacta: acompaña a algo que sí se ve, en vez de ocupar el sitio
+   de lo que falta. Encima del mapa, una tarjeta alta empuja el mapa fuera de la
+   pantalla, que era justo lo que la persona venía a mirar. El icono se pone al
+   lado del título en vez de encima, y el texto pesa menos. */
+.acceso-necesario.compacta {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px 13px;
+  padding: 16px 18px;
+}
+.acceso-necesario.compacta .acceso-icono {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+.acceso-necesario.compacta h2 {
+  font-size: 14.5px;
+  line-height: 1.3;
+}
+.acceso-necesario.compacta p,
+.acceso-necesario.compacta .acceso-acciones {
+  grid-column: 1 / -1;
+}
+.acceso-necesario.compacta p {
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.acceso-necesario.compacta .acceso-acciones {
+  margin-top: 0;
+}
+.acceso-necesario.compacta .btn {
+  padding: 9px 16px;
+  font-size: 12.5px;
+}

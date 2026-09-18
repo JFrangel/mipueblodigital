@@ -322,3 +322,65 @@ export async function retryOutgoing(key: string, owner: string) {
     };
   });
 }
+
+/**
+ * El dueño de mentira que lleva lo preparado sin haber entrado.
+ *
+ * Un reporte hecho sin cuenta no se puede enviar —el servidor exige sesión— y
+ * tampoco se puede perder. Va a la bandeja a nombre de nadie, con este dueño,
+ * y espera ahí a que la persona entre. La bandeja ya sabe listar por dueño,
+ * deduplicar por contenido y respetar sus límites, así que no hace falta otro
+ * almacén: hace falta un nombre que no pueda chocar con un identificador de
+ * Firebase, que son cadenas de veintitantos caracteres alfanuméricos.
+ */
+export const SIN_CUENTA = "sin-cuenta";
+
+/**
+ * Pasa a otro dueño lo que estaba esperando.
+ *
+ * Se llama cuando alguien entra después de haber preparado reportes sin cuenta.
+ * Devuelve cuántos se traspasaron, para que la pantalla pueda decirlo.
+ *
+ * **La clave lleva el dueño dentro** (`${owner}:${hash}`), así que traspasar no
+ * es cambiar un campo: es escribir la entrada nueva, mover su fotografía y
+ * borrar la vieja. Todo en una transacción, porque es el único momento en que
+ * un reporte cambia de manos: si se rompiera a medias, el reporte no daría un
+ * error, desaparecería.
+ *
+ * Lo que ya tuviera esa persona se queda: traspasar es añadir, no reemplazar. Y
+ * si el mismo contenido ya estaba a su nombre, la clave coincide y se escribe
+ * encima, que es la misma deduplicación que hace `enqueue`.
+ */
+export async function traspasar(de: string, a: string): Promise<number> {
+  const db = await openDb();
+  return new Promise<number>((resolve, reject) => {
+    const tx = db.transaction(["reports", "payloads"], "readwrite"),
+      store = tx.objectStore("reports"),
+      cargas = tx.objectStore("payloads"),
+      req = store.index("owner").getAll(de);
+    let movidos = 0;
+    req.onsuccess = () => {
+      const entradas: Outgoing[] = req.result;
+      movidos = entradas.length;
+      for (const entrada of entradas) {
+        const clave = `${a}:${entrada.key.slice(de.length + 1)}`;
+        const carga = cargas.get(entrada.key);
+        carga.onsuccess = () => {
+          if (carga.result !== undefined) cargas.put(carga.result, clave);
+          cargas.delete(entrada.key);
+        };
+        store.put({ ...entrada, key: clave, owner: a });
+        store.delete(entrada.key);
+      }
+    };
+    tx.oncomplete = () => {
+      db.close();
+      changed();
+      resolve(movidos);
+    };
+    tx.onabort = tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}

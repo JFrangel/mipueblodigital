@@ -4,13 +4,13 @@ import { onAuthStateChanged } from "firebase/auth";
 import Link from "next/link";
 import { prepareEvidence } from "@/platform/evidence";
 import { toast } from "@/data/toasts";
-import { enqueue, outgoingFor } from "@/data/outbox";
+import { SIN_CUENTA, enqueue, outgoingFor } from "@/data/outbox";
 import { requestBackgroundSync, syncOutbox } from "@/data/sync-outbox";
 import { firebaseClient } from "@/data/firebase/client";
 import { VoiceInput } from "./voice-input";
 import { WritingAssistant } from "./writing-assistant";
 import { readDraft, writeDraft } from "@/data/local-store";
-import { adoptar, marcar } from "@/data/borrador-huerfano";
+import { adoptar, marcar } from "@/data/sin-cuenta";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -96,21 +96,20 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       setSensitive(false);
       setPoint(null);
       setEvidence(null);
-      /* Si esta persona acaba de entrar tras haberlo intentado sin sesión,
-         su borrador estaba suelto y ahora pasa a su nombre. Va antes de leer,
-         porque lo que se lee después tiene que ser ya el suyo. */
-      void (owner ? adoptar(owner) : Promise.resolve(false))
-        .then((adoptado) => {
-          if (adoptado && active && current === generation) {
+      /* Si esta persona acaba de entrar tras haber preparado reportes sin
+         cuenta, esos reportes pasan ahora a su nombre y salen solos con la
+         siguiente sincronización. Ver sin-cuenta.ts para por qué el traspaso va
+         atado a ese flujo y no a cualquier cosa que estuviera esperando. */
+      void (owner ? adoptar(owner) : Promise.resolve(0))
+        .then((traspasados) => {
+          if (traspasados > 0 && active && current === generation)
             /* Un aviso que se queda, no uno flotante que se va a los tres
-               segundos. Lo que hay que hacer ahora es enviarlo, y el botón de
-               enviar está justo debajo de este texto: un borrador completo
-               vuelve al último paso, que es el de revisar y mandar. */
+               segundos: es la respuesta a «¿y lo que escribí antes?». */
             setMessage(
-              "Tu reporte quedó guardado mientras entrabas. Revísalo y dale a enviar.",
+              traspasados === 1
+                ? "Tu reporte pasó a tu cuenta y sale con la próxima conexión. Lo sigues en la bandeja de envíos."
+                : `Tus ${traspasados} reportes pasaron a tu cuenta y salen con la próxima conexión. Los sigues en la bandeja de envíos.`,
             );
-            toast("Aquí está tu reporte, tal como lo dejaste.");
-          }
           return readDraft(owner);
         })
         .then((saved) => {
@@ -177,17 +176,28 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
        * dos veces lo que acaba de pasarle en el río es la mejor forma de que no
        * lo escriba una tercera.
        *
-       * Ahora se guarda, se dice, y se le lleva a entrar con el borrador
-       * esperándole al volver. Queda suelto —todavía no tiene dueño— y lo
-       * adopta el efecto de arriba; ver borrador-huerfano.ts para por qué esa
-       * adopción va atada a este flujo y no a cualquier borrador suelto.
+       * Ahora va a la bandeja de envíos a nombre de nadie y espera ahí. Van
+       * a la bandeja y no a un borrador por una razón práctica: el borrador es
+       * uno solo, así que el segundo reporte pisaba al primero sin avisar. La
+       * bandeja es una lista, y admite varios.
+       *
+       * Al entrar pasan todos a su nombre y salen con la siguiente
+       * sincronización, sin tener que volver a escribirlos ni mandarlos uno por
+       * uno. Ver sin-cuenta.ts.
        */
       if (!uid) {
-        await writeDraft({ ...data, photos, sensitive, ...(point ?? {}) });
+        await enqueue(SIN_CUENTA, {
+          ...data,
+          photo: photos[0],
+          sensitive,
+          ...(point ?? {}),
+        });
         marcar();
-        toast(
-          "Guardamos tu reporte como borrador. Entra a tu cuenta y lo enviamos.",
-        );
+        /* Y el borrador se limpia: el reporte ya está entero en la bandeja, y
+           dejarlo también aquí haría que al volver el formulario apareciera
+           lleno como si no se hubiera guardado nada. */
+        await writeDraft(null).catch(() => undefined);
+        toast("Guardamos tu reporte. Entra a tu cuenta y lo enviamos por ti.");
         router.push("/acceso/?volver=reporte");
         return;
       }

@@ -28,10 +28,18 @@ export function AccesoNecesario({
   icono: Icono,
   titulo,
   cifras,
+  compacta = false,
   children,
 }: {
   icono: LucideIcon;
   titulo: string;
+  /**
+   * Para cuando la tarjeta acompaña a algo que sí se ve —el mapa dibuja el
+   * territorio igual— en vez de ocupar el sitio de lo que falta. Ahí no tiene
+   * que pesar lo mismo: encima de un mapa, una tarjeta alta empuja el mapa
+   * fuera de la pantalla, que era justo lo que la persona venía a ver.
+   */
+  compacta?: boolean;
   /** Los rótulos de lo que se vería. Se pintan con la raya de «no se sabe». */
   cifras?: readonly string[];
   /** Qué vería esta persona si entrara. No «inicia sesión»: eso lo dice el botón. */
@@ -53,7 +61,7 @@ export function AccesoNecesario({
   ) : null;
 
   return (
-    <section className="panel acceso-necesario">
+    <section className={`panel acceso-necesario${compacta ? " compacta" : ""}`}>
       <span className="acceso-icono">
         <Icono size={22} />
       </span>
