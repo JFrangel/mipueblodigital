@@ -19,6 +19,37 @@ type Plataforma = "android" | "web";
 const VAPID = () => process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "";
 
 /**
+ * Si este aparato llegó a quedar apuntado de verdad.
+ *
+ * En el navegador, el permiso y el registro son dos cosas distintas, y hasta
+ * ahora la fila de Mi cuenta leía solo el permiso. Cuando pedir el token
+ * fallaba —pasó— el permiso ya estaba concedido, así que al recargar la
+ * pantalla decía «Activados» sin que nadie fuera a recibir nada: la peor clase
+ * de error, el que se ve bien.
+ *
+ * Se apunta aquí al registrar y se borra al dar de baja. Es del navegador y de
+ * nadie más, así que no viaja ni cuenta nada a ningún servidor.
+ */
+const APUNTADO = "mpd-avisos-apuntado";
+
+function marcarApuntado(si: boolean) {
+  try {
+    if (si) localStorage.setItem(APUNTADO, "1");
+    else localStorage.removeItem(APUNTADO);
+  } catch {
+    /* Sin almacén, la fila se guía solo por el permiso, como antes. */
+  }
+}
+
+function constaApuntado(): boolean {
+  try {
+    return localStorage.getItem(APUNTADO) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/**
  * El complemento nativo, cargado solo cuando hace falta.
  *
  * **Se devuelve el módulo, no el complemento, y eso no es estilo.** Los
@@ -96,16 +127,26 @@ async function crearCanal(
  * existe este módulo: el complemento en la aplicación instalada, la API del
  * navegador en el navegador.
  */
+/** Solo el permiso del sistema, sin mirar si el registro llegó a completarse. */
+async function permisoConcedido(): Promise<boolean> {
+  if (esNativo()) {
+    const { FirebaseMessaging } = await modulo();
+    return (await FirebaseMessaging.checkPermissions()).receive === "granted";
+  }
+  return (
+    typeof Notification !== "undefined" &&
+    Notification.permission === "granted"
+  );
+}
+
 export async function activado(): Promise<boolean> {
   try {
-    if (esNativo()) {
-      const { FirebaseMessaging } = await modulo();
-      return (await FirebaseMessaging.checkPermissions()).receive === "granted";
-    }
-    return (
-      typeof Notification !== "undefined" &&
-      Notification.permission === "granted"
-    );
+    if (!(await permisoConcedido())) return false;
+    /* En el APK el complemento pide permiso y apunta el aparato en el mismo
+       gesto, así que el permiso basta. En el navegador son dos cosas: se
+       pueden dar permisos y aun así fallar al pedir el token —pasó—, y
+       entonces la fila decía «Activados» sin que nadie fuera a recibir nada. */
+    return esNativo() || constaApuntado();
   } catch {
     return false;
   }
@@ -114,7 +155,12 @@ export async function activado(): Promise<boolean> {
 /** El token de este aparato en el navegador, con la clave y el service worker. */
 async function tokenWeb(): Promise<string | null> {
   const { getMessaging, getToken } = await import("firebase/messaging");
-  return await getToken(getMessaging(), {
+  /* Con la aplicación nombrada, no la por defecto: este proyecto crea
+     «mi-pueblo» y nunca una por defecto, así que `getMessaging()` a secas
+     revienta. El error se lo tragaba `registrar()` y en pantalla salía
+     «no pudo quedar apuntado. Revisa la conexión», mandando a mirar la red
+     cuando la red estaba perfectamente. */
+  return await getToken(getMessaging(firebaseClient().app), {
     vapidKey: VAPID(),
     serviceWorkerRegistration: await navigator.serviceWorker.ready,
   });
@@ -168,6 +214,7 @@ export async function registrar(): Promise<Resultado> {
     const salida = await pedirToken();
     if (typeof salida === "string") return salida;
     await contarAlServidor("/api/push/registro/", salida);
+    marcarApuntado(true);
     return "ok";
   } catch {
     return "no-disponible";
@@ -187,7 +234,10 @@ export async function registrar(): Promise<Resultado> {
 export async function refrescar(): Promise<void> {
   if (!firebaseClient().auth.currentUser) return;
   try {
-    if (!(await disponible()) || !(await activado())) return;
+    /* Por el permiso y no por `activado()`: un aparato que el servidor ya tiene
+       apuntado debe seguir renovando su token aunque se haya borrado el almacén
+       de este navegador. */
+    if (!(await disponible()) || !(await permisoConcedido())) return;
     await registrar();
   } catch {
     /* Un arranque no se rompe por esto. */
@@ -216,8 +266,9 @@ export async function darDeBaja(): Promise<void> {
       if (!(await disponible())) return;
       token = await tokenWeb();
       const { getMessaging, deleteToken } = await import("firebase/messaging");
-      await deleteToken(getMessaging());
+      await deleteToken(getMessaging(firebaseClient().app));
     }
+    marcarApuntado(false);
     if (!token) return;
     await contarAlServidor("/api/push/baja/", { token });
   } catch {

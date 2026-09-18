@@ -42,7 +42,11 @@ function initializeClient() {
     });
     connectFirestoreEmulator(db, "127.0.0.1", 8080);
   }
-  return { auth, db };
+  /* La aplicación sale junto a sus servicios porque esta **no es la aplicación
+     por defecto**: se llama «mi-pueblo». Cualquier `getAlgo()` sin argumento
+     busca la por defecto, que aquí no existe, y revienta con un error que se
+     traga quien lo llamó. Le pasó a los avisos del navegador. */
+  return { app, auth, db };
 }
 export function firebaseClient() {
   if (typeof window === "undefined")

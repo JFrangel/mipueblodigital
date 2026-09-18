@@ -361,3 +361,71 @@ it("en el navegador pregunta a la API del navegador", async () => {
   vi.stubGlobal("Notification", { permission: "denied" });
   expect(await activado()).toBe(false);
 });
+
+/* ── El permiso y el registro son dos cosas ──────────────────────────── */
+
+/**
+ * Lo que se vio en un computador: dar permisos y que aun así fallara al pedir
+ * el token. El permiso quedaba concedido, así que al recargar la fila de Mi
+ * cuenta decía «Activados» sin que nadie fuera a recibir nada —la peor clase de
+ * error, el que se ve bien—.
+ */
+it("con permiso pero sin registro, la fila no dice que esté activado", async () => {
+  state.nativo = false;
+  vi.stubGlobal("Notification", { permission: "granted" });
+  vi.stubGlobal("localStorage", {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  });
+  expect(await activado()).toBe(false);
+});
+
+it("tras un registro completo sí lo dice", async () => {
+  state.nativo = false;
+  let guardado: string | null = null;
+  vi.stubGlobal("Notification", { permission: "granted" });
+  vi.stubGlobal("localStorage", {
+    getItem: () => guardado,
+    setItem: (_k: string, v: string) => {
+      guardado = v;
+    },
+    removeItem: () => {
+      guardado = null;
+    },
+  });
+  expect(await registrar()).toBe("ok");
+  expect(await activado()).toBe(true);
+  await darDeBaja();
+  expect(await activado()).toBe(false);
+});
+
+/* En el APK el complemento pide permiso y apunta en el mismo gesto, así que no
+   hace falta esa marca: exigirla dejaría la fila apagada para siempre. */
+it("en el APK basta el permiso", async () => {
+  state.permisoNativo = "granted";
+  vi.stubGlobal("localStorage", {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  });
+  expect(await activado()).toBe(true);
+});
+
+/* Refrescar se guía por el permiso y no por la marca: un aparato que el
+   servidor ya tiene apuntado debe seguir renovando su token aunque se haya
+   borrado el almacén de este navegador. */
+it("refrescar reapunta aunque se haya perdido la marca local", async () => {
+  state.nativo = false;
+  vi.stubGlobal("Notification", { permission: "granted" });
+  vi.stubGlobal("localStorage", {
+    getItem: () => null,
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  });
+  await refrescar();
+  expect(state.llamadas[0].cuerpo).toEqual({
+    token: "tok-web",
+    platform: "web",
+  });
+});
