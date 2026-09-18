@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- El lanzador recorta este lienzo con la forma que use el teléfono. Delante,
+     la marca entera dentro de la ventana de 72 dp; detrás, la misma marca a
+     sangre y desenfocada, para que el vaivén del lanzador no descubra un borde
+     ni un color que no sea de la casa. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
+    <background android:drawable="@mipmap/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
