@@ -6125,12 +6125,37 @@ textarea {
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  /* Las filigranas del territorio se quedan en la pantalla: a 300 puntos por
-     pulgada dejan de ser un susurro y compiten con las cifras. */
+  /* Las filigranas del territorio también van al papel. Dos cosas hacen
+     falta para que se vean, y faltaban las dos.
+
+     El navegador **descarta los colores de fondo al imprimir** salvo que se le
+     pida lo contrario, y estas formas son exactamente eso: una máscara sobre un
+     color de fondo. Sin el color no queda forma que enseñar, queda nada. Es la
+     misma petición que ya llevan la rueda y las barras, unas líneas más abajo.
+
+     Y la opacidad se fija aquí en lugar de heredarla: en tema oscuro vale 0,2,
+     y el informe se imprime siempre en claro. Sin esto, quien tenga la pantalla
+     oscura sacaría la misma hoja con la filigrana más marcada. */
   .metric:before,
+  .management-metrics:before {
+    --filigrana: 0.16;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  /* Y encogen. Sobre el papel las cuatro tarjetas van en una fila de A4, mucho
+     más estrechas que en pantalla, y la filigrana de 78 px llegaba hasta debajo
+     del número: la hoja se lee de un vistazo y el 81 no puede tener un monte
+     encima. Aquí se queda en su esquina. */
+  .metric:before {
+    width: 52px !important;
+    height: 52px !important;
+    right: -8px !important;
+    bottom: -10px !important;
+  }
+  /* En los paneles que sobre el papel dejan de ser tarjeta, no. Una forma
+     asomando por la esquina de un bloque sin marco no adorna: se cae. */
   .reports-panel:before,
   .newsroom:before,
-  .management-metrics:before,
   .insight-panel:before {
     display: none !important;
   }
