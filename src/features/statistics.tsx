@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { shortId } from "@/domain/short-id";
+import { AccesoNecesario } from "@/components/acceso-necesario";
 import Link from "next/link";
 import {
   Sparkles,
@@ -163,23 +164,15 @@ export function Statistics({
             <p>Una lectura transparente de los reportes y su seguimiento.</p>
           </div>
         </div>
-        <section className="panel account-empty">
-          <BarChart3 size={36} />
-          <h2>Las cifras son de la comunidad</h2>
-          <p role="status">
-            Los reportes del territorio los ve quien forma parte de la
-            comunidad. Entra con tu cuenta y aquí verás cuántos hay, en qué
-            estado están y cuánto se tarda en atenderlos.
-          </p>
-          <div className="account-actions">
-            <Link className="btn primary" href="/acceso/">
-              Iniciar sesión
-            </Link>
-            <Link className="btn" href="/documentacion/">
-              Cómo funciona
-            </Link>
-          </div>
-        </section>
+        <AccesoNecesario
+          icono={BarChart3}
+          titulo="Las cifras son de la comunidad"
+          cifras={["Reportes", "Solucionados", "Espera mediana"]}
+        >
+          Los reportes del territorio los ve quien forma parte de la comunidad.
+          Entra con tu cuenta y aquí verás cuántos hay, en qué estado están y
+          cuánto se tarda en atenderlos.
+        </AccesoNecesario>
       </>
     );
   return (

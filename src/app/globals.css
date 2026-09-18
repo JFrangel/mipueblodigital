@@ -146,6 +146,81 @@ hr {
 .account-empty p {
   margin: 16px 0;
 }
+
+/* ── «Esto es tuyo, y todavía no has entrado» ───────────────────────────
+   Aparece donde una cifra sería mentira sin sesión. No es una tarjeta de
+   datos: es la que avisa de que faltan, así que se distingue de sus vecinas
+   sin competir con ellas. El degradado sube desde el verde de la marca y se
+   apaga; la filigrana es la de la casa, porque esta tarjeta no reclama un
+   significado propio: aparece en tres apartados distintos. */
+.acceso-necesario {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  justify-items: start;
+  gap: 13px;
+  padding: clamp(22px, 4vw, 30px);
+  background: linear-gradient(152deg, var(--soft) 0%, var(--surface) 64%);
+}
+.acceso-icono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--green);
+}
+.acceso-necesario h2 {
+  margin: 0;
+  font-size: 17px;
+  letter-spacing: -0.3px;
+}
+.acceso-necesario p {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.65;
+}
+/* Las cifras que faltan. Enseñar el hueco dice más que describirlo: van los
+   rótulos de siempre y, donde iría el número, la raya que esta aplicación ya
+   usa para lo que no puede saber. */
+.acceso-cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 30px;
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 15px 0 0;
+  border-top: 1px solid var(--line);
+}
+.acceso-cifras div {
+  display: flex;
+  /* Al revés que en el marcado: la raya queda encima del rótulo, en el sitio
+     donde estaría el número. */
+  flex-direction: column-reverse;
+  gap: 1px;
+}
+.acceso-cifras dd {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--muted);
+  opacity: 0.45;
+}
+.acceso-cifras dt {
+  font-size: 11px;
+  color: var(--muted);
+}
+.acceso-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 3px;
+}
 .newsroom {
   margin-top: 28px;
   padding: clamp(20px, 4vw, 32px);
@@ -4981,6 +5056,7 @@ textarea {
    máscara sobre un color, así que hereda el tema sin necesitar una variante
    oscura ni un archivo aparte. */
 .metric:before,
+.acceso-necesario:before,
 .reports-panel:before,
 .newsroom:before,
 .management-metrics:before,

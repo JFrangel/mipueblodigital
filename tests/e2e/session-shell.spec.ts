@@ -163,10 +163,19 @@ test("cada pantalla lleva sus propias cifras del territorio", async ({
   ).toBeVisible();
   await expect(inicio.getByText("Tasa de resolución")).toBeVisible();
 
+  /* «Mis reportes» sin sesión ya no enseña tres ceros: enseña la tarjeta que
+     dice de quién serían esas cifras, con los rótulos y el hueco donde iría el
+     número. Un cero ahí no decía que tuvieras cero reportes, decía que la
+     aplicación no sabe quién eres, y son cosas distintas. */
   await page.goto("/mis-reportes/");
-  const propios = page.locator(".community-pulse");
+  const propios = page.locator(".acceso-necesario");
   await expect(
-    propios.getByRole("heading", { name: "Tus reportes" }),
+    propios.getByRole("heading", {
+      name: "Tus reportes están a nombre de tu cuenta",
+    }),
   ).toBeVisible();
   await expect(propios.getByText("Registrados")).toBeVisible();
+  /* Y el hueco se ve: es la mitad del mensaje. */
+  await expect(propios.getByText("—").first()).toBeVisible();
+  await expect(page.locator(".community-pulse")).toHaveCount(0);
 });

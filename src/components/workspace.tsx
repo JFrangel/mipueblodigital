@@ -49,6 +49,7 @@ import {
 import { summarize, pageItems } from "@/domain/logic";
 import { Logo, AvatarMark } from "./ui";
 import { CaseList } from "./case-list";
+import { AccesoNecesario } from "./acceso-necesario";
 import { NewsArt, coverSource } from "./news-art";
 import { useLatestNews, voiceDate, voicePreview } from "@/data/latest-news";
 import { mergeMapCases, useCommunityReports } from "@/data/community-map";
@@ -632,7 +633,19 @@ export function Workspace({
             key={session.uid ?? "anonimo"}
             compact={section !== "mis-reportes"}
           />
-          {section === "mis-reportes" && (
+          {section === "mis-reportes" && !session.uid && (
+            <AccesoNecesario
+              icono={Files}
+              titulo="Tus reportes están a nombre de tu cuenta"
+              cifras={["Registrados", "En proceso", "Solucionados"]}
+            >
+              Entra y aquí verás lo que el Consejo tiene a tu nombre, en qué
+              estado va cada uno y lo que este dispositivo todavía no ha
+              enviado. Mientras tanto no hay nada que enseñar, porque no sabemos
+              de quién sería.
+            </AccesoNecesario>
+          )}
+          {section === "mis-reportes" && session.uid && (
             <TerritoryPulse
               title="Tus reportes"
               lead="Cada uno deja huella en el territorio."
@@ -702,7 +715,24 @@ export function Workspace({
             </section>
           )}
           {section === "mapa" && (
-            <Territory items={territory} onSelect={setSelected} />
+            <>
+              {/* El mapa se queda: el territorio es de todos y se dibuja igual.
+                  Lo que no se puede enseñar sin sesión son los puntos, que son
+                  reportes de la comunidad y propios. */}
+              {!session.uid && (
+                <AccesoNecesario
+                  icono={Map}
+                  titulo="Los puntos son de quienes forman la comunidad"
+                  cifras={["Reportes en el mapa"]}
+                >
+                  El territorio se ve sin entrar. Los puntos no: son reportes de
+                  vecinas y vecinos, y algunos todavía no son públicos. Entra y
+                  verás los tuyos y los que la comunidad puede ver, cada uno
+                  donde ocurrió.
+                </AccesoNecesario>
+              )}
+              <Territory items={territory} onSelect={setSelected} />
+            </>
           )}
           {/* El observatorio cuenta el territorio, así que lee el territorio:
               lo propio más lo que la comunidad puede ver. Contaba solo lo
@@ -900,48 +930,60 @@ function Dashboard({
           Ver mis reportes <ArrowRight size={15} />
         </Link>
       </div>
-      <div className="metrics four">
-        {[
-          {
-            label: "Mis reportes",
-            value: s.total,
-            Icon: Files,
-            color: "mint",
-            desc: "Tu aporte al territorio",
-          },
-          {
-            label: "En proceso",
-            value: s.active,
-            Icon: Clock,
-            color: "amber",
-            desc: "Con seguimiento activo",
-          },
-          {
-            label: "Solucionados",
-            value: s.solved,
-            Icon: CheckCircle2,
-            color: "green",
-            desc: "Un paso adelante",
-          },
-          {
-            label: "Pendientes",
-            value: s.pending,
-            Icon: MessageSquare,
-            color: "blue",
-            desc: "Por revisar",
-          },
-        ].map((m) => (
-          <Link href="/mis-reportes/" className="metric panel" key={m.label}>
-            <span className={`metric-icon ${m.color}`}>
-              <m.Icon size={20} />
-            </span>
-            <small>{m.label}</small>
-            <strong>{m.value}</strong>
-            <p>{m.desc}</p>
-            <ArrowUpRight className="metric-arrow" size={15} />
-          </Link>
-        ))}
-      </div>
+      {!session.uid ? (
+        <AccesoNecesario
+          icono={Files}
+          titulo="Tu participación vive en tu cuenta"
+          cifras={["Mis reportes", "En proceso", "Solucionados", "Pendientes"]}
+        >
+          Entra y aquí verás cuántos reportes has hecho, cuáles sigue el Consejo
+          y cuáles ya se resolvieron. Sin tu cuenta no podemos saberlo: estas
+          cifras no son cero, son las de alguien a quien todavía no conocemos.
+        </AccesoNecesario>
+      ) : (
+        <div className="metrics four">
+          {[
+            {
+              label: "Mis reportes",
+              value: s.total,
+              Icon: Files,
+              color: "mint",
+              desc: "Tu aporte al territorio",
+            },
+            {
+              label: "En proceso",
+              value: s.active,
+              Icon: Clock,
+              color: "amber",
+              desc: "Con seguimiento activo",
+            },
+            {
+              label: "Solucionados",
+              value: s.solved,
+              Icon: CheckCircle2,
+              color: "green",
+              desc: "Un paso adelante",
+            },
+            {
+              label: "Pendientes",
+              value: s.pending,
+              Icon: MessageSquare,
+              color: "blue",
+              desc: "Por revisar",
+            },
+          ].map((m) => (
+            <Link href="/mis-reportes/" className="metric panel" key={m.label}>
+              <span className={`metric-icon ${m.color}`}>
+                <m.Icon size={20} />
+              </span>
+              <small>{m.label}</small>
+              <strong>{m.value}</strong>
+              <p>{m.desc}</p>
+              <ArrowUpRight className="metric-arrow" size={15} />
+            </Link>
+          ))}
+        </div>
+      )}
       <div className="dashboard-grid">
         <section className="panel reports-panel">
           <div className="panel-heading">
