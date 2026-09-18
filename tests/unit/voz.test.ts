@@ -124,17 +124,27 @@ beforeEach(() => {
   state.quitados = 0;
   state.hayConstructor = true;
   state.instancia = null;
-  const Constructor = function (this: ReconocedorFalso) {
-    const yo = this;
-    yo.onresult = null;
-    yo.onerror = null;
-    yo.onend = null;
-    yo.arrancado = false;
-    yo.start = () => void (yo.arrancado = true);
-    yo.stop = () => yo.onend?.();
-    yo.abort = () => yo.onend?.();
-    state.instancia = yo;
-  } as unknown as new () => ReconocedorFalso;
+  class Constructor {
+    onresult: ((e: unknown) => void) | null = null;
+    onerror: ((e: { error: string }) => void) | null = null;
+    onend: (() => void) | null = null;
+    lang = "";
+    continuous = false;
+    interimResults = false;
+    arrancado = false;
+    constructor() {
+      state.instancia = this as unknown as ReconocedorFalso;
+    }
+    start() {
+      this.arrancado = true;
+    }
+    stop() {
+      this.onend?.();
+    }
+    abort() {
+      this.onend?.();
+    }
+  }
   vi.stubGlobal("window", {
     ...(state.hayConstructor ? { webkitSpeechRecognition: Constructor } : {}),
   });
