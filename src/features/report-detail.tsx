@@ -189,12 +189,8 @@ export function ReportDetail({
               <MapPin size={15} />
               <span>
                 Ubicación
-                <strong>
-                  {item.vereda || "Sin vereda"} ·{" "}
-                  {typeof item.lat === "number" && typeof item.lng === "number"
-                    ? "con punto marcado"
-                    : "sin punto; ubicado por el nombre"}
-                </strong>
+                {/* Ver la nota de council-inbox: la vereda y nada más. */}
+                <strong>{item.vereda || "Sin vereda"}</strong>
               </span>
             </li>
             {/* El número corto es con lo que se nombra el caso al Consejo, por

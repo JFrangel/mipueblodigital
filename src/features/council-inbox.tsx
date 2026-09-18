@@ -733,13 +733,13 @@ export function CouncilInbox({
                     <MapPin size={15} />
                     <span>
                       Ubicación
-                      <strong>
-                        {selected.vereda || "Sin vereda"} ·{" "}
-                        {typeof selected.lat === "number" &&
-                        typeof selected.lng === "number"
-                          ? "con punto marcado"
-                          : "sin punto; ubicado por el nombre"}
-                      </strong>
+                      {/* La vereda y nada más. Aquí decía además si el
+                          expediente traía punto de GPS, y ese dato no lleva a
+                          ninguna parte: esta ficha no enseña el punto ni deja
+                          abrirlo, así que «con punto marcado» era una etiqueta
+                          sin nada que hacer con ella, y «sin punto» una
+                          disculpa por algo que nadie echaba en falta. */}
+                      <strong>{selected.vereda || "Sin vereda"}</strong>
                     </span>
                   </li>
                   {/* Antes de cambiar nada conviene saber si la comunidad ya lo
