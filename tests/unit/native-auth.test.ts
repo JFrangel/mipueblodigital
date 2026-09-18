@@ -5,19 +5,19 @@ import {expect,it,vi,beforeEach} from 'vitest';
    de la aplicación. Estas pruebas fijan que se firme —y se salga— en las dos.
    Sin esto el fallo es mudo: el selector abre, la cuenta se elige y la pantalla
    se queda igual, que es justo lo que se reportó. */
-const state=vi.hoisted(()=>({nativo:true,credencial:{idToken:'token-de-google'} as {idToken?:string}|null,plugin:{entrar:vi.fn(),salir:vi.fn()},web:{arma:vi.fn((t?:string)=>({credencial:t})),entrar:vi.fn(),salir:vi.fn()},push:{baja:vi.fn()},orden:[] as string[]}));
+const state=vi.hoisted(()=>({nativo:true,credencial:{idToken:'token-de-google'} as {idToken?:string}|null,fallo:null as unknown,plugin:{entrar:vi.fn(),salir:vi.fn()},web:{arma:vi.fn((t?:string)=>({credencial:t})),entrar:vi.fn(),salir:vi.fn()},push:{baja:vi.fn()},orden:[] as string[]}));
 vi.mock('@capacitor/core',()=>({Capacitor:{isNativePlatform:()=>state.nativo}}));
 /* El doble imita al complemento de verdad: un proxy que contesta a cualquier
    propiedad, `then` incluida. Sin esto, devolver el complemento desde una
    función async cuelga la promesa para siempre en el teléfono y ninguna prueba
    se entera. Ver el comentario de modulo() en native.ts. */
 const comoCapacitor=<T extends object>(impl:T):T=>new Proxy(impl,{get:(o,p)=>p in o?o[p as keyof T]:()=>new Promise(()=>{}),has:()=>true});
-vi.mock('@capacitor-firebase/authentication',()=>({FirebaseAuthentication:comoCapacitor({signInWithGoogle:async()=>{state.plugin.entrar();return{credential:state.credencial}},signOut:state.plugin.salir})}));
+vi.mock('@capacitor-firebase/authentication',()=>({FirebaseAuthentication:comoCapacitor({signInWithGoogle:async()=>{state.plugin.entrar();if(state.fallo)throw state.fallo;return{credential:state.credencial}},signOut:state.plugin.salir})}));
 vi.mock('firebase/auth',()=>({GoogleAuthProvider:{credential:state.web.arma},signInWithCredential:state.web.entrar,signOut:async(a:unknown)=>{state.web.salir(a);state.orden.push('web')}}));
 vi.mock('../../src/data/firebase/client',()=>({firebaseClient:()=>({auth:'auth-web'})}));
 vi.mock('../../src/platform/push',()=>({darDeBaja:async()=>{state.push.baja();state.orden.push('baja')}}));
 import {cerrarSesion,entrarConGoogleNativo} from '../../src/platform/native';
-beforeEach(()=>{state.nativo=true;state.credencial={idToken:'token-de-google'};state.orden=[];for(const f of [state.plugin.entrar,state.plugin.salir,state.web.arma,state.web.entrar,state.web.salir,state.push.baja])f.mockClear()});
+beforeEach(()=>{state.nativo=true;state.credencial={idToken:'token-de-google'};state.fallo=null;state.orden=[];for(const f of [state.plugin.entrar,state.plugin.salir,state.web.arma,state.web.entrar,state.web.salir,state.push.baja])f.mockClear()});
 
 it('el acceso nativo firma también en el SDK web',async()=>{
   await entrarConGoogleNativo();
@@ -74,4 +74,33 @@ it('en el navegador también se suelta',async()=>{
   state.nativo=false;
   await cerrarSesion();
   expect(state.push.baja).toHaveBeenCalled();
+});
+
+/**
+ * La cuenta cerrada, vista desde el APK.
+ *
+ * El trayecto pasa por dos Firebase y el nativo revienta antes que el web: una
+ * cuenta que su dueña cerró falla ya en `signInWithGoogle()`, con una excepción
+ * de Android cuyo `code` no es el `auth/…` que entiende `authError()`. Sin
+ * traducirlo, esa persona lee en el APK «revisa tus datos» mientras en el
+ * navegador lee la verdad: que la puerta está cerrada y que el Consejo la abre.
+ */
+it('una cuenta cerrada se dice igual en el APK que en el navegador',async()=>{
+  state.fallo=Object.assign(new Error('The user account has been disabled by an administrator.'),{code:'ERROR_USER_DISABLED'});
+  await expect(entrarConGoogleNativo()).rejects.toMatchObject({code:'auth/user-disabled'});
+  expect(state.web.entrar).not.toHaveBeenCalled();
+});
+
+/* Y si el complemento ya trae el código bueno, no se toca. Sin esto, traducir
+   a lo bruto machacaría códigos correctos con uno inventado. */
+it('un código de Firebase que ya viene bien se respeta',async()=>{
+  state.fallo=Object.assign(new Error('...'),{code:'auth/network-request-failed'});
+  await expect(entrarConGoogleNativo()).rejects.toMatchObject({code:'auth/network-request-failed'});
+});
+
+/* Y un fallo cualquiera sigue siendo un fallo cualquiera: no todo lo que
+   revienta en el complemento es una cuenta cerrada. */
+it('otro fallo del complemento no se disfraza de cuenta cerrada',async()=>{
+  state.fallo=Object.assign(new Error('Se canceló el selector de cuentas.'),{code:'ERROR_ABORTED'});
+  await expect(entrarConGoogleNativo()).rejects.not.toMatchObject({code:'auth/user-disabled'});
 });

@@ -47,9 +47,36 @@ const modulo = () => import("@capacitor-firebase/authentication");
  * teléfono y devuelve un identificador, y con ese identificador se firma
  * también en la capa web, que es la que manda aquí.
  */
+/**
+ * El código de Firebase, cuando el complemento nativo no lo trae.
+ *
+ * El trayecto de arriba pasa por dos Firebase, y el nativo revienta **antes**
+ * que el web: una cuenta cerrada falla ya en `signInWithGoogle()`, con una
+ * excepción de Android cuyo `code` no siempre es el `auth/…` que entiende
+ * `authError()`. Cuando eso pasa, quien pidió eliminar su cuenta y volvió se
+ * lleva en el APK el texto de reserva —«revisa tus datos»— mientras en el
+ * navegador lee la verdad. Esto reconoce ese caso por lo que Android sí dice
+ * siempre, que es su propio nombre del error, y lo traduce.
+ *
+ * Es una red por debajo, no el camino principal: si el complemento ya trae el
+ * código bueno, no se toca nada.
+ */
+function conCodigoDeFirebase(error: unknown): unknown {
+  const e = error as { code?: unknown; message?: unknown };
+  if (typeof e?.code === "string" && e.code.startsWith("auth/")) return error;
+  const dicho = `${String(e?.code ?? "")} ${String(e?.message ?? "")}`;
+  if (/ERROR_USER_DISABLED|user (account )?has been disabled/i.test(dicho))
+    return Object.assign(error as object, { code: "auth/user-disabled" });
+  return error;
+}
+
 export async function entrarConGoogleNativo() {
   const { FirebaseAuthentication } = await modulo();
-  const { credential } = await FirebaseAuthentication.signInWithGoogle();
+  const { credential } = await FirebaseAuthentication.signInWithGoogle().catch(
+    (error: unknown) => {
+      throw conCodigoDeFirebase(error);
+    },
+  );
   const idToken = credential?.idToken;
   /* Sin identificador no hay nada que firmar, y seguir adelante devolvería a
      la persona a la misma pantalla quieta de antes. Mejor decirlo. */

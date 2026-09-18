@@ -62,32 +62,36 @@ desaparecer siguen ahí un mes después de pedirlo.
 
 ### 3.1. La puerta dice la verdad
 
-`src/domain/auth.ts`, dos códigos nuevos en el mapa:
+`src/domain/auth.ts`, un código nuevo en el mapa:
 
 ```
 "auth/user-disabled":
   "Esta cuenta está cerrada. Si quieres volver a usarla, acércate al Consejo
    Comunitario del Río Satinga y pide que te la restablezcan."
-
-"auth/email-already-in-use":
-  "Ya hay una cuenta con ese correo. Entra con ella en vez de crear otra."
 ```
 
-El segundo encadena con el primero y por eso va aquí: quien no puede entrar
-prueba a registrarse de nuevo con el mismo correo, se lleva
-`auth/email-already-in-use`, vuelve a entrar y **entonces** lee por qué. Sin él,
-los dos caminos terminan en el mismo texto de reserva que no explica nada.
+**Uno, no dos.** El plan pedía mapear también `auth/email-already-in-use`, para
+que quien probara a registrarse otra vez con el mismo correo encadenara hasta el
+mensaje bueno. Al construirlo se cayó `tests/unit/auth.test.ts`, que exige que
+ese código diga **lo mismo** que un correo desconocido, y la prueba tenía razón:
+ese error sale del formulario de registro, donde cualquiera puede teclear el
+correo de otra persona. Un mensaje distinto ahí deja enumerar quién tiene cuenta
+en esta aplicación, que en un territorio pequeño no es un dato menor. Se queda
+con el texto de reserva, y el porqué está escrito junto al mapa para que nadie lo
+«arregle» dentro de seis meses.
 
-Los mismos mensajes sirven para los tres accesos —correo, Google en el navegador
-y Google en el APK— porque los tres acaban en `signInWithCredential` o en
-`signInWithEmailAndPassword` del SDK web, que es quien lanza el código.
+`auth/user-disabled` sí, y la diferencia importa: ese código lo manda el
+servicio de identidad en la respuesta, así que cualquiera que mire la red lo lee
+igual, diga lo que diga la pantalla. Callarlo no esconde nada de quien sabe
+buscarlo; solo deja a ciegas a la persona a la que le está pasando.
 
-**Lo que hay que comprobar en un teléfono de verdad:** el acceso nativo de
-Android firma primero contra el Firebase nativo
-(`FirebaseAuthentication.signInWithGoogle()`, `skipNativeAuth: false`), y ese
-puede reventar **antes**, con una excepción de Android cuyo `code` puede no ser
-`auth/user-disabled`. Si es así, `src/platform/native.ts` tiene que reconocerla y
-relanzarla con ese código, igual que ya hace con `mpd/sin-credencial-google`.
+**El APK, por su cuenta.** El acceso nativo firma primero contra el Firebase de
+Android (`FirebaseAuthentication.signInWithGoogle()`, `skipNativeAuth: false`) y
+ese revienta **antes** que el SDK web, con una excepción cuyo `code` es
+`ERROR_USER_DISABLED` y no `auth/user-disabled`. Sin traducirlo, esa persona lee
+en el APK «revisa tus datos» mientras en el navegador lee la verdad.
+`src/platform/native.ts` lo reconoce por el nombre del error de Android y lo
+traduce, y solo cuando el complemento no trae ya un código `auth/…` bueno.
 
 `src/server/admin-auth.ts` — `requireMember()` dice hoy «Tu cuenta está
 deshabilitada. Contacta al Consejo Comunitario» tanto si la cerró la persona como
@@ -257,7 +261,32 @@ defiende.
 - `requireMember` distingue la cuenta cerrada por su dueña de la deshabilitada
   por el Consejo.
 
-## 6. Lo que queda fuera
+## 6. HU-19 no se toca
+
+Conviene decirlo aparte, porque es el requisito de la tesis y es lo que este
+trabajo podría haber estropeado sin que se notara.
+
+De la ruta de eliminación cambian tres cosas, y ninguna toca lo que destruye:
+
+- Una solicitud de una **vida anterior** de la cuenta —la que quedó en
+  `restored`— deja de contar como el comienzo de esta. Para una primera
+  eliminación no hay solicitud anterior, así que el camino es idéntico; para un
+  reintento de una que quedó a medias, el estado es `pending` o `partial` y
+  también. Solo cambia el caso nuevo, el que antes no existía.
+- La Novedad del Consejo gana una línea diciendo dónde se atiende.
+- El documento de la cuenta pierde la marca de un restablecimiento anterior, que
+  no puede sobrevivir a que esa cuenta se vuelva a cerrar.
+
+`src/server/anonymize.ts` no se toca. La autenticación reciente (300 s), el
+rechazo de las cuentas del Consejo y el 409 de una eliminación ya completada,
+tampoco.
+
+Y restablecer no deshace nada de eso: escribe exactamente tres documentos —la
+cuenta, el registro de la solicitud y la Novedad— y ninguno es un expediente.
+Está fijado con una prueba que compara la lista entera de escrituras, así que
+devolverle los reportes a alguien al restablecerlo se cae sola.
+
+## 7. Lo que queda fuera
 
 - **El plazo de gracia.** Decidido en el §2.
 - **Devolver reportes, fotografías o relatos.** No es que cueste: no existen.
