@@ -1,92 +1,28 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square } from "lucide-react";
-
-type Recognition = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult:
-    | ((event: {
-        /** Desde dónde son nuevos los resultados de este evento. */
-        resultIndex: number;
-        results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }>;
-      }) => void)
-    | null;
-  onerror: ((event: { error: string }) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-};
-type VoiceWindow = Window & {
-  SpeechRecognition?: new () => Recognition;
-  webkitSpeechRecognition?: new () => Recognition;
-};
+import { esNativo } from "@/platform/native";
+import { escuchar, type Escucha, type Impedimento } from "@/platform/voz";
 
 /**
- * Juntar los trozos del dictado sin repetirlos.
+ * Lo que se le dice a alguien cuando el dictado no arranca o se corta.
  *
- * Es el tercer intento, y los dos anteriores fallaron por suponer cómo entrega
- * Android el reconocimiento. Lo que llegó del teléfono:
- *
- *     hubohubohubohubo derrumbéhubo derrumbé enhubo derrumbé en la vía
- *     hubohubohubohubohubo unhubo unhubo un derrumbé yhubo un derrumbé y ocurrió
- *
- * Los dos son la misma frase creciendo. A veces la reemite en la misma
- * posición, a veces en posiciones nuevas —por eso ni juntarlas todas ni
- * guardarlas por posición bastaba—, pero en los dos casos **lo nuevo empieza
- * por lo viejo**.
- *
- * Así que la regla no mira posiciones ni banderas: mira el texto. Si un trozo
- * empieza por lo que ya se lleva, es la misma frase más larga y reemplaza; si
- * no, es frase nueva y se añade. Un ordenador, que entrega trozos distintos,
- * cae siempre por el segundo camino y se comporta igual que siempre.
- *
- * **La comparación no puede ser literal.** Al crecer, el reconocimiento
- * reescribe lo que ya había dicho: pone la mayúscula inicial, corrige tildes,
- * añade o quita comas. Comparando tal cual, «esto es» y «Esto es una» son dos
- * frases distintas y se suman:
- *
- *     esto es Esto es Esto es una Esto es una prueba
- *
- * Por eso se comparan normalizados —sin mayúsculas, sin tildes, sin signos— y
- * se conserva el texto tal como llegó, que es el que está mejor escrito.
+ * Cuatro motivos y cuatro frases, y esto no es cortesía: antes «no se autorizó»
+ * y «no hay servicio de voz» decían lo mismo, y son cosas distintas. La primera
+ * se arregla dando un permiso; la segunda no se arregla de ninguna manera, y lo
+ * único útil que se le puede decir a esa persona es que use el micrófono de su
+ * teclado. Mandarla a revisar unos permisos que ya están bien es mandarla a
+ * buscar donde no es.
  */
-const normaliza = (texto: string) =>
-  texto
-    .toLocaleLowerCase("es")
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^\p{Letter}\p{Number}\s]/gu, "")
-    .replace(/\s+/g, " ")
-    .trim();
-
-export function unir(partes: readonly string[]): string {
-  let texto = "";
-  let clave = "";
-  for (const parte of partes) {
-    const trozo = (parte ?? "").trim();
-    if (!trozo) continue;
-    const suya = normaliza(trozo);
-    if (!suya) continue;
-    if (!clave) {
-      texto = trozo;
-      clave = suya;
-    } else if (suya.startsWith(clave)) {
-      /* La misma frase, más larga y mejor escrita: reemplaza. */
-      texto = trozo;
-      clave = suya;
-    } else if (clave.startsWith(suya)) {
-      /* Una versión más corta de lo que ya se lleva: se ignora. */
-      continue;
-    } else {
-      texto = `${texto} ${trozo}`;
-      clave = `${clave} ${suya}`;
-    }
-  }
-  return texto;
-}
+const frases: Record<Impedimento, string> = {
+  "no-disponible":
+    "Este dispositivo no puede dictar. Escribe tu descripción, o usa el micrófono del teclado: funciona igual y el texto llega al mismo sitio.",
+  "sin-permiso":
+    "No se autorizó el micrófono. Puedes darle permiso desde los ajustes de este dispositivo, o escribir tu descripción.",
+  "sin-conexion":
+    "Conéctate a internet para dictar. Puedes seguir escribiendo sin conexión.",
+  "sin-voz": "No se detectó voz. Intenta hablar más cerca del micrófono.",
+};
 
 export function VoiceInput({
   value,
@@ -99,125 +35,61 @@ export function VoiceInput({
 }) {
   const original = useRef("");
   const [lastResult, setLastResult] = useState("");
-  const recognition = useRef<Recognition | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* La escucha en curso, si la hay. La puerta devuelve solo la manera de
+     pararla: qué reconocedor haya detrás no es asunto de esta pantalla. */
+  const escucha = useRef<Escucha | null>(null);
   const [listening, setListening] = useState(false);
   const [text, setText] = useState("");
   const [error, setError] = useState("");
+
+  /* Al desmontar se para lo que esté sonando. Sin esto, salir del formulario
+     con el dictado abierto deja el micrófono encendido. */
   useEffect(
     () => () => {
-      if (timer.current) clearTimeout(timer.current);
-      const current = recognition.current;
-      if (current) {
-        current.onresult = null;
-        current.onerror = null;
-        current.onend = null;
-        current.abort();
-      }
+      escucha.current?.parar();
+      escucha.current = null;
     },
     [],
   );
-  function start() {
-    if (recognition.current) return;
+
+  async function start() {
+    if (escucha.current) return;
     setError("");
-    const platform = window as VoiceWindow;
-    const Constructor =
-      platform.SpeechRecognition || platform.webkitSpeechRecognition;
-    if (!Constructor) {
-      setError(
-        "Este navegador no admite dictado. Puedes escribir tu descripción o usar el micrófono del teclado.",
-      );
-      return;
-    }
-    if (!navigator.onLine) {
-      setError(
-        "Conéctate a internet para dictar. Puedes seguir escribiendo sin conexión.",
-      );
-      return;
-    }
+    setText("");
     original.current = value;
-    const current = new Constructor();
-    recognition.current = current;
-    current.lang = "es-CO";
-    current.continuous = true;
-    current.interimResults = true;
-    /**
-     * Lo ya cerrado se guarda aquí, y no se vuelve a leer del evento.
-     *
-     * El manejador juntaba **todos** los resultados del evento cada vez. En un
-     * ordenador eso da el texto correcto, porque cada frase aparece una sola
-     * vez. En un teléfono no: Android cierra y reabre la sesión de
-     * reconocimiento por su cuenta mientras uno habla, y vuelve a entregar lo
-     * que ya había cerrado. El resultado era el dictado repitiéndose palabra
-     * por palabra, que es justo lo que se ve en el móvil.
-     *
-     * La forma correcta la da el propio evento: `resultIndex` dice desde dónde
-     * es nuevo, e `isFinal` dice qué está cerrado. Lo cerrado se acumula una
-     * vez; lo provisional se enseña aparte y se reemplaza en el evento
-     * siguiente. El código declaraba `isFinal` en su tipo y no lo miraba.
-     */
-    /**
-     * Cada trozo en su sitio.
-     *
-     * Este es el segundo intento, y el primero también se equivocaba. Junté
-     * todos los resultados de cada evento: en escritorio bien, en el teléfono
-     * repetido. Entonces pasé a **acumular** lo que llegaba marcado como
-     * cerrado, y el teléfono lo repitió igual, de otra manera:
-     *
-     *     hubohubohubohubo derrumbéhubo derrumbé enhubo derrumbé en la vía
-     *
-     * Porque Android no cierra una frase y pasa a la siguiente. **Reemite la
-     * misma frase creciendo, en el mismo índice, marcada como cerrada cada
-     * vez.** Sumar eso multiplica; lo que hay que hacer es reemplazar.
-     *
-     * Guardar cada trozo en la posición que el propio evento indica hace la
-     * operación idempotente: llegue una vez o llegue ocho, el resultado es el
-     * mismo. Y sirve igual para el escritorio, donde cada posición llega una
-     * sola vez.
-     */
-    const partes: string[] = [];
-    current.onresult = (event) => {
-      /* `resultIndex` está en la norma y lo mandan todos, pero si algún día
-         llega sin él se empieza por el principio: peor es no transcribir. */
-      const desde = event.resultIndex ?? 0;
-      for (let i = desde; i < event.results.length; i++)
-        partes[i] = event.results[i][0].transcript;
-      const transcript = unir(partes).slice(0, 12000);
-      setText(transcript);
-      const result = [original.current.trim(), transcript]
-        .filter(Boolean)
-        .join(" ");
-      setLastResult(result);
-      onChange(result);
-    };
-    current.onerror = ({ error: reason }) => {
-      setError(
-        reason === "not-allowed" || reason === "service-not-allowed"
-          ? "No se autorizó el micrófono o el servicio de voz. Revisa los permisos del navegador."
-          : reason === "no-speech"
-            ? "No se detectó voz. Intenta hablar más cerca del micrófono."
-            : "El dictado se interrumpió. Puedes revisar lo transcrito y continuar escribiendo.",
-      );
-    };
-    current.onend = () => {
+    /* Se marca escuchando antes de pedir nada: en el APK el permiso abre un
+       diálogo del sistema y el botón tiene que estar ya en «Detener», o se
+       pulsa dos veces y se arrancan dos escuchas. */
+    setListening(true);
+    onListening(true);
+
+    const abierta = await escuchar({
+      alTexto: (transcript) => {
+        const corto = transcript.slice(0, 12000);
+        setText(corto);
+        const result = [original.current.trim(), corto]
+          .filter(Boolean)
+          .join(" ");
+        setLastResult(result);
+        onChange(result);
+      },
+      alTerminar: (motivo) => {
+        escucha.current = null;
+        setListening(false);
+        onListening(false);
+        if (motivo) setError(frases[motivo]);
+      },
+    });
+
+    if (typeof abierta === "string") {
       setListening(false);
       onListening(false);
-      recognition.current = null;
-      if (timer.current) clearTimeout(timer.current);
-    };
-    try {
-      setText("");
-      current.start();
-      setListening(true);
-      onListening(true);
-      timer.current = setTimeout(() => current.stop(), 60000);
-    } catch {
-      recognition.current = null;
-      setListening(false);
-      onListening(false);
-      setError("No se pudo iniciar el micrófono. Inténtalo de nuevo.");
+      setError(frases[abierta]);
+      return;
     }
+    escucha.current = abierta;
   }
+
   return (
     <section className="voice-input" aria-label="Dictado de voz">
       <div className="voice-heading">
@@ -225,14 +97,23 @@ export function VoiceInput({
         <strong>Cuéntalo con tu voz</strong>
         <span>Español · hasta 1 minuto</span>
       </div>
+      {/* Quién oye el audio depende de dónde corre esto, y no es un detalle:
+          en el navegador el audio sale hacia el servicio de voz del navegador;
+          en la aplicación instalada lo transcribe el reconocedor del propio
+          teléfono, el mismo del micrófono del teclado. Decir «el navegador»
+          dentro del APK sería contar algo que no está pasando. */}
       <p>
-        El navegador puede enviar el audio a su servicio de reconocimiento. El
-        texto aparece directamente en Descripción; la app no guarda el audio.
+        {esNativo()
+          ? "Lo transcribe el reconocedor de voz de tu teléfono, el mismo del micrófono del teclado. El texto aparece directamente en Descripción; la app no guarda el audio."
+          : "El navegador puede enviar el audio a su servicio de reconocimiento. El texto aparece directamente en Descripción; la app no guarda el audio."}
       </p>
       <button
         type="button"
         className="btn"
-        onClick={() => (listening ? recognition.current?.stop() : start())}
+        onClick={() => {
+          if (listening) escucha.current?.parar();
+          else void start();
+        }}
       >
         {listening ? <Square size={16} /> : <Mic size={16} />}{" "}
         {listening ? "Detener dictado" : "Activar micrófono"}

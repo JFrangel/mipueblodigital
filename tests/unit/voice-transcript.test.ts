@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { unir } from "../../src/features/voice-input";
+import { unir } from "../../src/domain/dictado";
 
 /**
  * El dictado repetía las palabras en el teléfono. Tres versiones hicieron falta.

@@ -53,7 +53,31 @@
         </provider>
     </application>
 
-    <!-- Permissions -->
+    <!-- Permisos -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- El dictado. Sin esta línea Android negaba la petición del micrófono
+         **sin enseñar ningún diálogo**, y la persona leía «no se autorizó el
+         micrófono» sin haber tenido nunca nada que autorizar. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Lo pide el reconocedor de voz de Android para saber qué motores hay
+         instalados; sin esto no encuentra ninguno en Android 11 en adelante. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
+    <!-- «Usar mi ubicación» en el reporte. Las dos: con el permiso fino se
+         sitúa un derrumbe, y con el grueso al menos el sector, que es mejor que
+         nada cuando alguien no quiere dar el fino. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Y **no** ACCESS_BACKGROUND_LOCATION, a propósito y por escrito para que
+         nadie lo añada por si acaso. Esta aplicación solo necesita saber dónde
+         está alguien mientras esa persona mira el formulario y ha pulsado un
+         botón. Pedir la ubicación en segundo plano es una promesa que no hay
+         que hacerle a una comunidad sobre dónde están sus miembros, y además es
+         de las cosas por las que Google Play rechaza una aplicación. -->
 </manifest>

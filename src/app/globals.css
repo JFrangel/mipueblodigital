@@ -4498,6 +4498,20 @@ textarea {
   gap: 14px;
   flex-wrap: wrap;
 }
+/* «Usar mi ubicación», encima del mapa y no dentro: es una manera de poner el
+   punto, hermana de tocar el mapa, no un control del mapa. Y para las veredas
+   que el catálogo no sitúa es la única que hay, así que no puede esconderse
+   debajo de algo que ahí no se dibuja. */
+.located-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 14px 0 10px;
+}
+.located-actions .btn {
+  gap: 8px;
+}
 /* En el teléfono no caben en una línea el nombre, el correo, la etiqueta y el
    botón: «Cerrada» se quedaba cortada por debajo de «Restablecer», y es
    justamente el dato por el que el Consejo entra a esta pantalla a buscar. La

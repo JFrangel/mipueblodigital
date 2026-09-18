@@ -1,9 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, CircleMarker } from "leaflet";
-import { MapPin, WifiOff, Undo2 } from "lucide-react";
+import { Crosshair, MapPin, WifiOff, Undo2 } from "lucide-react";
 import { veredaReference } from "@/domain/territory";
 import { useOnline } from "@/data/network";
+import {
+  disponible as ubicacionDisponible,
+  dondeEstoy,
+  motivos,
+} from "@/platform/ubicacion";
 import "leaflet/dist/leaflet.css";
 
 export type Point = { lat: number; lng: number };
@@ -30,6 +35,14 @@ const origin = {
  * quien está allí. El punto ajustado viaja con el expediente y llega al Consejo
  * marcado como no verificado, porque lo puso la comunidad y no el catálogo.
  *
+ * **Y las veredas que el catálogo no sitúa.** Seis de las diecinueve no tienen
+ * punto documentado, y hasta ahora eso las dejaba sin mapa y sin manera ninguna
+ * de darles una coordenada: el reporte viajaba solo con el nombre y el caso no
+ * aparecía en el mapa del territorio. Con «Usar mi ubicación», quien está
+ * parado allí le pone el punto que el catálogo no tiene. No es inventar
+ * coordenadas —que es lo que esta pantalla se negaba a hacer, y con razón—: es
+ * que la persona que está en el sitio diga dónde está el sitio.
+ *
  * El mapa se carga bajo demanda y solo con conexión: abrir el formulario en el
  * río no debe costar la descarga de una biblioteca de mapas.
  */
@@ -46,11 +59,31 @@ export function VeredaPreview({
   const reference = vereda ? veredaReference(vereda) : null;
   const lat = point?.lat ?? reference?.lat;
   const lng = point?.lng ?? reference?.lng;
-  /* El componente se remonta al cambiar de vereda, así que el punto de partida
-     es constante durante toda su vida. */
-  const baseLat = reference?.lat;
-  const baseLng = reference?.lng;
-  const mapped = baseLat !== undefined && baseLng !== undefined;
+
+  /**
+   * Dónde abre el mapa.
+   *
+   * Empieza en el punto de la vereda, si lo hay. Si no lo hay, queda en nulo y
+   * **no hay mapa hasta que alguien diga dónde está**: dibujar el río entero
+   * centrado en cualquier parte no ayuda a nadie a marcar un derrumbe. Al usar
+   * la ubicación, ese punto se vuelve el centro y el mapa aparece.
+   *
+   * Se guarda aparte del punto elegido porque el mapa se construye una sola vez
+   * y no puede recentrarse cada vez que alguien toca: se le iría de las manos
+   * mientras lo arrastra.
+   */
+  const [centro, setCentro] = useState<Point | null>(
+    reference?.lat !== undefined && reference.lng !== undefined
+      ? { lat: reference.lat, lng: reference.lng }
+      : null,
+  );
+  /** De dónde salió el punto que hay ahora. */
+  const [origen, setOrigen] = useState<"mapa" | "aparato" | null>(null);
+  const [margen, setMargen] = useState<number | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const [avisoUbicacion, setAvisoUbicacion] = useState("");
+
+  const mapped = centro !== null;
   const container = useRef<HTMLDivElement>(null);
   const marker = useRef<CircleMarker | null>(null);
   /* El manejador vive en una referencia para no reconstruir el mapa al cambiar. */
@@ -60,6 +93,8 @@ export function VeredaPreview({
   }, [onPoint]);
   const [failed, setFailed] = useState(false);
 
+  const baseLat = centro?.lat;
+  const baseLng = centro?.lng;
   useEffect(() => {
     if (baseLat === undefined || baseLng === undefined || !online) return;
     const centre = { lat: baseLat, lng: baseLng };
@@ -93,6 +128,11 @@ export function VeredaPreview({
         map.on("click", (event) => {
           const { lat: y, lng: x } = event.latlng;
           marker.current?.setLatLng([y, x]);
+          /* Tocar el mapa es un punto puesto a mano: pierde el margen del
+             aparato, que ya no describe lo que hay en pantalla. */
+          setOrigen("mapa");
+          setMargen(null);
+          setAvisoUbicacion("");
           report.current({ lat: y, lng: x });
         });
       })
@@ -106,6 +146,26 @@ export function VeredaPreview({
     };
   }, [baseLat, baseLng, online]);
 
+  async function usarMiUbicacion() {
+    setBuscando(true);
+    setAvisoUbicacion("");
+    const resultado = await dondeEstoy();
+    setBuscando(false);
+    if (typeof resultado === "string") {
+      setAvisoUbicacion(motivos[resultado]);
+      return;
+    }
+    const { lat: y, lng: x, exactitud } = resultado;
+    setOrigen("aparato");
+    setMargen(Math.round(exactitud));
+    report.current({ lat: y, lng: x });
+    /* Si la vereda no tenía punto, este es el primero: el mapa nace aquí.
+       Si ya lo tenía, el mapa existe y basta mover el marcador; recentrar
+       reconstruiría el mapa entero por debajo de quien lo está mirando. */
+    if (!centro) setCentro({ lat: y, lng: x });
+    else marker.current?.setLatLng([y, x]);
+  }
+
   if (!vereda)
     return (
       <div className="location-preview">
@@ -118,6 +178,7 @@ export function VeredaPreview({
     );
 
   const adjusted = point !== null;
+  const puedeUbicar = ubicacionDisponible();
   return (
     <div className="location-preview located">
       <div className="located-head">
@@ -130,13 +191,16 @@ export function VeredaPreview({
               : "Sin punto de referencia documentado"}
           </small>
         </div>
-        {adjusted && (
+        {adjusted && reference && (
           <button
             type="button"
             className="text-button located-reset"
             onClick={() => {
-              if (baseLat !== undefined && baseLng !== undefined)
-                marker.current?.setLatLng([baseLat, baseLng]);
+              if (reference.lat !== undefined && reference.lng !== undefined)
+                marker.current?.setLatLng([reference.lat, reference.lng]);
+              setOrigen(null);
+              setMargen(null);
+              setAvisoUbicacion("");
               onPoint(null);
             }}
           >
@@ -144,6 +208,33 @@ export function VeredaPreview({
           </button>
         )}
       </div>
+      {/* El botón se pulsa a propósito, cada vez. En un territorio de casas
+          dispersas una coordenada es una persona parada en un sitio a una hora:
+          no se pide sola al abrir el formulario, ni se recuerda de una vez para
+          la siguiente. */}
+      {puedeUbicar && (
+        <div className="located-actions">
+          <button
+            type="button"
+            className="btn"
+            disabled={buscando}
+            onClick={() => void usarMiUbicacion()}
+          >
+            <Crosshair size={16} />
+            {buscando ? "Buscando tu ubicación…" : "Usar mi ubicación"}
+          </button>
+          {buscando && (
+            <small className="muted" role="status">
+              Puede tardar medio minuto bajo los árboles.
+            </small>
+          )}
+        </div>
+      )}
+      {avisoUbicacion && (
+        <p className="located-note" role="alert">
+          {avisoUbicacion}
+        </p>
+      )}
       {mapped && online && !failed && (
         <>
           <div
@@ -169,11 +260,13 @@ export function VeredaPreview({
         </p>
       )}
       <p className="located-note">
-        {!mapped
-          ? "Todavía no hay un punto documentado para esta vereda. No se inventan coordenadas: el reporte viaja con su nombre."
-          : adjusted
+        {origen === "aparato"
+          ? `Tu ubicación, con ${margen ?? "?"} m de margen. El Consejo la recibe sin verificar y la contrasta en campo.`
+          : origen === "mapa"
             ? "Ubicación marcada por ti. El Consejo la recibe sin verificar y la contrasta en campo."
-            : origin[reference?.kind ?? "abierta"]}
+            : !reference
+              ? "Todavía no hay un punto documentado para esta vereda. No se inventan coordenadas: usa tu ubicación si estás en el sitio, o envía el reporte con el nombre de la vereda."
+              : origin[reference.kind ?? "abierta"]}
       </p>
     </div>
   );
