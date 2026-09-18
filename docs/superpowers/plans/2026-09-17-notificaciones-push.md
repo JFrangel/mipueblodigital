@@ -1281,7 +1281,7 @@ Insert this row immediately **after** the «Apariencia» button (line 353,
         >
           <span>
             <Bell size={20} />
-            Avisos en este teléfono
+            Avisos en este dispositivo
           </span>
           <strong>{avisos ? "Activados" : "Desactivados"}</strong>
         </button>
@@ -1303,7 +1303,7 @@ test('sin soporte de avisos, Mi cuenta no ofrece el interruptor',async({page})=>
   await page.addInitScript(()=>{delete (window as unknown as {Notification?:unknown}).Notification});
   await page.goto('/cuenta/');
   await expect(page.getByText('Apariencia')).toBeVisible();
-  await expect(page.getByText('Avisos en este teléfono')).toHaveCount(0);
+  await expect(page.getByText('Avisos en este dispositivo')).toHaveCount(0);
 });
 ```
 

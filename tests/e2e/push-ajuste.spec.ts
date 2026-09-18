@@ -25,5 +25,5 @@ test("sin soporte de avisos, Mi cuenta no ofrece el interruptor", async ({
   /* La fila de al lado sí está: así se distingue «la pantalla cargó y el
      interruptor no aparece» de «la pantalla no cargó». */
   await expect(page.getByText("Apariencia")).toBeVisible();
-  await expect(page.getByText("Avisos en este teléfono")).toHaveCount(0);
+  await expect(page.getByText("Avisos en este dispositivo")).toHaveCount(0);
 });

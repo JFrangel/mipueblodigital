@@ -146,19 +146,19 @@ export function Account({
       if (avisos) {
         await darDeBaja();
         setAvisos(false);
-        toast("Ya no recibirás avisos en este aparato.");
+        toast("Ya no recibirás avisos en este dispositivo.");
         return;
       }
       const salida = await registrar();
       setAvisos(salida === "ok");
       toast(
         salida === "ok"
-          ? "Te avisaremos en este aparato."
+          ? "Te avisaremos en este dispositivo."
           : salida === "denegado"
-            ? "El teléfono tiene los avisos bloqueados para esta aplicación. Se activan desde los ajustes del sistema."
+            ? "Los avisos están bloqueados para esta aplicación. Se vuelven a activar desde los ajustes del navegador o del sistema."
             : salida === "sin-sesion"
               ? "Inicia sesión para recibir avisos sobre tus reportes."
-              : "Este aparato no pudo quedar apuntado. Revisa la conexión.",
+              : "Este dispositivo no pudo quedar apuntado. Revisa la conexión.",
         salida === "ok" ? undefined : "error",
       );
     } finally {
@@ -425,7 +425,7 @@ export function Account({
         >
           <span>
             {avisos ? <Bell size={20} /> : <BellOff size={20} />}
-            Avisos en este teléfono
+            Avisos en este dispositivo
           </span>
           <strong>{avisos ? "Activados" : "Desactivados"}</strong>
         </button>
