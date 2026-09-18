@@ -111,15 +111,42 @@ async function nativa(opciones: {
       : await SpeechRecognition.requestPermissions();
   if (permiso.speechRecognition !== "granted") return "sin-permiso";
 
+  /**
+   * Una frase por vuelta, y cada frase en su sitio.
+   *
+   * **El reconocedor de Android no escucha un minuto seguido: reconoce una
+   * frase y se detiene.** Quien dicta un reporte hace pausas —para pensar, para
+   * mirar el derrumbe— y cada pausa cierra una vuelta. Así que se reanuda hasta
+   * el tope o hasta que la persona pare.
+   *
+   * Y ahí está la trampa que ya nos costó dos intentos en el navegador: si cada
+   * vuelta escribiera en la misma posición, la segunda frase **borraría la
+   * primera** y el dictado se iría perdiendo por detrás mientras se habla. Cada
+   * vuelta escribe en la suya, y `unir()` se ocupa del resto.
+   *
+   * La transcripción buena no es el último trozo provisional: es la que llega
+   * al resolverse `start()`, ya corregida y con sus tildes. Se guarda encima.
+   */
   const partes: string[] = [];
+  let indice = 0;
   let vivo = true;
+  /* Vueltas seguidas que no trajeron nada. Tres, no una: una vuelta vacía es
+     alguien pensando, tres seguidas es alguien que dejó de hablar. */
+  let vacias = 0;
+  const SILENCIOS = 3;
+  /* Y un tope duro de vueltas, para que un reconocedor que contestara al
+     instante no dejara esto girando: el reloj de abajo es de tiempo, y el
+     tiempo no corre si cada vuelta dura cero. */
+  let vueltas = 0;
+  const VUELTAS_MAXIMAS = 60;
+
   const oyente = await SpeechRecognition.addListener(
     "partialResults",
     ({ matches }) => {
       /* La primera coincidencia es la que el reconocedor considera más
          probable; las demás son alternativas y no se pintan. */
       if (!vivo || !matches?.length) return;
-      partes[0] = matches[0];
+      partes[indice] = matches[0];
       opciones.alTexto(unir(partes));
     },
   );
@@ -134,16 +161,45 @@ async function nativa(opciones: {
   };
   const reloj = setTimeout(() => cerrar(null), TOPE_MS);
 
-  SpeechRecognition.start({
-    language: "es-CO",
-    partialResults: true,
-    /* Sin la ventana del sistema: el dictado ocurre dentro del formulario, a la
-       vista del texto que se está escribiendo. */
-    popup: false,
-  })
-    .then(() => cerrar(null))
-    .catch(() => cerrar("sin-voz"));
+  const seguir = (hubo: boolean) => {
+    if (!vivo) return;
+    if (hubo) {
+      indice = partes.length;
+      vacias = 0;
+    } else if (++vacias >= SILENCIOS) {
+      /* Sin una sola palabra en toda la escucha, el problema es el micrófono y
+         se dice. Con algo dicho, el silencio es el final normal del dictado. */
+      cerrar(partes.length ? null : "sin-voz");
+      return;
+    }
+    vuelta();
+  };
 
+  const vuelta = () => {
+    if (!vivo) return;
+    if (++vueltas > VUELTAS_MAXIMAS) {
+      cerrar(null);
+      return;
+    }
+    SpeechRecognition.start({
+      language: "es-CO",
+      partialResults: true,
+      /* Sin la ventana del sistema: el dictado ocurre dentro del formulario, a
+         la vista del texto que se está escribiendo. */
+      popup: false,
+    })
+      .then(({ matches }) => {
+        const dicho = matches?.[0]?.trim();
+        if (dicho) {
+          partes[indice] = dicho;
+          opciones.alTexto(unir(partes));
+        }
+        seguir(Boolean(dicho));
+      })
+      .catch(() => seguir(false));
+  };
+
+  vuelta();
   return { parar: () => cerrar(null) };
 }
 
