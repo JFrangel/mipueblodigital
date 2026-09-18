@@ -508,6 +508,39 @@
     grid-template-columns: 1fr;
     gap: 22px;
   }
+
+  /* En el teléfono la columna deja de tener un canto izquierdo que sostener: el
+     botón ocupa el ancho entero, así que lo que cuelga debajo se centra bajo él
+     en vez de quedar colgando de una línea que ya no existe. En escritorio no
+     cambia nada: ahí el canto sí está, y lo sostienen el titular, el relato,
+     los pilares y el botón.
+
+     Esto va **aquí abajo y no arriba con el resto de reglas móviles**: una
+     consulta de medios no añade especificidad, así que una regla colocada antes
+     de la definición base de `.foot` pierde contra ella por orden de archivo.
+     Puesta arriba, el pie se quedaba exactamente igual y no se veía por qué. */
+  .ya {
+    text-align: center;
+  }
+  /* El pie de la portada: las coordenadas y el enlace a la guía. */
+  .foot {
+    justify-content: center;
+    text-align: center;
+  }
+  .coords {
+    justify-content: center;
+  }
+  /* Y el del explicador, con «Entrar a la aplicación» y el enlace a la guía. */
+  .explainerFoot {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  /* El aviso de abajo no: centrar un párrafo de varias líneas lo hace más
+     difícil de leer, que es lo contrario de lo que se buscaba al centrar. */
+  .note {
+    text-align: left;
+  }
 }
 @media (max-width: 560px) {
   .link small {
