@@ -11,10 +11,12 @@ import { validateReport } from "@/domain/logic";
 import { DEFAULT_PRIORITY } from "@/domain/priority";
 import { categories } from "@/data/catalog";
 import { anotarAporte } from "@/server/veredas";
+import { comoLaDelCatalogo } from "@/domain/veredas";
 import { avisar } from "@/server/push";
 import {
   isCatalogued,
   isInsideTerritory,
+  veredaNames,
   veredaReference,
 } from "@/domain/territory";
 export const runtime = "nodejs";
@@ -83,12 +85,6 @@ export async function POST(request: Request) {
         400,
         errors[0] || "El texto supera el límite permitido.",
       );
-    // La vereda determina a quién se asigna el caso: solo se acepta del catálogo.
-    if (!isCatalogued(data.vereda))
-      throw new ApiError(
-        400,
-        "Selecciona una vereda del catálogo territorial vigente.",
-      );
     /* Punto del caso: opcional, pero si viene tiene que ser un par completo y
        caer dentro del marco del territorio. */
     const hasPoint = input.lat !== undefined || input.lng !== undefined;
@@ -127,6 +123,36 @@ export async function POST(request: Request) {
       input.pointAccuracy >= 0
         ? Math.round(input.pointAccuracy)
         : null;
+    /**
+     * La vereda: del catálogo, o propuesta por quien está allí.
+     *
+     * Hasta ahora solo valía el catálogo, y eso dejaba fuera a quien vive en una
+     * vereda que el EOT de 2007 no nombró: no podía reportar, sin más. El
+     * catálogo se declara a sí mismo pendiente de validación por el Consejo, así
+     * que negarle a alguien su propio topónimo era darle a ese documento una
+     * autoridad que él mismo no se da.
+     *
+     * Ahora se acepta una vereda nueva, **con dos condiciones**:
+     *
+     * Primero, que no sea una del catálogo escrita de otra manera. Si lo es, se
+     * usa la del catálogo sin decir nada: la bandeja del Consejo ya arrastra la
+     * lección de que «Bellavista», «Bella Vista» y «bellavista» se vuelven tres
+     * sitios en el mapa y tres columnas en las cifras. El formulario ya ofrece
+     * la del catálogo antes de llegar aquí; esto es la red de debajo.
+     *
+     * Y segundo, que venga con punto del aparato. Un topónimo sin coordenada no
+     * se puede ni situar ni contrastar, y sería la puerta por la que el catálogo
+     * territorial de un consejo comunitario se llena de ruido.
+     */
+    const delCatalogo = comoLaDelCatalogo(data.vereda, veredaNames);
+    if (delCatalogo) data.vereda = delCatalogo;
+    const veredaProposed = !isCatalogued(data.vereda);
+    if (veredaProposed && pointSource !== "aparato")
+      throw new ApiError(
+        400,
+        "Para proponer una vereda que no está en la lista, usa tu ubicación desde el sitio. Si no estás allí, elige la vereda más cercana del catálogo.",
+      );
+
     const photo = await validateOriginal(input.photo);
     const id = createHash("sha256")
       .update(`${uid}:${input.requestId}`)
@@ -225,6 +251,8 @@ export async function POST(request: Request) {
         lng: point?.lng ?? null,
         pointSource,
         pointAccuracy,
+        /* El nombre lo puso la comunidad y el Consejo todavía no lo ha mirado. */
+        veredaProposed,
         /* Lo marcó quien reporta, no el Consejo: sigue sin verificar. */
         locationVerified: false,
         evidenceId,
@@ -315,7 +343,7 @@ export async function POST(request: Request) {
           cuenta: uid,
         },
         {
-          nueva: !isCatalogued(data.vereda),
+          nueva: veredaProposed,
           /* Si ya está situada, solo se vuelve a molestar al Consejo cuando el
              centro se haya apartado de verdad. */
           yaSituada: veredaReference(data.vereda),

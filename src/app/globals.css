@@ -4512,6 +4512,22 @@ textarea {
 .located-actions .btn {
   gap: 8px;
 }
+/* La vereda que el catálogo no nombra. El campo va debajo del desplegable,
+   separado por su propio botón: lo normal es encontrarla en la lista, y esto
+   es la salida para cuando no. */
+.vereda-nueva {
+  margin-top: 14px;
+}
+.vereda-sugerida {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.vereda-sugerida small {
+  color: var(--muted);
+}
 /* En el teléfono no caben en una línea el nombre, el correo, la etiqueta y el
    botón: «Cerrada» se quedaba cortada por debajo de «Restablecer», y es
    justamente el dato por el que el Consejo entra a esta pantalla a buscar. La

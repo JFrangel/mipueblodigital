@@ -18,6 +18,7 @@ import {
   Camera,
   Check,
   Files,
+  MapPinPlus,
   Save,
 } from "lucide-react";
 import { categories, type Case } from "@/data/catalog";
@@ -27,6 +28,7 @@ import {
   veredaReference,
 } from "@/domain/territory";
 import { VeredaPreview, type Point } from "./vereda-preview";
+import { comoLaDelCatalogo } from "@/domain/veredas";
 import { validateReport } from "@/domain/logic";
 import { CategoryIcon } from "@/components/ui";
 import { LeafFall } from "./leaf-fall";
@@ -61,6 +63,16 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
   /* Lo escrito para acortar la lista de veredas. No es parte del reporte: se
      queda aquí y no viaja a ninguna parte. */
   const [veredaQuery, setVeredaQuery] = useState("");
+  /**
+   * Cuando la vereda no está en la lista.
+   *
+   * Seis de las diecinueve del catálogo no tienen punto, y el catálogo mismo
+   * —EOT de 2007 y fuentes abiertas— se declara pendiente de validación. Quien
+   * vive en una vereda que ese documento no nombró no podía reportar: se
+   * quedaba fuera de su propia aplicación por un papel de hace diecinueve años.
+   */
+  const [veredaFuera, setVeredaFuera] = useState(false);
+  const [veredaEscrita, setVeredaEscrita] = useState("");
   /* Sin tildes y en minúsculas por los dos lados: «vibora» tiene que
      encontrar «Víbora Paraíso», que es como se teclea de verdad. */
   const veredasShown = veredaNames.filter(
@@ -293,6 +305,21 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
     : 0;
   /* Estado real de cada paso: si se borra la categoría, «Detalles» deja de ser
      alcanzable aunque ya se hubiera visitado. */
+  /* Antes de crear nada, buscar: si es una del catálogo escrita de otra
+     manera, se ofrece esa. Sin esto, «Bellavista», «Bella Vista» y
+     «bellavista» acaban siendo tres sitios en el mapa y tres columnas en las
+     cifras, que es una lección que la bandeja del Consejo ya arrastra. */
+  const sugerida = veredaFuera
+    ? comoLaDelCatalogo(veredaEscrita, veredaNames)
+    : null;
+  /* Una vereda propuesta necesita el punto del aparato: un topónimo sin
+     coordenada no se puede situar ni contrastar. Se dice **aquí**, y no al
+     final con un error del servidor, que llegaría después de escribirlo todo. */
+  const faltaUbicacion =
+    veredaFuera &&
+    !sugerida &&
+    veredaEscrita.trim().length > 1 &&
+    point?.pointSource !== "aparato";
   const pending = validateReport({ ...data, photos: photos.length });
   const filled = [
     !pending.includes("Selecciona una categoría."),
@@ -307,7 +334,14 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       step === 0
         ? all.filter((e) => e === "Selecciona una categoría.")
         : step === 1
-          ? all.filter((e) => e === "Selecciona una vereda.")
+          ? [
+              ...all.filter((e) => e === "Selecciona una vereda."),
+              ...(faltaUbicacion
+                ? [
+                    "Para proponer una vereda que no está en la lista, usa tu ubicación desde el sitio.",
+                  ]
+                : []),
+            ]
           : all;
     if (current.length) {
       setErrors(current);
@@ -535,6 +569,70 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 )}
                 <small className="muted">{catalogueNotice}</small>
               </label>
+              {/* El catálogo no es la última palabra sobre cómo se llama el
+                  territorio de nadie. Va debajo del desplegable y no encima:
+                  lo normal es encontrar la vereda en la lista. */}
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  const abre = !veredaFuera;
+                  setVeredaFuera(abre);
+                  setVeredaEscrita("");
+                  setPoint(null);
+                  setData({ ...data, vereda: "" });
+                  if (!abre) setVeredaQuery("");
+                }}
+              >
+                <MapPinPlus size={15} />
+                {veredaFuera
+                  ? "Buscar en la lista"
+                  : "Mi vereda no está en la lista"}
+              </button>
+              {veredaFuera && (
+                <label className="field-label vereda-nueva">
+                  Nombre de tu vereda
+                  <input
+                    type="text"
+                    aria-label="Nombre de tu vereda"
+                    placeholder="Escríbelo como lo dicen allá…"
+                    maxLength={60}
+                    value={veredaEscrita}
+                    onChange={(e) => {
+                      const escrito = e.target.value;
+                      setVeredaEscrita(escrito);
+                      /* La vereda del reporte es lo escrito hasta que el
+                         catálogo diga otra cosa; eso lo decide quien reporta
+                         pulsando la sugerencia, no esta pantalla por su cuenta. */
+                      setData({ ...data, vereda: escrito.trim() });
+                    }}
+                  />
+                  {sugerida ? (
+                    <span className="vereda-sugerida">
+                      <small>Esa vereda ya está en la lista.</small>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => {
+                          setVeredaFuera(false);
+                          setVeredaEscrita("");
+                          setVeredaQuery("");
+                          setPoint(null);
+                          setData({ ...data, vereda: sugerida });
+                        }}
+                      >
+                        Usar «{sugerida}»
+                      </button>
+                    </span>
+                  ) : (
+                    <small className="muted">
+                      Usa tu ubicación desde el sitio para que el Consejo pueda
+                      situarla. Con la tuya y la de otros reportes, tu vereda
+                      entra al mapa con su nombre.
+                    </small>
+                  )}
+                </label>
+              )}
               {/* Remontar al cambiar de vereda reinicia el mapa y su estado. */}
               <VeredaPreview
                 key={data.vereda}

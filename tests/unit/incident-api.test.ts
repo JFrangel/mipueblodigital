@@ -20,7 +20,22 @@ it("ignora dueño y privilegios enviados por cliente",async()=>{const r=await PO
    haciendo falta; el correo verificado solo lo pide la asistencia de IA. */
 it("recibe el reporte de quien no ha verificado su correo",async()=>{state.verified=false;const r=await POST(req());expect(r.status).toBe(200);expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(true);});
 it("revisa de nuevo la cuenta antes de confirmar",async()=>{state.store.set("accounts/alice",{active:false});expect((await POST(req())).status).toBe(403);expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(false);});
-it("rechaza una vereda fuera del catálogo territorial",async()=>{const r=await POST(req({vereda:"Vereda inventada"}));expect(r.status).toBe(400);expect((await r.json()).error).toContain("catálogo territorial");expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(false);});
+/* Una vereda que el catálogo no nombra ya no cierra el paso —el catálogo se
+   declara a sí mismo pendiente de validación, y negarle a alguien su propio
+   topónimo era darle una autoridad que no se da—, pero **no entra sin
+   evidencia**: hace falta el punto del aparato, tomado desde el sitio. Sin eso
+   sería la puerta por la que el catálogo territorial se llena de ruido. */
+it("una vereda que no está en la lista no entra sin ubicación del aparato",async()=>{const r=await POST(req({vereda:"El Firme"}));expect(r.status).toBe(400);expect((await r.json()).error).toContain("ubicación");expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(false);});
+it("y tampoco con un punto marcado a mano sobre el mapa",async()=>{const r=await POST(req({vereda:"El Firme",lat:2.2356,lng:-78.2474,pointSource:"mano"}));expect(r.status).toBe(400);expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(false);});
+it("con la ubicación del aparato sí, y queda marcada como propuesta",async()=>{const r=await POST(req({vereda:"El Firme",lat:2.2356,lng:-78.2474,pointSource:"aparato",pointAccuracy:12}));expect(r.status).toBe(200);const{id}=await r.json();expect(state.store.get(`incidents/${id}`)).toMatchObject({vereda:"El Firme",veredaProposed:true,pointSource:"aparato",pointAccuracy:12});});
+/* Y la red de debajo del formulario: un nombre del catálogo escrito de otra
+   manera **no crea una vereda nueva**. Sin esto, «Bellavista», «Bella Vista» y
+   «bellavista» se vuelven tres sitios en el mapa y tres columnas en las cifras;
+   la bandeja del Consejo ya arrastra esa lección. */
+it("un nombre del catálogo escrito de otra manera no crea vereda nueva",async()=>{const r=await POST(req({vereda:"bella vista",lat:2.2356,lng:-78.2474,pointSource:"aparato",pointAccuracy:12}));expect(r.status).toBe(200);const{id}=await r.json();expect(state.store.get(`incidents/${id}`)).toMatchObject({vereda:"Bellavista",veredaProposed:false});});
+/* El origen del punto no se lo inventa el cliente a su favor: sin decir nada,
+   vale «mano», que es el que no cuenta para situar una vereda. */
+it("un punto sin origen declarado cuenta como marcado a mano",async()=>{const r=await POST(req({lat:2.2356,lng:-78.2474}));const{id}=await r.json();expect(state.store.get(`incidents/${id}`)).toMatchObject({pointSource:"mano",pointAccuracy:null});});
 it("acepta un punto dentro del territorio y lo guarda sin verificar",async()=>{const r=await POST(req({lat:2.2356,lng:-78.2474}));const{id}=await r.json();expect(r.status).toBe(200);expect(state.store.get(`incidents/${id}`)).toMatchObject({lat:2.2356,lng:-78.2474,locationVerified:false});});
 it("rechaza un punto fuera del territorio",async()=>{const r=await POST(req({lat:4.7,lng:-74.1}));expect(r.status).toBe(400);expect((await r.json()).error).toContain("fuera del territorio");expect([...state.store.keys()].some(k=>k.startsWith("incidents/"))).toBe(false);});
 it("rechaza media coordenada",async()=>{expect((await POST(req({lat:2.2356}))).status).toBe(400);});
