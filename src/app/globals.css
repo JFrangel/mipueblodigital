@@ -4512,21 +4512,33 @@ textarea {
 .located-actions .btn {
   gap: 8px;
 }
-/* La vereda que el catálogo no nombra. El campo va debajo del desplegable,
-   separado por su propio botón: lo normal es encontrarla en la lista, y esto
-   es la salida para cuando no. */
-.vereda-nueva {
-  margin-top: 14px;
+/**
+ * La advertencia del catálogo y la salida, en una sola caja.
+ *
+ * Iban sueltas —un párrafo largo sobre el EOT de 2007 en medio de la pantalla y,
+ * debajo, un botón que no se sabía de dónde salía— y son la misma idea: esta
+ * lista no es la última palabra sobre cómo se llama el territorio de nadie.
+ * Juntas, la salida se entiende sin explicarla.
+ */
+.vereda-salida {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--soft);
 }
-.vereda-sugerida {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 8px;
-}
-.vereda-sugerida small {
+.vereda-salida p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.6;
   color: var(--muted);
+}
+.vereda-salida strong {
+  color: var(--text);
+}
+.vereda-salida .text-button,
+.vereda-salida .btn {
+  font-size: 13px;
 }
 /* Las veredas que la comunidad sitúa, en el panel del Consejo. Cada propuesta
    es una tarjeta con su mapa y las cifras de las que sale el punto: sin esas

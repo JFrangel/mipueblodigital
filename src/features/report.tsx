@@ -530,73 +530,22 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 Selecciona la vereda o el centro poblado más cercano al lugar de
                 la situación.
               </p>
-              <label className="field-label">
-                Vereda
-                {/* Escribir acorta la lista. Dieciocho veredas en un
-                    desplegable obligan a recorrerlo entero, y en una ventana
-                    baja el desplegable se abre con media lista fuera de la
-                    pantalla. Queda un desplegable —así el nombre siempre sale
-                    del catálogo y el mapa puede agrupar por él—, pero se llega
-                    a cualquiera con dos letras. */}
-                <input
-                  type="search"
-                  className="vereda-filter"
-                  value={veredaQuery}
-                  aria-label="Buscar vereda por nombre"
-                  placeholder="Escribe para acortar la lista…"
-                  onChange={(e) => setVeredaQuery(e.target.value)}
-                />
-                <select
-                  aria-label="Vereda"
-                  value={data.vereda}
-                  onChange={(e) => {
-                    // Otro sitio, otro punto: el ajuste anterior ya no aplica.
-                    setPoint(null);
-                    setData({ ...data, vereda: e.target.value });
-                  }}
-                >
-                  <option value="">Seleccionar vereda</option>
-                  {veredasShown.map((v) => (
-                    <option key={v}>{v}</option>
-                  ))}
-                </select>
-                {veredaQuery.trim() && (
-                  <small className="muted">
-                    {veredasShown.length === 0
-                      ? "Ninguna vereda se llama así. Borra la búsqueda para ver todas."
-                      : `${veredasShown.length} de ${veredaNames.length} veredas.`}
-                  </small>
-                )}
-                <small className="muted">{catalogueNotice}</small>
-              </label>
-              {/* El catálogo no es la última palabra sobre cómo se llama el
-                  territorio de nadie. Va debajo del desplegable y no encima:
-                  lo normal es encontrar la vereda en la lista. */}
-              <button
-                type="button"
-                className="text-button"
-                onClick={() => {
-                  const abre = !veredaFuera;
-                  setVeredaFuera(abre);
-                  setVeredaEscrita("");
-                  setPoint(null);
-                  setData({ ...data, vereda: "" });
-                  if (!abre) setVeredaQuery("");
-                }}
-              >
-                <MapPinPlus size={15} />
-                {veredaFuera
-                  ? "Buscar en la lista"
-                  : "Mi vereda no está en la lista"}
-              </button>
-              {veredaFuera && (
-                <label className="field-label vereda-nueva">
+              {/**
+               * Dos maneras de contestar la misma pregunta, y **solo una a la
+               * vez**. Estaban las dos en pantalla: al escribir el nombre de tu
+               * vereda seguían ahí el buscador y el desplegable, que ya no
+               * pintaban nada, y el paso entero se leía como una pila de campos
+               * sueltos en vez de como una pregunta.
+               */}
+              {veredaFuera ? (
+                <label className="field-label">
                   Nombre de tu vereda
                   <input
                     type="text"
                     aria-label="Nombre de tu vereda"
                     placeholder="Escríbelo como lo dicen allá…"
                     maxLength={60}
+                    autoFocus
                     value={veredaEscrita}
                     onChange={(e) => {
                       const escrito = e.target.value;
@@ -607,9 +556,64 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                       setData({ ...data, vereda: escrito.trim() });
                     }}
                   />
-                  {sugerida ? (
-                    <span className="vereda-sugerida">
-                      <small>Esa vereda ya está en la lista.</small>
+                </label>
+              ) : (
+                <label className="field-label">
+                  Vereda
+                  {/* Escribir acorta la lista. Dieciocho veredas en un
+                      desplegable obligan a recorrerlo entero, y en una ventana
+                      baja el desplegable se abre con media lista fuera de la
+                      pantalla. Queda un desplegable —así el nombre siempre sale
+                      del catálogo y el mapa puede agrupar por él—, pero se llega
+                      a cualquiera con dos letras. */}
+                  <input
+                    type="search"
+                    className="vereda-filter"
+                    value={veredaQuery}
+                    aria-label="Buscar vereda por nombre"
+                    placeholder="Escribe para acortar la lista…"
+                    onChange={(e) => setVeredaQuery(e.target.value)}
+                  />
+                  <select
+                    aria-label="Vereda"
+                    value={data.vereda}
+                    onChange={(e) => {
+                      // Otro sitio, otro punto: el ajuste anterior ya no aplica.
+                      setPoint(null);
+                      setData({ ...data, vereda: e.target.value });
+                    }}
+                  >
+                    <option value="">Seleccionar vereda</option>
+                    {veredasShown.map((v) => (
+                      <option key={v}>{v}</option>
+                    ))}
+                  </select>
+                  {veredaQuery.trim() && (
+                    <small className="muted">
+                      {veredasShown.length === 0
+                        ? "Ninguna vereda se llama así. Borra la búsqueda para ver todas."
+                        : `${veredasShown.length} de ${veredaNames.length} veredas.`}
+                    </small>
+                  )}
+                </label>
+              )}
+              {/**
+               * La advertencia del catálogo y la salida, en el mismo sitio.
+               *
+               * Iban sueltas: un párrafo largo sobre el EOT de 2007 en medio de
+               * la pantalla y, debajo, un botón que no se sabía de dónde salía.
+               * Son **la misma idea** —esta lista no es la última palabra sobre
+               * cómo se llama el territorio de nadie— y leerlas juntas es lo que
+               * hace que la salida se entienda sin explicarla.
+               */}
+              <div className="vereda-salida">
+                {veredaFuera ? (
+                  sugerida ? (
+                    <>
+                      <p>
+                        <strong>{sugerida}</strong> ya está en la lista. Es la
+                        misma escrita de otra manera.
+                      </p>
                       <button
                         type="button"
                         className="btn"
@@ -623,16 +627,35 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                       >
                         Usar «{sugerida}»
                       </button>
-                    </span>
+                    </>
                   ) : (
-                    <small className="muted">
+                    <p>
                       Usa tu ubicación desde el sitio para que el Consejo pueda
                       situarla. Con la tuya y la de otros reportes, tu vereda
                       entra al mapa con su nombre.
-                    </small>
-                  )}
-                </label>
-              )}
+                    </p>
+                  )
+                ) : (
+                  <p>{catalogueNotice}</p>
+                )}
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={() => {
+                    const abre = !veredaFuera;
+                    setVeredaFuera(abre);
+                    setVeredaEscrita("");
+                    setPoint(null);
+                    setData({ ...data, vereda: "" });
+                    if (!abre) setVeredaQuery("");
+                  }}
+                >
+                  <MapPinPlus size={15} />
+                  {veredaFuera
+                    ? "Buscar en la lista"
+                    : "Mi vereda no está en la lista"}
+                </button>
+              </div>
               {/* Remontar al cambiar de vereda reinicia el mapa y su estado. */}
               <VeredaPreview
                 key={data.vereda}
