@@ -97,12 +97,31 @@ no es incorrecto. Lo que sí es mejorable es **lo que dice**: la página de
 respaldo habla de reportes, y quien llega ahí desde «Iniciar sesión» no recibe
 respuesta a lo que preguntó.
 
-### 2.8. Primera visita sin caché: pantalla en blanco · **no es resoluble**
+### 2.8. Primera visita sin caché · **corregido en el APK** (19 de septiembre)
 
 Si el aparato nunca abrió la aplicación con señal, no hay _service worker_
-instalado y el navegador enseña su propio error. No hay nada que la aplicación
-pueda hacer: **hace falta una primera visita con red**, y conviene decirlo al
-entregar teléfonos en el territorio.
+instalado. **En el navegador no hay nada que hacer**: hace falta una primera
+visita con red, y conviene decirlo al entregar teléfonos en el territorio.
+
+En el APK sí lo había, y se estaba desperdiciando. La aplicación instalada lleva
+dentro una página para este caso exacto, y **no se cargaba nunca**: Capacitor
+solo la pide si se le configura `server.errorPath`, y faltaba. Lo que se veía al
+instalar sin señal era el error del propio navegador —«Webpage not available ·
+net::ERR_INTERNET_DISCONNECTED», en inglés, con el robot de Android—.
+
+Y eso importa aquí más que en otros sitios: en este territorio unas cuantas
+instalaciones van a ser alguien pasando el archivo por Bluetooth o por una
+memoria, y abriéndolo donde no hay red.
+
+Ahora sale la página en español, que dice qué pasa y qué hacer, con un botón que
+reintenta de verdad. El botón necesitó su propio trabajo: la página se sirve
+desde `localhost` mientras la aplicación vive en otra dirección, así que recargar
+**abría Chrome** y dejaba a la persona fuera de su aplicación. La dirección se le
+pone al sincronizar (`scripts/inyectar-servidor.mjs`), en la copia que git
+ignora, para que no quede escrita en el repositorio.
+
+Comprobado en emulador con el ciclo entero: instalar sin señal, pulsar sin señal
+—se queda donde está—, y pulsar con señal, que entra.
 
 ---
 

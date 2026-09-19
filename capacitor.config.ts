@@ -50,6 +50,24 @@ const config: CapacitorConfig = {
     url,
     /* Nunca HTTP en claro: por aquí viajan sesiones y fotografías. */
     cleartext: false,
+    /**
+     * Qué se ve cuando la ventana no alcanza el servidor.
+     *
+     * **Sin esta línea, la página que el APK lleva dentro no se carga nunca.**
+     * Capacitor solo la pide si hay `errorPath` —su `BridgeWebViewClient` lo
+     * comprueba antes de hacer nada— y si falta, deja el error del propio
+     * navegador: «Webpage not available · net::ERR_INTERNET_DISCONNECTED», en
+     * inglés, con el robot de Android y sin decir qué hacer. Comprobado en el
+     * emulador con la aplicación recién instalada y el aparato en modo avión.
+     *
+     * Y ese es justamente el caso del territorio: aquí unas cuantas
+     * instalaciones van a ser alguien pasando el archivo por Bluetooth o por
+     * una memoria, y abriéndolo donde no hay señal.
+     *
+     * Solo se ve entonces: el primer arranque sin haber alcanzado el servidor
+     * ni una vez. Después manda el service worker y no vuelve a aparecer.
+     */
+    errorPath: "index.html",
   },
   android: {
     /* La ventana no guarda contraseñas ni rellena formularios por su cuenta:

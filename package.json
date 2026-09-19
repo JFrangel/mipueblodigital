@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:e2e": "npm run build && playwright test",
     "seed:noticias": "node scripts/sembrar-noticias.mjs",
-    "cap:sync": "cap sync android",
+    "cap:sync": "cap sync android && node scripts/inyectar-servidor.mjs",
     "cap:open": "cap open android",
     "cap:apk": "cd android && gradlew.bat assembleRelease",
     "test:rules": "firebase emulators:exec --only firestore --project demo-mi-pueblo \"node tests/integration/rules.mjs\""

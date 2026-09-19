@@ -3,6 +3,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mi Pueblo Digital</title>
+  <!--SERVIDOR-->
   <!--
     La única página que lleva el APK dentro.
 
@@ -11,6 +12,10 @@
     servidor ni una vez y por tanto no hay nada guardado. A partir de la primera
     visita con red, manda el service worker de la aplicación y esta página no
     vuelve a aparecer.
+
+    **La ve quien más falta le hace que funcione.** En este territorio unas
+    cuantas instalaciones van a ser alguien pasando el archivo por Bluetooth o
+    por una memoria, y abriéndolo donde no hay señal.
 
     Va sin hoja de estilos aparte ni tipografías de fuera, porque en el momento
     en que se ve no hay de dónde traerlas.
@@ -49,7 +54,33 @@
       funciona sin señal: podrás reportar, leer tus reportes y los comunicados
       aunque no haya red.
     </p>
-    <p>Busca señal y vuelve a abrirla.</p>
-    <button onclick="location.reload()">Reintentar</button>
+    <p id="pista">Busca señal y vuelve a intentarlo.</p>
+    <button id="reintentar" type="button">Reintentar</button>
   </main>
+  <script>
+    /*
+      Reintentar, con la dirección puesta al compilar.
+
+      Esta página no puede averiguar sola dónde vive la aplicación: se sirve
+      desde `localhost` y el puente de Capacitor, aunque se inyecta, no trae ni
+      la dirección ni los complementos —comprobado: `Capacitor.Plugins` no
+      existe aquí—. Se la pone `scripts/inyectar-servidor.mjs` al sincronizar,
+      en la copia que git ignora, para que no quede escrita en el repositorio.
+
+      **No se puede recargar.** Recargar pide `localhost` otra vez, y Capacitor,
+      que espera la aplicación en otra dirección, trata eso como una navegación
+      a otro sitio y **la abre en Chrome**: eso hacía el botón anterior, medido
+      en el emulador, y dejaba a la persona fuera de su propia aplicación.
+      `history.back()` tampoco: vuelve, pero no recarga.
+
+      Sin la dirección —alguien compiló saltándose el guion— se dice qué hacer
+      a mano, que es lo único honesto que queda.
+    */
+    document.getElementById("reintentar").addEventListener("click", function () {
+      if (window.MPD_APP) location.replace(window.MPD_APP);
+      else
+        document.getElementById("pista").textContent =
+          "Busca señal, cierra la aplicación deslizándola fuera de las aplicaciones recientes y vuelve a abrirla.";
+    });
+  </script>
 </html>
