@@ -11,6 +11,7 @@ import {
 import { firebaseClient } from "@/data/firebase/client";
 import { cerrarSesion } from "@/platform/native";
 import { toast } from "@/data/toasts";
+import { dondeSeArregla, estadoDe, type Estado } from "@/platform/permisos";
 import { PasswordChange } from "./password-change";
 import { DeleteAccount } from "./delete-account";
 import { AvatarPicker } from "./avatar-picker";
@@ -26,6 +27,8 @@ import {
   Camera,
   Bell,
   BellOff,
+  Mic,
+  Crosshair,
 } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
 import {
@@ -73,6 +76,20 @@ export function Account({
    * la fila parpadee al entrar en la pantalla.
    */
   const [avisos, setAvisos] = useState<boolean | null>(null);
+  /**
+   * El micrófono y la ubicación.
+   *
+   * No son interruptores de esta aplicación: los tiene el sistema, y esta
+   * pantalla solo puede decir en qué quedaron y dónde se cambian. Están aquí
+   * por Android 13 en adelante, donde **un «no» dicho a destiempo solo se
+   * deshace entrando en los ajustes**: sin contarlo, alguien se queda creyendo
+   * que el dictado no funciona en su teléfono.
+   *
+   * Nulos de partida, y las filas no salen donde no se puedan preguntar: una
+   * fila que dice «no sabemos» no ayuda a decidir nada.
+   */
+  const [microfono, setMicrofono] = useState<Estado | null>(null);
+  const [ubicacion, setUbicacion] = useState<Estado | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   useEffect(() => {
@@ -135,6 +152,24 @@ export function Account({
     })();
     return () => {
       vivo = false;
+    };
+  }, []);
+
+  /* Se miran al entrar, y otra vez al volver a la pantalla: alguien pudo
+     haberlos cambiado en los ajustes del sistema mientras tanto, y encontrarse
+     el dato viejo al volver sería justo lo contrario de lo que estas filas
+     vienen a resolver. */
+  useEffect(() => {
+    let vivo = true;
+    const mirar = () => {
+      void estadoDe("microfono").then((e) => vivo && setMicrofono(e));
+      void estadoDe("ubicacion").then((e) => vivo && setUbicacion(e));
+    };
+    mirar();
+    document.addEventListener("visibilitychange", mirar);
+    return () => {
+      vivo = false;
+      document.removeEventListener("visibilitychange", mirar);
     };
   }, []);
 
@@ -429,6 +464,39 @@ export function Account({
           </span>
           <strong>{avisos ? "Activados" : "Desactivados"}</strong>
         </button>
+      )}
+      {/* Los otros dos permisos. No se piden desde aquí —eso se hace al pulsar
+          «Activar micrófono» o «Usar mi ubicación», cuando ya se sabe para qué
+          sirven— pero sí se dice en qué quedaron y dónde se cambian. */}
+      {[
+        ["Micrófono para dictar", microfono] as const,
+        ["Ubicación para tus reportes", ubicacion] as const,
+      ].map(([rotulo, estado]) =>
+        estado === null || estado === "no-aplica" ? null : (
+          <div className="account-row account-permiso" key={rotulo}>
+            <span>
+              {rotulo === "Micrófono para dictar" ? (
+                <Mic size={20} />
+              ) : (
+                <Crosshair size={20} />
+              )}
+              {rotulo}
+            </span>
+            <strong>
+              {estado === "concedido"
+                ? "Concedido"
+                : estado === "negado"
+                  ? "Bloqueado"
+                  : "Se pide al usarlo"}
+            </strong>
+          </div>
+        ),
+      )}
+      {(microfono === "negado" || ubicacion === "negado") && (
+        <p className="subtle-note account-permiso-nota">
+          Un permiso bloqueado no se puede volver a pedir desde aquí. Se cambia
+          en {dondeSeArregla()}
+        </p>
       )}
       <Link className="account-row" href="/mis-reportes/">
         <span>Mis reportes</span>

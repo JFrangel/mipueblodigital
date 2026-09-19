@@ -4584,6 +4584,14 @@ textarea {
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
+/* Una fila de permiso no lleva a ninguna parte: dice en qué quedó algo que
+   gobierna el sistema. Se distingue de las que sí se pulsan. */
+.account-permiso {
+  cursor: default;
+}
+.account-permiso-nota {
+  margin-top: 12px;
+}
 .territorio-decision p {
   margin: 0 0 12px;
   font-size: 13px;
