@@ -1,18 +1,27 @@
 "use client";
 import { useRef, useState } from "react";
-import { Inbox, Bell, Newspaper, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  Inbox,
+  Bell,
+  Newspaper,
+  Sparkles,
+  ShieldCheck,
+  MapPinned,
+} from "lucide-react";
 import type { Case } from "@/data/catalog";
 import { CouncilInbox } from "./council-inbox";
 import { AdminAnalysis } from "./admin-analysis";
 import { NewsEditor } from "./news-editor";
 import { Notifications, useCouncilUnread } from "./notifications";
 import { CouncilRoles } from "./council-roles";
+import { CouncilTerritory } from "./council-territory";
 
 const tabs = [
   { id: "expedientes", label: "Expedientes", Icon: Inbox },
   { id: "novedades", label: "Novedades", Icon: Bell },
   { id: "comunicados", label: "Comunicados", Icon: Newspaper },
   { id: "analisis", label: "Análisis", Icon: Sparkles },
+  { id: "territorio", label: "Territorio", Icon: MapPinned },
   { id: "roles", label: "Quién administra", Icon: ShieldCheck },
 ] as const;
 
@@ -144,6 +153,17 @@ export function CouncilPanel({ pending }: { pending: Case[] }) {
         hidden={active !== "analisis"}
       >
         <AdminAnalysis />
+      </div>
+      <div
+        className="council-tabpanel"
+        id="council-panel-territorio"
+        role="tabpanel"
+        aria-labelledby="council-tab-territorio"
+        hidden={active !== "territorio"}
+      >
+        {/* Solo se monta al abrirla: trae propuestas y dibuja mapas, y eso no
+            tiene por qué pesar en quien entra a mirar los expedientes. */}
+        {active === "territorio" && <CouncilTerritory />}
       </div>
       <div
         className="council-tabpanel"
