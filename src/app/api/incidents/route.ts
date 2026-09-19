@@ -10,8 +10,13 @@ import {
 import { validateReport } from "@/domain/logic";
 import { DEFAULT_PRIORITY } from "@/domain/priority";
 import { categories } from "@/data/catalog";
+import { anotarAporte } from "@/server/veredas";
 import { avisar } from "@/server/push";
-import { isCatalogued, isInsideTerritory } from "@/domain/territory";
+import {
+  isCatalogued,
+  isInsideTerritory,
+  veredaReference,
+} from "@/domain/territory";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
 function failure(error: unknown) {
@@ -286,6 +291,36 @@ export async function POST(request: Request) {
        no viaja en la respuesta, que no es asunto de quien reporta. */
     const { aviso, ...recibo } = receipt;
     if (aviso) void avisar(db, { consejo: true }, aviso);
+    /**
+     * Y el grano de arena para situar la vereda en el mapa.
+     *
+     * Con `void` y fuera de la transacción por lo mismo que el aviso: seis de
+     * las diecinueve veredas del catálogo no tienen punto, y esto es lo que
+     * acabará poniéndolas ahí —cuando varios reportes coincidan y el Consejo lo
+     * acepte—, pero **es lo menos importante que ocurre en esta petición**. Un
+     * recibo confirmado no se deshace porque falle un acumulador.
+     *
+     * Solo los puntos del aparato dejan rastro; `anotarAporte` descarta el
+     * resto sin escribir nada.
+     */
+    if (point && pointSource && pointAccuracy !== null)
+      void anotarAporte(
+        db,
+        data.vereda,
+        {
+          lat: point.lat,
+          lng: point.lng,
+          exactitud: pointAccuracy,
+          origen: pointSource,
+          cuenta: uid,
+        },
+        {
+          nueva: !isCatalogued(data.vereda),
+          /* Si ya está situada, solo se vuelve a molestar al Consejo cuando el
+             centro se haya apartado de verdad. */
+          yaSituada: veredaReference(data.vereda),
+        },
+      ).catch(() => undefined);
     return Response.json(recibo, { status: 200, headers });
   } catch (error) {
     return failure(error);
