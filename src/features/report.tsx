@@ -118,7 +118,13 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
             setPhotos(saved.photos);
             setSensitive(saved.sensitive === true);
             if (typeof saved.lat === "number" && typeof saved.lng === "number")
-              setPoint({ lat: saved.lat, lng: saved.lng });
+              setPoint({
+                lat: saved.lat,
+                lng: saved.lng,
+                /* Ver el comentario del borrador: sin constancia, «mano». */
+                pointSource: saved.pointSource ?? "mano",
+                pointAccuracy: saved.pointAccuracy ?? null,
+              });
             /* Se vuelve al primer paso que quedó a medias, no al principio.
                Guardar un borrador para enviarlo después no sirve de nada si
                al volver hay que recorrer otra vez los pasos ya llenos. */

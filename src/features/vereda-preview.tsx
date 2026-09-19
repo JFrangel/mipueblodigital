@@ -11,7 +11,22 @@ import {
 } from "@/platform/ubicacion";
 import "leaflet/dist/leaflet.css";
 
-export type Point = { lat: number; lng: number };
+/**
+ * El punto de un reporte, con de dónde salió.
+ *
+ * El origen viaja con el punto y no aparte porque **son inseparables**: un par
+ * de coordenadas sin saber si lo puso un GPS o un dedo sobre un mapa no se
+ * puede usar para deducir dónde queda una vereda, y separarlos es la manera de
+ * que algún día se pierda por el camino. Los nombres son los del servidor
+ * porque este objeto se extiende tal cual dentro del envío.
+ */
+export type Point = {
+  lat: number;
+  lng: number;
+  pointSource: "aparato" | "mano";
+  /** Metros que declaró el aparato, o nulo si lo puso un dedo. */
+  pointAccuracy: number | null;
+};
 
 /**
  * De dónde sale el punto que se propone. No es un detalle de créditos: quien
@@ -72,7 +87,7 @@ export function VeredaPreview({
    * y no puede recentrarse cada vez que alguien toca: se le iría de las manos
    * mientras lo arrastra.
    */
-  const [centro, setCentro] = useState<Point | null>(
+  const [centro, setCentro] = useState<{ lat: number; lng: number } | null>(
     reference?.lat !== undefined && reference.lng !== undefined
       ? { lat: reference.lat, lng: reference.lng }
       : null,
@@ -133,7 +148,12 @@ export function VeredaPreview({
           setOrigen("mapa");
           setMargen(null);
           setAvisoUbicacion("");
-          report.current({ lat: y, lng: x });
+          report.current({
+            lat: y,
+            lng: x,
+            pointSource: "mano",
+            pointAccuracy: null,
+          });
         });
       })
       .catch(() => {
@@ -158,7 +178,12 @@ export function VeredaPreview({
     const { lat: y, lng: x, exactitud } = resultado;
     setOrigen("aparato");
     setMargen(Math.round(exactitud));
-    report.current({ lat: y, lng: x });
+    report.current({
+      lat: y,
+      lng: x,
+      pointSource: "aparato",
+      pointAccuracy: Math.round(exactitud),
+    });
     /* Si la vereda no tenía punto, este es el primero: el mapa nace aquí.
        Si ya lo tenía, el mapa existe y basta mover el marcador; recentrar
        reconstruiría el mapa entero por debajo de quien lo está mirando. */

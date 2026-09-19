@@ -243,6 +243,11 @@ export type LocalDraft = {
      el trabajo más difícil de rehacer: exige acordarse del sitio exacto. */
   lat?: number;
   lng?: number;
+  /* De dónde salió el punto. Un borrador de una versión anterior no lo trae, y
+     entonces vale «mano»: no saberlo **no puede** leerse como que lo puso un
+     GPS, porque de ahí sale después dónde se sitúa una vereda entera. */
+  pointSource?: "aparato" | "mano";
+  pointAccuracy?: number | null;
 };
 /**
  * Un borrador guardado por cualquier versión anterior, leído sin confiar.
@@ -270,6 +275,8 @@ const comoBorrador = (valor: unknown): LocalDraft | undefined => {
     sensitive: v.sensitive === true,
     lat: numero(v.lat),
     lng: numero(v.lng),
+    pointSource: v.pointSource === "aparato" ? "aparato" : "mano",
+    pointAccuracy: numero(v.pointAccuracy),
   };
 };
 

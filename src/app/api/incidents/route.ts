@@ -84,8 +84,8 @@ export async function POST(request: Request) {
         400,
         "Selecciona una vereda del catálogo territorial vigente.",
       );
-    /* Punto ajustado a mano: opcional, pero si viene tiene que ser un par
-       completo y caer dentro del marco del territorio. */
+    /* Punto del caso: opcional, pero si viene tiene que ser un par completo y
+       caer dentro del marco del territorio. */
     const hasPoint = input.lat !== undefined || input.lng !== undefined;
     if (hasPoint && !isInsideTerritory(input.lat, input.lng))
       throw new ApiError(
@@ -95,6 +95,33 @@ export async function POST(request: Request) {
     const point = hasPoint
       ? { lat: input.lat as number, lng: input.lng as number }
       : null;
+    /**
+     * De dónde salió ese punto, y con cuánto margen.
+     *
+     * **No es contabilidad: es lo que impide que el catálogo se muerda la
+     * cola.** Con estos datos se deduce después dónde queda una vereda que el
+     * catálogo no sitúa, y para eso un punto tocado sobre el mapa no vale: no
+     * dice dónde está la vereda, dice dónde está el derrumbe, y sale de un mapa
+     * que ya estaba centrado donde lo centró esta aplicación. Contarlo sería
+     * medir su propia respuesta.
+     *
+     * Se guarda lo que diga el cliente sin creérselo para nada que importe: solo
+     * decide si este punto cuenta para proponerle algo al Consejo, y el Consejo
+     * mira la propuesta antes de aceptarla.
+     */
+    const pointSource =
+      point && (input.pointSource === "aparato" || input.pointSource === "mano")
+        ? (input.pointSource as "aparato" | "mano")
+        : point
+          ? "mano"
+          : null;
+    const pointAccuracy =
+      point &&
+      typeof input.pointAccuracy === "number" &&
+      Number.isFinite(input.pointAccuracy) &&
+      input.pointAccuracy >= 0
+        ? Math.round(input.pointAccuracy)
+        : null;
     const photo = await validateOriginal(input.photo);
     const id = createHash("sha256")
       .update(`${uid}:${input.requestId}`)
@@ -191,6 +218,8 @@ export async function POST(request: Request) {
         date,
         lat: point?.lat ?? null,
         lng: point?.lng ?? null,
+        pointSource,
+        pointAccuracy,
         /* Lo marcó quien reporta, no el Consejo: sigue sin verificar. */
         locationVerified: false,
         evidenceId,
