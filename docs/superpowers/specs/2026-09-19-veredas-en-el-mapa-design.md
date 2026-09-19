@@ -18,7 +18,7 @@ ya se borraron— y **la clave de firma** para publicar un APK de versión.
 
 ## 2. De qué se trata
 
-Diecinueve veredas en el catálogo; **seis sin punto documentado**. Para esas,
+Dieciocho veredas en el catálogo; **seis sin punto documentado**. Para esas,
 hoy:
 
 - El formulario de reporte **no dibuja mapa** —no hay dónde centrarlo— así que

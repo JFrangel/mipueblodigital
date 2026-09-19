@@ -323,7 +323,7 @@ export async function POST(request: Request) {
      * Y el grano de arena para situar la vereda en el mapa.
      *
      * Con `void` y fuera de la transacción por lo mismo que el aviso: seis de
-     * las diecinueve veredas del catálogo no tienen punto, y esto es lo que
+     * las dieciocho veredas del catálogo no tienen punto, y esto es lo que
      * acabará poniéndolas ahí —cuando varios reportes coincidan y el Consejo lo
      * acepte—, pero **es lo menos importante que ocurre en esta petición**. Un
      * recibo confirmado no se deshace porque falle un acumulador.

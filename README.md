@@ -17,7 +17,17 @@ territorio; el Consejo lo recibe, lo gestiona y responde.
 - **Retirada de un expediente con su motivo**, que le llega a quien reportó.
 - **Comunicados** con portada, imágenes y anclado.
 - **Mapa, estadísticas y calendario** sobre los reportes reales del territorio.
-- **Eliminación de cuenta** con anonimización de los expedientes.
+- **Avisos que llegan al teléfono** con la aplicación cerrada, en el APK y en el
+  navegador. Se piden al enviar el primer reporte, no al abrir.
+- **Dictar el relato por voz**: la API del navegador en el navegador, el
+  reconocedor de Android dentro del APK. Ningún audio se guarda.
+- **«Usar mi ubicación»** en el reporte, y con ella las **veredas que el catálogo
+  no sitúa**: quien está allí pone el punto, y cuando varios coinciden el Consejo
+  lo acepta y la vereda entra al mapa con su nombre.
+- **Tres ayudas de redacción** con un modelo de lenguaje, solo con modelos
+  gratuitos y sin que salga del territorio más de lo que cada una necesita.
+- **Eliminación de cuenta** con anonimización de los expedientes, y
+  **restablecimiento por el Consejo** si quien la cerró cambia de idea.
 
 La aplicación **no lleva datos inventados**: lo que se ve es lo que la comunidad
 reportó. Una instalación nueva arranca vacía, y cada pantalla dice de dónde sale
@@ -65,6 +75,7 @@ ahí, desde el propio Panel del Consejo.
 | Documento                                                                 | Para quién                              |
 | ------------------------------------------------------------------------- | --------------------------------------- |
 | [Arquitectura](docs/arquitectura.md)                                      | Quien va a tocar el código o sostenerlo |
+| [Integraciones externas](docs/integraciones.md)                           | Quien sostenga la aplicación o responda por ella |
 | [Empaquetado Android](docs/empaquetado-android.md)                        | Quien compile y publique la aplicación  |
 | [Auditoría del modo sin conexión](docs/auditoria-offline-2026-09-16.md)   | Quien dude de qué funciona sin señal    |
 | [Manual del ciudadano](docs/manual-ciudadano.md)                          | Quien reporta                           |
@@ -83,13 +94,19 @@ salidas y variantes en el lenguaje del territorio.
 Lo que falta no es código. Está detallado en
 [Límites conocidos](docs/arquitectura.md#14-límites-conocidos); en resumen:
 
-1. Validar el catálogo territorial con el Consejo. Cinco veredas no tienen punto
-   documentado; sus reportes se gestionan igual, pero no se dibujan.
-2. Probar las reglas de Firestore en emulador contra una cuenta ajena y otra
+1. **Rotar la clave de la cuenta de servicio de Firebase.** Estuvo dentro de
+   despliegues que ya se borraron.
+2. Validar el catálogo territorial con el Consejo. Seis de las dieciocho veredas
+   no tienen punto documentado; sus reportes se gestionan igual, pero no se
+   dibujan hasta que la comunidad las sitúe y el Consejo lo acepte.
+3. Probar las reglas de Firestore en emulador contra una cuenta ajena y otra
    desactivada.
-3. Verificar la restauración de copias de seguridad.
-4. Completar las pruebas de accesibilidad.
-5. Ejecutar el piloto comunitario y designar formalmente a la persona
+4. Verificar la restauración de copias de seguridad.
+5. Completar las pruebas de accesibilidad.
+6. **Firmar el APK para publicar**, y confirmar con el Consejo el identificador
+   permanente `co.riosatinga.mipueblodigital`: no se puede cambiar después de
+   la primera subida a Google Play.
+7. Ejecutar el piloto comunitario y designar formalmente a la persona
    mantenedora.
 
 Una compilación correcta no es la validación de las 21 historias de usuario.

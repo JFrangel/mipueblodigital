@@ -9,7 +9,7 @@ const headers = { "Cache-Control": "no-store" };
 /**
  * Dónde el Consejo sitúa las veredas que el catálogo no sitúa.
  *
- * Seis de las diecinueve no tienen punto documentado. Los reportes de quien
+ * Seis de las dieciocho no tienen punto documentado. Los reportes de quien
  * está allí van dejando su coordenada, y cuando varias coinciden esta ruta le
  * pone la propuesta delante al Consejo: cuántos reportes, de cuántas cuentas y
  * cómo de repartidos. **Aquí no se acepta nada solo.** El catálogo territorial

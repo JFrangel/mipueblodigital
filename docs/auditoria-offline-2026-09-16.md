@@ -123,6 +123,23 @@ entregar teléfonos en el territorio.
 Las teselas del mapa, las estadísticas del Consejo, la asistencia de IA, entrar
 o crear una cuenta, y cualquier expediente que este aparato no tenga guardado.
 
+### 4.1. Añadido el 19 de septiembre de 2026
+
+Lo que se construyó después de esta auditoría, y cómo se comporta sin señal.
+
+| | Sin señal |
+| --- | --- |
+| **Dictado por voz** | **No.** Los dos motores —el del navegador y el de Android— mandan el audio a un servicio remoto. Se dice antes de empezar, no después de esperar en blanco |
+| **«Usar mi ubicación»** | **Sí.** El GPS no necesita red. Bajo los árboles tarda entre veinte y cuarenta segundos, y la pantalla lo avisa |
+| **El mapa de esa ubicación** | **No.** El punto se guarda igual y viaja con el reporte; lo que falta es el dibujo |
+| **Proponer una vereda nueva** | **Sí.** Nombre y punto viajan en la cola de envío como cualquier reporte |
+| **Los puntos de vereda aceptados** | **Sí**, los que ya se hayan traído: se guardan en este navegador y se leen al arrancar sin esperar a nadie. Sin ellos vale el catálogo compilado, que es como se ha visto siempre |
+| **Avisos con la aplicación cerrada** | **No**, y no es una carencia: un aviso es una cosa que llega por la red. Lo que sí llega es lo acumulado, al volver la señal |
+
+Lo importante de la ubicación: **no sale del teléfono hacia ningún tercero**. Es
+el aparato el que la da, así que es de las pocas cosas de esta aplicación que
+funcionan igual de bien en el río que en una ciudad.
+
 ---
 
 ## 5. Verificación

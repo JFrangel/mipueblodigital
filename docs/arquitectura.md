@@ -158,6 +158,9 @@ La columna de la derecha es la que importa para las copias de seguridad: **lo
 | `councilRoleEvents/{id}`                               | uuid                 | Quién dio o quitó el rol, y cuándo                                                                                      | `POST /api/admin/roles`                                  |
 | `accountDeletionRequests/{uid}`                        | uid                  | Estado de una solicitud de eliminación                                                                                  | `POST /api/account/deletion`                             |
 | `accountRestoreEvents/{id}`                           | uuid                 | Quién volvió a abrir qué cuenta, y cuándo                                                                                   | `POST /api/admin/accounts/restablecer`                   |
+| `veredaProposals/{clave}`                              | vereda normalizada   | Aportes para situar una vereda. **No sale del servidor**                                                                    | `POST /api/incidents`                                    |
+| `veredaPoints/{clave}`                                 | vereda normalizada   | Puntos de vereda aceptados por el Consejo                                                                                   | `POST /api/admin/territorio`                             |
+| `veredaPointEvents/{id}`                               | uuid                 | Quién aceptó, fundió o descartó qué vereda                                                                                  | Ídem                                                     |
 | `writingAiLimits`, `readingAiLimits`, `serverAiLimits` | uid                  | Cupos de la asistencia de IA                                                                                            | Las rutas de IA                                          |
 
 **El identificador de un expediente es el sha256 de su contenido.** De ahí sale
@@ -293,6 +296,7 @@ permisos que no se tienen.
 | `/api/admin/incidents/{id}/retirada` | POST              | Consejo | Retira un expediente con su motivo ([§8.4](#84-retirada))                                                                                |
 | `/api/admin/roles`                   | GET, POST         | Consejo | Listado de cuentas y designación. Cada cuenta dice si su puerta está cerrada                                                              |
 | `/api/admin/accounts/restablecer`   | POST              | Consejo | Vuelve a abrir una cuenta que su dueña cerró ([§8.6](#86-volver-después-de-haberse-ido))                                                 |
+| `/api/admin/territorio`              | GET, POST         | Consejo | Sitúa en el mapa las veredas que el catálogo no sitúa ([§15](#15-las-veredas-que-el-catálogo-no-sitúa))                                  |
 | `/api/admin/statistics`              | GET               | Consejo | Cifras agregadas del territorio                                                                                                          |
 | `/api/admin/analysis`                | POST              | Consejo | Lectura asistida de la bandeja                                                                                                           |
 | `/api/admin/news`                    | GET               | Consejo | Los comunicados, incluidos los borradores                                                                                                |
@@ -748,11 +752,16 @@ Lo que hoy no está resuelto. Está aquí para que nadie lo descubra en el pilot
 
 1. **El catálogo territorial no está validado por el Consejo.** Sale del EOT de
    2007 y de fuentes abiertas; los nombres pueden cambiar y los puntos son
-   aproximados. La aplicación lo dice en el formulario y en el mapa. **Cinco
-   veredas no tienen punto documentado**: sus reportes se envían y se gestionan
-   igual, pero no se dibujan, y las dos pantallas lo declaran.
-2. **No hay notificaciones push.** Los avisos se ven al abrir la aplicación.
-   Falta generar la clave VAPID en la consola de Firebase.
+   aproximados. La aplicación lo dice en el formulario y en el mapa. **Seis de
+   las dieciocho veredas no tienen punto documentado**: sus reportes se envían y
+   se gestionan igual, pero no se dibujan hasta que la comunidad las sitúe y el
+   Consejo lo acepte ([§15](#15-las-veredas-que-el-catálogo-no-sitúa)).
+2. **El dictado necesita red**, en los dos mundos: el reconocimiento lo hace un
+   servicio remoto, no el aparato. Se dice antes de empezar.
+3. **Los ajustes del sistema no se abren desde la aplicación.** Un permiso
+   bloqueado en Android 13 en adelante solo se deshace allí, y Mi cuenta dice el
+   camino con todas sus letras en vez de abrirlo: hacerlo desde una ventana de
+   Capacitor necesita otro complemento en el APK.
 3. **El historial propio se pagina hasta 200 reportes** (8 páginas de 25) y lo
    público igual. Más allá de ese tope, la limpieza de copias locales
    retiradas se inhibe a propósito, para no borrar por no haber mirado.
@@ -766,8 +775,99 @@ Lo que hoy no está resuelto. Está aquí para que nadie lo descubra en el pilot
 7. **Sin piloto comunitario.** Nada de lo anterior sustituye a probarlo con
    gente del territorio.
 
-Antes de habilitar cuentas reales: validar el catálogo con el Consejo, probar
+Antes de habilitar cuentas reales: **rotar la clave de la cuenta de servicio de
+Firebase** —estuvo dentro de despliegues que ya se borraron—, validar el
+catálogo con el Consejo, probar
 las reglas de Firestore en emulador contra una cuenta ajena y otra desactivada,
 verificar la restauración de copias de seguridad, completar las pruebas de
 accesibilidad, ejecutar el piloto y designar formalmente a la persona
 mantenedora.
+
+---
+
+## 15. Las veredas que el catálogo no sitúa
+
+**Seis de las dieciocho** del catálogo no tienen punto documentado: Cañas, José,
+Las Mercedes, Pueblo Nuevo, La Victoria y Los Leyos. Sin punto no hay mapa —ni
+en el formulario del reporte ni en el del territorio— y sus casos contaban en las
+cifras sin verse en ninguna parte. Y quien vivía en una vereda que el EOT de 2007
+no nombró **no podía reportar**: la ruta exigía el catálogo.
+
+La salida no es inventar coordenadas. Es que **quien está parado allí ponga el
+punto, y cuando varios coincidan, el Consejo lo acepte**. Una persona aporta, la
+aritmética propone, el Consejo decide.
+
+### 15.1. Quién aporta
+
+El botón **Usar mi ubicación** del paso de ubicación. Para una vereda sin punto
+es la única manera de darle coordenadas: el mapa nace de ese primer punto.
+
+Cada reporte guarda además `pointSource` y `pointAccuracy` —de dónde salió el
+punto y con cuánto margen—, y **eso no es contabilidad**: es lo que impide que el
+catálogo se muerda la cola. En cuanto una vereda tenga punto, el formulario
+abrirá su mapa ahí y la gente tocará para ajustar **el caso**; contar esos toques
+sería medir la propia respuesta de la aplicación y convencerse de que acertó.
+
+### 15.2. La aritmética
+
+`src/domain/veredas.ts`. **La mediana, no el promedio**: un solo reporte hecho
+desde el casco urbano sobre algo que pasó en la vereda se llevaría un promedio
+kilómetros.
+
+| | Cuánto | Por qué |
+| --- | --- | --- |
+| Reportes | ≥ 3 | Uno es una anécdota |
+| Cuentas distintas | ≥ 2 | Una persona reportando tres veces desde su casa es **un** dato |
+| Margen de cada punto | ≤ 100 m | Más estricto que el del reporte (500 m): un caso mal situado se corrige en campo, un catálogo mal situado se queda |
+| Punto publicado | 3 decimales | Unos 110 m. Nombra un sector, no señala una casa |
+
+Se devuelven dos medidas de reparto, y hacen falta las dos: la **dispersión**
+—distancia mediana al centro— dice cómo de apretado está el grupo, y los
+**apartados** cuentan los que caen a más de 2 km. La mediana aguanta a los
+intrusos, que es para lo que se eligió, y por eso mismo se queda callada cuando
+hay dos reportes perdidos entre cinco.
+
+### 15.3. Quién decide
+
+La pestaña **Territorio** del panel del Consejo, y `POST /api/admin/territorio`.
+Cada propuesta enseña su punto, cuántos reportes de cuántas personas, y un mapa
+con **un círculo** del tamaño de la dispersión: dice cuánto se reparten sin
+dibujar dónde estuvo cada quien.
+
+Tres salidas: **aceptar** —con la opción de ajustar el punto a mano—, **fundir**
+con una vereda del catálogo, que reescribe los reportes afectados, y
+**descartar** con motivo, que apaga esa vereda para siempre.
+
+### 15.4. Dónde vive
+
+| Colección | Qué | Quién lee |
+| --- | --- | --- |
+| `veredaProposals/{clave}` | El acumulador con los aportes crudos | **Nadie desde fuera.** Lleva coordenadas y de qué cuenta salió cada una |
+| `veredaPoints/{clave}` | Los puntos aceptados | Cualquier miembro: son el mapa del territorio |
+| `veredaPointEvents/{id}` | Quién aceptó, fundió o descartó qué | Solo el servidor |
+
+### 15.5. El catálogo deja de ser del todo estático
+
+`src/domain/territory.ts` sigue siendo un módulo puro y compilado, y `src/data/
+territorio-vivo.ts` es la costura. Está hecha para que **sin red se comporte
+exactamente como antes**: lo compilado es la base y la respuesta de último
+recurso, lo aceptado se trae una vez por sesión y se guarda en el navegador, y al
+arrancar se lee lo guardado sin esperar a nadie —quien llama pinta un mapa, no
+espera una promesa—.
+
+Un punto aceptado que todavía no llegó a un teléfono no rompe nada: esa vereda se
+ve como se veía ayer.
+
+### 15.6. La vereda que no está en el catálogo
+
+El formulario ofrece **«Mi vereda no está en la lista»**. Antes de crear nada
+busca: si es una del catálogo escrita de otra manera, ofrece esa —y el servidor
+la sustituye aunque el formulario falle—, porque sin eso «Bellavista», «Bella
+Vista» y «bellavista» se vuelven tres sitios en el mapa y tres columnas en las
+cifras.
+
+Un nombre nuevo **solo se acepta con punto del aparato**, tomado desde el sitio.
+Un topónimo sin coordenada no se puede situar ni contrastar, y sería la puerta
+por la que el catálogo territorial de un consejo comunitario se llena de ruido.
+
+Diseño completo: `docs/superpowers/specs/2026-09-19-veredas-en-el-mapa-design.md`.

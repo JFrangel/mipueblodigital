@@ -82,7 +82,7 @@ function MapaPropuesta({ propuesta }: { propuesta: Propuesta }) {
 /**
  * Las veredas que el catálogo no sitúa, y lo que la comunidad propone.
  *
- * Seis de las diecinueve no tienen punto documentado, y sin punto no hay mapa:
+ * Seis de las dieciocho no tienen punto documentado, y sin punto no hay mapa:
  * ni en el formulario del reporte ni en el del territorio. Los reportes de quien
  * está allí van dejando su coordenada; cuando varias coinciden, la propuesta
  * llega aquí.

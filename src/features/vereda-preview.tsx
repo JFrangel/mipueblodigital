@@ -58,7 +58,7 @@ const origin: Record<string, string> = {
  * quien está allí. El punto ajustado viaja con el expediente y llega al Consejo
  * marcado como no verificado, porque lo puso la comunidad y no el catálogo.
  *
- * **Y las veredas que el catálogo no sitúa.** Seis de las diecinueve no tienen
+ * **Y las veredas que el catálogo no sitúa.** Seis de las dieciocho no tienen
  * punto documentado, y hasta ahora eso las dejaba sin mapa y sin manera ninguna
  * de darles una coordenada: el reporte viajaba solo con el nombre y el caso no
  * aparecía en el mapa del territorio. Con «Usar mi ubicación», quien está

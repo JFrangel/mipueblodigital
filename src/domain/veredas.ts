@@ -1,7 +1,7 @@
 /**
  * Deducir dónde queda una vereda a partir de los reportes de quien está allí.
  *
- * Seis de las diecinueve veredas del catálogo no tienen punto documentado, y sin
+ * Seis de las dieciocho veredas del catálogo no tienen punto documentado, y sin
  * punto no hay mapa: ni en el formulario del reporte ni en el del territorio. El
  * catálogo sale del EOT de 2007 y él mismo se declara pendiente de validación.
  * La gente del río sabe dónde queda su vereda mejor que un documento de hace

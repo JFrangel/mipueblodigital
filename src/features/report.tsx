@@ -66,7 +66,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
   /**
    * Cuando la vereda no está en la lista.
    *
-   * Seis de las diecinueve del catálogo no tienen punto, y el catálogo mismo
+   * Seis de las dieciocho del catálogo no tienen punto, y el catálogo mismo
    * —EOT de 2007 y fuentes abiertas— se declara pendiente de validación. Quien
    * vive en una vereda que ese documento no nombró no podía reportar: se
    * quedaba fuera de su propia aplicación por un papel de hace diecinueve años.
