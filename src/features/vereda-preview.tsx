@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, CircleMarker } from "leaflet";
 import { Crosshair, MapPin, WifiOff, Undo2 } from "lucide-react";
-import { veredaReference } from "@/domain/territory";
+import { referencia } from "@/data/territorio-vivo";
 import { useOnline } from "@/data/network";
 import {
   disponible as ubicacionDisponible,
@@ -33,14 +33,22 @@ export type Point = {
  * reporta decide si mueve el marcador según lo fiable que sea el de partida, y
  * un punto deducido de la escuela merece menos confianza que uno del DANE.
  */
-const origin = {
+const origin: Record<string, string> = {
   oficial:
     "Punto oficial del DANE para esta localidad. Es la referencia de la vereda, no la ubicación exacta del caso.",
   abierta:
     "Punto de cartografía abierta, sin validar por el Consejo. Es la referencia de la vereda, no la ubicación exacta del caso.",
   escuela:
     "Punto deducido de la escuela rural que lleva el nombre de la vereda. Sitúa el sector; si el caso está lejos de la escuela, muévelo.",
-} as const;
+  /* Y el camino nuevo: esta vereda no estaba en ningún mapa, y la sitúa la
+     gente que vive allí. Se dice, porque un punto que puso la comunidad y
+     aceptó el Consejo merece más confianza que uno deducido de una escuela, y
+     quien reporta decide si mover el marcador según eso. */
+  comunidad:
+    "Punto que pusieron los reportes de la comunidad y aceptó el Consejo. Es la referencia de la vereda, no la ubicación exacta del caso.",
+  consejo:
+    "Punto situado por el Consejo Comunitario. Es la referencia de la vereda, no la ubicación exacta del caso.",
+};
 
 /**
  * Ubicación del reporte.
@@ -71,7 +79,7 @@ export function VeredaPreview({
   onPoint: (point: Point | null) => void;
 }) {
   const online = useOnline();
-  const reference = vereda ? veredaReference(vereda) : null;
+  const reference = vereda ? referencia(vereda) : null;
   const lat = point?.lat ?? reference?.lat;
   const lng = point?.lng ?? reference?.lng;
 
@@ -291,7 +299,8 @@ export function VeredaPreview({
             ? "Ubicación marcada por ti. El Consejo la recibe sin verificar y la contrasta en campo."
             : !reference
               ? "Todavía no hay un punto documentado para esta vereda. No se inventan coordenadas: usa tu ubicación si estás en el sitio, o envía el reporte con el nombre de la vereda."
-              : origin[reference.kind ?? "abierta"]}
+              : (origin[reference.fuente ?? reference.kind ?? "abierta"] ??
+                origin.abierta)}
       </p>
     </div>
   );

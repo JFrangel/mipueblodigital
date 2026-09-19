@@ -42,6 +42,19 @@ service cloud.firestore {
     // Los aparatos que reciben avisos. Se escriben solo desde /api/push/,
     // con el SDK de servidor. Aqui se deniega explicitamente para que quien
     // lea estas reglas no tenga que deducirlo de la regla comodin de abajo.
+    // Los puntos de vereda que el Consejo acepto a partir de los reportes de
+    // quien vive alli. Los lee cualquier miembro porque son el mapa del
+    // territorio; escribirlos es cosa de /api/admin/territorio/, con el SDK de
+    // servidor. Llevan nombre, punto y fuente: nada de quien los aporto.
+    match /veredaPoints/{vereda} {
+      allow get, list: if active();
+      allow write: if false;
+    }
+    // El acumulador con los aportes crudos no sale del servidor: lleva las
+    // coordenadas de cada reporte y de que cuenta salio cada una.
+    match /veredaProposals/{vereda} {
+      allow read, write: if false;
+    }
     match /pushTokens/{uid}/devices/{token} {
       allow read, write: if false;
     }

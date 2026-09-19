@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Case } from "@/data/catalog";
 import { memberHeaders } from "@/data/remote-reports";
-import { veredaReference } from "@/domain/territory";
+import { referencia as veredaReference } from "./territorio-vivo";
 
 type Shared = {
   id: string;

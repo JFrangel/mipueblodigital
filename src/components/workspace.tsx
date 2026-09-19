@@ -75,6 +75,7 @@ import { mergeAccountReports, orphanedReports } from "@/domain/account-reports";
 import { deliveryOf } from "@/domain/delivery";
 import { DraftCard } from "@/features/draft-card";
 import { CuentaRestablecida } from "@/features/cuenta-restablecida";
+import { refrescarSituadas } from "@/data/territorio-vivo";
 import { Account } from "@/features/account";
 import { CommunityFeed } from "@/features/community-feed";
 import { NewsDetail } from "@/features/news-detail";
@@ -306,6 +307,16 @@ export function Workspace({
         setStorageError("El almacenamiento local no está disponible."),
       )
       .finally(() => setLoaded(true));
+  }, [session.uid]);
+  /**
+   * Las veredas que el Consejo situó a partir de los reportes de la comunidad.
+   *
+   * Una vez por sesión, y nunca bloquea nada: lo que ya está guardado en este
+   * navegador vale mientras tanto, y si no hay red vale el catálogo compilado,
+   * que es como se ha visto siempre. Ver `src/data/territorio-vivo.ts`.
+   */
+  useEffect(() => {
+    if (session.uid) void refrescarSituadas();
   }, [session.uid]);
   function theme() {
     toggleTheme();
