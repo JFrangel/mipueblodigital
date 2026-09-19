@@ -629,10 +629,12 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                       </button>
                     </>
                   ) : (
+                    /* Aquí no va nada: la tarjeta de abajo ya lo dice, y lo
+                       dice con el botón al lado. Decirlo dos veces empuja fuera
+                       de la pantalla justo lo que hay que pulsar. */
                     <p>
-                      Usa tu ubicación desde el sitio para que el Consejo pueda
-                      situarla. Con la tuya y la de otros reportes, tu vereda
-                      entra al mapa con su nombre.
+                      Con tu ubicación y la de otros reportes, tu vereda entra al
+                      mapa con su nombre.
                     </p>
                   )
                 ) : (
@@ -662,6 +664,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 vereda={data.vereda}
                 point={point}
                 onPoint={setPoint}
+                proponiendo={veredaFuera}
               />
             </>
           )}

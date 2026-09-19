@@ -73,10 +73,18 @@ export function VeredaPreview({
   vereda,
   point,
   onPoint,
+  proponiendo = false,
 }: {
   vereda: string;
   point: Point | null;
   onPoint: (point: Point | null) => void;
+  /**
+   * Quien pulsó «mi vereda no está en la lista» y todavía no ha escrito el
+   * nombre. Su vereda está vacía, así que caería en la tarjeta de siempre —la
+   * que solo dice que la ubicación importa— justo cuando la ubicación es lo
+   * único que puede sacarlo de ahí.
+   */
+  proponiendo?: boolean;
 }) {
   const online = useOnline();
   const reference = vereda ? referencia(vereda) : null;
@@ -96,13 +104,23 @@ export function VeredaPreview({
    * mientras lo arrastra.
    */
   const [centro, setCentro] = useState<{ lat: number; lng: number } | null>(
-    reference?.lat !== undefined && reference.lng !== undefined
-      ? { lat: reference.lat, lng: reference.lng }
-      : null,
+    /* El punto gana a la referencia de la vereda. Importa al escribir el nombre
+       de una vereda nueva: este componente se remonta con cada cambio de vereda,
+       y sin esto perdería el punto que se acababa de tomar y el mapa no
+       aparecería nunca. */
+    point
+      ? { lat: point.lat, lng: point.lng }
+      : reference?.lat !== undefined && reference.lng !== undefined
+        ? { lat: reference.lat, lng: reference.lng }
+        : null,
   );
-  /** De dónde salió el punto que hay ahora. */
-  const [origen, setOrigen] = useState<"mapa" | "aparato" | null>(null);
-  const [margen, setMargen] = useState<number | null>(null);
+  /** De dónde salió el punto que hay ahora. Ver arriba: sobrevive al remontaje. */
+  const [origen, setOrigen] = useState<"mapa" | "aparato" | null>(
+    point ? (point.pointSource === "aparato" ? "aparato" : "mapa") : null,
+  );
+  const [margen, setMargen] = useState<number | null>(
+    point?.pointAccuracy ?? null,
+  );
   const [buscando, setBuscando] = useState(false);
   const [avisoUbicacion, setAvisoUbicacion] = useState("");
 
@@ -203,10 +221,57 @@ export function VeredaPreview({
     return (
       <div className="location-preview">
         <MapPin size={36} />
-        <strong>Tu ubicación importa</strong>
-        <p>
-          El Consejo usa la vereda para ubicar el caso y asignar responsables.
-        </p>
+        {proponiendo ? (
+          <>
+            <strong>Dinos dónde estás</strong>
+            <p>
+              Tu vereda no está en la lista, así que el Consejo necesita tu
+              ubicación para poder situarla. Tómala desde el sitio.
+            </p>
+            {ubicacionDisponible() && (
+              <div className="located-actions">
+                <button
+                  type="button"
+                  className={
+                    point?.pointSource === "aparato" ? "btn" : "btn primary"
+                  }
+                  disabled={buscando}
+                  onClick={() => void usarMiUbicacion()}
+                >
+                  <Crosshair size={16} />
+                  {buscando
+                    ? "Buscando tu ubicación…"
+                    : point?.pointSource === "aparato"
+                      ? "Volver a tomarla"
+                      : "Usar mi ubicación"}
+                </button>
+                {buscando ? (
+                  <small className="muted" role="status">
+                    Puede tardar medio minuto bajo los árboles.
+                  </small>
+                ) : point?.pointSource === "aparato" ? (
+                  <small className="muted" role="status">
+                    Tomada con {point.pointAccuracy} m de margen. Ahora escribe
+                    el nombre de tu vereda.
+                  </small>
+                ) : null}
+              </div>
+            )}
+            {avisoUbicacion && (
+              <p className="errors" role="alert">
+                {avisoUbicacion}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <strong>Tu ubicación importa</strong>
+            <p>
+              El Consejo usa la vereda para ubicar el caso y asignar
+              responsables.
+            </p>
+          </>
+        )}
       </div>
     );
 
