@@ -3829,11 +3829,40 @@ textarea {
   .account-row {
     padding: 13px 0;
   }
-  /* «Cerrar sesión» cierra la columna, y una raya debajo de lo último es una
-     raya que no separa nada. En «Mi cuenta» sí separa, porque allí esta fila
-     tiene vecinas; aquí es la única y es la última. */
-  .sidebar-bottom .account-row:last-child {
-    border-bottom: 0;
+  /**
+   * «Cerrar sesión», con la forma de las demás filas del cajón.
+   *
+   * Venía de «Mi cuenta», que es una lista de franjas separadas por rayas de
+   * lado a lado, y aquí eso desentonaba por tres cosas a la vez: empezaba
+   * catorce píxeles más a la izquierda que todo lo demás de la columna —las
+   * entradas del menú llevan su propio relleno—, arrastraba una raya debajo
+   * que no separaba nada porque es lo último, y no se parecía a un botón: era
+   * un texto suelto contra el canto.
+   *
+   * Ahora es exactamente una entrada más: mismo relleno, mismo hueco entre
+   * icono y texto, mismo redondeo al tocarla y mismo alto mínimo de 44 px.
+   *
+   * **Y no va en rojo.** Cerrar sesión no destruye nada —se vuelve a entrar—,
+   * y pintar de alarma lo que no es alarma gasta el único color que después
+   * hará falta para lo que sí lo es, que es borrar la cuenta.
+   */
+  .sidebar-bottom .account-row {
+    justify-content: flex-start;
+    gap: 13px;
+    margin-top: 2px;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 9px;
+    min-height: 44px;
+    color: var(--muted);
+  }
+  .sidebar-bottom .account-row > span {
+    gap: 13px;
+  }
+  .sidebar-bottom .account-row:hover,
+  .sidebar-bottom .account-row:active {
+    background: var(--soft);
+    color: var(--text);
   }
 
   /* El botón del menú sí va suelto: abre otra cosa, no pertenece al grupo. */

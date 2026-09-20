@@ -134,8 +134,7 @@ async function permisoConcedido(): Promise<boolean> {
     return (await FirebaseMessaging.checkPermissions()).receive === "granted";
   }
   return (
-    typeof Notification !== "undefined" &&
-    Notification.permission === "granted"
+    typeof Notification !== "undefined" && Notification.permission === "granted"
   );
 }
 
@@ -273,5 +272,72 @@ export async function darDeBaja(): Promise<void> {
     await contarAlServidor("/api/push/baja/", { token });
   } catch {
     /* Ver arriba: soltar el aparato no puede impedir cerrar la sesión. */
+  }
+}
+
+/**
+ * Lo que pasa cuando un aviso llega con la aplicación abierta, y lo que pasa
+ * al tocarlo.
+ *
+ * **Faltaban las dos cosas, y se notaban como si los avisos no funcionaran.**
+ * En Android, un mensaje con título y cuerpo que llega mientras la aplicación
+ * está delante **no aparece en la barra de estado**: el sistema se lo entrega a
+ * la aplicación y da por hecho que ella sabrá qué hacer. Como aquí no lo
+ * escuchaba nadie, no pasaba nada en absoluto: ni barra, ni sonido, ni señal.
+ * Quien estuviera dentro de la aplicación —que es justo quien acaba de tocar
+ * algo y espera respuesta— no se enteraba de nada.
+ *
+ * Y al tocar un aviso desde fuera, la aplicación abría por donde la dejaron. La
+ * dirección del caso viaja en el mensaje desde el primer día; simplemente no la
+ * leía nadie.
+ *
+ * Con la aplicación abierta **no se levanta un aviso del sistema**, a
+ * propósito: quien está mirando la pantalla no necesita que le suene el
+ * teléfono, necesita verlo. Por eso sale por donde salen las demás cosas que
+ * pasan dentro.
+ *
+ * Solo en la aplicación instalada. En el navegador esto lo hace el service
+ * worker, que ya tiene su propio camino.
+ */
+export async function escuchar(manejo: {
+  alLlegar: (texto: string) => void;
+  alTocar: (ruta: string) => void;
+}): Promise<() => void> {
+  if (!esNativo()) return () => {};
+  try {
+    const { FirebaseMessaging } = await modulo();
+    const llega = await FirebaseMessaging.addListener(
+      "notificationReceived",
+      (evento) => {
+        const aviso = evento.notification;
+        const texto = [aviso?.title, aviso?.body].filter(Boolean).join(": ");
+        if (texto) manejo.alLlegar(texto);
+      },
+    );
+    const toca = await FirebaseMessaging.addListener(
+      "notificationActionPerformed",
+      (evento) => {
+        /* `data` llega tipado como objeto vacío: el complemento no sabe qué
+           campos manda el servidor. El nuestro manda uno, `url`. */
+        const ruta = (evento.notification?.data as { url?: unknown })?.url;
+        /* Solo rutas de esta aplicación. Lo que llega en un mensaje viene de
+           fuera, y mandar la ventana a donde diga un mensaje es abrirle la
+           puerta a que la mande a cualquier sitio. */
+        if (
+          typeof ruta === "string" &&
+          ruta.startsWith("/") &&
+          !ruta.startsWith("//")
+        )
+          manejo.alTocar(ruta);
+      },
+    );
+    return () => {
+      void llega.remove();
+      void toca.remove();
+    };
+  } catch {
+    /* Un teléfono sin el complemento o una versión que no tiene estos avisos.
+       Los mensajes siguen llegando a la barra de estado como antes. */
+    return () => {};
   }
 }
