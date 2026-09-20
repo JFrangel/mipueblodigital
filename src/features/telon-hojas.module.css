@@ -63,6 +63,23 @@
   position: absolute;
   width: 0;
   height: 0;
+  /**
+   * **Quietas y fuera hasta que se les diga.**
+   *
+   * Poniendo aquí la animación, empieza a correr en cuanto el navegador aplica
+   * los estilos —y en la ventana del APK eso pasa **casi un segundo antes de
+   * que se pinte el primer fotograma**—. Se comprobó grabando un arranque: de
+   * 5,6 a 6,6 segundos los fotogramas son idénticos. La entrada ocurría con la
+   * pantalla todavía en blanco y lo que se veía después era su último
+   * fotograma congelado por el `forwards`: las hojas aparecían ya puestas y
+   * sin moverse.
+   */
+  transform: var(--fuera);
+}
+
+/* Se arranca desde el navegador, en el primer fotograma que se pinta de
+   verdad. */
+.entrando {
   animation: entrar 700ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
 }
 
@@ -127,14 +144,22 @@
   animation: salir 900ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
 }
 
+/**
+ * **Se van, no se disuelven.**
+ *
+ * Antes salían cincuenta unidades midiendo ciento treinta y ocho: no llegaban a
+ * abandonar la pantalla y terminaban de irse desvaneciéndose, así que durante
+ * media animación se veían hojas translúcidas por encima de la interfaz, con su
+ * mitad oscura lavada contra el fondo claro de la aplicación. Ahora el
+ * recorrido las saca fuera y la opacidad no se toca hasta el final, cuando ya
+ * casi no queda nada dentro del cuadro.
+ */
 @keyframes salir {
   0% {
     transform: var(--cerrada);
     opacity: 1;
   }
-  /* Siguen enteras casi hasta el final: primero se apartan, y solo al salir se
-     van. Desvanecerlas antes convierte el gesto en un fundido. */
-  60% {
+  88% {
     opacity: 1;
   }
   100% {
@@ -149,14 +174,14 @@
   top: 6%;
   --fuera: translateX(-72vmax) rotate(104deg);
   --cerrada: translateX(0) rotate(84deg);
-  --abierta: translateX(-52vmax) rotate(68deg);
+  --abierta: translateX(-104vmax) rotate(62deg);
 }
 .dos {
   left: 0;
   top: 46%;
   --fuera: translateX(-76vmax) rotate(76deg);
   --cerrada: translateX(0) rotate(96deg);
-  --abierta: translateX(-56vmax) rotate(110deg);
+  --abierta: translateX(-108vmax) rotate(116deg);
   animation-delay: 50ms;
 }
 .tres {
@@ -164,7 +189,7 @@
   top: 88%;
   --fuera: translateX(-70vmax) rotate(86deg);
   --cerrada: translateX(0) rotate(106deg);
-  --abierta: translateX(-50vmax) rotate(126deg);
+  --abierta: translateX(-102vmax) rotate(132deg);
   animation-delay: 100ms;
 }
 
@@ -174,7 +199,7 @@
   top: 14%;
   --fuera: translateX(72vmax) rotate(-106deg);
   --cerrada: translateX(0) rotate(-88deg);
-  --abierta: translateX(52vmax) rotate(-70deg);
+  --abierta: translateX(104vmax) rotate(-64deg);
   animation-delay: 25ms;
 }
 .cinco {
@@ -182,7 +207,7 @@
   top: 54%;
   --fuera: translateX(76vmax) rotate(-78deg);
   --cerrada: translateX(0) rotate(-98deg);
-  --abierta: translateX(56vmax) rotate(-114deg);
+  --abierta: translateX(108vmax) rotate(-120deg);
   animation-delay: 75ms;
 }
 .seis {
@@ -190,7 +215,7 @@
   top: 94%;
   --fuera: translateX(70vmax) rotate(-88deg);
   --cerrada: translateX(0) rotate(-108deg);
-  --abierta: translateX(50vmax) rotate(-128deg);
+  --abierta: translateX(102vmax) rotate(-134deg);
   animation-delay: 125ms;
 }
 

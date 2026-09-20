@@ -79,7 +79,32 @@ export function TelonHojas({ listo }: { listo: boolean }) {
      esperara a decidirse en el navegador, se vería un instante la aplicación
      antes de que cayera el telón, que es exactamente al revés. */
   const [puesto, setPuesto] = useState(true);
+  const [entrando, setEntrando] = useState(false);
   const [abriendo, setAbriendo] = useState(false);
+
+  /**
+   * La entrada arranca **en el primer fotograma que se pinta**, no al aplicar
+   * los estilos.
+   *
+   * En la ventana del APK entre una cosa y otra pasa casi un segundo, y la
+   * animación se gastaba entera con la pantalla todavía en blanco: al pintar,
+   * las hojas ya estaban puestas y quietas. Se comprobó grabando un arranque
+   * en el teléfono —trece fotogramas seguidos, todos iguales—.
+   *
+   * Dos vueltas de requestAnimationFrame y no una: la primera se programa
+   * antes de que el navegador dibuje, así que dentro de ella todavía no ha
+   * pintado nada. La segunda corre ya con el fotograma en pantalla.
+   */
+  useEffect(() => {
+    let segundo = 0;
+    const primero = requestAnimationFrame(() => {
+      segundo = requestAnimationFrame(() => setEntrando(true));
+    });
+    return () => {
+      cancelAnimationFrame(primero);
+      cancelAnimationFrame(segundo);
+    };
+  }, []);
 
   useEffect(() => {
     /* Ya visto en este arranque: se retira en el acto y sin animación. */
@@ -121,7 +146,12 @@ export function TelonHojas({ listo }: { listo: boolean }) {
         /* El ancla en el borde y la hoja colgando de ella: así el giro sale
            del peciolo y no del centro de la lámina. */
         <div
-          className={`${styles.ancla} ${donde} ${abriendo ? styles.abriendo : ""}`}
+          className={[
+            styles.ancla,
+            donde,
+            entrando ? styles.entrando : "",
+            abriendo ? styles.abriendo : "",
+          ].join(" ")}
           key={donde}
         >
           <div className={styles.hoja}>
