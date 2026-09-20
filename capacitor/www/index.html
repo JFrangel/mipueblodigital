@@ -7,10 +7,16 @@
   <!--
     La única página que lleva el APK dentro.
 
-    Se ve en un caso: el primer arranque de la aplicación recién instalada sin
-    señal, cuando la ventana no ha podido alcanzar el servidor ni una vez. A
-    partir de la primera visita con red manda el service worker y esta página no
-    vuelve a aparecer.
+    Se ve cada vez que la ventana no logra alcanzar el servidor: la aplicación
+    instalada es una ventana a la web y esa ventana se abre por la red.
+
+    **Decía «falta la primera conexión», y era mentira.** La idea era que a
+    partir de la primera visita con red mandara el service worker y esta página
+    no volviera a salir; en un teléfono de verdad vuelve a salir al cerrar la
+    aplicación desde recientes y abrirla sin señal. Prometerle a alguien que
+    con conectarse una vez queda lista es dejarlo esperando algo que no pasa.
+    Queda por averiguar por qué el service worker no toma el relevo; mientras
+    tanto, lo que se dice aquí es lo que ocurre.
 
     **La ve quien más falta le hace que funcione.** En este territorio unas
     cuantas instalaciones son alguien pasando el archivo por Bluetooth o por una
@@ -256,10 +262,10 @@
           <path d="M0 18c10 6 20 6 30 0s20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0" stroke="#a9c577" stroke-width="2" fill="none" />
         </svg>
       </span>
-      <h1>Falta la primera conexión</h1>
+      <h1>Sin señal no se puede abrir</h1>
       <p id="pista">
-        Mi Pueblo Digital necesita conectarse una vez para quedar lista. Busca
-        señal y vuelve a intentarlo.
+        Mi Pueblo Digital vive en internet y necesita señal cada vez que se
+        abre, no solo la primera. Busca señal y vuelve a intentarlo.
       </p>
       <button id="reintentar" type="button">Reintentar</button>
     </div>
