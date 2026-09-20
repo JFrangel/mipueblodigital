@@ -80,10 +80,29 @@ export const isCatalogued = (name: string) => veredaNames.includes(name);
  *
  * El marco anterior (1,5–3,2 N, −79,2 a −77,2 O) abarcaba unas setenta veces
  * esta área y admitía un punto a ciento cincuenta kilómetros.
+ *
+ * **El borde norte llega a 2,62 y no a 2,55, y eso se midió.** El contorno del
+ * municipio de Olaya Herrera —OpenStreetMap, relación 1311681, `admin_level=6`,
+ * 1.929 vértices— sube hasta 2,60209 N. Con el borde en 2,55 quedaban fuera
+ * unos 146 km² de la esquina norte del municipio, hacia el Pacífico: ninguna
+ * vereda conocida está allí, pero es exactamente donde estaría una que no
+ * conocemos, y el marco decide qué reportes se aceptan.
+ *
+ * **Y por eso sigue siendo un rectángulo y no el polígono del municipio.** Al
+ * cruzar las fuentes aparece que el DANE sitúa Pueblo Nuevo —una de las
+ * dieciocho veredas del Consejo— en −78,4514, al oeste del borde municipal: en
+ * Mosquera. El territorio del Consejo **no coincide con el municipio**, así que
+ * validar contra el contorno municipal dejaría fuera una vereda propia. Un
+ * rectángulo generoso admite las dos cosas; un polígono exacto tendría que
+ * elegir, y elegiría mal.
+ *
+ * Con estos cuatro números el marco cubre el municipio entero con margen, el
+ * título colectivo, y las doce localidades del catálogo con al menos veinte
+ * kilómetros de holgura cada una.
  */
 export const territoryBounds = {
   south: 1.9,
-  north: 2.55,
+  north: 2.62,
   west: -78.5,
   east: -78.0,
 };
