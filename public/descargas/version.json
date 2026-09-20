@@ -1,8 +1,8 @@
 {
-  "versionCode": 10,
-  "versionName": "1.8",
-  "bytes": 7824674,
+  "versionCode": 11,
+  "versionName": "1.9",
+  "bytes": 7356902,
   "fecha": "2026-09-20",
-  "notas": "Al abrir ya no sale el icono: sale la portada, y sale al instante porque viaja dentro de la aplicación. Y la descarga de actualizaciones se queda dentro: ya no te manda al navegador, ya no se atasca en el 99 %, y si algo falla dice qué fue.",
+  "notas": "El arranque va entero en el azul del río de noche: la pantalla de Android, la portada y el telón de hojas son ahora el mismo color, sin el verde que cruzaba por en medio.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

@@ -3,31 +3,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mi Pueblo Digital</title>
-  <script>
-    /*
-      El tema que eligió la persona, leído antes de pintar nada.
-
-      **No vale `prefers-color-scheme` aquí.** Esa es la preferencia del
-      teléfono, y la aplicación tiene su propio interruptor de tema guardado en
-      el navegador; quien tenga el teléfono en claro y la aplicación en oscuro
-      veía esta portada en verde y un instante después todo lo demás en azul.
-      Es el mismo almacén y la misma clave que lee `src/data/theme.ts` —esta
-      página comparte origen con la aplicación, que para eso está puesto
-      `server.hostname`—, así que las dos dicen siempre lo mismo.
-
-      Va aquí arriba, suelto y sin esperar a nada, porque si se decidiera
-      después ya se habría visto el color que no era.
-    */
-    try {
-      document.documentElement.setAttribute(
-        "data-tema",
-        localStorage.getItem("mpd-theme") === "dark" ? "oscuro" : "claro"
-      );
-    } catch (e) {
-      /* Sin almacenamiento se queda el claro, que es el de la aplicación
-         cuando nadie ha tocado el interruptor. */
-    }
-  </script>
   <!--MODULOS-->
   <!--
     La única página que lleva el APK dentro.
@@ -289,16 +264,15 @@
       inset: 0;
       z-index: 10;
       text-align: center;
-      /* El manglar para el tema claro y el río de noche para el oscuro, igual
-         que `--arranque` en la aplicación. */
-      background: #16463c;
+      /* El azul del río de noche, el mismo en los dos temas: es el único que
+         la pantalla de Android puede garantizar, porque se pinta antes de que
+         exista el navegador donde vive la elección del tema. Igual que
+         `--arranque` en la aplicación y que `mpd_arranque` en Android; si uno
+         de los tres se mueve, se ve el cambio de color al entrar. */
+      background: #0d3340;
       color: #cfe0d6;
       font-size: 13px;
     }
-    /* El río de noche cuando la aplicación está en oscuro. Lo decide el
-       interruptor de la aplicación, no el del teléfono: ver el guion de
-       arriba. */
-    :root[data-tema="oscuro"] .portada { background: #0d3340; }
 
     /*
       El palafito, clavado en el centro de la pantalla.

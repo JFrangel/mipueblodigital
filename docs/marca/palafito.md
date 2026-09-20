@@ -7,16 +7,29 @@ repite trazo por trazo para generar los iconos.
 
 ## Los fondos
 
-| dónde | color | por qué |
-|---|---|---|
-| icono, y la pantalla de arranque de Android | río de noche `#0d3340` | Es donde hay que destacar: a 44 px, compitiendo en el cajón, el palafito se recorta con fuerza contra el azul. Y el agua del dibujo deja de flotar sobre un fondo de otra familia. |
-| portada, tema claro | manglar `#16463c` | Verde con azul dentro: la casa verde y el agua azul pertenecen las dos al fondo y ninguna salta. Ahí el dibujo va grande y no compite con nada, así que puede permitirse ser más parejo. |
-| portada, tema oscuro | río de noche `#0d3340` | El mismo del icono. |
+**Uno solo: río de noche `#0d3340`**, en los dos temas y en las cinco piezas
+que se suceden al abrir.
 
-**La pantalla de Android solo admite un color** y no sabe qué tema hay puesto,
-así que con el tema claro se ve pasar el azul al verde del manglar. Los dos son
-hondos y dura un instante, pero está: es la única costura del arranque que no se
-puede quitar desde la web.
+| dónde | quién lo declara |
+|---|---|
+| la pantalla que dibuja Android | `mpd_arranque` en `android/…/values/avisos.xml` |
+| el fondo de la ventana mientras carga | `backgroundColor` en `capacitor.config.ts` |
+| la portada que va dentro del archivo | `.portada` en `capacitor/www/index.html` |
+| la portada de la web, y el telón de hojas | `--arranque` en `globals.css` |
+| la pantalla de arranque de reserva | `FONDO_ARRANQUE` en `scripts/iconos-android.mjs` |
+
+Se eligió el azul porque a 44 px, compitiendo en el cajón del teléfono, el
+palafito se recorta con fuerza contra él, y porque el agua del dibujo deja de
+flotar sobre un fondo de otra familia.
+
+**Hubo un tiempo en que fueron dos** —el manglar `#16463c` para el tema claro—,
+y la idea se sostenía mirando la portada sola: sobre ese verde, la casa verde y
+el agua azul pertenecen las dos al fondo y ninguna salta. Lo que no se sostenía
+era la sucesión. La pantalla de Android **solo admite un color** y se pinta antes
+de que exista el navegador donde vive la elección del tema, así que cualquier
+desacuerdo —entre temas, o entre el tema del teléfono y el de la aplicación— se
+veía como un verde cruzando el azul justo al abrir. Con un color no hay nada que
+coordinar, y el que vale es el que esa pantalla puede garantizar.
 
 ## Las dos versiones
 

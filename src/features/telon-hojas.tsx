@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { HojaPlatano } from "./leaf-fall";
-import { getServerTheme, getTheme, subscribeTheme } from "@/data/theme";
 import styles from "./telon-hojas.module.css";
 
 /** Lo que tardan las hojas en entrar y cerrarse, contando el retardo de las
@@ -52,9 +51,6 @@ let yaSeVio = false;
  */
 export function TelonHojas({ listo }: { listo: boolean }) {
   const [fase, setFase] = useState<"fuera" | "entrando" | "abriendo">("fuera");
-  /* El tema, leído aquí porque el telón vive fuera del contenedor que lo
-     marca. Es el mismo almacén que lee la aplicación. */
-  const oscuro = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
 
   useEffect(() => {
     if (!listo || yaSeVio || fase !== "fuera") return;
@@ -89,20 +85,7 @@ export function TelonHojas({ listo }: { listo: boolean }) {
 
   if (fase === "fuera") return null;
   return (
-    /**
-     * La marca del tema va **en el propio telón**, y hace falta que vaya aquí.
-     *
-     * `--arranque` está declarada bajo `.dark`, que es una clase de contenedor,
-     * y este telón se pinta como hermano de la aplicación, no dentro: fuera de
-     * ese contenedor la variable se resuelve con el valor claro. El resultado
-     * era que con el tema oscuro puesto, justo antes de entrar las hojas se veía
-     * pasar un verde de monte por encima del azul. La portada de carga ya hacía
-     * lo mismo y por el mismo motivo.
-     */
-    <div
-      className={`${styles.telon} ${oscuro ? "dark" : ""}`}
-      aria-hidden="true"
-    >
+    <div className={styles.telon} aria-hidden="true">
       {/* El verde detrás: entra con las hojas y se va con ellas, para que el
           momento de estar tapado sea opaco de verdad. */}
       <div

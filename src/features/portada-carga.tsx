@@ -1,8 +1,7 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { Logo } from "@/components/ui";
 import { TRAZOS_PALAFITO } from "@/components/palafito";
-import { getServerTheme, getTheme, subscribeTheme } from "@/data/theme";
 import styles from "./portada-carga.module.css";
 
 /**
@@ -39,16 +38,6 @@ const FRASES = [
  */
 export function PortadaCarga() {
   const [frase, setFrase] = useState<string>(FRASES[0].dice);
-  /**
-   * El tema, leído aquí y no heredado.
-   *
-   * La marca `dark` vive en el contenedor de la aplicación, y esta pantalla se
-   * pinta **antes** de que exista: sin esto, quien tiene el tema oscuro puesto
-   * veía el arranque claro y luego el salto. Es el mismo almacén que lee la
-   * aplicación, así que no hay dos verdades sobre qué tema está puesto.
-   */
-  const oscuro = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
-
   useEffect(() => {
     const relojes = FRASES.slice(1).map((f) =>
       setTimeout(() => setFrase(f.dice), f.alSegundo * 1000),
@@ -56,8 +45,11 @@ export function PortadaCarga() {
     return () => relojes.forEach(clearTimeout);
   }, []);
 
+  /* Sin marca de tema: el fondo del arranque es uno solo en los dos temas
+     —ver `--arranque` en `globals.css`—, así que esta pantalla ya no tiene que
+     averiguar qué tema hay puesto antes de pintarse. */
   return (
-    <div className={`${styles.portada} ${oscuro ? "dark" : ""}`}>
+    <div className={styles.portada}>
       {/* `pathLength` normaliza cada curva a uno: así el mismo retardo vale
           para las tres aunque midan distinto, y sigue valiendo el día que
           alguien retoque el dibujo. */}

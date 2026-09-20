@@ -23,13 +23,12 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { circulo, conPalafito, fondo, palafito } from "./marca-hoja.mjs";
 import { AGUA, CASA, trazosPalafito } from "./palafito.mjs";
 
-/* El verde de la pantalla de arranque: el mismo que declara `capacitor.config.ts`
-   en `SplashScreen.backgroundColor`. Si cambia allí, cambia aquí, o el dibujo
-   aparece sobre un color y el resto de la pantalla sobre otro. */
-/* El verde del manglar, el mismo de `--arranque` en tema claro y el de
-   `mpd_arranque` en `values/`. Estaba en `#123f39`, de antes de que el arranque
-   tuviera color propio, y era un cuarto verde que no coincidía con ninguno. */
-const FONDO_ARRANQUE = "#16463c";
+/* El fondo de la pantalla de arranque: el azul del río de noche, el mismo que
+   declaran `capacitor.config.ts`, `--arranque` en `globals.css` y `mpd_arranque`
+   en Android. Si cambia en uno solo, el dibujo aparece sobre un color y el resto
+   de la pantalla sobre otro. Es uno para los dos temas a propósito: ver
+   `globals.css`. */
+const FONDO_ARRANQUE = "#0d3340";
 
 const res = "android/app/src/main/res";
 

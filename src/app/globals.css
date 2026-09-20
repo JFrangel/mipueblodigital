@@ -12,18 +12,23 @@
    * este se mira durante segundos y tiene que ser un sitio donde reposar, no un
    * cartel.
    *
-   * Son dos, uno por tema. El claro va al verde del manglar, que lleva azul
-   * dentro: sobre él, la casa verde y el agua azul del palafito pertenecen las
-   * dos al fondo y ninguna salta. El oscuro va al azul hondo del agua de noche.
+   * **Es uno solo, y por eso funciona.** El azul hondo del río de noche, el
+   * mismo del icono que se acaba de tocar para abrir, en los dos temas.
    *
-   * **La pantalla de Android solo puede llevar uno** —se pinta antes de que
-   * exista la web y no sabe qué tema tiene puesto nadie—, y lleva el azul, que
-   * es el del icono que se acaba de tocar para abrir. Con el tema claro se ve
-   * pasar ese azul al verde del manglar: los dos son hondos y el paso dura un
-   * instante, pero está, y es la única costura que no se puede quitar desde
-   * aquí.
+   * Fueron dos un tiempo —el manglar para el claro— y la idea tenía sentido
+   * mirando la portada sola: sobre ese verde, la casa verde y el agua azul del
+   * palafito pertenecen las dos al fondo y ninguna salta. Lo que no funcionaba
+   * era la sucesión. El arranque no es una pantalla: son cuatro seguidas —la
+   * que dibuja Android, la portada que va dentro del archivo, la de la web y
+   * el telón de hojas— y la de Android solo puede llevar un color, porque se
+   * pinta antes de que exista el navegador donde vive la elección del tema.
+   * Con dos colores, cualquier desacuerdo entre el tema del teléfono y el de
+   * la aplicación se veía como un verde cruzando el azul.
+   *
+   * Con uno no hay nada que coordinar. Y se elige el azul y no el verde porque
+   * es el único que la pantalla de Android puede garantizar.
    */
-  --arranque: #16463c;
+  --arranque: #0d3340;
   --green: #174f3b;
   --soft: #eaf2e9;
   --accent: #b9d8a3;
@@ -653,7 +658,6 @@ hr {
   background: #242424;
 }
 .dark {
-  --arranque: #0d3340;
   color-scheme: dark;
   --bg: #111111;
   --surface: #1b1b1b;
