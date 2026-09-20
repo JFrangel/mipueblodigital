@@ -20,7 +20,9 @@ const state = vi.hoisted(() => ({
   permisoNativo: "granted" as string,
   pedidos: 0,
   /** Lo que cada vuelta del reconocedor nativo va a entregar, en orden. */
-  vueltas: [] as Array<{ parciales?: string[]; final?: string } | "falla">,
+  vueltas: [] as Array<
+    { parciales?: string[]; final?: string } | "falla" | { error: string }
+  >,
   vueltaActual: 0,
   arranques: [] as unknown[],
   paradas: 0,
@@ -77,7 +79,8 @@ vi.mock("@capacitor-community/speech-recognition", () => ({
       state.arranques.push(opciones);
       const guion = state.vueltas[state.vueltaActual++];
       if (guion === undefined) return { matches: [] };
-      if (guion === "falla") throw new Error("ERROR_NO_MATCH");
+      if (guion === "falla") throw new Error("No match");
+      if ("error" in guion) throw new Error(guion.error);
       /* Los parciales llegan por el oyente, como en el teléfono. */
       for (const parcial of guion.parciales ?? [])
         for (const oyente of state.oyentes) oyente({ matches: [parcial] });
@@ -239,6 +242,38 @@ it("sin haber oído nada lo dice; habiendo oído algo, no", async () => {
   state.vueltaActual = 0;
   state.vueltas = [{ final: "Algo." }, "falla", "falla", "falla"];
   expect((await dictar()).motivo).toBeNull();
+});
+
+/**
+ * «Ocupado» no es «no se detectó voz».
+ *
+ * Esto sale de un fallo real en el APK: se pulsaba «Activar micrófono» y la
+ * tarjeta se apagaba sola al instante diciendo que hablaras más cerca. El
+ * reconocedor de Android contestaba «RecognitionService busy» —tarda un momento
+ * en soltarse cuando viene de otra escucha—, el bucle contaba eso como una
+ * vuelta sin palabras y reintentaba **sin pausa**, así que los tres silencios
+ * se gastaban en milisegundos antes de que el micrófono llegara a abrirse.
+ */
+it("si el reconocedor está ocupado se espera y se reintenta", async () => {
+  state.vueltas = [
+    { error: "RecognitionService busy" },
+    { error: "RecognitionService busy" },
+    { final: "hubo un derrumbe" },
+  ];
+  const { ultimo, motivo } = await dictar();
+  expect(ultimo).toBe("hubo un derrumbe");
+  expect(motivo).toBeNull();
+  /* Y arrancó más de una vez: con el bucle viejo los dos «ocupado» habrían
+     cerrado la escucha sin llegar nunca a la tercera. */
+  expect(state.arranques.length).toBeGreaterThanOrEqual(3);
+});
+
+/* Y un fallo que no se arregla esperando se dice por su nombre, en vez de
+   mandar a alguien a hablar más cerca de un micrófono que no era el problema. */
+it("un fallo de red se dice como fallo de red", async () => {
+  state.vueltas = [{ error: "Network error" }];
+  expect((await dictar()).motivo).toBe("sin-conexion");
+  expect(state.arranques).toHaveLength(1);
 });
 
 /* Al terminar se suelta el oyente y se para el reconocedor. Sin esto, salir del

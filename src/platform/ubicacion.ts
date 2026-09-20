@@ -15,6 +15,7 @@ import { isInsideTerritory } from "@/domain/territory";
 export type SinPunto =
   | "sin-permiso"
   | "sin-señal"
+  | "ubicacion-apagada"
   | "tarde"
   | "fuera-del-territorio"
   | "no-disponible";
@@ -49,6 +50,47 @@ export const MARGEN_MAXIMO = 500;
 export const ESPERA_MS = 30000;
 
 const modulo = () => import("@capacitor/geolocation");
+
+/**
+ * Por qué falló, de verdad.
+ *
+ * **Esto existe porque antes no existía**, y esa es la historia de un fallo
+ * real: cualquier error que no fuera un plazo agotado se convertía en «la señal
+ * no alcanza para situarte con precisión». Con la ubicación del teléfono
+ * apagada —el caso más común de todos— la aplicación culpaba a la señal y
+ * mandaba a alguien a buscar cobertura en la orilla, cuando lo único que había
+ * que hacer era bajar la cortinilla y pulsar un botón. Decir una causa falsa
+ * es peor que no decir ninguna: manda a arreglar donde no está roto.
+ *
+ * Se mira primero el código del complemento, que es estable, y solo si no lo
+ * hay se mira el texto, que puede cambiar entre versiones.
+ */
+function porQue(error: unknown): SinPunto {
+  const e = error as { code?: unknown; message?: unknown };
+  const codigo = String(e?.code ?? "");
+  const dicho = String(e?.message ?? "");
+  /* OS-PLUG-GLOC-0007 y -0017: la ubicación del aparato está apagada. */
+  if (/GLOC-(0007|0017)/.test(codigo) || /not enabled|turned off/i.test(dicho))
+    return "ubicacion-apagada";
+  if (/GLOC-(0003|0009)/.test(codigo) || /permission.*denied/i.test(dicho))
+    return "sin-permiso";
+  if (/GLOC-0010/.test(codigo) || /timeout|timed out|in time/i.test(dicho))
+    return "tarde";
+  /* Lo que quede —Play Services, ajustes, posición no disponible— sí se
+     parece a no poder situarse, y ahí el mensaje de la señal no miente. */
+  return "sin-señal";
+}
+
+/** Una lectura del aparato, con o sin precisión fina. */
+async function leer(alta: boolean) {
+  const { Geolocation } = await modulo();
+  const { coords } = await Geolocation.getCurrentPosition({
+    enableHighAccuracy: alta,
+    timeout: ESPERA_MS,
+    maximumAge: 0,
+  });
+  return coords;
+}
 
 /** ¿Este aparato puede decir dónde está, en principio? */
 export function disponible(): boolean {
@@ -104,12 +146,20 @@ export async function dondeEstoy(): Promise<Punto | SinPunto> {
         permiso.coarseLocation !== "granted"
       )
         return "sin-permiso";
-      const { coords } = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: ESPERA_MS,
-        maximumAge: 0,
-      });
-      return aceptar(coords);
+      try {
+        return aceptar(await leer(true));
+      } catch (error) {
+        const motivo = porQue(error);
+        /* Sin permiso o con la ubicación apagada no hay segunda oportunidad:
+           volver a preguntar da el mismo error y hace esperar otros treinta
+           segundos para nada. */
+        if (motivo !== "sin-señal" && motivo !== "tarde") return motivo;
+        /* **Pero bajo el dosel sí la hay.** El GPS fino no engancha entre los
+           árboles, y ahí antes esto se rendía; las antenas y la red sí dan un
+           punto, con peor margen. No es bajar el listón: el filtro de
+           MARGEN_MAXIMO sigue puesto y descarta la lectura si no vale. */
+        return aceptar(await leer(false));
+      }
     }
     return await new Promise<Punto | SinPunto>((resolver) => {
       navigator.geolocation.getCurrentPosition(
@@ -126,10 +176,9 @@ export async function dondeEstoy(): Promise<Punto | SinPunto> {
       );
     });
   } catch (error) {
-    /* El complemento nativo lanza al agotarse el plazo en vez de contestar. */
-    return /timeout|timed out/i.test(String((error as Error)?.message ?? ""))
-      ? "tarde"
-      : "sin-señal";
+    /* El complemento nativo lanza en vez de contestar, así que aquí llega
+       todo lo que no atrapó la rama de arriba. */
+    return porQue(error);
   }
 }
 
@@ -137,6 +186,8 @@ export async function dondeEstoy(): Promise<Punto | SinPunto> {
 export const motivos: Record<SinPunto, string> = {
   "sin-permiso":
     "No se autorizó la ubicación. Puedes marcar el punto en el mapa, o darle permiso desde los ajustes de este dispositivo.",
+  "ubicacion-apagada":
+    "El teléfono tiene la ubicación apagada. Enciéndela y vuelve a intentarlo, o marca el punto en el mapa.",
   "sin-señal":
     "La señal no alcanza para situarte con precisión. Marca el punto en el mapa: ahí tú sabes mejor que el aparato.",
   tarde:

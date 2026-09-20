@@ -24,6 +24,8 @@ const state = vi.hoisted(() => ({
   fallo: null as { code: number } | null,
   /** Lo que contesta el complemento nativo. */
   permisoNativo: "granted" as string,
+  /** Lo que lanza el complemento nativo, una entrada por llamada. */
+  fallosNativos: [] as ({ code?: string; message?: string } | null)[],
   pedidos: 0,
   opciones: [] as unknown[],
 }));
@@ -57,6 +59,11 @@ vi.mock("@capacitor/geolocation", () => ({
     },
     getCurrentPosition: async (opciones: unknown) => {
       state.opciones.push(opciones);
+      const fallo = state.fallosNativos.shift();
+      if (fallo)
+        throw Object.assign(new Error(fallo.message ?? ""), {
+          code: fallo.code,
+        });
       return { coords: state.coords };
     },
   }),
@@ -74,6 +81,7 @@ beforeEach(() => {
   state.coords = { latitude: 2.2, longitude: -78.2, accuracy: 12 };
   state.fallo = null;
   state.permisoNativo = "granted";
+  state.fallosNativos = [];
   state.pedidos = 0;
   state.opciones = [];
   vi.stubGlobal("navigator", {
@@ -81,7 +89,11 @@ beforeEach(() => {
     geolocation: {
       getCurrentPosition: (
         ok: (p: { coords: typeof state.coords }) => void,
-        mal: (e: { code: number; PERMISSION_DENIED: number; TIMEOUT: number }) => void,
+        mal: (e: {
+          code: number;
+          PERMISSION_DENIED: number;
+          TIMEOUT: number;
+        }) => void,
         opciones: unknown,
       ) => {
         state.opciones.push(opciones);
@@ -127,7 +139,11 @@ it("en el APK pide el permiso solo si falta", async () => {
  * sería mentir con una cifra delante.
  */
 it("un punto con demasiado margen se rechaza", async () => {
-  state.coords = { latitude: 2.2, longitude: -78.2, accuracy: MARGEN_MAXIMO + 1 };
+  state.coords = {
+    latitude: 2.2,
+    longitude: -78.2,
+    accuracy: MARGEN_MAXIMO + 1,
+  };
   expect(await dondeEstoy()).toBe("sin-señal");
 });
 
@@ -192,12 +208,68 @@ it("nunca acepta un punto guardado, ni en el navegador ni en el APK", async () =
     });
 });
 
+/* ── Lo que dice el aparato cuando se niega ───────────────────────────── */
+
+/**
+ * Un error que no es falta de señal no puede contarse como falta de señal.
+ *
+ * Esto salió de un fallo real: con la ubicación del teléfono apagada, la
+ * aplicación decía «la señal no alcanza para situarte» y mandaba a alguien a
+ * buscar cobertura cuando lo único que había que hacer era encenderla. Una
+ * causa falsa manda a arreglar donde no está roto.
+ */
+it("la ubicación apagada no se cuenta como falta de señal", async () => {
+  state.nativo = true;
+  state.fallosNativos = [
+    {
+      code: "OS-PLUG-GLOC-0007",
+      message: "Location services are not enabled.",
+    },
+  ];
+  expect(await dondeEstoy()).toBe("ubicacion-apagada");
+  /* Y no se reintenta: daría el mismo error treinta segundos después. */
+  expect(state.opciones).toHaveLength(1);
+});
+
+/**
+ * Bajo el dosel el GPS fino no engancha, y ahí antes esto se rendía. Las
+ * antenas y la red sí dan un punto, con peor margen, y peor margen no es lo
+ * mismo que ningún punto.
+ */
+it("si el GPS fino no engancha, se reintenta sin él antes de rendirse", async () => {
+  state.nativo = true;
+  state.fallosNativos = [
+    { message: "There was en error trying to obtain the location." },
+  ];
+  state.coords = { latitude: 2.2, longitude: -78.2, accuracy: 180 };
+  expect(await dondeEstoy()).toEqual({ lat: 2.2, lng: -78.2, exactitud: 180 });
+  expect(state.opciones).toHaveLength(2);
+  expect(state.opciones[0]).toMatchObject({ enableHighAccuracy: true });
+  expect(state.opciones[1]).toMatchObject({ enableHighAccuracy: false });
+});
+
+/* Y el reintento no es una puerta de atrás: el margen sigue mandando. */
+it("el punto del reintento también se descarta si trae demasiado margen", async () => {
+  state.nativo = true;
+  state.fallosNativos = [{ message: "Location settings error." }];
+  state.coords = {
+    latitude: 2.2,
+    longitude: -78.2,
+    accuracy: MARGEN_MAXIMO + 1,
+  };
+  expect(await dondeEstoy()).toBe("sin-señal");
+});
+
 /* ── Y que cada motivo diga algo distinto ─────────────────────────────── */
 
-it("los cinco motivos dicen cosas distintas y ninguno queda mudo", () => {
+/* Sin número fijo: lo que importa no es cuántos motivos hay —ya cambió una
+   vez, al separar «la ubicación está apagada» de «no hay señal»— sino que
+   cada uno diga algo suyo. Un número aquí solo obliga a editar la prueba
+   cuando se añade un motivo, que es justo cuando hay que mirarla de verdad. */
+it("cada motivo dice algo distinto y ninguno queda mudo", () => {
   const dichos = Object.values(motivos);
-  expect(dichos).toHaveLength(5);
-  expect(new Set(dichos).size).toBe(5);
+  expect(dichos.length).toBeGreaterThanOrEqual(5);
+  expect(new Set(dichos).size).toBe(dichos.length);
   for (const dicho of dichos) expect(dicho.length).toBeGreaterThan(30);
 });
 

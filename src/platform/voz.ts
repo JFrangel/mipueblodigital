@@ -23,10 +23,7 @@ import { unir } from "@/domain/dictado";
 
 /** Por qué no se puede dictar, cuando no se puede. */
 export type Impedimento =
-  | "no-disponible"
-  | "sin-permiso"
-  | "sin-conexion"
-  | "sin-voz";
+  "no-disponible" | "sin-permiso" | "sin-conexion" | "sin-voz";
 
 /** Lo que se devuelve al empezar a escuchar: la manera de parar. */
 export type Escucha = { parar: () => void };
@@ -94,6 +91,38 @@ export async function escuchar(opciones: {
   return esNativo() ? nativa(opciones) : web(opciones);
 }
 
+/**
+ * Qué pasó, según el reconocedor de Android.
+ *
+ * **Esto existe porque antes no existía.** El bucle de abajo hacía
+ * `.catch(() => seguir(false))`: cualquier fallo —el reconocedor ocupado, la
+ * red caída, el micrófono tomado por otra aplicación— se contaba como una
+ * vuelta sin palabras, y tres vueltas sin palabras dan «no se detectó voz».
+ * Como los reintentos eran inmediatos, los tres se gastaban en milisegundos: se
+ * pulsaba «Activar micrófono» y la tarjeta se apagaba sola al instante,
+ * diciendo que hablaras más cerca cuando el micrófono ni había llegado a
+ * abrirse.
+ *
+ * Los textos son los que devuelve el complemento en `getErrorText`.
+ */
+type Suceso = Impedimento | "vacia" | "ocupado";
+
+function queDijo(error: unknown): Suceso {
+  const dicho = String((error as Error)?.message ?? error ?? "");
+  if (/Insufficient permissions|Missing permission/i.test(dicho))
+    return "sin-permiso";
+  if (/Network|server/i.test(dicho)) return "sin-conexion";
+  if (/not available|Audio recording error/i.test(dicho))
+    return "no-disponible";
+  /* Ocupado o error de cliente: el reconocedor de Android tarda un momento en
+     soltarse cuando viene de otra escucha —o de otra aplicación—, y vuelve a
+     estar listo enseguida. Reintentar es lo correcto; rendirse, no. */
+  if (/busy|Client side error/i.test(dicho)) return "ocupado";
+  /* «No match» y «No speech input» son la vuelta vacía de siempre: alguien
+     pensando, o el final natural del dictado. */
+  return "vacia";
+}
+
 /* ── El APK ───────────────────────────────────────────────────────────── */
 
 async function nativa(opciones: {
@@ -139,6 +168,12 @@ async function nativa(opciones: {
      tiempo no corre si cada vuelta dura cero. */
   let vueltas = 0;
   const VUELTAS_MAXIMAS = 60;
+  /* Reintentos por «ocupado», con su propio cupo: no son vueltas vacías —no
+     ha habido micrófono todavía— y por eso no gastan el cupo de silencios.
+     La pausa es lo que separa reintentar de atragantarse. */
+  let ocupados = 0;
+  const OCUPADOS_MAXIMOS = 5;
+  const PAUSA_MS = 400;
 
   const oyente = await SpeechRecognition.addListener(
     "partialResults",
@@ -196,7 +231,18 @@ async function nativa(opciones: {
         }
         seguir(Boolean(dicho));
       })
-      .catch(() => seguir(false));
+      .catch((error: unknown) => {
+        const suceso = queDijo(error);
+        if (suceso === "vacia") return seguir(false);
+        if (suceso === "ocupado") {
+          /* Agotado el cupo se cierra sin motivo: hubo micrófono, lo que no
+             hubo fue turno, y eso no es culpa de quien habla. */
+          if (++ocupados > OCUPADOS_MAXIMOS) return cerrar(null);
+          setTimeout(vuelta, PAUSA_MS);
+          return;
+        }
+        cerrar(suceso);
+      });
   };
 
   vuelta();
