@@ -229,6 +229,19 @@
       font-weight: 600;
       color: #18533a;
     }
+    .archivos { display: flex; gap: 10px; }
+    .archivos .archivo { flex: 1; }
+    .rotulo { display: block; margin-bottom: 6px; }
+    .elegida {
+      display: block;
+      margin-bottom: 8px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: #eef5ef;
+      color: #18533a;
+      font-size: 13px;
+      word-break: break-all;
+    }
     [hidden] { display: none !important; }
   </style>
   <main>
@@ -299,11 +312,29 @@
         <small>Qué observaste, cuándo y cómo afecta a tu comunidad.</small>
       </div>
       <div class="campo">
-        <label class="archivo" for="foto">
-          Una fotografía
-          <span id="fotoRotulo">Tomar o elegir una fotografía</span>
-          <input id="foto" type="file" accept="image/*" capture="environment" />
-        </label>
+        <span class="rotulo">Una fotografía</span>
+        <span id="fotoRotulo" class="elegida" hidden></span>
+        <!--
+          **Dos botones y no uno.** Antes había un solo campo que decía «Tomar o
+          elegir una fotografía» y llevaba `capture="environment"`: esa palabra
+          manda a Android directo a la cámara y no ofrece nunca la galería ni
+          los archivos. El rótulo prometía dos cosas y el control hacía una.
+
+          El de archivos va **sin `accept`** a propósito: es lo que hace que
+          Android abra el explorador de verdad en vez de volver al selector de
+          fotos, que a veces entrega una referencia que ya no sirve cuando se va
+          a leer. Es el mismo reparto que usa el formulario de la aplicación.
+        -->
+        <div class="archivos">
+          <label class="archivo" for="foto">
+            <span>Tomar una foto</span>
+            <input id="foto" type="file" accept="image/*" capture="environment" />
+          </label>
+          <label class="archivo" for="fotoArchivo">
+            <span>Buscar en mis archivos</span>
+            <input id="fotoArchivo" type="file" />
+          </label>
+        </div>
         <small id="fotoNota">El Consejo la necesita para atender el reporte.</small>
       </div>
       <div class="campo">
@@ -495,7 +526,7 @@
           description: $("descripcion").value,
           phone: $("telefono").value.trim(),
         };
-        var archivo = $("foto").files[0];
+        var archivo = laFoto();
 
         /* Las mismas reglas que el formulario de la aplicación, porque es la
            misma función. */
@@ -547,16 +578,31 @@
           });
       });
 
-      $("foto").addEventListener("change", function () {
-        var elegida = $("foto").files[0];
-        $("fotoRotulo").textContent = elegida
-          ? elegida.name
-          : "Tomar o elegir una fotografía";
+      /* La que haya, venga de la cámara o de los archivos. La última en
+         elegirse gana: quien acaba de tomar una foto quiere esa. */
+      function laFoto() {
+        return $("foto").files[0] || $("fotoArchivo").files[0];
+      }
+
+      function contarLaFoto() {
+        var elegida = laFoto();
+        $("fotoRotulo").hidden = !elegida;
+        $("fotoRotulo").textContent = elegida ? elegida.name : "";
+      }
+
+      ["foto", "fotoArchivo"].forEach(function (cual) {
+        $(cual).addEventListener("change", function () {
+          /* Solo una viaja. Si se elige por un camino, se suelta el otro, o el
+             nombre que se enseña no sería el del archivo que se manda. */
+          var otro = cual === "foto" ? "fotoArchivo" : "foto";
+          if ($(cual).files[0]) $(otro).value = "";
+          contarLaFoto();
+        });
       });
 
       $("otro").addEventListener("click", function () {
         form.reset();
-        $("fotoRotulo").textContent = "Tomar o elegir una fotografía";
+        contarLaFoto();
         form.hidden = false;
         $("hecho").hidden = true;
         decir([]);

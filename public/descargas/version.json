@@ -1,8 +1,8 @@
 {
-  "versionCode": 6,
-  "versionName": "1.4",
-  "bytes": 7358361,
+  "versionCode": 7,
+  "versionName": "1.5",
+  "bytes": 7359097,
   "fecha": "2026-09-20",
-  "notas": "El icono es ahora las olas del río. Se puede marcar la ubicación en el mapa cuando el teléfono no logra situarte, y la pantalla sin señal entra sola en vez de pedir que toques Reintentar.",
+  "notas": "En la pantalla sin señal ya se puede buscar la foto en los archivos, no solo tomarla con la cámara. Y esa pantalla entra sola cuando hay señal, sin pedir que toques Reintentar.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }
