@@ -46,17 +46,16 @@ export function Logo() {
       </span>
       {/* El nombre y su descriptor son una columna, y el «Mi» va al lado: así
           «Digital» cae debajo de «Pueblo» y no debajo de todo el rótulo. */}
-      <span className="brand-word">
-        Pueblo
-        <em>
-          {/* La hoja **es la A**. Deja de ser un remate al final del renglón y
+      <span className="brand-word">Pueblo</span>
+      <em>
+        {/* La hoja **es la A**. Deja de ser un remate al final del renglón y
               pasa a ser una letra: sin ella la palabra no está escrita. La «a»
               de verdad va detrás, tapada, para que quien no vea el dibujo
               —lector de pantalla, o quien copie el texto— siga leyendo
               «Digital» y no «Digitl». */}
-          Digit
-          <svg className="brand-leaf" viewBox="0 0 24 24" aria-hidden="true">
-            {/* La lámina, **cerrada**, como estaba al principio.
+        Digit
+        <svg className="brand-leaf" viewBox="0 0 24 24" aria-hidden="true">
+          {/* La lámina, **cerrada**, como estaba al principio.
 
                 Se probó abriéndola por abajo y por el canto izquierdo, y con
                 cada apertura se leía menos una A, no más: lo que hace la letra
@@ -66,8 +65,8 @@ export function Logo() {
 
                 El giro de 16° tampoco se toca: probados 26 y 34, tumban el
                 vértice y vuelve a parecer una hoja. */}
-            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
-            {/* El travesaño es **el río**. Esto es el Gran Consejo Comunitario
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+          {/* El travesaño es **el río**. Esto es el Gran Consejo Comunitario
                 del Río Satinga: en ese territorio el río no es un adorno del
                 paisaje, es la calle. Que la barra de la A sea un meandro dice
                 de dónde es la aplicación sin escribirlo en ninguna parte.
@@ -96,14 +95,13 @@ export function Logo() {
                 vueltas el río se vuelve un borrón y la A deja de leerse. Los
                 extremos caen justo sobre el canto de la lámina, así que los
                 remates redondos mueren dentro de su trazo por los dos lados. */}
-            <path
-              className="brand-rio"
-              d="M3.9 13C4.6 13.2 6.7 14.2 8.1 14.2C9.5 14.2 10.8 13.4 12.2 13C13.6 12.6 15 11.8 16.4 11.8C17.8 11.8 19.9 12.8 20.6 13"
-            />
-          </svg>
-          <span className="solo-lectores">a</span>l
-        </em>
-      </span>
+          <path
+            className="brand-rio"
+            d="M3.9 13C4.6 13.2 6.7 14.2 8.1 14.2C9.5 14.2 10.8 13.4 12.2 13C13.6 12.6 15 11.8 16.4 11.8C17.8 11.8 19.9 12.8 20.6 13"
+          />
+        </svg>
+        <span className="solo-lectores">a</span>l
+      </em>
     </span>
   );
 }

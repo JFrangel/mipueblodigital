@@ -653,7 +653,20 @@ hr {
   position: fixed;
   left: 0;
   top: 0;
-  padding: 32px 20px 16px;
+  /**
+   * **Las muescas del teléfono, arriba y abajo.**
+   *
+   * En el APK este cajón va a sangre contra los bordes de la pantalla, así que
+   * sin esto el rótulo queda debajo del reloj y la señal —en un teléfono de
+   * verdad se veía «Mi Pueblo» pegado a la barra de estado— y la fila de «Mi
+   * cuenta» cae sobre la barra de gestos, donde un dedo que quiera pulsarla
+   * arrastra la pantalla en vez de tocar.
+   *
+   * `env()` vale cero en un navegador de escritorio, así que la medida de
+   * siempre se conserva donde no hay muesca.
+   */
+  padding: calc(32px + env(safe-area-inset-top)) 20px
+    calc(16px + env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   z-index: 30;
@@ -669,7 +682,21 @@ hr {
    entero —nombre más descriptor— y quedaba medio renglón por debajo de
    «Pueblo». Así los dos se apoyan en la misma raya. */
 .brand {
-  display: flex;
+  /**
+   * Rejilla y no fila, para **centrar «DIGITAL» bajo el nombre entero**.
+   *
+   * En una fila, «DIGITAL» vive dentro de «Pueblo» y se alinea con ella: empieza
+   * donde empieza «Pueblo» y no donde empieza «Mi». Medido, su centro caía
+   * veintiún píxeles a la derecha del centro del rótulo, y se veía escorado sin
+   * que se supiera contra qué.
+   *
+   * Con la rejilla, «Mi» y «Pueblo» ocupan una fila de dos columnas y «DIGITAL»
+   * cruza las dos por debajo. Se centra respecto al conjunto y se recalcula solo
+   * si el nombre cambia de ancho.
+   */
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
   align-items: baseline;
   color: var(--green);
   line-height: 1.2;
@@ -748,18 +775,28 @@ hr {
  * y puede serlo porque lo que tiene que decir no es una forma concreta sino
  * «esto es la herramienta».
  */
-.brand-word em {
+.brand em {
   /* Texto corrido y no una fila con el dibujo al final: la hoja está **dentro**
-     de la palabra, así que tiene que fluir con ella. */
-  display: block;
-  margin-top: 7px;
+     de la palabra, así que tiene que fluir con ella. Lo que salió de «Pueblo»
+     es el renglón entero, no la hoja: así puede centrarse bajo el nombre. */
+  grid-column: 1 / -1;
+  justify-self: center;
+  /* Tres y no siete: con el renglón ya centrado bajo el nombre, siete abrían
+     un pasillo que partía el rótulo en dos cosas. Pegado se lee como una sola
+     marca de dos renglones, que es lo que es. */
+  margin-top: 3px;
   font-family:
     ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
     "DejaVu Sans Mono", monospace;
   font-style: normal;
-  font-size: 10px;
+  /* Sube de 10 a 11,5 y el espaciado con él: a diez, la monoespaciada quedaba
+     por debajo del tamaño al que sus formas se distinguen, y «DIGITAL» se leía
+     como una tira gris en vez de como una palabra. El espaciado acompaña
+     porque es lo que hace que suene a rótulo; dejándolo fijo, al crecer la
+     letra se cerraría. */
+  font-size: 11.5px;
   font-weight: 500;
-  letter-spacing: 3px;
+  letter-spacing: 3.4px;
   text-transform: uppercase;
   color: #7d8a85;
 }
@@ -782,9 +819,12 @@ hr {
  */
 .brand-leaf {
   display: inline-block;
-  width: 11px;
-  height: 11px;
-  vertical-align: -3px;
+  /* La hoja es la A de la palabra, así que crece con ella: quedándose en once
+     mientras las letras suben, dejaría de leerse como una letra y pasaría a
+     ser un icono metido en medio. */
+  width: 12.5px;
+  height: 12.5px;
+  vertical-align: -3.5px;
   /* La tinta de la hoja no llena su caja —el trazo empieza adentro y el giro
      lo escora—, así que con el espaciado a secas se abría un hueco de más
      contra la «T» y se cerraba contra la «L». Se corrige por los dos lados. */
@@ -797,7 +837,7 @@ hr {
   stroke-linejoin: round;
   transform: rotate(-16deg);
 }
-.dark .brand-word em {
+.dark .brand em {
   color: #c2c9c5;
 }
 /* La hoja se queda verde: es la única mancha de color del renglón. */
@@ -835,6 +875,22 @@ hr {
 }
 .logo-link {
   margin: 0 12px 40px;
+}
+
+/**
+ * En la barra lateral el rótulo va **centrado**.
+ *
+ * Su caja ocupa el ancho de la barra, pero la tinta del nombre mide bastante
+ * menos, así que alineada al principio quedaban 26 px de aire a la izquierda y
+ * 96 a la derecha: se veía escorado sin que se supiera contra qué. Centrando el
+ * contenido de la fila, el aire se reparte por igual.
+ *
+ * Va aquí y no en  porque el mismo rótulo se usa en la cabecera y en
+ * la portada de carga, y allí quien decide dónde cae es el sitio que lo
+ * contiene.
+ */
+.logo-link .brand {
+  justify-content: center;
 }
 .sidebar-caption {
   font-size: 9px;
@@ -1028,6 +1084,19 @@ hr {
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--bg);
+}
+/* Dentro de una cápsula redonda el realce del cursor tiene que ser redondo.
+   Con el radio de 8 px que trae `.icon-button` se dibujaba un cuadrado dentro
+   de un óvalo: las esquinas de arriba y de abajo asomaban contra la curva de
+   la cápsula y el botón parecía mal encajado. */
+.control-cluster .icon-button {
+  /* Los mínimos de `.icon-button` se anulan a propósito: aquí manda el
+     cuadrado exacto, porque un alto y un ancho distintos dan un óvalo. */
+  min-width: 0;
+  min-height: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
 }
 .hero-tag > span {
   width: 5px;
@@ -3366,7 +3435,8 @@ textarea {
 @media (max-width: 1150px) {
   .sidebar {
     width: 215px;
-    padding: 28px 14px 16px;
+    padding: calc(28px + env(safe-area-inset-top)) 14px
+      calc(16px + env(safe-area-inset-bottom));
   }
   .main-shell {
     margin-left: 215px;
@@ -3605,40 +3675,121 @@ textarea {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Sitio para que el halo de «Digital» se apague antes del borde.
+       `overflow: hidden` —que está para recortar la marca cuando no cabe, y
+       eso pasa en cuanto aparece el aviso de «Sin conexión»— cortaba el
+       resplandor en seco y dibujaba un rectángulo alrededor de la palabra. El
+       relleno aleja el corte y el margen negativo devuelve la caja a su sitio,
+       así que la maqueta no se mueve un píxel. */
+    padding: 7px 10px;
+    margin: -7px -10px;
   }
+  /**
+   * «Digital» va cambiando de tono cada dos minutos.
+   *
+   * Los tres son del sitio: el verde de la marca, el verde oscuro del monte que
+   * cierra el río y el azul del agua. **El azul de aquí no es el mismo del
+   * icono de las olas, y es a propósito**: allí es un dibujo y le basta con
+   * distinguirse del fondo; esto es texto de quince píxeles, que necesita casi
+   * el doble de contraste. El azul de las olas sobre este fondo claro se queda
+   * en 3,4 y hay que bajarlo a 4,8 para que se lea al sol.
+   *
+   * El paso de un tono a otro es lento a propósito: quien esté mirando la
+   * pantalla justo en ese segundo no tiene por qué ver un parpadeo.
+   */
   .identity-brand em {
     font-style: normal;
     color: #2f7150;
+    transition:
+      color 1.6s ease,
+      text-shadow 1.6s ease;
   }
+  .identity-brand em[data-tono="bosque"] {
+    color: #1f5138;
+  }
+  .identity-brand em[data-tono="mar"] {
+    color: #2f6f96;
+  }
+  /**
+   * Y sobre oscuro, enciende **un poco**.
+   *
+   * Un resplandor sobre blanco no se lee como neón sino como una impresión mal
+   * registrada: el brillo necesita oscuridad alrededor para existir, así que en
+   * tema claro la palabra va limpia.
+   *
+   * **La letra se enciende, no solo el aire de alrededor.** Cada tono tiene su
+   * gemelo de neón —el mismo color subido de brillo— y encima dos sombras: una
+   * corta pegada al trazo, que es lo que hace el tubo, y otra larga y floja,
+   * que es lo que hace el aire. A media fuerza: esto no es un letrero de bar,
+   * es el nombre de la aplicación, y tiene que poder leerse mil veces al día
+   * sin cansar. Con una sola sombra la palabra parece
+   * mojada; con el halo más largo se le cierran los huecos de las letras —la
+   * panza de la «g», el ojo de la «a»— y se lee borrosa en vez de encendida.
+   *
+   * El halo va del color de la letra: un verde brillando azul se vería como un
+   * error de impresión, no como neón.
+   *
+   * Va con `text-shadow` y no con `filter`, que para esto es la herramienta
+   * cara: un filtro obliga al navegador a rasterizar la palabra en su propia
+   * capa cada vez que algo cambia alrededor, y esto corre en teléfonos de poca
+   * memoria. Una sombra de texto la dibuja el mismo trazado de las letras.
+   */
   .dark .identity-brand em {
-    color: #8fcf9a;
+    color: #86dca6;
+    text-shadow:
+      0 0 4px rgba(134, 220, 166, 0.4),
+      0 0 10px rgba(134, 220, 166, 0.18);
   }
-  /* El menú y los controles pasan a círculos sueltos, como la referencia. */
+  .dark .identity-brand em[data-tono="bosque"] {
+    color: #4ccd8b;
+    text-shadow:
+      0 0 4px rgba(76, 205, 139, 0.4),
+      0 0 10px rgba(76, 205, 139, 0.18);
+  }
+  .dark .identity-brand em[data-tono="mar"] {
+    color: #7cc4ea;
+    text-shadow:
+      0 0 4px rgba(124, 196, 234, 0.4),
+      0 0 10px rgba(124, 196, 234, 0.18);
+  }
+  /* El botón del menú sí va suelto: abre otra cosa, no pertenece al grupo. */
   .mobile-menu {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     border: 1px solid var(--line);
     background: var(--soft);
+    /**
+     * Las olas, en azul.
+     *
+     * Es el azul del agua que ya usa la aplicación —el mismo de la brújula del
+     * mapa y del río de la marca—, no un azul nuevo: si el agua de esta casa
+     * tuviera un tono por sitio, dejaría de significar agua. Sobre oscuro sube
+     * de claridad lo que pide el fondo, y sigue siendo el mismo tono.
+     */
+    color: #4a86b8;
+  }
+  .dark .mobile-menu {
+    color: #83b9e0;
   }
   .topbar-actions {
     gap: 6px;
   }
+  /* Tema y novedades siguen en una sola cápsula, igual que en el escritorio.
+     Sueltos eran dos bordes seguidos más el del menú —tres circunferencias en
+     una barra de 390 px— y no se leía cuáles iban juntos. Solo encogen para
+     que la cápsula quede a la altura del botón del menú. */
   .control-cluster {
-    gap: 5px;
-    padding: 0;
-    border: 0;
-    background: none;
+    padding: 2px;
   }
   .control-cluster .icon-button {
-    width: 37px;
-    height: 37px;
-    border-radius: 50%;
-    border: 1px solid var(--line);
-    background: var(--surface);
+    width: 34px;
+    height: 34px;
   }
-  .net-pill {
-    display: inline-flex;
+  /* En el teléfono tampoco se anuncia estar en línea: se da por hecho. La
+     cápsula sigue apareciendo sola cuando **no** hay señal, que es lo único
+     que hay que decir, y mientras tanto el ancho es para la marca. */
+  .net-pill.off {
     padding: 7px 11px 7px 9px;
   }
   .net-pill small {
@@ -5773,6 +5924,10 @@ div.account-permiso {
 }
 @media (prefers-reduced-motion: reduce) {
   .case-row {
+    transition: none;
+  }
+  /* El tono de «Digital» sigue cambiando: lo que se quita es el desvanecido. */
+  .identity-brand em {
     transition: none;
   }
 }

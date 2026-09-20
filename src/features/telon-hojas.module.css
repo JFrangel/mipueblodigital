@@ -53,10 +53,10 @@
 }
 
 @keyframes verde-entra {
-  0%,
-  94% {
+  from {
     opacity: 0;
   }
+  38%,
   to {
     opacity: 1;
   }
@@ -64,7 +64,7 @@
 
 @keyframes verde-sale {
   0%,
-  35% {
+  62% {
     opacity: 1;
   }
   to {
@@ -232,6 +232,7 @@
   --fuera: translateX(-72vmax) rotate(104deg);
   --cerrada: translateX(0) rotate(84deg);
   --abierta: translateX(-104vmax) rotate(62deg);
+  animation-delay: 95ms;
 }
 .dos {
   left: 0;
@@ -239,7 +240,7 @@
   --fuera: translateX(-76vmax) rotate(76deg);
   --cerrada: translateX(0) rotate(96deg);
   --abierta: translateX(-108vmax) rotate(116deg);
-  animation-delay: 50ms;
+  animation-delay: 145ms;
 }
 .tres {
   left: 0;
@@ -247,7 +248,7 @@
   --fuera: translateX(-70vmax) rotate(86deg);
   --cerrada: translateX(0) rotate(106deg);
   --abierta: translateX(-102vmax) rotate(132deg);
-  animation-delay: 100ms;
+  animation-delay: 195ms;
 }
 
 /* ── Y las tres del derecho, en espejo ──────────────────────────────────── */
@@ -257,7 +258,7 @@
   --fuera: translateX(72vmax) rotate(-106deg);
   --cerrada: translateX(0) rotate(-88deg);
   --abierta: translateX(104vmax) rotate(-64deg);
-  animation-delay: 25ms;
+  animation-delay: 120ms;
 }
 .cinco {
   right: 0;
@@ -265,7 +266,7 @@
   --fuera: translateX(76vmax) rotate(-78deg);
   --cerrada: translateX(0) rotate(-98deg);
   --abierta: translateX(108vmax) rotate(-120deg);
-  animation-delay: 75ms;
+  animation-delay: 170ms;
 }
 .seis {
   right: 0;
@@ -273,7 +274,7 @@
   --fuera: translateX(70vmax) rotate(-88deg);
   --cerrada: translateX(0) rotate(-108deg);
   --abierta: translateX(102vmax) rotate(-134deg);
-  animation-delay: 125ms;
+  animation-delay: 220ms;
 }
 
 /**
@@ -285,10 +286,17 @@
  * color del fondo, así que lo que cierra del todo tiene forma de hoja hasta el
  * último rincón.
  *
- * Entran las últimas, con su retardo, y por eso el cierre se ve **llegar**. El
- * escalonado entre ellas es corto —35 ms— y no por prisa: con retardos largos
- * la última llegaba medio segundo después que sus compañeras y se veía
- * rezagada, como si le costara cerrar.
+ * **Entran primero, antes que las de color.**
+ *
+ * Parecía lo suyo que llegaran al final, porque son las que cierran; se probó
+ * y se veía mal de dos maneras distintas. Llegando tarde, aparecían cuando las
+ * demás llevaban rato quietas y el telón daba la impresión de costarle cerrar.
+ * Llegando a la vez tampoco bastaba: van detrás, así que solo se las ve por los
+ * huecos que dejan las de color, y esos huecos son justo lo último que se
+ * cierra —parecían tardías otra vez.
+ *
+ * Yendo primero, el fondo cierra la base y las de color caen encima. El telón
+ * se construye de atrás hacia delante, que es como se monta cualquier cosa.
  *
  * El color va por selector y no en el dibujo porque el dibujo es el mismo
  * componente que usan todas: un atributo de presentación lo gana cualquier
@@ -306,7 +314,6 @@
   --fuera: translateX(-74vmax) rotate(96deg);
   --cerrada: translateX(0) rotate(90deg);
   --abierta: translateX(-106vmax) rotate(118deg);
-  animation-delay: 235ms;
 }
 .segunda {
   right: 0;
@@ -314,7 +321,7 @@
   --fuera: translateX(74vmax) rotate(-96deg);
   --cerrada: translateX(0) rotate(-90deg);
   --abierta: translateX(106vmax) rotate(-118deg);
-  animation-delay: 270ms;
+  animation-delay: 30ms;
 }
 .tercera {
   left: 0;
@@ -322,7 +329,7 @@
   --fuera: translateX(-74vmax) rotate(96deg);
   --cerrada: translateX(0) rotate(90deg);
   --abierta: translateX(-106vmax) rotate(118deg);
-  animation-delay: 305ms;
+  animation-delay: 60ms;
 }
 .cuarta {
   right: 0;
@@ -330,7 +337,7 @@
   --fuera: translateX(74vmax) rotate(-96deg);
   --cerrada: translateX(0) rotate(-90deg);
   --abierta: translateX(106vmax) rotate(-118deg);
-  animation-delay: 340ms;
+  animation-delay: 90ms;
 }
 
 /**

@@ -5,7 +5,7 @@ import styles from "./telon-hojas.module.css";
 
 /** Lo que tardan las hojas en entrar y cerrarse, contando el retardo de las
  *  últimas, que son las que cierran. */
-const ENTRADA_MS = 1060;
+const ENTRADA_MS = 930;
 /** Lo que se quedan tapando antes de abrirse. */
 const QUIETA_MS = 250;
 /** Y lo que tardan en apartarse, contando el retardo de las de color, que

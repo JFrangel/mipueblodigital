@@ -30,7 +30,6 @@ import {
   ChevronRight,
   ShieldCheck,
   Leaf,
-  Menu,
   Moon,
   RefreshCw,
   Trash2,
@@ -57,8 +56,11 @@ import { mergeMapCases, useCommunityReports } from "@/data/community-map";
 import { useReportLookup, type Removed } from "@/data/report-lookup";
 import { useOfflinePages } from "@/data/offline-pages";
 import { Toasts } from "./toasts";
+import { AvisoActualizacion } from "@/features/aviso-actualizacion";
 import { Knowledge } from "@/features/knowledge";
 import { LeafFall } from "@/features/leaf-fall";
+import { Olas } from "./olas";
+import { useTonoDeMarca } from "@/data/tono-marca";
 import { Territory } from "@/features/territory";
 import { Statistics } from "@/features/statistics";
 import { Report } from "@/features/report";
@@ -121,6 +123,7 @@ export function Workspace({
   const unread = useUnreadCount() + useCouncilUnread();
   const council = section === "admin" && session.admin;
   const online = useOnline();
+  const tono = useTonoDeMarca();
   /* Cifras propias para la tarjeta de «Mis reportes». */
   const mine = summarize(items.filter((i) => i.owner !== "community"));
   /* El historial es de la cuenta, no del teléfono: lo que el servidor guarda a
@@ -457,14 +460,18 @@ export function Workspace({
             aria-label="Abrir menú"
             onClick={() => setMenu(!menu)}
           >
-            <Menu size={22} />
+            {/* Tres rayas, sí, pero de agua: el río es la calle del
+                territorio y el menú se sigue reconociendo igual. */}
+            <Olas />
           </button>
           {/* Solo en móvil: sin barra lateral, la cabecera lleva la identidad.
               La sección la marcan la navegación inferior y el encabezado de
               cada pantalla. */}
           <div className="identity">
             <span className="identity-brand">
-              Mi Pueblo <em>Digital</em>
+              {/* «Digital» va cambiando de tono cada dos minutos: verde de la
+                  marca, verde de monte, azul de mar. */}
+              Mi Pueblo <em data-tono={tono}>Digital</em>
             </span>
           </div>
           <div className="topbar-actions">
@@ -642,6 +649,11 @@ export function Workspace({
               vacía, y sin decirlo eso parece una avería. Va lo primero de la
               portada: es lo que explica todo lo demás que va a encontrar. */}
           {section === "inicio" && <CuentaRestablecida />}
+          {/* Si hay un APK nuevo esperando. Solo sale dentro de la aplicación
+              instalada y solo cuando de verdad hay algo que reinstalar: lo que
+              se arregla en la web llega solo, y pedir treinta megas por eso
+              sería gastarle los datos a alguien para nada. */}
+          {section === "inicio" && <AvisoActualizacion />}
           {/* El borrador se enseña donde uno mira: al entrar y en sus reportes. */}
           {(section === "inicio" || section === "mis-reportes") && (
             <DraftCard />
