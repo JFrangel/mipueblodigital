@@ -155,17 +155,47 @@ export async function abrirAjustes(): Promise<boolean> {
 }
 
 /**
+ * ¿Está la aplicación instalada, fuera de una pestaña?
+ *
+ * **Importa porque cambia dónde se arreglan los permisos.** Instalada —el icono
+ * en la pantalla de inicio, sin barra de direcciones a la vista— no hay candado
+ * que tocar, aunque por dentro siga siendo el navegador quien manda. El sistema
+ * la registra como una aplicación más, así que sus permisos están donde los de
+ * cualquier otra.
+ *
+ * `standalone` es lo que dicen Android y los navegadores de escritorio;
+ * `navigator.standalone` es lo que dice iOS, que nunca implementó lo primero.
+ */
+const instalada = () => {
+  try {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true
+    );
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Dónde se arregla un permiso negado.
  *
- * No se abren los ajustes: hacerlo desde una ventana de Capacitor necesita otro
- * complemento en el APK, y el camino dicho con todas sus letras resuelve lo
- * mismo. Si algún día entra ese complemento, este es el sitio.
+ * **Son dos caminos y no tres**, aunque los sitios donde corre esto sean tres.
+ * En el APK esto casi nunca se lee, porque `abrirAjustes` abre esa pantalla de
+ * un toque; queda para cuando no se pueda. Instalada desde el navegador el
+ * camino es **el mismo**: el teléfono la registra como una aplicación y sus
+ * permisos están donde los de cualquier otra. Y en una pestaña, el candado.
+ *
+ * Decía el del candado en los dos sitios donde no hay candado. A quien lo leía
+ * dentro de una aplicación instalada se le mandaba a buscar una barra de
+ * direcciones que no existe, que es peor que no decir nada: parece que uno no
+ * encuentra algo que está.
  *
  * Va **en minúscula y sin preposición**, porque se lee detrás de «Se cambia
  * en»: con la mayúscula puesta, la frase salía diciendo «se cambia en En la
  * barra de direcciones».
  */
 export const dondeSeArregla = () =>
-  esNativo()
+  esNativo() || instalada()
     ? "los ajustes del teléfono › Aplicaciones › Mi Pueblo Digital › Permisos."
     : "la barra de direcciones del navegador, tocando el candado › Permisos de este sitio.";
