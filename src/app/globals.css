@@ -3767,6 +3767,75 @@ textarea {
       0 0 4px rgba(124, 196, 234, 0.4),
       0 0 10px rgba(124, 196, 234, 0.18);
   }
+  /**
+   * El cajón, apretado para que quepa sin desplazarlo.
+   *
+   * Medido en un teléfono de 703 px con sesión y con el «Panel del Consejo»
+   * —que es el caso más alto que existe—: el contenido pedía 852 px, así que
+   * sobraban 149. Se recuperan 124 quitando aire, **sin tocar una sola zona
+   * táctil**: las filas conservan sus 44 px de alto mínimo, que es lo que hace
+   * que se puedan pulsar con el pulgar.
+   *
+   * Lo que encoge es lo que no se toca: el hueco bajo el rótulo, los márgenes
+   * del botón de reportar, el sello del territorio y el respiro de la ficha de
+   * la cuenta. En un teléfono normal con sesión ya cabe entero; a quien
+   * administra y tenga la pantalla muy corta le quedará un dedo de
+   * desplazamiento, y para eso el cajón se sigue pudiendo desplazar.
+   */
+  .sidebar {
+    padding-top: calc(18px + env(safe-area-inset-top));
+  }
+  .logo-link {
+    margin-bottom: 22px;
+  }
+  .sidebar-caption {
+    margin-bottom: 8px;
+  }
+  /**
+   * Y si aun así no cabe, **lo que cede es la lista de secciones**.
+   *
+   * Es lo único de este cajón que puede crecer sin fin: un día son cinco
+   * entradas y otro son siete. Todo lo demás es fijo y es lo que hay que
+   * poder alcanzar siempre —el botón de reportar, la ficha de la cuenta y
+   * «Cerrar sesión»—, así que se quedan quietos y la lista se desplaza
+   * dentro de lo que sobre.
+   *
+   * Antes se desplazaba el cajón entero: llegar a «Cerrar sesión» obligaba a
+   * empujar hacia arriba el rótulo, el menú y todo lo demás, y desde fuera no
+   * había ninguna señal de que hubiera algo más abajo.
+   *
+   * `min-height: 0` no es adorno: sin él, una caja flexible se niega a
+   * encoger por debajo de su contenido y la lista empuja al resto fuera de la
+   * pantalla en vez de desplazarse.
+   */
+  .sidebar nav {
+    gap: 3px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sidebar-report {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+  .territory-seal {
+    margin: 10px;
+    padding-top: 10px;
+  }
+  .profile {
+    padding-top: 12px;
+  }
+  .account-row {
+    padding: 13px 0;
+  }
+  /* «Cerrar sesión» cierra la columna, y una raya debajo de lo último es una
+     raya que no separa nada. En «Mi cuenta» sí separa, porque allí esta fila
+     tiene vecinas; aquí es la única y es la última. */
+  .sidebar-bottom .account-row:last-child {
+    border-bottom: 0;
+  }
+
   /* El botón del menú sí va suelto: abre otra cosa, no pertenece al grupo. */
   .mobile-menu {
     width: 40px;
