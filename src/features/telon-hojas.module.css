@@ -1,0 +1,130 @@
+/**
+ * El telón de hojas que abre la aplicación.
+ *
+ * Seis hojas cerradas sobre el verde de la casa, que se apartan y dejan ver lo
+ * que hay detrás. La idea es la de siempre aquí: las hojas significan **paso**,
+ * y no hay paso más literal que el de entrar.
+ */
+
+.telon {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  background: #123f39;
+  pointer-events: none;
+  animation: fondo 1100ms ease-in forwards;
+}
+
+/* El fondo aguanta cerrado y se va cuando las hojas ya han abierto hueco. */
+@keyframes fondo {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.hoja {
+  position: absolute;
+  /* Anchas a propósito: tienen que **tapar**, y en una pantalla apaisada seis
+     hojas estrechas dejan pasillos por los que se ve la aplicación antes de
+     tiempo. Se miden contra la diagonal para que cubran en las dos
+     orientaciones. */
+  width: 78vmax;
+  height: auto;
+  transform-origin: 50% 100%;
+  animation: abrir 1100ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.hoja svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/**
+ * Cada hoja sale por donde entró.
+ *
+ * El giro y el desplazamiento van juntos: una hoja que solo se desliza parece
+ * una lámina de cartón, y una que solo gira parece una aspa. Las de abajo
+ * salen un poco después que las de arriba —el escalonado está en el retardo de
+ * cada una— porque una cortina que se abre de golpe por los seis lados se lee
+ * como un corte de escena, no como algo que se aparta.
+ */
+@keyframes abrir {
+  0%,
+  25% {
+    transform: var(--cerrada);
+  }
+  100% {
+    transform: var(--abierta);
+    opacity: 0.85;
+  }
+}
+
+/* Arriba a la izquierda */
+.uno {
+  top: -18vmax;
+  left: -26vmax;
+  --cerrada: rotate(150deg);
+  --abierta: rotate(108deg) translate(-30vmax, 14vmax);
+}
+/* Arriba a la derecha */
+.dos {
+  top: -20vmax;
+  right: -26vmax;
+  --cerrada: rotate(210deg);
+  --abierta: rotate(250deg) translate(30vmax, 12vmax);
+  animation-delay: 60ms;
+}
+/* El centro, por la izquierda */
+.tres {
+  top: 14vmax;
+  left: -34vmax;
+  --cerrada: rotate(112deg);
+  --abierta: rotate(84deg) translate(-34vmax, 4vmax);
+  animation-delay: 30ms;
+}
+/* El centro, por la derecha */
+.cuatro {
+  top: 10vmax;
+  right: -34vmax;
+  --cerrada: rotate(248deg);
+  --abierta: rotate(276deg) translate(34vmax, 6vmax);
+  animation-delay: 90ms;
+}
+/* Abajo a la izquierda */
+.cinco {
+  bottom: -24vmax;
+  left: -22vmax;
+  --cerrada: rotate(42deg);
+  --abierta: rotate(18deg) translate(-26vmax, 18vmax);
+  animation-delay: 120ms;
+}
+/* Abajo a la derecha */
+.seis {
+  bottom: -26vmax;
+  right: -22vmax;
+  --cerrada: rotate(318deg);
+  --abierta: rotate(342deg) translate(26vmax, 18vmax);
+  animation-delay: 150ms;
+}
+
+/**
+ * Con el movimiento reducido, **no se mueve nada**.
+ *
+ * Quien pide menos animación no está pidiendo la misma más lenta. Se deja el
+ * fondo un instante y se va: sigue habiendo un arranque con el color de la
+ * casa, sin nada girando.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .telon {
+    animation: fondo 400ms ease-out forwards;
+  }
+  .hoja {
+    display: none;
+  }
+}

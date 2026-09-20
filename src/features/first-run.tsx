@@ -3,6 +3,7 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Workspace } from "@/components/workspace";
 import { Logo } from "@/components/ui";
+import { TelonHojas } from "./telon-hojas";
 import {
   getServerVisited,
   hasVisited,
@@ -24,11 +25,22 @@ export function FirstRun() {
   useEffect(() => {
     if (visited === false) router.replace("/bienvenida/");
   }, [visited, router]);
-  if (visited) return <Workspace section="inicio" />;
+  /* El telón va por encima de las dos salidas, y no dentro de la portada.
+     Esa portada solo se pinta mientras se decide si es la primera visita, y
+     cuando la respuesta ya está guardada se resuelve en el mismo fotograma:
+     por eso se veía unas veces sí y otras no. El arranque no puede depender
+     de una carrera. */
   return (
-    <div className="splash">
-      <Logo />
-      <p role="status">Preparando tu comunidad…</p>
-    </div>
+    <>
+      <TelonHojas />
+      {visited ? (
+        <Workspace section="inicio" />
+      ) : (
+        <div className="splash">
+          <Logo />
+          <p role="status">Preparando tu comunidad…</p>
+        </div>
+      )}
+    </>
   );
 }
