@@ -83,6 +83,35 @@ const config: CapacitorConfig = {
      */
     errorPath: "index.html",
     /**
+     * Arrancar en la página que va dentro del archivo, no en la web.
+     *
+     * **Es lo que pone la portada dentro del APK.** Hasta aquí la ventana
+     * abría directa contra el servidor, así que su primera pantalla propia no
+     * existía hasta que la página había viajado por la red: con la señal del
+     * río, segundos en los que lo único que podía verse era el icono que
+     * dibuja Android. Con esto el primer fotograma sale del teléfono y es
+     * inmediato; la aplicación se carga por detrás y entra cuando llega.
+     *
+     * Y es **la misma página** que `errorPath` a propósito, no un descuido:
+     * cuando hay `server.url`, Capacitor solo sirve del archivo la del error
+     * —lo decide `isErrorUrl` en `WebViewLocalServer.shouldInterceptRequest`,
+     * todo lo demás se va a la red—. Una página, dos momentos: empieza como
+     * portada y, si la aplicación no se alcanza, se queda diciendo que no hay
+     * señal. Ella misma los distingue.
+     *
+     * Tiene que ser `errorPath` **con una barra delante**, y la barra no es un
+     * detalle de estilo. Capacitor pega esto a `server.url` tal cual y solo
+     * añade la barra cuando no hay `server.url` —ver `Bridge.loadWebView`—, así
+     * que sin ella la dirección sale `…vercel.appindex.html`: otro dominio.
+     * Medido en el emulador, lo que pasaba entonces es lo peor que podía pasar:
+     * como no es el suyo, la ventana **abría la aplicación en Chrome**.
+     *
+     * Y por lo demás tiene que coincidir con `errorPath`. Si se separan, esto
+     * deja de servirse del archivo y se pide a la red: el arranque volvería a
+     * depender de la señal, que es lo que esto viene a quitar.
+     */
+    appStartPath: "/index.html",
+    /**
      * El nombre bajo el que se sirve lo que va dentro del APK.
      *
      * Por defecto es `localhost`, y eso deja la página de arranque en **otro
@@ -143,28 +172,40 @@ const config: CapacitorConfig = {
     },
     SplashScreen: {
       /**
-       * **No dibuja nada.** Y eso es la decisión, no un descuido.
+       * Cuánto puede quedarse puesta la pantalla de arranque como mucho.
        *
-       * Android ya enseña su propia pantalla al abrir —el icono sobre el verde,
-       * y en Android 12 en adelante no se puede quitar—, así que la de Capacitor
-       * era un segundo logotipo encima del primero. Entre las dos, más la
-       * portada de carga y el telón de hojas, el mismo dibujo aparecía tres
-       * veces antes de que nadie pudiera tocar nada, y la animación de entrada
-       * —que es la que tiene que recibir— llegaba la última y a veces ni se
-       * veía.
+       * **No dibuja un segundo logotipo: sostiene el primero.** Esto es lo que
+       * más fácil se entiende al revés. El complemento, en Android 12 en
+       * adelante, no pinta nada suyo: coge la pantalla que ya está enseñando el
+       * sistema —el palafito sobre el azul del río— y la **mantiene** puesta
+       * hasta que la aplicación diga que ya hay algo que enseñar
+       * (`showWithAndroid12API`, que bloquea el dibujado con un
+       * `OnPreDrawListener`). El icono de antes y el de después son el mismo
+       * píxel; no hay parpadeo porque no hay dos dibujos.
        *
-       * En cuanto se retira la del sistema queda el fondo de la ventana, que es
-       * este mismo verde (`AppTheme.NoActionBar`, `android:windowBackground`),
-       * y encima entra la aplicación. No hay hueco blanco ni cambio de color:
-       * los tres momentos son del mismo verde.
+       * **Con cero no se sostenía nada**, y ese era el agujero: `showOnLaunch`
+       * empieza con `if (launchShowDuration == 0) return;`, así que el
+       * complemento se iba sin poner el freno. Grabando un arranque se veía el
+       * resultado —el icono, y después **dos segundos largos de azul liso** sin
+       * nada encima mientras la ventana pedía la página por la red—. No era un
+       * destello de color equivocado, que es lo que esto arreglaba antes: era
+       * una pantalla vacía del color correcto, que se lee igual de mal.
        *
-       * Se deja `launchAutoHide` encendido a propósito aunque la duración sea
-       * cero: si algún día alguien vuelve a subirla, que siga retirándose sola.
+       * **Diez segundos es el tope, no la espera.** Quien la retira de verdad
+       * es la aplicación, en cuanto pinta su primer fotograma
+       * (`platform/arranque.ts`, llamado desde `NativeShell`, que está en todas
+       * las rutas). Esto es la red de abajo, por si ese aviso no llegara nunca
+       * —un fallo de JavaScript, una versión rara del complemento—. Se prefiere
+       * holgado antes que corto: pasado el tope no aparece la aplicación, queda
+       * el fondo liso de la ventana, así que cortar antes no adelanta nada y
+       * solo devuelve el agujero.
+       *
+       * `launchAutoHide` tiene que seguir encendido para que ese tope exista.
        * Una pantalla de arranque que puede atrapar a alguien sin señal es peor
        * que no tenerla.
        */
       launchAutoHide: true,
-      launchShowDuration: 0,
+      launchShowDuration: 10000,
       backgroundColor: "#0d3340",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,

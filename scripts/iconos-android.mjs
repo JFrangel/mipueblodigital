@@ -21,11 +21,15 @@
 import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
 import { circulo, conPalafito, fondo, palafito } from "./marca-hoja.mjs";
+import { AGUA, CASA, trazosPalafito } from "./palafito.mjs";
 
 /* El verde de la pantalla de arranque: el mismo que declara `capacitor.config.ts`
    en `SplashScreen.backgroundColor`. Si cambia allí, cambia aquí, o el dibujo
    aparece sobre un color y el resto de la pantalla sobre otro. */
-const FONDO_ARRANQUE = "#123f39";
+/* El verde del manglar, el mismo de `--arranque` en tema claro y el de
+   `mpd_arranque` en `values/`. Estaba en `#123f39`, de antes de que el arranque
+   tuviera color propio, y era un cuarto verde que no coincidía con ninguno. */
+const FONDO_ARRANQUE = "#16463c";
 
 const res = "android/app/src/main/res";
 
@@ -184,5 +188,62 @@ for (const [nombre, ancho, alto] of ARRANQUES) {
 await mkdir(`${res}/drawable`, { recursive: true });
 await arranque(720, 1280, `${res}/drawable/splash.png`);
 console.log(`  ${ARRANQUES.length + 1} pantallas de arranque`);
+
+/**
+ * El palafito que dibuja Android al abrir, en lugar del icono del cajón.
+ *
+ * **Es lo que hace que la pantalla de arranque deje de parecer un icono.** De
+ * Android 12 en adelante el sistema dibuja siempre su propia pantalla desde que
+ * se toca la aplicación y no hay manera de quitarla; lo único que se elige es
+ * qué dibuja. Por defecto coge el icono del cajón, y el icono del cajón viene
+ * con su círculo detrás: se lee como un icono esperando, no como la portada.
+ * Con esto dibuja el palafito solo, del tamaño y del color que tiene en la
+ * portada, así que lo que aparece al abrir **ya es la portada** —y un instante
+ * después se le suman el rótulo y la frase—.
+ *
+ * Va en XML y no en PNG porque Android lo quiere así: `windowSplashScreenAnimatedIcon`
+ * solo admite un dibujo vectorial.
+ *
+ * **Las medidas no son a ojo.** Android da 288dp al icono del arranque y solo
+ * garantiza los dos tercios de dentro; lo de fuera se lo puede comer la máscara
+ * del sistema. El palafito ocupa su recuadro de 24 enterito, así que se mete en
+ * un lienzo de 36 centrado: 24 de 36 son exactamente esos dos tercios.
+ */
+function marcaDeArranque() {
+  const CAJA = 24;
+  const LIENZO = 36;
+  const margen = (LIENZO - CAJA) / 2;
+  const trazos = trazosPalafito()
+    .map(
+      ([d, parte, opacidad]) =>
+        `        <path\n` +
+        `            android:pathData="${d}"\n` +
+        `            android:strokeColor="${parte === "agua" ? AGUA : CASA}"\n` +
+        `            android:strokeAlpha="${opacidad}"\n` +
+        `            android:strokeWidth="1.15"\n` +
+        `            android:strokeLineCap="round"\n` +
+        `            android:strokeLineJoin="round"/>`,
+    )
+    .join("\n");
+  return `<?xml version="1.0" encoding="utf-8"?>
+<!-- Lo escribe scripts/iconos-android.mjs desde src/components/palafito-trazos.ts.
+     No lo edites a mano: se pierde a la siguiente generación y deja de ser el
+     mismo palafito que dibuja la portada. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="${LIENZO}"
+    android:viewportHeight="${LIENZO}">
+    <group
+        android:translateX="${margen}"
+        android:translateY="${margen}">
+${trazos}
+    </group>
+</vector>
+`;
+}
+
+await writeFile(`${res}/drawable/marca_arranque.xml`, marcaDeArranque());
+console.log("  1 marca de arranque (marca_arranque.xml)");
 
 console.log("\nListo. Recompila con: npm run cap:apk");

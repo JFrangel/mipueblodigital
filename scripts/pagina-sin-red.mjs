@@ -130,6 +130,49 @@ for (const modulo of MODULOS) {
   piezas.push(envolver(modulo));
 }
 
+/**
+ * El palafito de la portada de arranque, leído de donde lo lee la web.
+ *
+ * **No se copia el dibujo.** La portada que va dentro del APK y la de la
+ * aplicación tienen que ser el mismo palafito: si aquí hubiera una copia,
+ * bastaría con que alguien retocara una curva para que el arranque enseñara un
+ * dibujo y la aplicación otro, y el del arranque es justo el que nadie mira dos
+ * veces. Así que se lee `palafito-trazos.ts` —solo datos, por eso está aparte
+ * del componente— y se escriben los trazos tal cual.
+ *
+ * `pathLength="1"` normaliza cada trazo a uno, que es lo que permite que el
+ * mismo tiempo de animación valga para todos aunque midan distinto. El retardo
+ * va por trazo y en el orden en que se pintan, que es el que cuenta la
+ * profundidad: las patas de atrás, el agua que las tapa, la casa, las de
+ * delante, y la ola de abajo.
+ */
+function trazosDelPalafito() {
+  const fuente = readFileSync("src/components/palafito-trazos.ts", "utf8");
+  const js = ts.transpileModule(fuente, {
+    compilerOptions: {
+      target: ts.ScriptTarget.ES2020,
+      module: ts.ModuleKind.CommonJS,
+    },
+  }).outputText;
+  const caja = {};
+  new Function("exports", js)(caja);
+  const trazos = caja.TRAZOS_PALAFITO;
+  if (!Array.isArray(trazos) || !trazos.length)
+    throw new Error(
+      "palafito-trazos.ts no devolvió TRAZOS_PALAFITO. Sin el dibujo, la " +
+        "portada de arranque saldría vacía y nadie se enteraría hasta verla.",
+    );
+  /* El mismo que usa la portada de la aplicación. */
+  const RETARDO_MS = 95;
+  return trazos
+    .map(
+      ([d, parte, opacidad], i) =>
+        `<path d="${d}" data-parte="${parte}" pathLength="1"` +
+        ` style="opacity:${opacidad};animation-delay:${i * RETARDO_MS}ms"/>`,
+    )
+    .join("");
+}
+
 const destino = "android/app/src/main/assets/public/index.html";
 if (!existsSync(destino)) {
   console.error(`No existe ${destino}. Esto va después de \`cap sync\`.`);
@@ -137,18 +180,23 @@ if (!existsSync(destino)) {
 }
 
 const marca = "<!--MODULOS-->";
+const marcaPalafito = "<!--PALAFITO-->";
 const pagina = readFileSync(destino, "utf8");
-if (!pagina.includes(marca)) {
-  console.error(`${destino} no lleva ${marca}. Mira capacitor/www/index.html.`);
-  process.exit(1);
+for (const m of [marca, marcaPalafito]) {
+  if (!pagina.includes(m)) {
+    console.error(`${destino} no lleva ${m}. Mira capacitor/www/index.html.`);
+    process.exit(1);
+  }
 }
 
 writeFileSync(
   destino,
-  pagina.replace(
-    marca,
-    `<script>window.MPD_APP=${JSON.stringify(url)};\n${piezas.join("\n")}\nwindow.MPD = { Territorio, Logica, Evidencia, Bandeja };\n</script>`,
-  ),
+  pagina
+    .replace(
+      marca,
+      `<script>window.MPD_APP=${JSON.stringify(url)};\n${piezas.join("\n")}\nwindow.MPD = { Territorio, Logica, Evidencia, Bandeja };\n</script>`,
+    )
+    .replace(marcaPalafito, trazosDelPalafito()),
 );
 console.log(
   `  ${destino} ← ${url} y ${MODULOS.length} módulos (${piezas.join("").length} bytes)`,

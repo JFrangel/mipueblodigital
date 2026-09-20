@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    El arranque con el tema oscuro del teléfono: el río de noche.
+
+    Es el mismo color que la portada usa en oscuro, para que la pantalla que
+    dibuja Android y la que dibuja la aplicación sean la misma sin costura. El
+    claro —el verde del manglar— está en `values/avisos.xml`, con el porqué.
+-->
+<resources>
+    <color name="mpd_arranque">#0d3340</color>
+</resources>

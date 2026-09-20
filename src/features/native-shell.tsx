@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { esNativo } from "@/platform/native";
+import { descubrirVentana } from "@/platform/arranque";
 import { getTheme, subscribeTheme } from "@/data/theme";
 
 /**
@@ -30,11 +31,23 @@ export function NativeShell() {
     /* Se guarda aparte porque el tema puede cambiar mucho antes de que el
        complemento termine de cargarse. */
     let vestir: ((oscuro: boolean) => void) | undefined;
+    /**
+     * Retirar la pantalla de arranque, lo primero y por su cuenta.
+     *
+     * **Va suelta y no dentro del bloque de abajo a propósito.** Ahí dentro
+     * estaba esperando a que bajara también el complemento de la barra de
+     * estado, y mientras tanto la pantalla de arranque sigue puesta tapando la
+     * aplicación entera: un trozo de JavaScript que no tiene nada que ver
+     * decidía cuándo se ve la portada, y si ese no llegaba a cargar, no se
+     * retiraba nunca —hasta el tope de diez segundos—.
+     *
+     * Aquí y no en `first-run.tsx` porque esto está en todas las rutas. Quien
+     * abre desde un aviso entra directo a su expediente, y esa pantalla también
+     * tiene que descubrirse.
+     */
+    void descubrirVentana();
     void (async () => {
-      const [{ StatusBar, Style }, { SplashScreen }] = await Promise.all([
-        import("@capacitor/status-bar"),
-        import("@capacitor/splash-screen"),
-      ]);
+      const { StatusBar, Style } = await import("@capacitor/status-bar");
       if (!vivo) return;
       /**
        * Los iconos de la barra de estado, del color contrario a lo que hay
@@ -51,10 +64,6 @@ export function NativeShell() {
           style: oscuro ? Style.Dark : Style.Light,
         }).catch(() => undefined);
       vestir(getTheme());
-      /* La pantalla de arranque se retira en cuanto hay algo que enseñar. Se
-         retira sola a los dos segundos de todos modos: esto solo la adelanta
-         cuando la aplicación arranca antes, que es casi siempre. */
-      await SplashScreen.hide().catch(() => undefined);
     })();
     const dejarTema = subscribeTheme(() => vestir?.(getTheme()));
     return () => {

@@ -44,9 +44,68 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body>
+        {/**
+         * ¿Ya se dibujó el palafito antes de llegar aquí?
+         *
+         * Dentro del APK la portada de arranque se pinta **dos veces**: una
+         * desde el archivo, que es la que aparece al instante, y otra aquí
+         * cuando la web termina de llegar. Son la misma pantalla, así que sin
+         * esto el palafito se traza, se corta a la mitad y vuelve a empezar de
+         * cero. Eso no se lee como una entrada, se lee como un tartamudeo —y es
+         * exactamente el «sale el logo dos veces» que ya hubo que quitar una
+         * vez—.
+         *
+         * La marca la deja `capacitor/www/index.html` en el almacén de la
+         * sesión, que comparten porque comparten origen. Aquí solo se traslada
+         * a un atributo para que la hoja de estilos pueda mirarlo.
+         *
+         * **Va al principio del cuerpo y no en un efecto** porque tiene que
+         * estar puesto antes del primer fotograma: decidido después, ya se
+         * habría visto arrancar la animación que se quería evitar.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(sessionStorage.getItem('mpd-portada'))" +
+              "document.documentElement.setAttribute('data-arranque','hecho');}catch(e){}",
+          }}
+        />
         <PwaRegistration />
         <NativeShell />
         {children}
+        {/**
+         * Descubrir la portada en cuanto está pintada, sin esperar a React.
+         *
+         * **Va suelto aquí abajo y no en un componente porque el momento es el
+         * asunto.** La pantalla de arranque de Android tapa la ventana hasta
+         * que la aplicación avisa, y si ese aviso sale de un efecto de React
+         * hay que esperar a que baje el paquete y termine de hidratar. Para
+         * entonces la portada de carga ya ha cumplido y se ha ido: lo que se
+         * descubre es la pantalla siguiente, y el dibujo del palafito
+         * trazándose —que es el recibimiento— no lo llega a ver nadie. Se vio
+         * midiendo: en el emulador el arranque pasaba del icono a la bienvenida
+         * sin portada por el medio.
+         *
+         * Aquí, al final del cuerpo, esto corre al terminar de leerse el
+         * documento: la portada ya está en el HTML que mandó el servidor, así
+         * que el fotograma siguiente la tiene entera. Dos vueltas de reloj
+         * porque la primera se programa **antes** de que el navegador dibuje, y
+         * soltando ahí se vería un instante en blanco.
+         *
+         * Se llama al puente crudo, que es lo único que existe antes de que
+         * cargue nada nuestro. En el navegador no hay `Capacitor` y no pasa
+         * nada. El aviso de `NativeShell` se queda debajo por si esto no
+         * corriera.
+         */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "requestAnimationFrame(function(){requestAnimationFrame(function(){" +
+              "try{var c=window.Capacitor;" +
+              "if(c&&c.nativePromise)c.nativePromise('SplashScreen','hide',{});}catch(e){}" +
+              "})})",
+          }}
+        />
       </body>
     </html>
   );

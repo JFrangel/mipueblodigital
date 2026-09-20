@@ -29,14 +29,19 @@
  * desvanecía a ellas: el movimiento quedaba tapado por su propia transparencia
  * y la animación se leía como un fundido, no como algo que se aparta.
  *
- * Es el mismo verde que declaran `capacitor.config.ts` y `styles.xml` para el
- * arranque de Android, así que el momento tapado y el arranque del teléfono son
- * el mismo color.
+ * **Y es el color del arranque, leído de la variable y no escrito aquí.**
+ * Estaba escrito a mano —`#123f39`— desde antes de que el arranque tuviera sus
+ * dos colores, el manglar para el tema claro y el río de noche para el oscuro.
+ * Desde entonces había tres verdes distintos jurando ser el mismo: el de la
+ * portada, el de la pantalla de Android y este. No se notaba mientras el telón
+ * caía sobre una pantalla clara; ahora cae justo encima de la portada, y dos
+ * verdes casi iguales pegados uno detrás de otro no se leen como un color, se
+ * leen como un parpadeo.
  */
 .fondo {
   position: absolute;
   inset: 0;
-  background: #123f39;
+  background: var(--arranque);
   opacity: 0;
 }
 

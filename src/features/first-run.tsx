@@ -3,7 +3,6 @@ import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Workspace } from "@/components/workspace";
 import { PortadaCarga } from "./portada-carga";
-import { descubrirVentana } from "@/platform/arranque";
 import { TelonHojas } from "./telon-hojas";
 import {
   getServerVisited,
@@ -27,21 +26,11 @@ export function FirstRun() {
     if (visited === false) router.replace("/bienvenida/");
   }, [visited, router]);
 
-  /* En cuanto la ventana web pinta su primer fotograma se retira la pantalla
-     de arranque de Capacitor: hasta entonces tapaba la portada de carga y el
-     telón enteros, y lo único que llegaba a verse era el final de la
-     animación. Dos vueltas de reloj de animación porque la primera se
-     programa antes de que el navegador dibuje. */
-  useEffect(() => {
-    let segundo = 0;
-    const primero = requestAnimationFrame(() => {
-      segundo = requestAnimationFrame(() => void descubrirVentana());
-    });
-    return () => {
-      cancelAnimationFrame(primero);
-      cancelAnimationFrame(segundo);
-    };
-  }, []);
+  /* La pantalla de arranque la retira `NativeShell`, que está en el diseño
+     raíz y por tanto en todas las rutas. Aquí había una segunda llamada de lo
+     mismo —se veían las dos en el registro del arranque, una detrás de otra—
+     y esta solo cubría la raíz: quien abre desde un aviso entra directo a su
+     expediente y no pasaba por aquí. */
   /* El telón va por encima de las dos salidas, y no dentro de la portada.
      Esa portada solo se pinta mientras se decide si es la primera visita, y
      cuando la respuesta ya está guardada se resuelve en el mismo fotograma:

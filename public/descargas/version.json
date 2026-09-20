@@ -1,8 +1,8 @@
 {
-  "versionCode": 9,
-  "versionName": "1.7",
-  "bytes": 7351737,
+  "versionCode": 10,
+  "versionName": "1.8",
+  "bytes": 7824674,
   "fecha": "2026-09-20",
-  "notas": "El icono es ahora el palafito: la casa sobre el agua, sobre el azul del río de noche. Y la pantalla de arranque lo dibuja solo al abrir.",
+  "notas": "Al abrir ya no sale el icono: sale la portada, y sale al instante porque viaja dentro de la aplicación. Y la descarga de actualizaciones se queda dentro: ya no te manda al navegador, ya no se atasca en el 99 %, y si algo falla dice qué fue.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

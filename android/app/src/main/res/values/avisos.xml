@@ -19,9 +19,15 @@
          un cambio de color donde no ocurre nada. Es también el de
          `backgroundColor` en `capacitor.config.ts`.
 
-         **La pantalla de Android solo puede llevar un color.** Se pinta antes
-         de que exista la web, así que no sabe qué tema tiene puesto nadie. Va
-         el del icono, que es lo que se acaba de tocar para abrir. -->
-    <color name="mpd_arranque">#0d3340</color>
+         **Sigue al tema del teléfono, y tiene que seguirlo.** Este es el verde
+         del manglar, el de la portada en tema claro; el río de noche está en
+         `values-night`. Se pinta antes de que exista la web, así que no puede
+         saber qué tema eligió alguien *dentro* de la aplicación —eso vive en el
+         navegador—, pero sí el del teléfono, que es el que usa la portada del
+         arranque mientras la aplicación no ha llegado. Con un solo color, en
+         tema claro se veía el azul de noche y justo después el manglar: un
+         cambio de color donde no ocurre nada, y ahora que una pantalla entra
+         detrás de la otra se nota el doble. -->
+    <color name="mpd_arranque">#16463c</color>
     <string name="mpd_canal_avisos" translatable="false">consejo</string>
 </resources>

@@ -243,7 +243,135 @@
       word-break: break-all;
     }
     [hidden] { display: none !important; }
+    /*
+      La portada de arranque, dentro del archivo.
+
+      **Está aquí porque desde aquí se pinta sin red.** La aplicación instalada
+      es una ventana a la web, así que su portada no existe hasta que el
+      teléfono ha traído la página, y con la señal del río eso son segundos en
+      los que solo podía verse el icono que dibuja Android. Esta es la misma
+      pantalla —el mismo palafito, el mismo rótulo, las mismas frases— pero
+      viaja dentro del APK: se ve en el primer fotograma, antes de pedirle nada
+      a nadie, y se queda puesta mientras la de verdad viene por detrás.
+
+      El dibujo no está copiado: lo escribe `scripts/pagina-sin-red.mjs` leyendo
+      `src/components/palafito-trazos.ts`, el mismo sitio del que lo saca la
+      web. Dos copias serían dos palafitos distintos el día que alguien retoque
+      una curva.
+    */
+    .portada {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      text-align: center;
+      /* El manglar para el tema claro y el río de noche para el oscuro, igual
+         que `--arranque` en la aplicación. */
+      background: #16463c;
+      color: #cfe0d6;
+      font-size: 13px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .portada { background: #0d3340; }
+    }
+
+    /*
+      El palafito, clavado en el centro de la pantalla.
+
+      **No centrado con el rótulo, sino donde lo pone Android.** La pantalla que
+      dibuja el sistema al abrir lleva su icono en el centro exacto de la
+      ventana, y esta página entra justo detrás con el mismo dibujo. Centrando
+      el grupo entero —dibujo, rótulo y frase— el palafito queda un poco más
+      arriba que el del sistema, y en el relevo pega un salto de unos setenta
+      píxeles: el ojo lo lee como un tirón, no como una pantalla que se
+      completa. Así se queda quieto y lo único que se mueve es el texto.
+
+      `overflow: visible` porque el cabo redondo del trazo se sale del recuadro
+      de 24 por medio grosor, y recortado el dibujo pierde las puntas.
+    */
+    .portada svg {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(52vw, 168px);
+      height: auto;
+      overflow: visible;
+      stroke-width: 1.15;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    /* El texto cuelga del palafito: medio dibujo desde el centro, y un respiro.
+       `min(26vw, 84px)` es la mitad del ancho de arriba y cambia con él. */
+    .portada .pie {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(50% + min(26vw, 84px) + 26px);
+      padding: 0 28px;
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+    }
+    /*
+      El palafito aquí **no se dibuja: ya está dibujado**.
+
+      Porque no empieza aquí. La pantalla que pinta Android al abrir lleva este
+      mismo palafito, del mismo tamaño y sobre el mismo fondo, y esta página
+      entra justo detrás. Trazándolo otra vez, lo que se ve es la casa
+      apareciendo, cortándose y volviendo a empezar de cero: un tartamudeo, no
+      una entrada. Lo que se mueve es lo que **falta** —el rótulo y la frase—,
+      y así la portada se completa en vez de repetirse.
+    */
+    .portada svg path[data-parte="casa"] { stroke: #a7e6b8; }
+    .portada svg path[data-parte="agua"] { stroke: #8fd0f0; }
+
+    /* El rótulo y la frase son lo único que entra, y entran seguidos: es lo que
+       convierte el dibujo que ya estaba en una pantalla terminada. */
+    .portada .marca {
+      margin: 0;
+      color: #f1f7f2;
+      animation: subir 620ms ease-out 240ms both;
+    }
+    .portada .marca em { color: #a7dcb6; }
+    @keyframes subir {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .portada .frase {
+      margin: 0;
+      max-width: 30ch;
+      line-height: 1.5;
+      animation: llegar 420ms ease-out 640ms both;
+    }
+    @keyframes llegar {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Quien pide menos animación no está pidiendo la misma más lenta: se quita
+       el recorrido y queda el dibujo hecho. Estaba para recibir, no para
+       informar de nada. */
+    @media (prefers-reduced-motion: reduce) {
+      .portada .marca, .portada .frase { animation: none; }
+    }
   </style>
+  <!--
+    Lo primero que se ve al abrir, y se ve sin haber pedido nada por la red.
+
+    Se queda puesta mientras la ventana va a buscar la aplicación. Si la
+    encuentra, la aplicación entra por debajo y esta desaparece con ella; si no,
+    el guion la quita y debajo está lo que hay que decir: que no hay señal, y
+    que se puede reportar igual.
+  -->
+  <div class="portada" id="portada">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><!--PALAFITO--></svg>
+    <div class="pie">
+      <p class="marca">Mi Pueblo <em>Digital</em></p>
+      <p class="frase" id="fraseArranque" role="status">Preparando tu comunidad…</p>
+    </div>
+  </div>
   <main>
     <p class="marca">Mi Pueblo <em>Digital</em></p>
     <div class="aviso">
@@ -374,6 +502,27 @@
       var $ = function (id) { return document.getElementById(id); };
 
       /*
+        Retirar la pantalla de arranque, también desde aquí.
+
+        La sostiene el complemento hasta que la aplicación avisa de que ya pinta
+        algo, y esta página **no es la aplicación**: no trae sus complementos ni
+        su JavaScript, así que ese aviso no saldría de ninguna parte y quien
+        abre sin señal se quedaría mirando el icono hasta que saltara el tope de
+        diez segundos de `capacitor.config.ts`. Y sin señal es justo cuando esta
+        página tiene que aparecer rápido.
+
+        Se llama por el puente crudo, que es lo único inyectado en una página
+        suelta —`Capacitor.Plugins` lo arma el paquete de la aplicación, que
+        aquí no está—. Fuera del APK no existe nada de esto y no pasa nada.
+      */
+      try {
+        if (window.Capacitor && window.Capacitor.nativePromise)
+          window.Capacitor.nativePromise("SplashScreen", "hide", {});
+      } catch (e) {
+        /* Queda el tope. Nadie se queda encerrado mirando un icono. */
+      }
+
+      /*
         Reintentar, con la dirección puesta al compilar.
 
         Esta página no puede averiguar sola dónde vive la aplicación: se sirve
@@ -457,7 +606,83 @@
         );
       });
 
-      if (window.MPD_APP && navigator.onLine && intentos() < TOPE) {
+      /**
+       * ¿Esta es la portada de arranque, o es que la aplicación no se alcanzó?
+       *
+       * **Es la misma página en los dos casos**, y tiene que serlo: cuando la
+       * ventana es una ventana a la web, Capacitor sirve del archivo una sola
+       * página —la de `errorPath`, ver `WebViewLocalServer.shouldInterceptRequest`—
+       * y `server.appStartPath` la pone también de arranque. Una página, dos
+       * momentos.
+       *
+       * La primera vez en esta sesión de la ventana es el arranque: se enseña
+       * la portada y se va a buscar la aplicación en el acto. Si se vuelve aquí
+       * es porque no se alcanzó, y entonces toca decirlo.
+       *
+       * Se apunta en la sesión de la ventana, que nace y muere con ella: así
+       * cada vez que alguien abre la aplicación vuelve a haber portada, y
+       * dentro de una misma apertura no se dan vueltas.
+       */
+      var ARRANQUE = "mpd-arranque";
+      function esElArranque() {
+        try {
+          if (sessionStorage.getItem(ARRANQUE)) return false;
+          sessionStorage.setItem(ARRANQUE, "1");
+          return true;
+        } catch (e) {
+          /* Sin almacenamiento no se puede distinguir un momento del otro, y
+             equivocarse hacia la portada dejaría a alguien sin señal mirando
+             una pantalla de espera que no acaba. Se dice la verdad. */
+          return false;
+        }
+      }
+
+      /* Las frases son las mismas de la portada de la aplicación, y aparecen
+         cuando su momento significa algo: la segunda reconoce que ya tarda
+         más de la cuenta —en el río, poca señal—, y la tercera dice lo único
+         que hace falta saber a los quince segundos, que no hay que cerrar. */
+      var FRASES = [
+        [5000, "Con poca señal esto tarda un poco más."],
+        [14000, "Sigue intentándolo. No hace falta cerrar la app."],
+      ];
+
+      var arrancando = !!window.MPD_APP && esElArranque();
+
+      if (arrancando) {
+        /* Que la portada de la aplicación no vuelva a dibujar lo mismo.
+           Cuando la web entre por detrás, su portada es esta misma pantalla:
+           si repitiera el trazado, el palafito se dibujaría dos veces
+           seguidas y lo que se lee no es una entrada, es un tartamudeo. Lo
+           recoge el guion de `src/app/layout.tsx` antes de pintar nada. */
+        try {
+          sessionStorage.setItem("mpd-portada", "1");
+        } catch (e) {
+          /* Sin almacenamiento se dibuja dos veces. Feo, no roto. */
+        }
+        FRASES.forEach(function (f) {
+          setTimeout(function () {
+            var p = $("fraseArranque");
+            if (p) p.textContent = f[1];
+          }, f[0]);
+        });
+        /* Dos vueltas de reloj: la primera se programa antes de que el
+           navegador dibuje, y saliendo de aquí sin haber pintado la portada no
+           se vería nunca. La ventana se queda enseñándola mientras carga lo
+           que viene. */
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            location.replace(window.MPD_APP);
+          });
+        });
+      } else if ($("portada")) {
+        /* No es el arranque: debajo está lo que hay que decir. */
+        $("portada").hidden = true;
+      }
+
+      /* El reintento automático es para cuando esto salió por un fallo. En el
+         arranque ya se está yendo a la aplicación: programarlo aquí sería una
+         segunda navegación encima de la primera. */
+      if (!arrancando && window.MPD_APP && navigator.onLine && intentos() < TOPE) {
         apuntar(intentos() + 1);
         $("pista").textContent = "Buscando la aplicación…";
         reloj = setTimeout(function () {

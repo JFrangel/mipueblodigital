@@ -46,6 +46,23 @@
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/mpd_arranque</item>
+        <!--
+            Lo que dibuja Android al abrir: el palafito, no el icono del cajón.
+
+            **La pantalla del sistema no se puede quitar** —de Android 12 en
+            adelante se pinta desde que se toca la aplicación—, así que lo único
+            que se decide es qué aparece ahí. Sin esta línea aparece el icono
+            del cajón, y ese viene con su círculo detrás: se lee como un icono
+            esperando a que algo cargue. Con esta, aparece el palafito solo, del
+            mismo tamaño y del mismo color que en la portada, sobre el mismo
+            fondo. Ya no es un icono antes de la portada: es la portada, a la
+            que un instante después se le suman el rótulo y la frase.
+
+            El dibujo lo escribe `scripts/iconos-android.mjs` desde
+            `src/components/palafito-trazos.ts`, que es de donde lo saca también
+            la web. No se edita a mano.
+        -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/marca_arranque</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
     </style>
