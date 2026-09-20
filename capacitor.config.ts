@@ -68,6 +68,20 @@ const config: CapacitorConfig = {
      * ni una vez. Después manda el service worker y no vuelve a aparecer.
      */
     errorPath: "index.html",
+    /**
+     * El nombre bajo el que se sirve lo que va dentro del APK.
+     *
+     * Por defecto es `localhost`, y eso deja la página de arranque en **otro
+     * origen** que la aplicación: su almacén no es el mismo, así que un reporte
+     * escrito ahí quedaría en un cajón que la aplicación no abre nunca.
+     *
+     * Poniéndolo al dominio de la aplicación, esa página comparte origen con
+     * ella y lo que escriba lo recoge la bandeja de envíos. Es lo único que
+     * cambia: el dominio ya estaba en las autoridades del servidor local —lo
+     * añade `server.url`— así que la intermediación de peticiones es la misma
+     * de siempre.
+     */
+    hostname: new URL(url).host,
   },
   android: {
     /* La ventana no guarda contraseñas ni rellena formularios por su cuenta:

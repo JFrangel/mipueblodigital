@@ -3,42 +3,179 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mi Pueblo Digital</title>
-  <!--SERVIDOR-->
+  <!--MODULOS-->
   <!--
     La única página que lleva el APK dentro.
 
-    Se ve en un caso y solo en uno: el primer arranque de la aplicación recién
-    instalada sin señal, cuando la ventana todavía no ha podido alcanzar el
-    servidor ni una vez y por tanto no hay nada guardado. A partir de la primera
-    visita con red, manda el service worker de la aplicación y esta página no
+    Se ve en un caso: el primer arranque de la aplicación recién instalada sin
+    señal, cuando la ventana no ha podido alcanzar el servidor ni una vez. A
+    partir de la primera visita con red manda el service worker y esta página no
     vuelve a aparecer.
 
     **La ve quien más falta le hace que funcione.** En este territorio unas
-    cuantas instalaciones van a ser alguien pasando el archivo por Bluetooth o
-    por una memoria, y abriéndolo donde no hay señal.
+    cuantas instalaciones son alguien pasando el archivo por Bluetooth o por una
+    memoria, y abriéndolo donde no hay señal. Por eso no se queda en avisar: deja
+    escribir un reporte, que espera en la bandeja y sale al entrar con cuenta.
+
+    Todo lo que hace lo hace con **los módulos de verdad de la aplicación**,
+    inlinados por `scripts/pagina-sin-red.mjs`: la misma preparación de la
+    fotografía, las mismas validaciones y la misma bandeja. Duplicarlos a mano
+    sería garantizar que un día se desincronicen, y el síntoma sería el peor de
+    todos: el reporte se escribe y no lo recoge nadie.
 
     Va sin hoja de estilos aparte ni tipografías de fuera, porque en el momento
     en que se ve no hay de dónde traerlas.
   -->
   <style>
     :root { color-scheme: light; }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 32px;
+      padding: 28px 22px 48px;
       background: #f5f7f2;
       color: #143a2c;
-      font: 15px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
-      text-align: center;
+      font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
     }
-    main { max-width: 34ch; }
-    h1 { font-size: 20px; margin: 0 0 10px; }
-    p { color: #4a5b52; margin: 0 0 18px; }
+    main { max-width: 34rem; margin: 0 auto; }
+    h1 { font-size: 21px; margin: 0 0 10px; }
+    h2 { font-size: 16px; margin: 0 0 4px; }
+    p { color: #4a5b52; margin: 0 0 16px; }
+    /* La marca, discreta: esta página es la aplicación, no una página suelta
+       que apareció por un error. */
+    .marca {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin: 0 0 22px;
+    }
+    .marca em { font-style: normal; color: #4a8751; }
+
+    /**
+     * El aviso, como una tarjeta de la aplicación: el mismo degradado suave y
+     * la misma filigrana asomando por la esquina.
+     */
+    .aviso {
+      position: relative;
+      overflow: hidden;
+      padding: 22px;
+      border-radius: 16px;
+      background: linear-gradient(152deg, #eaf2e9 0%, #fbfdfa 68%);
+      margin-bottom: 30px;
+    }
+    /* Solo lo que se lee. Los <span> del dibujo van absolutos, detrás. */
+    .aviso > *:not(span) { position: relative; z-index: 1; }
+    .aviso p:last-of-type { margin-bottom: 18px; }
+
+    /**
+     * Las hojas.
+     *
+     * Son las mismas hojas de plátano de la aplicación —los mismos trazos y la
+     * misma pareja: una a cada lado, con la base fuera del recuadro—. Allí
+     * **se apartan y se vuelven a cerrar** cuando un reporte sale.
+     *
+     * Aquí se apartan y **se quedan abiertas**. No ha salido nada, no hay señal
+     * para que salga, y lo que el dibujo hace es abrirle paso a lo único que
+     * esta pantalla sí puede ofrecer: volver a intentarlo.
+     *
+     * Quien ve esta página **nunca ha visto la aplicación** —es su primer
+     * arranque—, así que el parecido no es para que lo reconozca hoy: es para
+     * que el día que entre, esto ya le suene suyo.
+     *
+     * Del dibujo original se quitó la hojita de la base: a este tamaño no se
+     * leía como hoja, se leía como un borrón oscuro junto al botón.
+     */
+    .hoja {
+      position: absolute;
+      bottom: -74px;
+      width: clamp(58px, 19%, 78px);
+      opacity: 0;
+      transform-origin: 50% 100%;
+      animation:
+        apartarse 2.2s cubic-bezier(0.22, 0.8, 0.3, 1) both,
+        respirar 11s ease-in-out 2.4s infinite;
+      z-index: 0;
+    }
+    .hoja svg { display: block; width: 100%; height: auto; }
+    .izq { left: -14px; --entrada: -70%; --giro: -13deg; --mecer: -2.5deg; }
+    .der { right: -14px; --entrada: 70%; --giro: 13deg; --mecer: 2.5deg; }
+    .der svg { transform: scaleX(-1); }
+    .der { animation-delay: 160ms, 2.6s; }
+
+    @keyframes apartarse {
+      from { opacity: 0; transform: translateX(var(--entrada)) rotate(var(--giro)); }
+      to { opacity: 0.7; transform: translateX(0) rotate(0deg); }
+    }
+    /* Respirar y nada más: la hoja está viva, pero no está haciendo nada. */
+    @keyframes respirar {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(var(--mecer)); }
+    }
+
+    /* El río, al pie. Va quieto, que es como está el agua cuando no pasa nada. */
+    .agua {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 8px;
+      height: 18px;
+      opacity: 0.45;
+      z-index: 0;
+    }
+    .agua svg { display: block; width: 100%; height: 100%; }
+
+    /**
+     * Al guardar: una sola hoja, y hacia arriba.
+     *
+     * **No es el gesto del envío.** El reporte no salió —se quedó sembrado en
+     * este teléfono hasta que haya señal—, así que la hoja brota en vez de
+     * irse. Por eso también se le recorta el tallo: se está asomando, no
+     * despidiéndose.
+     */
+    .hecho .hoja {
+      display: block;
+      position: static;
+      width: 78px;
+      height: 124px;
+      overflow: hidden;
+      margin: 0 auto;
+      opacity: 1;
+      animation: brotar 1.6s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+    }
+    @keyframes brotar {
+      from { opacity: 0; transform: translateY(66px) rotate(-7deg); }
+      to { opacity: 1; transform: translateY(0) rotate(0deg); }
+    }
+    .hecho .agua {
+      display: block;
+      position: static;
+      width: 190px;
+      height: 16px;
+      /* Subida sobre la hoja a propósito: el agua tapa el corte del tallo, y
+         la hoja sale del río en vez de estar cortada encima de él. */
+      margin: -11px auto 18px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hoja { animation: none; opacity: 0.7; }
+      .hecho .hoja { animation: none; opacity: 1; }
+    }
+    label { display: block; font-weight: 600; margin: 0 0 6px; font-size: 14px; }
+    .campo { margin-bottom: 18px; }
+    select, textarea, input[type="tel"], input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccd7cd;
+      border-radius: 9px;
+      background: #fff;
+      font: inherit;
+      color: inherit;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    small { display: block; color: #6b7a72; font-size: 12px; margin-top: 5px; }
     button {
-      min-height: 46px;
-      padding: 12px 22px;
+      width: 100%;
+      min-height: 50px;
+      padding: 13px 22px;
       border: 0;
       border-radius: 9px;
       background: #18533a;
@@ -46,41 +183,299 @@
       font: inherit;
       font-weight: 600;
     }
+    button[disabled] { opacity: 0.55; }
+    /* En esta tarjeta el botón no ocupa todo el ancho: las dos esquinas son
+       de las hojas, y el paso que abren tiene que ser el botón. */
+    .aviso button {
+      display: block;
+      width: auto;
+      margin: 0 auto;
+      padding: 13px 32px;
+    }
+    button.secundario {
+      background: transparent;
+      color: #18533a;
+      border: 1px solid #ccd7cd;
+      margin-top: 12px;
+    }
+    .error {
+      padding: 12px 14px;
+      border-radius: 9px;
+      background: #fdeceb;
+      color: #8c2f22;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    .hecho { text-align: center; padding: 26px 0; }
+    .hecho h1 { color: #18533a; }
+    /* El control nativo de archivo sale en inglés —«Choose File / No file
+       chosen»— y no hay forma de traducirlo: lo pinta el sistema. Se esconde y
+       se pone una etiqueta encima, que además es un blanco más grande para un
+       dedo. */
+    .archivo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .archivo span {
+      display: block;
+      padding: 13px;
+      border: 1px dashed #ccd7cd;
+      border-radius: 9px;
+      background: #fff;
+      text-align: center;
+      font-weight: 600;
+      color: #18533a;
+    }
+    [hidden] { display: none !important; }
   </style>
   <main>
-    <h1>Falta la primera conexión</h1>
-    <p>
-      Mi Pueblo Digital necesita conectarse una vez para quedar lista. Después
-      funciona sin señal: podrás reportar, leer tus reportes y los comunicados
-      aunque no haya red.
-    </p>
-    <p id="pista">Busca señal y vuelve a intentarlo.</p>
-    <button id="reintentar" type="button">Reintentar</button>
+    <p class="marca">Mi Pueblo <em>Digital</em></p>
+    <div class="aviso">
+      <span class="hoja izq" aria-hidden="true">
+        <svg viewBox="0 0 120 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M33.2 314L33.6 302.1L34.2 290.3L35.2 278.7L36.5 267.2L38 255.8L39.8 244.5L41.8 233.3L44 222.2L46.4 211.1L49 200.1L51.7 189.1L54.6 178.1L57.5 167.1L60.6 156L63.7 144.9L66.8 133.8L70 122.5L73.2 111.2L76.4 99.7L79.5 88.2L82.5 76.4L85.5 64.5L88.4 52.5L91.1 40.2L93.7 27.7L96.1 15L95.9 15L93.3 27.6L90.5 40.1L87.6 52.3L84.6 64.3L81.5 76.1L78.2 87.8L75 99.3L71.7 110.7L68.3 122L65 133.2L61.7 144.3L58.4 155.4L55.2 166.4L52.1 177.4L49.1 188.4L46.2 199.4L43.4 210.4L40.9 221.5L38.5 232.7L36.3 243.9L34.3 255.2L32.6 266.7L31.2 278.2L30.1 290L29.2 301.9L28.8 314Z" fill="#acbd70" />
+          <path d="M96 14C35 30 2 86 14 144l26-15-23 26c5 25 14 45 26 64l19-39-12 54c39-24 66-58 65-103l-16 10 15-23c2-35-3-69-18-104Z" fill="#24634b" />
+          <path d="M96 14C83 78 62 151 43 219c-12-19-21-39-26-64l23-26-26 15C2 86 35 30 96 14Z" fill="#4a8751" />
+          <path d="M96 14L94.5 20.4L93 26.8L91.5 33.2L89.9 39.5L88.4 45.8L86.9 52.2L85.3 58.4L83.7 64.7L82.1 71L80.5 77.2L78.9 83.4L77.2 89.6L75.6 95.8L73.9 102L72.2 108.1L70.5 114.3L68.8 120.4L67.1 126.6L65.4 132.7L63.7 138.8L62 145L60.3 151.1L58.6 157.2L56.8 163.3L55.1 169.5L53.4 175.6L51.7 181.7L50 187.8L48.3 194L46.6 200.1L44.9 206.3L43.2 212.4L41.5 218.6L46.1 213.2L47.7 207L49.3 200.9L51 194.7L52.6 188.6L54.3 182.4L55.9 176.3L57.6 170.1L59.2 164L60.9 157.9L62.5 151.7L64.2 145.6L65.8 139.4L67.5 133.3L69.1 127.1L70.8 121L72.4 114.8L74 108.6L75.6 102.4L77.2 96.2L78.8 90L80.3 83.8L81.9 77.5L83.4 71.3L84.9 65L86.4 58.7L87.9 52.4L89.3 46.1L90.7 39.7L92.1 33.3L93.5 26.9L94.8 20.5L96 14Z" fill="#c1d17e" />
+          <g stroke="#a9c577" stroke-width="1" opacity=".6">
+            <path d="M86.5 56.1 65.3 40.9M78.7 87 46.5 63.2M70.6 117.6 30.7 87.5M62.3 148 41.7 132.3M54 178.4 31.7 161.4M88.9 45.6 100.8 43.8M82.4 72.6 104.2 69.6M74.4 103.4 104.2 99.6M66.2 133.9 98 130.1M57.9 164.2 83.7 161.2" />
+          </g>
+        </svg>
+      </span>
+      <span class="hoja der" aria-hidden="true">
+        <svg viewBox="0 0 120 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M33.2 314L33.6 302.1L34.2 290.3L35.2 278.7L36.5 267.2L38 255.8L39.8 244.5L41.8 233.3L44 222.2L46.4 211.1L49 200.1L51.7 189.1L54.6 178.1L57.5 167.1L60.6 156L63.7 144.9L66.8 133.8L70 122.5L73.2 111.2L76.4 99.7L79.5 88.2L82.5 76.4L85.5 64.5L88.4 52.5L91.1 40.2L93.7 27.7L96.1 15L95.9 15L93.3 27.6L90.5 40.1L87.6 52.3L84.6 64.3L81.5 76.1L78.2 87.8L75 99.3L71.7 110.7L68.3 122L65 133.2L61.7 144.3L58.4 155.4L55.2 166.4L52.1 177.4L49.1 188.4L46.2 199.4L43.4 210.4L40.9 221.5L38.5 232.7L36.3 243.9L34.3 255.2L32.6 266.7L31.2 278.2L30.1 290L29.2 301.9L28.8 314Z" fill="#acbd70" />
+          <path d="M96 14C35 30 2 86 14 144l26-15-23 26c5 25 14 45 26 64l19-39-12 54c39-24 66-58 65-103l-16 10 15-23c2-35-3-69-18-104Z" fill="#24634b" />
+          <path d="M96 14C83 78 62 151 43 219c-12-19-21-39-26-64l23-26-26 15C2 86 35 30 96 14Z" fill="#4a8751" />
+          <path d="M96 14L94.5 20.4L93 26.8L91.5 33.2L89.9 39.5L88.4 45.8L86.9 52.2L85.3 58.4L83.7 64.7L82.1 71L80.5 77.2L78.9 83.4L77.2 89.6L75.6 95.8L73.9 102L72.2 108.1L70.5 114.3L68.8 120.4L67.1 126.6L65.4 132.7L63.7 138.8L62 145L60.3 151.1L58.6 157.2L56.8 163.3L55.1 169.5L53.4 175.6L51.7 181.7L50 187.8L48.3 194L46.6 200.1L44.9 206.3L43.2 212.4L41.5 218.6L46.1 213.2L47.7 207L49.3 200.9L51 194.7L52.6 188.6L54.3 182.4L55.9 176.3L57.6 170.1L59.2 164L60.9 157.9L62.5 151.7L64.2 145.6L65.8 139.4L67.5 133.3L69.1 127.1L70.8 121L72.4 114.8L74 108.6L75.6 102.4L77.2 96.2L78.8 90L80.3 83.8L81.9 77.5L83.4 71.3L84.9 65L86.4 58.7L87.9 52.4L89.3 46.1L90.7 39.7L92.1 33.3L93.5 26.9L94.8 20.5L96 14Z" fill="#c1d17e" />
+          <g stroke="#a9c577" stroke-width="1" opacity=".6">
+            <path d="M86.5 56.1 65.3 40.9M78.7 87 46.5 63.2M70.6 117.6 30.7 87.5M62.3 148 41.7 132.3M54 178.4 31.7 161.4M88.9 45.6 100.8 43.8M82.4 72.6 104.2 69.6M74.4 103.4 104.2 99.6M66.2 133.9 98 130.1M57.9 164.2 83.7 161.2" />
+          </g>
+        </svg>
+      </span>
+      <span class="agua" aria-hidden="true">
+        <svg viewBox="0 0 240 24" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 8c10 6 20 6 30 0s20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0" stroke="#4a8751" stroke-width="2" fill="none" />
+          <path d="M0 18c10 6 20 6 30 0s20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0" stroke="#a9c577" stroke-width="2" fill="none" />
+        </svg>
+      </span>
+      <h1>Falta la primera conexión</h1>
+      <p id="pista">
+        Mi Pueblo Digital necesita conectarse una vez para quedar lista. Busca
+        señal y vuelve a intentarlo.
+      </p>
+      <button id="reintentar" type="button">Reintentar</button>
+    </div>
+
+    <!-- Solo si el reporte va a poder recogerse. Ver `puedeGuardar()`. -->
+    <form id="formulario" hidden>
+      <h2>Mientras tanto, puedes reportar</h2>
+      <p>
+        Se guarda en este teléfono y sale solo cuando entres con tu cuenta.
+        Nadie más lo ve hasta entonces.
+      </p>
+      <div id="errores"></div>
+      <div class="campo">
+        <label for="categoria">¿Qué tipo de situación es?</label>
+        <select id="categoria" required>
+          <option value="">Elegir…</option>
+          <option value="infraestructura">Infraestructura</option>
+          <option value="recursos_naturales">Ambiente</option>
+          <option value="conflictos_territoriales">Territorio</option>
+          <option value="socioeconomicos">Comunidad</option>
+          <option value="otro">Otro</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="vereda">¿Dónde está ocurriendo?</label>
+        <select id="vereda" required></select>
+      </div>
+      <div class="campo">
+        <label for="descripcion">Cuéntanos qué pasó</label>
+        <textarea id="descripcion" maxlength="15000" required></textarea>
+        <small>Qué observaste, cuándo y cómo afecta a tu comunidad.</small>
+      </div>
+      <div class="campo">
+        <label class="archivo" for="foto">
+          Una fotografía
+          <span id="fotoRotulo">Tomar o elegir una fotografía</span>
+          <input id="foto" type="file" accept="image/*" capture="environment" />
+        </label>
+        <small id="fotoNota">El Consejo la necesita para atender el reporte.</small>
+      </div>
+      <div class="campo">
+        <label for="telefono">Tu celular (opcional)</label>
+        <input id="telefono" type="tel" maxlength="20" />
+      </div>
+      <button id="guardar" type="submit">Guardar el reporte</button>
+    </form>
+
+    <div id="hecho" class="hecho" hidden>
+      <span class="hoja" aria-hidden="true">
+        <svg viewBox="0 0 120 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M33.2 314L33.6 302.1L34.2 290.3L35.2 278.7L36.5 267.2L38 255.8L39.8 244.5L41.8 233.3L44 222.2L46.4 211.1L49 200.1L51.7 189.1L54.6 178.1L57.5 167.1L60.6 156L63.7 144.9L66.8 133.8L70 122.5L73.2 111.2L76.4 99.7L79.5 88.2L82.5 76.4L85.5 64.5L88.4 52.5L91.1 40.2L93.7 27.7L96.1 15L95.9 15L93.3 27.6L90.5 40.1L87.6 52.3L84.6 64.3L81.5 76.1L78.2 87.8L75 99.3L71.7 110.7L68.3 122L65 133.2L61.7 144.3L58.4 155.4L55.2 166.4L52.1 177.4L49.1 188.4L46.2 199.4L43.4 210.4L40.9 221.5L38.5 232.7L36.3 243.9L34.3 255.2L32.6 266.7L31.2 278.2L30.1 290L29.2 301.9L28.8 314Z" fill="#acbd70" />
+          <path d="M96 14C35 30 2 86 14 144l26-15-23 26c5 25 14 45 26 64l19-39-12 54c39-24 66-58 65-103l-16 10 15-23c2-35-3-69-18-104Z" fill="#24634b" />
+          <path d="M96 14C83 78 62 151 43 219c-12-19-21-39-26-64l23-26-26 15C2 86 35 30 96 14Z" fill="#4a8751" />
+          <path d="M96 14L94.5 20.4L93 26.8L91.5 33.2L89.9 39.5L88.4 45.8L86.9 52.2L85.3 58.4L83.7 64.7L82.1 71L80.5 77.2L78.9 83.4L77.2 89.6L75.6 95.8L73.9 102L72.2 108.1L70.5 114.3L68.8 120.4L67.1 126.6L65.4 132.7L63.7 138.8L62 145L60.3 151.1L58.6 157.2L56.8 163.3L55.1 169.5L53.4 175.6L51.7 181.7L50 187.8L48.3 194L46.6 200.1L44.9 206.3L43.2 212.4L41.5 218.6L46.1 213.2L47.7 207L49.3 200.9L51 194.7L52.6 188.6L54.3 182.4L55.9 176.3L57.6 170.1L59.2 164L60.9 157.9L62.5 151.7L64.2 145.6L65.8 139.4L67.5 133.3L69.1 127.1L70.8 121L72.4 114.8L74 108.6L75.6 102.4L77.2 96.2L78.8 90L80.3 83.8L81.9 77.5L83.4 71.3L84.9 65L86.4 58.7L87.9 52.4L89.3 46.1L90.7 39.7L92.1 33.3L93.5 26.9L94.8 20.5L96 14Z" fill="#c1d17e" />
+          <g stroke="#a9c577" stroke-width="1" opacity=".6">
+            <path d="M86.5 56.1 65.3 40.9M78.7 87 46.5 63.2M70.6 117.6 30.7 87.5M62.3 148 41.7 132.3M54 178.4 31.7 161.4M88.9 45.6 100.8 43.8M82.4 72.6 104.2 69.6M74.4 103.4 104.2 99.6M66.2 133.9 98 130.1M57.9 164.2 83.7 161.2" />
+          </g>
+        </svg>
+      </span>
+      <span class="agua" aria-hidden="true">
+        <svg viewBox="0 0 240 24" fill="none" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 8c10 6 20 6 30 0s20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0" stroke="#4a8751" stroke-width="2" fill="none" />
+          <path d="M0 18c10 6 20 6 30 0s20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0 20 6 30 0 20-6 30 0" stroke="#a9c577" stroke-width="2" fill="none" />
+        </svg>
+      </span>
+      <h1>Guardado en este teléfono</h1>
+      <p id="hechoTexto"></p>
+      <button id="otro" class="secundario" type="button">
+        Guardar otro reporte
+      </button>
+    </div>
   </main>
   <script>
-    /*
-      Reintentar, con la dirección puesta al compilar.
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
 
-      Esta página no puede averiguar sola dónde vive la aplicación: se sirve
-      desde `localhost` y el puente de Capacitor, aunque se inyecta, no trae ni
-      la dirección ni los complementos —comprobado: `Capacitor.Plugins` no
-      existe aquí—. Se la pone `scripts/inyectar-servidor.mjs` al sincronizar,
-      en la copia que git ignora, para que no quede escrita en el repositorio.
+      /*
+        Reintentar, con la dirección puesta al compilar.
 
-      **No se puede recargar.** Recargar pide `localhost` otra vez, y Capacitor,
-      que espera la aplicación en otra dirección, trata eso como una navegación
-      a otro sitio y **la abre en Chrome**: eso hacía el botón anterior, medido
-      en el emulador, y dejaba a la persona fuera de su propia aplicación.
-      `history.back()` tampoco: vuelve, pero no recarga.
+        Esta página no puede averiguar sola dónde vive la aplicación: se sirve
+        desde el APK y el puente de Capacitor, aunque se inyecta, no trae ni la
+        dirección ni los complementos. Se la pone el guion de compilación.
 
-      Sin la dirección —alguien compiló saltándose el guion— se dice qué hacer
-      a mano, que es lo único honesto que queda.
-    */
-    document.getElementById("reintentar").addEventListener("click", function () {
-      if (window.MPD_APP) location.replace(window.MPD_APP);
-      else
-        document.getElementById("pista").textContent =
-          "Busca señal, cierra la aplicación deslizándola fuera de las aplicaciones recientes y vuelve a abrirla.";
-    });
+        **No se puede recargar.** Recargar vuelve a esta misma página, y si el
+        nombre de dominio no coincidiera, Capacitor lo trataría como irse a otro
+        sitio y **lo abriría en Chrome**. Eso hacía una versión anterior, medido
+        en el emulador.
+      */
+      $("reintentar").addEventListener("click", function () {
+        if (window.MPD_APP) location.replace(window.MPD_APP);
+        else
+          $("pista").textContent =
+            "Busca señal, cierra la aplicación y vuelve a abrirla.";
+      });
+
+      /**
+       * ¿Puede esta página guardar un reporte que alguien vaya a recoger?
+       *
+       * Dos cosas, y si falta cualquiera **no se ofrece el formulario**. Un
+       * formulario que guarda donde nadie mira es peor que no tenerlo: la
+       * persona se va convencida de que su reporte existe.
+       *
+       * 1. Que los módulos estén. Sin ellos no hay ni bandeja ni fotografía.
+       * 2. Que el origen sea el de la aplicación. El almacén de un navegador es
+       *    por origen: si esta página viviera en otro, lo que escriba aquí sería
+       *    invisible para la aplicación. Depende de `server.hostname`, y esto es
+       *    lo que comprueba que esa configuración sigue puesta.
+       */
+      function puedeGuardar() {
+        if (!window.MPD || !window.MPD.Bandeja || !window.MPD_APP) return false;
+        try {
+          return location.origin === new URL(window.MPD_APP).origin;
+        } catch (e) {
+          return false;
+        }
+      }
+      if (!puedeGuardar()) return;
+
+      var MPD = window.MPD;
+      var form = $("formulario");
+      var lista = $("vereda");
+      var nombres = MPD.Territorio.veredaNames || [];
+      lista.appendChild(new Option("Elegir…", ""));
+      for (var i = 0; i < nombres.length; i++)
+        lista.appendChild(new Option(nombres[i], nombres[i]));
+      form.hidden = false;
+
+      var decir = function (mensajes) {
+        $("errores").innerHTML = "";
+        for (var i = 0; i < mensajes.length; i++) {
+          var p = document.createElement("div");
+          p.className = "error";
+          p.textContent = mensajes[i];
+          $("errores").appendChild(p);
+        }
+        if (mensajes.length) $("errores").scrollIntoView({ block: "nearest" });
+      };
+
+      form.addEventListener("submit", function (evento) {
+        evento.preventDefault();
+        var boton = $("guardar");
+        if (boton.disabled) return;
+
+        var datos = {
+          category: $("categoria").value,
+          vereda: $("vereda").value,
+          description: $("descripcion").value,
+          phone: $("telefono").value.trim(),
+        };
+        var archivo = $("foto").files[0];
+
+        /* Las mismas reglas que el formulario de la aplicación, porque es la
+           misma función. */
+        var fallos = MPD.Logica.validateReport({
+          category: datos.category,
+          vereda: datos.vereda,
+          description: datos.description,
+          phone: datos.phone,
+          photos: archivo ? 1 : 0,
+        });
+        if (fallos.length) return decir(fallos);
+
+        boton.disabled = true;
+        boton.textContent = "Guardando…";
+        decir([]);
+
+        /* La misma preparación de la fotografía que usa la aplicación: si aquí
+           se mandara el original sin más, el servidor podría rechazarlo al
+           enviarse y el reporte moriría en la bandeja sin que nadie lo viera. */
+        MPD.Evidencia.prepareEvidence(archivo)
+          .then(function (preparada) {
+            return MPD.Bandeja.enqueue(MPD.Bandeja.SIN_CUENTA, {
+              category: datos.category,
+              vereda: datos.vereda,
+              description: datos.description,
+              phone: datos.phone,
+              photo: preparada.dataUrl,
+              sensitive: false,
+            });
+          })
+          .then(function () {
+            form.hidden = true;
+            $("hecho").hidden = false;
+            $("hechoTexto").textContent =
+              "Sale solo en cuanto entres con tu cuenta y haya señal. Lo verás en tu bandeja de envíos.";
+            window.scrollTo(0, 0);
+          })
+          .catch(function (error) {
+            /* Lo escrito no se toca. Quien acaba de contar un derrumbe no puede
+               perderlo porque falle el almacén del teléfono. */
+            decir([
+              (error && error.message) ||
+                "No se pudo guardar en este teléfono. Anota lo que escribiste antes de cerrar.",
+            ]);
+          })
+          .finally(function () {
+            boton.disabled = false;
+            boton.textContent = "Guardar el reporte";
+          });
+      });
+
+      $("foto").addEventListener("change", function () {
+        var elegida = $("foto").files[0];
+        $("fotoRotulo").textContent = elegida
+          ? elegida.name
+          : "Tomar o elegir una fotografía";
+      });
+
+      $("otro").addEventListener("click", function () {
+        form.reset();
+        $("fotoRotulo").textContent = "Tomar o elegir una fotografía";
+        form.hidden = false;
+        $("hecho").hidden = true;
+        decir([]);
+        window.scrollTo(0, 0);
+      });
+    })();
   </script>
 </html>
