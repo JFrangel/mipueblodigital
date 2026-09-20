@@ -16,6 +16,63 @@
 }
 
 /**
+ * El verde, detrás de las hojas.
+ *
+ * **No está puesto de antes: entra con ellas y se va con ellas.** Se probó
+ * quitarlo —con esta coreografía detrás siempre hay algo terminado, así que en
+ * teoría no hacía falta— y se rompía justo lo que tenía que funcionar: entre
+ * hoja y hoja se veía la pantalla de debajo, y el momento de estar tapado, que
+ * es el que da sentido al gesto, no llegaba a existir. Con el verde, el cierre
+ * es opaco de verdad.
+ *
+ * Y va en su propia capa. Estando en la misma que las hojas, desvanecerlo las
+ * desvanecía a ellas: el movimiento quedaba tapado por su propia transparencia
+ * y la animación se leía como un fundido, no como algo que se aparta.
+ *
+ * Es el mismo verde que declaran `capacitor.config.ts` y `styles.xml` para el
+ * arranque de Android, así que el momento tapado y el arranque del teléfono son
+ * el mismo color.
+ */
+.fondo {
+  position: absolute;
+  inset: 0;
+  background: #123f39;
+  opacity: 0;
+}
+
+/* Llega antes que las hojas acaben de cerrarse, para que el cierre no tenga ni
+   un fotograma translúcido. */
+.entrando .fondo,
+.fondo.entrando {
+  animation: verde-entra 700ms ease-out both;
+}
+
+.abriendo .fondo,
+.fondo.abriendo {
+  animation: verde-sale 900ms ease-in both;
+}
+
+@keyframes verde-entra {
+  from {
+    opacity: 0;
+  }
+  55%,
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes verde-sale {
+  0%,
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/**
  * El ancla: un punto sin tamaño pegado al borde de la pantalla.
  *
  * **Es lo que hace que la hoja gire sobre su peciolo y no sobre su centro.**

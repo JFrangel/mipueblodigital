@@ -84,6 +84,15 @@ export function TelonHojas({ listo }: { listo: boolean }) {
   if (fase === "fuera") return null;
   return (
     <div className={styles.telon} aria-hidden="true">
+      {/* El verde detrás: entra con las hojas y se va con ellas, para que el
+          momento de estar tapado sea opaco de verdad. */}
+      <div
+        className={[
+          styles.fondo,
+          styles.entrando,
+          fase === "abriendo" ? styles.abriendo : "",
+        ].join(" ")}
+      />
       {[
         styles.uno,
         styles.dos,
