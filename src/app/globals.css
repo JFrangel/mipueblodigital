@@ -4543,6 +4543,11 @@ textarea {
 /* El mapa necesita alto declarado: Leaflet parte del contenedor, y sin medida
    dibuja sobre cero píxeles y no hay dónde tocar para corregir el punto. */
 .located-map {
+  /* A sangre dentro de su tarjeta. Sin esto, en la tarjeta de proponer vereda
+     —que centra a sus hijos— el contenedor del mapa se quedaba en cero píxeles
+     de ancho: Leaflet arrancaba, pedía dos teselas y no dibujaba nada. */
+  width: 100%;
+  align-self: stretch;
   height: 260px;
   margin-top: 14px;
   border-radius: 12px;

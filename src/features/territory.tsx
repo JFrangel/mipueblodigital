@@ -5,7 +5,7 @@ import { MapPin, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { type Case, statuses, categories, shortDate } from "@/data/catalog";
 import { clusterPoints, pageItems } from "@/domain/logic";
 import { veredaLoad } from "@/domain/vereda-load";
-import { veredaCatalogue } from "@/domain/territory";
+import { territoryCentre, veredaCatalogue } from "@/domain/territory";
 import { CaseList } from "@/components/case-list";
 import "leaflet/dist/leaflet.css";
 export function Territory({
@@ -65,12 +65,9 @@ export function Territory({
     import("leaflet")
       .then((L) => {
         if (disposed || !container.current) return;
-        /* Centro del título colectivo, no el casco urbano: con la vista fija en
-           Bocas de Satinga las veredas del tramo bajo del río quedaban fuera de
-           pantalla y nadie sabía que existían. */
         const map = L.map(container.current, { zoomControl: false }).setView(
-          [2.2068, -78.2287],
-          11,
+          [territoryCentre.lat, territoryCentre.lng],
+          territoryCentre.zoom,
         );
         /* Capa propia para los rótulos, por debajo de los marcadores. Los
            globos de Leaflet viven en un plano que va por encima de todo, así

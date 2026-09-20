@@ -1,8 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { Map as LeafletMap, CircleMarker } from "leaflet";
-import { Crosshair, MapPin, WifiOff, Undo2 } from "lucide-react";
+import {
+  Crosshair,
+  Map as MapaIcono,
+  MapPin,
+  WifiOff,
+  Undo2,
+} from "lucide-react";
 import { referencia } from "@/data/territorio-vivo";
+import { territoryCentre } from "@/domain/territory";
 import { useOnline } from "@/data/network";
 import {
   disponible as ubicacionDisponible,
@@ -103,7 +110,12 @@ export function VeredaPreview({
    * y no puede recentrarse cada vez que alguien toca: se le iría de las manos
    * mientras lo arrastra.
    */
-  const [centro, setCentro] = useState<{ lat: number; lng: number } | null>(
+  const [centro, setCentro] = useState<{
+    lat: number;
+    lng: number;
+    /** Solo lo trae el centro del territorio: ver más abajo. */
+    zoom?: number;
+  } | null>(
     /* El punto gana a la referencia de la vereda. Importa al escribir el nombre
        de una vereda nueva: este componente se remonta con cada cambio de vereda,
        y sin esto perdería el punto que se acababa de tomar y el mapa no
@@ -136,9 +148,10 @@ export function VeredaPreview({
 
   const baseLat = centro?.lat;
   const baseLng = centro?.lng;
+  const baseZoom = centro?.zoom;
   useEffect(() => {
     if (baseLat === undefined || baseLng === undefined || !online) return;
-    const centre = { lat: baseLat, lng: baseLng };
+    const centre = { lat: baseLat, lng: baseLng, zoom: baseZoom };
     let disposed = false;
     let map: LeafletMap | undefined;
     void import("leaflet")
@@ -149,7 +162,10 @@ export function VeredaPreview({
           // La rueda desplaza la página, no el mapa: en un formulario largo es
           // peor perder el sitio que tener que pellizcar para acercar.
           scrollWheelZoom: false,
-        }).setView([centre.lat, centre.lng], 14);
+          /* Catorce para el punto de una vereda, que es lo que hay que
+             afinar. El mapa abierto a mano llega con el suyo, más lejos, para
+             que se vea el río entero y alguien pueda buscar su sitio. */
+        }).setView([centre.lat, centre.lng], centre.zoom ?? 14);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -190,7 +206,7 @@ export function VeredaPreview({
       marker.current = null;
       map?.remove();
     };
-  }, [baseLat, baseLng, online]);
+  }, [baseLat, baseLng, baseZoom, online]);
 
   async function usarMiUbicacion() {
     setBuscando(true);
@@ -260,6 +276,62 @@ export function VeredaPreview({
             {avisoUbicacion && (
               <p className="errors" role="alert">
                 {avisoUbicacion}
+              </p>
+            )}
+            {/* **La salida cuando el aparato no puede.**
+                Hasta ahora esta pantalla solo dibujaba el mapa si la ubicación
+                del teléfono funcionaba, y los avisos de error terminan todos en
+                «marca el punto en el mapa»: mandaban a un mapa que no existía.
+                Quedaban sin salida los tres casos que más se dan en el río —bajo
+                los árboles no hay satélites, un teléfono sin GPS no aparece
+                siquiera el botón, y una señal mala devuelve un punto que cae
+                fuera de la cuenca—, y sin punto la vereda nueva no se puede
+                situar.
+
+                Abrir el mapa **no se hace solo**, y eso no cambia: el río entero
+                centrado en cualquier parte no ayuda a nadie. Se abre porque
+                alguien lo pide. */}
+            {online && !mapped && (
+              <div className="located-actions">
+                <button
+                  type="button"
+                  className={
+                    ubicacionDisponible() ? "text-button" : "btn primary"
+                  }
+                  onClick={() => setCentro(territoryCentre)}
+                >
+                  <MapaIcono size={16} />
+                  Marcarlo en el mapa
+                </button>
+              </div>
+            )}
+            {mapped && online && !failed && (
+              <>
+                <div
+                  ref={container}
+                  className="located-map"
+                  aria-label="Mapa del territorio. Arrastra y toca el sitio donde está tu vereda."
+                />
+                <p className="located-note">
+                  {origen === "aparato"
+                    ? `Tu ubicación, con ${margen ?? "?"} m de margen. Si el punto no corresponde, arrastra el mapa y toca el sitio.`
+                    : origen === "mapa"
+                      ? "Punto marcado por ti. Toca otra vez si quieres corregirlo."
+                      : "Arrastra el mapa y toca el sitio donde está tu vereda."}
+                </p>
+              </>
+            )}
+            {mapped && online && failed && (
+              <p className="located-note">
+                No se pudo cargar el mapa. Escribe el nombre de la vereda y
+                envía el reporte: el Consejo la sitúa en campo.
+              </p>
+            )}
+            {!online && (
+              <p className="located-note">
+                <WifiOff size={15} /> Sin conexión no se puede dibujar el mapa.
+                Escribe el nombre de la vereda y envíalo: el punto se puede
+                poner después.
               </p>
             )}
           </>

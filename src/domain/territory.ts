@@ -107,6 +107,16 @@ export const territoryBounds = {
   east: -78.0,
 };
 
+/**
+ * Dónde abre un mapa que no tiene un punto propio al que ir.
+ *
+ * Es el centro del título colectivo, **no el casco urbano**: con la vista fija
+ * en Bocas de Satinga, las veredas del tramo bajo del río quedaban fuera de
+ * pantalla y nadie sabía que existían. El acercamiento deja ver el río entero,
+ * que es lo que hace falta cuando alguien va a buscar su sitio a mano.
+ */
+export const territoryCentre = { lat: 2.2068, lng: -78.2287, zoom: 11 };
+
 /** El título colectivo tal como lo publica la ANT, para citarlo en la interfaz. */
 export { collectiveTitle };
 
