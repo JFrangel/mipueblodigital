@@ -11,7 +11,13 @@ import {
 import { firebaseClient } from "@/data/firebase/client";
 import { cerrarSesion } from "@/platform/native";
 import { toast } from "@/data/toasts";
-import { dondeSeArregla, estadoDe, type Estado } from "@/platform/permisos";
+import {
+  abrirAjustes,
+  dondeSeArregla,
+  estadoDe,
+  pedir,
+  type Estado,
+} from "@/platform/permisos";
 import { PasswordChange } from "./password-change";
 import { DeleteAccount } from "./delete-account";
 import { AvatarPicker } from "./avatar-picker";
@@ -31,12 +37,7 @@ import {
   Crosshair,
 } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
-import {
-  activado,
-  darDeBaja,
-  disponible,
-  registrar,
-} from "@/platform/push";
+import { activado, darDeBaja, disponible, registrar } from "@/platform/push";
 import { updateSession, useSession } from "@/data/session";
 import { AvatarMark } from "@/components/ui";
 
@@ -465,39 +466,85 @@ export function Account({
           <strong>{avisos ? "Activados" : "Desactivados"}</strong>
         </button>
       )}
-      {/* Los otros dos permisos. No se piden desde aquí —eso se hace al pulsar
-          «Activar micrófono» o «Usar mi ubicación», cuando ya se sabe para qué
-          sirven— pero sí se dice en qué quedaron y dónde se cambian. */}
+      {/* Los otros dos permisos. **Se piden aquí**: la fila se pulsa y sale la
+          ventana del sistema. Antes solo contaban en qué habían quedado y un
+          párrafo fijo remitía a los ajustes, que es mandar a alguien fuera de
+          la aplicación para algo que se resuelve con un toque.
+
+          Concedido no es un botón: no hay nada que pulsar, y un control que no
+          puede hacer nada es peor que no tenerlo. */}
       {[
-        ["Micrófono para dictar", microfono] as const,
-        ["Ubicación para tus reportes", ubicacion] as const,
-      ].map(([rotulo, estado]) =>
-        estado === null || estado === "no-aplica" ? null : (
-          <div className="account-row account-permiso" key={rotulo}>
-            <span>
-              {rotulo === "Micrófono para dictar" ? (
-                <Mic size={20} />
-              ) : (
-                <Crosshair size={20} />
-              )}
-              {rotulo}
-            </span>
-            <strong>
-              {estado === "concedido"
-                ? "Concedido"
-                : estado === "negado"
-                  ? "Bloqueado"
-                  : "Se pide al usarlo"}
-            </strong>
-          </div>
-        ),
-      )}
-      {(microfono === "negado" || ubicacion === "negado") && (
-        <p className="subtle-note account-permiso-nota">
-          Un permiso bloqueado no se puede volver a pedir desde aquí. Se cambia
-          en {dondeSeArregla()}
-        </p>
-      )}
+        ["Micrófono para dictar", microfono, "microfono"] as const,
+        ["Ubicación para tus reportes", ubicacion, "ubicacion"] as const,
+      ].map(([rotulo, estado, cual]) => {
+        if (estado === null || estado === "no-aplica") return null;
+        const nombre = (
+          <span>
+            {cual === "microfono" ? <Mic size={20} /> : <Crosshair size={20} />}
+            {rotulo}
+          </span>
+        );
+        const guardar = (nuevo: Estado) =>
+          cual === "microfono" ? setMicrofono(nuevo) : setUbicacion(nuevo);
+
+        if (estado === "concedido")
+          return (
+            <div className="account-row account-permiso" key={rotulo}>
+              {nombre}
+              {/* Una palabra, y corta.
+
+                  Aquí estuvo «Solo mientras usas la app» —que es lo que Android
+                  concede de verdad, porque el permiso de segundo plano no está
+                  en el manifiesto y no va a estarlo— y en un teléfono de 360 px
+                  no cabía al lado de su rótulo: la fila se partía en dos
+                  renglones y quedaba desparejada con la de al lado. Esa
+                  salvedad la dice el propio diálogo de Android al concederlo,
+                  que es donde se decide. */}
+              <strong>Concedido</strong>
+            </div>
+          );
+
+        return (
+          <button
+            className="account-row account-permiso"
+            key={rotulo}
+            onClick={() => {
+              /* Negado: el sistema ya no vuelve a preguntar por mucho que se
+                 pulse. En vez de no hacer nada —que se lee como una avería—
+                 se dice dónde se cambia, y se dice **al pulsar**, no en un
+                 párrafo que está siempre ahí. */
+              if (estado === "negado")
+                return void abrirAjustes().then((abrio) => {
+                  /* En el teléfono se abre la pantalla de permisos y ya está.
+                     Recitar «Ajustes › Aplicaciones › Mi Pueblo Digital ›
+                     Permisos» es mandar a alguien a buscar por su cuenta algo
+                     que se abre de un toque. El camino dicho queda para el
+                     navegador, donde no hay nada que abrir. */
+                  if (!abrio)
+                    /* No es un «hecho»: es un permiso que no se consiguió y
+                       que hay que ir a arreglar. Con el tono de fallo además
+                       se queda el doble de tiempo en pantalla, que es lo que
+                       hace falta para leer un camino y seguirlo. */
+                    toast(
+                      `Ya se le dijo que no a este permiso, y desde aquí no se puede volver a pedir. Se cambia en ${dondeSeArregla()}`,
+                      "error",
+                    );
+                });
+              void pedir(cual).then((nuevo) => {
+                guardar(nuevo);
+                if (nuevo === "negado")
+                  toast(
+                    `Sin este permiso no se puede. Si cambias de idea, se activa en ${dondeSeArregla()}`,
+                    "error",
+                  );
+              });
+            }}
+          >
+            {nombre}
+            <strong>{estado === "negado" ? "Bloqueado" : "Activar"}</strong>
+          </button>
+        );
+      })}
       <Link className="account-row" href="/mis-reportes/">
         <span>Mis reportes</span>
         <ArrowUpRight size={16} />

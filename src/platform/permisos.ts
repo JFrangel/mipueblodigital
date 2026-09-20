@@ -1,4 +1,5 @@
 "use client";
+import { registerPlugin } from "@capacitor/core";
 import { esNativo } from "./native";
 
 /**
@@ -37,9 +38,8 @@ const comoEstado = (valor: string | undefined): Estado =>
 async function nativo(permiso: Permiso): Promise<Estado> {
   try {
     if (permiso === "microfono") {
-      const { SpeechRecognition } = await import(
-        "@capacitor-community/speech-recognition"
-      );
+      const { SpeechRecognition } =
+        await import("@capacitor-community/speech-recognition");
       if (!(await SpeechRecognition.available()).available) return "no-aplica";
       return comoEstado(
         (await SpeechRecognition.checkPermissions()).speechRecognition,
@@ -78,14 +78,94 @@ async function web(permiso: Permiso): Promise<Estado> {
 export const estadoDe = (permiso: Permiso): Promise<Estado> =>
   esNativo() ? nativo(permiso) : web(permiso);
 
+async function pedirNativo(permiso: Permiso): Promise<Estado> {
+  try {
+    if (permiso === "microfono") {
+      const { SpeechRecognition } =
+        await import("@capacitor-community/speech-recognition");
+      return comoEstado(
+        (await SpeechRecognition.requestPermissions()).speechRecognition,
+      );
+    }
+    const { Geolocation } = await import("@capacitor/geolocation");
+    const permisos = await Geolocation.requestPermissions();
+    return permisos.location === "granted" ||
+      permisos.coarseLocation === "granted"
+      ? "concedido"
+      : comoEstado(permisos.location);
+  } catch {
+    return "no-aplica";
+  }
+}
+
+async function pedirWeb(permiso: Permiso): Promise<Estado> {
+  try {
+    if (permiso === "microfono") {
+      const flujo = await navigator.mediaDevices.getUserMedia({ audio: true });
+      /* Se suelta en cuanto se concede: aquí se pedía el permiso, no se está
+         grabando, y dejar el micrófono abierto encendería el punto rojo del
+         teléfono sin que nadie esté dictando. */
+      flujo.getTracks().forEach((pista) => pista.stop());
+      return "concedido";
+    }
+    await new Promise<void>((bien, mal) =>
+      navigator.geolocation.getCurrentPosition(() => bien(), mal, {
+        timeout: 20000,
+      }),
+    );
+    return "concedido";
+  } catch {
+    /* Un «no» no es un fallo: se vuelve a leer el estado y se dice lo que haya
+       quedado, que es lo que hace falta para saber si se puede reintentar. */
+    return web(permiso);
+  }
+}
+
+/**
+ * Pedir el permiso.
+ *
+ * Se pide **al pulsar la fila**, que es cuando la persona ya sabe para qué
+ * sirve. Antes esta pantalla solo contaba en qué habían quedado y remitía a
+ * los ajustes con un párrafo permanente: una pantalla que dice «esto está
+ * apagado» y no ofrece encenderlo obliga a salir de la aplicación para algo
+ * que se resuelve con un toque.
+ */
+export const pedir = (permiso: Permiso): Promise<Estado> =>
+  esNativo() ? pedirNativo(permiso) : pedirWeb(permiso);
+
+/**
+ * Abrir los permisos de esta aplicación en los ajustes del teléfono.
+ *
+ * Solo existe en el APK, y por eso devuelve si pudo: quien llama tiene que
+ * poder decir el camino de palabra cuando no. En el navegador no hay nada que
+ * abrir —los permisos de un sitio los gobierna el propio navegador— y contesta
+ * que no sin intentarlo.
+ */
+export async function abrirAjustes(): Promise<boolean> {
+  if (!esNativo()) return false;
+  try {
+    const Ajustes = registerPlugin<{ abrirPermisos(): Promise<void> }>(
+      "Ajustes",
+    );
+    await Ajustes.abrirPermisos();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Dónde se arregla un permiso negado.
  *
  * No se abren los ajustes: hacerlo desde una ventana de Capacitor necesita otro
  * complemento en el APK, y el camino dicho con todas sus letras resuelve lo
  * mismo. Si algún día entra ese complemento, este es el sitio.
+ *
+ * Va **en minúscula y sin preposición**, porque se lee detrás de «Se cambia
+ * en»: con la mayúscula puesta, la frase salía diciendo «se cambia en En la
+ * barra de direcciones».
  */
 export const dondeSeArregla = () =>
   esNativo()
-    ? "Ajustes del teléfono › Aplicaciones › Mi Pueblo Digital › Permisos."
-    : "En la barra de direcciones del navegador, tocando el candado › Permisos de este sitio.";
+    ? "los ajustes del teléfono › Aplicaciones › Mi Pueblo Digital › Permisos."
+    : "la barra de direcciones del navegador, tocando el candado › Permisos de este sitio.";
