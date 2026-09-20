@@ -7,6 +7,10 @@
   --green: #174f3b;
   --soft: #eaf2e9;
   --accent: #b9d8a3;
+  /* Lo que salió bien y lo que no. Propios, no heredados: `--green` se vuelve
+     casi blanco en tema oscuro y dejaba el aviso sin color. */
+  --aviso-hecho: #2f7150;
+  --aviso-falla: #c0503a;
   --shadow: 0 4px 20px #243e2811;
   --radius: 18px;
 }
@@ -637,6 +641,8 @@ hr {
   --line: #343434;
   --green: #e5e5e1;
   --soft: #252525;
+  --aviso-hecho: #7ec49a;
+  --aviso-falla: #e78b72;
   --shadow: 0 4px 20px #0002;
 }
 .sidebar {
@@ -651,44 +657,181 @@ hr {
   display: flex;
   flex-direction: column;
   z-index: 30;
+  /* La hoja del fondo entra por la esquina y se recorta contra la barra. */
+  overflow: hidden;
 }
+/* Todo lo que se lee va por delante del dibujo. */
+.sidebar > *:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 1;
+}
+/* Por línea base, no por centro: centrado, el «Mi» se alineaba con el bloque
+   entero —nombre más descriptor— y quedaba medio renglón por debajo de
+   «Pueblo». Así los dos se apoyan en la misma raya. */
 .brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
   color: var(--green);
   line-height: 1.2;
-}
-.brand-mark {
-  border-radius: 13px;
-  flex-shrink: 0;
+  /* Una sola medida manda el rótulo entero: el nombre, la «Mi» de al lado y
+     todo lo que se calcula en `em` a partir de ellos. */
+  --rotulo: 28px;
 }
 /* El nombre lleva la tipografía de rótulo; el resto de la aplicación, no. */
 .brand-word {
   font-family:
     "Bricolage Grotesque Variable", "DM Sans Variable", Arial, sans-serif;
-  font-size: 22px;
-  font-weight: 750;
-  line-height: 0.98;
-  letter-spacing: -0.9px;
+  font-size: var(--rotulo);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -1.3px;
+}
+/* El corte de esta fuente con eje de anchura pesa 131 KB contra 41 KB del de
+   grueso. Noventa kilobytes más de tipografía crítica no valen un rótulo en un
+   territorio donde la aplicación se pasa por Bluetooth: el carácter sale del
+   contraste de pesos y del espaciado, que no cuestan nada. */
+/**
+ * El «Mi».
+ *
+ * No es parte del nombre: es el posesivo, y por eso va escrito a mano y con la
+ * enredadera alrededor. Lo que lo separa de «Pueblo» no es el tamaño —es del
+ * mismo cuerpo— sino la letra, el color y el dibujo.
+ */
+.brand-mi {
+  display: inline-block;
+  vertical-align: baseline;
+  font-size: calc(var(--rotulo) * 1.12);
+}
+.brand-mi i {
+  /* Escrita a mano: es el posesivo, y quien lo dice es una persona. La fuente
+     ya viaja con la aplicación —la usa la firma de los comunicados—, así que
+     no cuesta un byte. */
+  font-family: "Caveat Variable", "Segoe Script", cursive;
+  font-style: normal;
+  /* Caveat tiene el ojo pequeño y las astas largas: a 1,34 em con interlínea
+     0,8 los trazos se salían del recuadro por los cuatro lados. */
+  font-size: 1em;
+  font-weight: 700;
+  letter-spacing: 0;
+  display: inline-block;
+  line-height: 1.05;
+  padding: 0.04em 0.1em 0.06em;
+  /* El gris de la aplicación, que ya cambia solo con el tema. */
+  color: var(--muted);
+}
+/* Un espacio de palabra y nada más. Los 14 px de antes eran el hueco que
+   necesitaba la enredadera para no montarse sobre la «P»; sin ella, separaban
+   dos palabras que son una sola cosa. */
+.brand .brand-mi {
+  margin-right: 5px;
 }
 /* «Digital» deja de ser una segunda palabra del mismo tamaño y pasa a ser lo
    que es: el descriptor. Pequeño, espaciado y en el verde de la marca, vuelve
    al cuerpo de texto para que el contraste entre las dos líneas sea evidente
    y no parezca que la segunda se quedó corta. */
+/**
+ * El descriptor, en plata.
+ *
+ * «Digital» es la parte técnica del nombre y ahora lo dice el color: un gris
+ * frío en vez del verde del territorio. Así la línea tiene un solo color —el
+ * de la hoja que la cierra— y el contraste entre lo que somos y la herramienta
+ * queda dicho sin una palabra de más.
+ *
+ * El plata de verdad (#c0c0c0) no se puede usar: a 10 px sobre blanco no llega
+ * al contraste mínimo y el rótulo dejaría de leerse. Cada tema lleva el suyo,
+ * frío en los dos.
+ *
+ * Y va en **monoespaciada**, que es lo que de verdad grita «digital»: la letra
+ * de ancho fijo es la convención de lo que sale de una máquina, y a este cuerpo
+ * se reconoce antes que cualquier otro recurso. Es la del sistema, así que no
+ * se descarga nada: la única parte del rótulo que no viaja con la aplicación,
+ * y puede serlo porque lo que tiene que decir no es una forma concreta sino
+ * «esto es la herramienta».
+ */
 .brand-word em {
+  /* Texto corrido y no una fila con el dibujo al final: la hoja está **dentro**
+     de la palabra, así que tiene que fluir con ella. */
   display: block;
-  margin-top: 4px;
-  font-family: "DM Sans Variable", Arial, sans-serif;
+  margin-top: 7px;
+  font-family:
+    ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
+    "DejaVu Sans Mono", monospace;
   font-style: normal;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 2.4px;
+  font-weight: 500;
+  letter-spacing: 3px;
   text-transform: uppercase;
-  color: #2f7150;
+  color: #7d8a85;
+}
+/* Lo que solo existe para quien no ve la pantalla. */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/**
+ * La hoja, que es la A.
+ *
+ * Va dentro del renglón y con la medida de una letra, no colgada al final:
+ * ocupa su casilla en la retícula de la monoespaciada como una más. Ladeada a
+ * propósito —a plomo parecería un icono— y con el trazo del mismo grosor
+ * óptico que las mayúsculas de al lado.
+ */
+.brand-leaf {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  vertical-align: -3px;
+  /* La tinta de la hoja no llena su caja —el trazo empieza adentro y el giro
+     lo escora—, así que con el espaciado a secas se abría un hueco de más
+     contra la «T» y se cerraba contra la «L». Se corrige por los dos lados. */
+  margin: 0 1.5px 0 -1.5px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transform: rotate(-16deg);
 }
 .dark .brand-word em {
-  color: #8fcf9a;
+  color: #c2c9c5;
+}
+/* La hoja se queda verde: es la única mancha de color del renglón. */
+.brand-leaf {
+  color: #3f9a61;
+}
+/**
+ * El río, en azul.
+ *
+ * Es lo único de la marca que no es verde, y por eso la barra de la A se lee
+ * como agua y no como una nervadura más de la hoja. Va el azul que ya usa la
+ * aplicación para el agua —el mismo de la brújula del mapa y de las olas—, y
+ * sobre oscuro sube de claridad lo que pide el fondo: es el mismo tono, no un
+ * azul nuevo.
+ */
+.brand-rio {
+  stroke: #4a86b8;
+}
+/**
+ * El neón, **solo sobre oscuro**.
+ *
+ * Un resplandor sobre blanco no se lee como neón: se lee como una impresión
+ * mal registrada, porque el brillo necesita oscuridad alrededor para existir.
+ * Así que en tema claro la hoja va limpia y en oscuro enciende — y enciende
+ * solo ella, que es la única letra de color del renglón: un neón repartido por
+ * toda la palabra sería un letrero, no una marca.
+ */
+.dark .brand-leaf {
+  color: #7ef2a4;
+  filter: drop-shadow(0 0 3px rgba(126, 242, 164, 0.75))
+    drop-shadow(0 0 7px rgba(126, 242, 164, 0.35));
+}
+.dark .brand-rio {
+  stroke: #83b9e0;
 }
 .logo-link {
   margin: 0 12px 40px;
@@ -1210,6 +1353,19 @@ hr {
   border-radius: 9px;
   background: linear-gradient(135deg, #d9e4d5, #a2bca4);
   color: #365d42;
+}
+/* Con fotografía, el recuadro deja de ser el icono de la categoría y pasa a
+   ser la fotografía. Solo pasa en la bandeja del Consejo: ver
+   miniatura-expediente.tsx. */
+.case-art.con-foto {
+  background: var(--soft);
+  overflow: hidden;
+}
+.case-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .case-art.recursos_naturales {
   background: #dde8bb;
@@ -1763,58 +1919,132 @@ select {
   display: grid;
   gap: 10px;
 }
+/**
+ * Los avisos.
+ *
+ * El color va en **un solo sitio**: el disco del icono. Antes era una raya de
+ * 3 px en el canto izquierdo, que es el adorno que lleva cualquier tarjeta de
+ * cualquier sitio y que además aquí estaba roto —en tema oscuro `--green` vale
+ * casi blanco, así que el color de «hecho» se quedaba sin color—.
+ *
+ * Los dos tonos son propios y no heredados, para que digan lo mismo en los dos
+ * temas: verde lo que salió bien, terracota lo que no.
+ */
 .toast {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 11px;
   padding: 13px 14px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: 0 10px 30px #1a2a2033;
+  box-shadow:
+    0 14px 34px rgb(10 28 20 / 0.22),
+    0 2px 6px rgb(10 28 20 / 0.1);
   font-size: 12px;
   line-height: 1.55;
   color: var(--text);
+  position: relative;
+  overflow: hidden;
   /* El contenedor no intercepta el puntero para no tapar lo que hay debajo;
      cada aviso sí, porque lleva su botón de cerrar. */
   pointer-events: auto;
-  animation: toast-entra 0.22s cubic-bezier(0.22, 0.7, 0.3, 1);
+  animation: toast-entra 0.26s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
+/**
+ * La hoja del aviso.
+ *
+ * **La hoja de plátano de la animación de envío**, la misma que se aparta
+ * cuando un reporte sale. Las tarjetas llevan los elementos del territorio
+ * —canoa, palma, manglar—; el aviso lleva la hoja, porque el aviso es la
+ * aplicación hablando de algo que acaba de pasar.
+ *
+ * Lo que cambia con el tipo no es el dibujo sino su tinte: la marca es siempre
+ * la de la casa y el color dice lo que pasó.
+ */
+.toast:before {
+  content: "";
+  position: absolute;
+  /* Tumbada en la esquina, no de pie: la hoja mide 120 por 320, y puesta
+     vertical en un aviso de cien píxeles solo se ve un trozo del centro de la
+     lámina, que es una mancha. Ladeada entran la punta y el ancho, y entonces
+     se reconoce. */
+  /* Colocada **por su centro**: con la caja a 94 por 200, ponerla a −34 y −78
+     deja ese centro trece píxeles dentro del canto derecho y veintidós por
+     encima del inferior, o sea dentro de la esquina. */
+  right: -34px;
+  bottom: -78px;
+  width: 94px;
+  height: 200px;
+  pointer-events: none;
+  background: var(--tinte-aviso);
+  opacity: 0.3;
+  mask: var(--platano) center / contain no-repeat;
+  -webkit-mask: var(--platano) center / contain no-repeat;
+  /* Gira sobre su centro. Girando sobre su propia esquina, la lámina se iba
+     hacia el medio del aviso y acababa detrás del texto, que es justo donde no
+     tiene que estar. */
+  transform: rotate(-45deg);
+}
+/* Todo lo que se lee, por delante del dibujo. */
+.toast > * {
+  position: relative;
+  z-index: 1;
+}
+/* El icono en su propio disco: dice de qué habla antes de que se lea. */
 .toast > svg:first-child {
   flex: none;
-  margin-top: 1px;
+  box-sizing: border-box;
+  width: 26px;
+  height: 26px;
+  padding: 5px;
+  border-radius: 50%;
 }
 .toast > span {
   flex: 1;
   min-width: 0;
+  /* La hoja tiene su propia banda por la derecha. Sin ella habría que dejarla
+     casi invisible para no estorbar la lectura, y entonces no se ve. */
+  padding-right: 30px;
 }
 .toast > button {
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 1px -4px 0 0;
   padding: 0;
   border: 0;
+  border-radius: 50%;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
 }
 .toast > button:hover {
   color: var(--text);
+  background: var(--soft);
 }
 .toast-done {
-  border-left: 3px solid var(--green);
-}
-.toast-done > svg:first-child {
-  color: var(--green);
+  --tinte-aviso: var(--aviso-hecho);
 }
 .toast-error {
-  border-left: 3px solid #c0503a;
+  --tinte-aviso: var(--aviso-falla);
+}
+.toast-done > svg:first-child {
+  color: var(--aviso-hecho);
+  background: color-mix(in srgb, var(--aviso-hecho) 15%, transparent);
 }
 .toast-error > svg:first-child {
-  color: #c0503a;
+  color: var(--aviso-falla);
+  background: color-mix(in srgb, var(--aviso-falla) 15%, transparent);
 }
+/* Entra desde su esquina, no desde abajo: vive pegado al canto derecho. */
 @keyframes toast-entra {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translate(16px, 6px) scale(0.98);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2909,6 +3139,23 @@ textarea {
   gap: 10px;
   align-items: center;
 }
+/**
+ * Cuando el valor no cabe al lado de su rótulo, baja a su propio renglón.
+ *
+ * En un teléfono de 360 px la fila tiene 278, y el rótulo de la ubicación se
+ * come 198. «Bloqueado» cabe raspando; «Solo mientras usas la app» —que es lo
+ * que dice esa misma fila en cuanto se concede el permiso— mide más del doble
+ * y aplastaba el rótulo contra el borde.
+ *
+ * Envolviendo, la fila que cabe no cambia y la que no cabe se parte, con el
+ * valor alineado a la derecha en su renglón. Es la solución que no depende de
+ * lo largo que sea el texto, y aquí hay textos que aún no existen. */
+.account-row > span {
+  min-width: 0;
+}
+.account-row > strong {
+  flex-shrink: 0;
+}
 /* La fila que lleva a otra pantalla lo dice con la misma flecha que el pie de
    la tarjeta; la de apariencia no la lleva porque no va a ninguna parte:
    cambia un ajuste aquí mismo y ya enseña su valor a la derecha. */
@@ -3397,9 +3644,10 @@ textarea {
   .net-pill small {
     display: none;
   }
-  .theme-toggle {
-    display: none;
-  }
+  /* El cambio de tema **sí** cabe en el teléfono. Estaba escondido porque la
+     barra necesitaba el ancho para la identidad y el estado de red, y ya no:
+     medido a 414 px quedan 98 px libres entre una cosa y la otra. Escondido
+     obligaba a tres toques por Mi cuenta para algo que se usa al anochecer. */
   /* La bandeja de novedades sube desde el borde inferior, con el alcance del pulgar. */
   .notification-pop {
     position: fixed;
@@ -4596,13 +4844,11 @@ textarea {
   padding-top: 14px;
   border-top: 1px solid var(--line);
 }
-/* Una fila de permiso no lleva a ninguna parte: dice en qué quedó algo que
-   gobierna el sistema. Se distingue de las que sí se pulsan. */
-.account-permiso {
+/* Solo la fila de un permiso **ya concedido** no lleva a ninguna parte —no
+   hay nada que pulsar—, y esa es la que se pinta como un <div>. Las otras dos
+   son botones que piden el permiso, y se pulsan como cualquier otra fila. */
+div.account-permiso {
   cursor: default;
-}
-.account-permiso-nota {
-  margin-top: 12px;
 }
 .territorio-decision p {
   margin: 0 0 12px;
@@ -4770,17 +5016,24 @@ textarea {
    y se queda hasta que alguien la da por leída. Por eso lleva marco propio y
    no el gris de los rengloncillos de estado. */
 .sync-status.delivered {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 12px 16px;
+  /* Los costados son de las hojas. Ver .small en banana-leaves.module.css. */
+  padding: 14px 56px;
   border: 1px solid var(--line);
   border-left: 3px solid #3f9a61;
   border-radius: 12px;
   background: var(--surface);
   color: var(--text);
+}
+.sync-status.delivered > *:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 1;
 }
 .sync-status.delivered .text-button {
   padding: 0;
@@ -5057,49 +5310,15 @@ textarea {
   z-index: 1;
   max-width: 100%;
 }
+/* Las filas de envíos y el pie no van dentro de -body, y el dibujo se pinta
+   por encima de lo que no está posicionado. Se sube todo lo que se lee. */
+.remote-panel > *:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 1;
+}
 @media (min-width: 768px) {
   .remote-panel-body {
     max-width: 62%;
-  }
-}
-.panel-artwork {
-  display: none;
-}
-@media (min-width: 768px) {
-  .panel-artwork {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 45%;
-    padding-right: 36px;
-    pointer-events: none;
-    user-select: none;
-    z-index: 0;
-  }
-  .panel-artwork-svg {
-    position: absolute;
-    right: -20px;
-    top: -20px;
-    width: 320px;
-    height: 320px;
-    color: var(--line);
-    opacity: 0.7;
-  }
-  .panel-artwork-text {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    line-height: 1.45;
-    color: var(--text);
-    opacity: 0.25;
-    text-align: right;
-    position: relative;
-    z-index: 1;
   }
 }
 
@@ -5332,6 +5551,10 @@ textarea {
   --brujula: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m12 3.6 2.1 6.3 6.3 2.1-6.3 2.1-2.1 6.3-2.1-6.3L3.6 12l6.3-2.1z'/%3E%3C/svg%3E");
   /* Atarraya: la red que se lanza y recoge de una vez lo que hay abajo. */
   --atarraya: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 3.5h14l-2.6 17h-8.8L5 3.5Z'/%3E%3Cpath d='M7.4 9.2h9.2'/%3E%3Cpath d='M8.3 14.8h7.4'/%3E%3Cpath d='M10 3.5l1.2 17'/%3E%3Cpath d='M14 3.5l-1.2 17'/%3E%3C/svg%3E");
+  /* La hoja de plátano de la animación de envío, en silueta: la misma que se
+     aparta cuando un reporte sale. Aquí va de filigrana, así que solo hace
+     falta su contorno. */
+  --platano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 320'%3E%3Cpath d='M34.5 314.1L34.8 301.7L35.5 289.5L36.4 277.4L37.7 265.5L39.3 253.7L41.2 242L43.3 230.4L45.6 218.9L48.1 207.4L50.8 195.9L53.7 184.5L56.7 173L59.8 161.5L62.9 150L66.1 138.4L69.4 126.7L72.7 115L75.9 103.1L79.1 91.1L82.3 78.9L85.3 66.5L88.3 54L91.1 41.2L93.8 28.3L96.3 15.1L95.7 14.9L93 28.1L90 41L87 53.7L83.8 66.1L80.5 78.4L77.1 90.5L73.6 102.4L70.1 114.2L66.6 125.9L63.1 137.5L59.6 149L56.2 160.5L52.9 172L49.7 183.4L46.5 194.8L43.6 206.3L40.8 217.8L38.2 229.4L35.8 241L33.7 252.8L31.8 264.7L30.2 276.7L29 288.9L28.1 301.3L27.5 313.9Z' fill='%23000'/%3E%3Cpath d='M96 14C35 30 2 86 14 144l26-15-23 26c5 25 14 45 26 64l19-39-12 54c39-24 66-58 65-103l-16 10 15-23c2-35-3-69-18-104Z' fill='%23000'/%3E%3C/svg%3E");
   --brote: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 20h10'/%3E%3Cpath d='M10 20c5.5-2.5.8-6.4 3-10'/%3E%3Cpath d='M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z'/%3E%3Cpath d='M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z'/%3E%3C/svg%3E");
 }
 /* La tarjeta recorta el motivo contra su propio canto redondeado. */
@@ -5387,6 +5610,89 @@ textarea {
 }
 .newsroom:before {
   --tinte: #3f9a61;
+}
+/**
+ * La filigrana de la tarjeta de acceso.
+ *
+ * Estaba declarada desde el principio junto a las demás y **no se vio nunca**:
+ * al pseudoelemento no le dio medida nadie, así que se quedaba en 0×0. Aquí se
+ * le da, en la esquina que estas tarjetas dejan libre —los botones van abajo a
+ * la izquierda—.
+ */
+/* La filigrana va detrás: los botones de estas tarjetas llegan hasta la
+   esquina, y una marca pintada encima de un botón no es una marca, es
+   suciedad. */
+.acceso-necesario > *,
+.lista-casos > * {
+  position: relative;
+  z-index: 1;
+}
+.acceso-necesario:before {
+  right: -22px;
+  bottom: -26px;
+  width: 158px;
+  height: 158px;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(-12deg);
+}
+/* Sobre el mapa la tarjeta es baja y está ocupando el sitio de lo que la
+   persona vino a ver: ahí la marca se encoge en vez de comerse el hueco. */
+.acceso-necesario.compacta:before {
+  right: -16px;
+  bottom: -20px;
+  width: 108px;
+  height: 108px;
+}
+/* Cada una con el elemento de lo que hay al otro lado, y ninguna repetida:
+   la canoa lleva los reportes río abajo, la brújula dice dónde estás, la palma
+   es lo que se ve desde tu propia orilla y la atarraya recoge de una vez lo
+   que hay debajo, que es lo que hace una estadística. */
+/**
+ * El hueco de la barra lateral.
+ *
+ * Se lo queda el dibujo: crece con lo que sobre y se encoge cuando no sobra
+ * nada —con la barra del Consejo, que lleva más apartados, o en una pantalla
+ * corta—. Las hojas van pegadas a su borde de abajo, así que al encogerse
+ * asoman menos en vez de montarse sobre los enlaces.
+ */
+/* La lista de casos, cuando está vacía: el brote, que es lo que hay en un
+   espacio por completar. Lleva su filigrana como las demás tarjetas, y no la
+   llevaba. */
+.lista-casos {
+  position: relative;
+  overflow: hidden;
+}
+.lista-casos:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: var(--tinte, currentColor);
+  mask: var(--hoja) center / contain no-repeat;
+  -webkit-mask: var(--hoja) center / contain no-repeat;
+  --hoja: var(--brote);
+  --tinte: #3f9a61;
+  right: -24px;
+  bottom: -28px;
+  width: 150px;
+  height: 150px;
+  opacity: var(--filigrana-grande, 0.13);
+  transform: rotate(-10deg);
+}
+.acceso-canoa:before {
+  --hoja: var(--canoa);
+  --tinte: #4a86b8;
+}
+.acceso-brujula:before {
+  --hoja: var(--brujula);
+  --tinte: #4a86b8;
+}
+.acceso-palma:before {
+  --hoja: var(--palma);
+  --tinte: #3f9a61;
+}
+.acceso-atarraya:before {
+  --hoja: var(--atarraya);
+  --tinte: #8a7a4e;
 }
 /* «Mi cuenta» es la pantalla más personal de la aplicación: lleva la palma,
    que es lo que se ve al levantar la vista desde cualquier orilla del río. */
@@ -5639,6 +5945,75 @@ textarea {
   max-width: 1040px;
   margin: 0 auto;
   padding: clamp(20px, 4vw, 34px);
+  position: relative;
+  overflow: hidden;
+}
+.bulletin > *:not([aria-hidden="true"]) {
+  position: relative;
+  z-index: 1;
+}
+/**
+ * La bandeja de salida: el palafito.
+ *
+ * La casa sobre pilotes es lo que hay aquí —reportes guardados en el teléfono,
+ * a resguardo, esperando a que suba el agua para salir—. Aquí se probó antes
+ * el dibujo grande de las hojas y no cabía: el panel mide 745 px con tres
+ * envíos y su pie se iba debajo de la barra de navegación. En tamaño de marca
+ * cierra la esquina y se ve siempre.
+ */
+.remote-panel:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  right: -16px;
+  bottom: -18px;
+  width: 112px;
+  height: 112px;
+  background: #3f9a61;
+  opacity: var(--filigrana-grande, 0.13);
+  mask: var(--palafito) center / contain no-repeat;
+  -webkit-mask: var(--palafito) center / contain no-repeat;
+  transform: rotate(-8deg);
+}
+/**
+ * La guía: el manglar.
+ *
+ * Su índice se queda pegado arriba mientras se lee, y debajo de los apartados
+ * sobra media columna. Ahí va el manglar —el árbol que se sostiene sobre sus
+ * propias raíces dentro del agua, lo que sujeta la orilla y donde queda todo
+ * lo que el río trae—, que es exactamente lo que hace una guía.
+ *
+ * Solo en la disposición de dos columnas: en el teléfono el índice va en línea
+ * y no hay columna donde ponerlo.
+ */
+@media (min-width: 768px) {
+  .knowledge-nav:after {
+    content: "";
+    height: 132px;
+    margin-top: 20px;
+    pointer-events: none;
+    background: #3f9a61;
+    opacity: var(--filigrana-grande, 0.13);
+    mask: var(--manglar) center / contain no-repeat;
+    -webkit-mask: var(--manglar) center / contain no-repeat;
+  }
+}
+/* La hoja del comunicado: la filigrana del sistema, no el dibujo grande. Este
+   panel es el único que no la llevaba, y la hoja en tamaño de ilustración le
+   quedaba encima; en tamaño de marca cierra el recuadro y ya. */
+.bulletin:before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  right: -18px;
+  bottom: -20px;
+  width: 118px;
+  height: 118px;
+  background: #3f9a61;
+  opacity: var(--filigrana-grande, 0.13);
+  mask: var(--hoja) center / contain no-repeat;
+  -webkit-mask: var(--hoja) center / contain no-repeat;
+  transform: rotate(-12deg);
 }
 .bulletin-back {
   display: inline-flex;
@@ -6551,11 +6926,22 @@ textarea {
 /* Los mandos de la cabecera de una lista: la acción principal y, debajo, la de
    volver a pedirla. Apiladas y a la derecha, para que el botón verde siga
    alineado con el titular como en el resto de las pantallas. */
+/* El rótulo del botón no se parte.
+
+   En el reparto de .page-intro esta columna es la que cede, y a anchos medios
+   se encogía hasta partir «Nuevo reporte» en dos líneas alrededor del signo:
+   el icono a la izquierda, el rótulo en dos renglones y todo descuadrado
+   respecto a «Actualizar», que sí cabía de una. */
 .intro-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+  flex-shrink: 0;
+}
+.intro-actions .btn,
+.intro-actions .text-button {
+  white-space: nowrap;
 }
 .intro-actions .text-button {
   display: inline-flex;
@@ -6576,6 +6962,8 @@ textarea {
   .intro-actions {
     align-items: stretch;
   }
+  /* Centrada bajo el botón, no alineada a su canto: se probaron las dos y
+     esta es la que se ve mejor. */
   .intro-actions .text-button {
     justify-content: center;
   }
