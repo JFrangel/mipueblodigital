@@ -4,12 +4,12 @@
  * **Tiene color propio, y antes no lo tenía.** Seguía el tema del teléfono con
  * la idea de que una portada con color se lee como algo a medio cargar. En la
  * web eso es cierto; dentro de la aplicación instalada era justo al revés: la
- * pantalla que pinta Android va en verde, el telón de hojas que abre va en
- * verde, y esta quedaba en medio en blanco. El arranque era verde, blanco,
- * verde —un destello— y lo que se veía no era una portada sencilla, era una
- * costura.
+ * pantalla que pinta Android lleva color, el telón de hojas que abre también, y
+ * esta quedaba en medio en blanco. Un destello a contraluz cada vez que alguien
+ * abría: lo que se veía no era una portada sencilla, era una costura.
  *
- * Ahora las tres son el mismo campo y el arranque se lee como una sola pieza.
+ * Ahora las cinco pantallas que se suceden al abrir son el mismo campo —el azul
+ * del río de noche, ver `--arranque`— y el arranque se lee como una sola pieza.
  */
 
 .portada {
@@ -107,12 +107,6 @@
 }
 .marca :global(.brand em) {
   color: #a7dcb6;
-}
-.marca :global(.brand-leaf) {
-  color: #86dca6;
-}
-.marca :global(.brand-rio) {
-  stroke: #8fd0f0;
 }
 
 /**

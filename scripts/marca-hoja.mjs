@@ -14,56 +14,24 @@
  * están aquí: se leen de `src/components/palafito-trazos.ts`, que es la misma
  * fuente que usa la aplicación.
  *
- * La hoja-A sigue existiendo, pero como rótulo y no como icono: es la pieza que
- * lleva «DIGITAL» en la cabecera, y ahí tiene sitio para leerse.
+ * La hoja ya no está en ninguna parte: fue la marca y fue la A de «DIGITAL» en
+ * el rótulo, y las dos cosas pasaron al palafito o volvieron a ser letra. Sus
+ * trazos se quitaron de aquí el día que dejaron de dibujarse en algún sitio;
+ * quien los quiera de vuelta, están en el historial.
  */
 import { trazosPalafito } from "./palafito.mjs";
 
-/** Los mismos trazos que `.brand-leaf` en `src/components/ui.tsx`. */
-export const LAMINA =
-  "M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z";
-
-/**
- * El travesaño de la A **es el río**, y por eso serpentea.
- *
- * Esto es el Gran Consejo Comunitario del Río Satinga: allí el río no es un
- * adorno del paisaje, es la calle. El meandro cruza a la altura a la que cabe
- * —se midió la distancia de cada punto al canto de la lámina— y con la
- * amplitud que deja raya de sombra contra ella.
- */
-export const RIO =
-  "M3.9 13C4.6 13.2 6.7 14.2 8.1 14.2C9.5 14.2 10.8 13.4 12.2 13C13.6 12.6 15 11.8 16.4 11.8C17.8 11.8 19.9 12.8 20.6 13";
-
-/** El verde de la hoja, sobre el fondo oscuro de la casa. */
+/** El verde de la casa, sobre el fondo azul del icono. */
 export const VERDE = "#9be49c";
 
 /**
- * El azul del río: el mismo que usa la aplicación para el agua (#4a86b8), con
- * la claridad que pide un fondo verde oscuro. No es un azul nuevo, es el mismo
- * tono más claro.
+ * El azul del agua: el mismo que usa la aplicación (#4a86b8), con la claridad
+ * que pide un fondo oscuro. No es un azul nuevo, es el mismo tono más claro.
  *
- * Es lo único de la marca que no es verde, y de ahí sale todo su trabajo: una
- * raya verde dentro de una hoja verde se lee como una nervadura; en azul se lee
- * como agua. A tamaños pequeños —11 px en el rótulo— la forma del meandro ya no
- * se distingue, pero el color sí, y es lo que sigue diciendo que hay un río.
+ * Es lo que separa la casa del río dentro del dibujo. En un solo color, a
+ * tamaño de icono las olas se leerían como tres rayas más de la casa.
  */
 export const AZUL = "#83b9e0";
-
-/**
- * La hoja, en SVG.
- *
- * `rio` se pasa aparte para el icono de avisos: de ese archivo Android usa
- * **solo el canal alfa** y lo tiñe él de un color, así que allí la hoja entera
- * va del mismo tono y el río solo puede ser forma.
- */
-export const hoja = (color = VERDE, grosor = 2.4, rio = AZUL) => `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
-     stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round">
-  <g transform="rotate(-16 12 12)">
-    <path d="${LAMINA}" stroke="${color}"/>
-    <path d="${RIO}" stroke="${rio}"/>
-  </g>
-</svg>`;
 
 /**
  * Las tres olas, las mismas del botón del menú.

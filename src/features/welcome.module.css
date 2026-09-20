@@ -102,9 +102,6 @@
 .brand :global(.brand-mi i) {
   color: rgb(255 255 255 / 0.78);
 }
-.brand :global(.brand-leaf) {
-  color: #9be49c;
-}
 .brandName {
   display: block;
   font-size: clamp(19px, 2vw, 23px);
@@ -316,7 +313,6 @@
   .light .brand :global(.brand) { color: #103c2e; }
   .light .brand :global(.brand-word em) { color: #246a40; }
   .light .brand :global(.brand-mi i) { color: #4d6a5b; }
-  .light .brand :global(.brand-leaf) { color: #246a40; }
   .light .brandLine { color: #3d6353; border-top-color: rgb(28 76 47 / .22); }
 }
 .light .coords, .light .foot a { color: #eaf5ed; }

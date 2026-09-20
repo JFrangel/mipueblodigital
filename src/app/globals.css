@@ -840,78 +840,8 @@ hr {
   text-transform: uppercase;
   color: #7d8a85;
 }
-/* Lo que solo existe para quien no ve la pantalla. */
-.solo-lectores {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-/**
- * La hoja, que es la A.
- *
- * Va dentro del renglón y con la medida de una letra, no colgada al final:
- * ocupa su casilla en la retícula de la monoespaciada como una más. Ladeada a
- * propósito —a plomo parecería un icono— y con el trazo del mismo grosor
- * óptico que las mayúsculas de al lado.
- */
-.brand-leaf {
-  display: inline-block;
-  /* La hoja es la A de la palabra, así que crece con ella: quedándose en once
-     mientras las letras suben, dejaría de leerse como una letra y pasaría a
-     ser un icono metido en medio. */
-  width: 12.5px;
-  height: 12.5px;
-  vertical-align: -3.5px;
-  /* La tinta de la hoja no llena su caja —el trazo empieza adentro y el giro
-     lo escora—, así que con el espaciado a secas se abría un hueco de más
-     contra la «T» y se cerraba contra la «L». Se corrige por los dos lados. */
-  margin: 0 1.5px 0 -1.5px;
-  flex-shrink: 0;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transform: rotate(-16deg);
-}
 .dark .brand em {
   color: #c2c9c5;
-}
-/* La hoja se queda verde: es la única mancha de color del renglón. */
-.brand-leaf {
-  color: #3f9a61;
-}
-/**
- * El río, en azul.
- *
- * Es lo único de la marca que no es verde, y por eso la barra de la A se lee
- * como agua y no como una nervadura más de la hoja. Va el azul que ya usa la
- * aplicación para el agua —el mismo de la brújula del mapa y de las olas—, y
- * sobre oscuro sube de claridad lo que pide el fondo: es el mismo tono, no un
- * azul nuevo.
- */
-.brand-rio {
-  stroke: #4a86b8;
-}
-/**
- * El neón, **solo sobre oscuro**.
- *
- * Un resplandor sobre blanco no se lee como neón: se lee como una impresión
- * mal registrada, porque el brillo necesita oscuridad alrededor para existir.
- * Así que en tema claro la hoja va limpia y en oscuro enciende — y enciende
- * solo ella, que es la única letra de color del renglón: un neón repartido por
- * toda la palabra sería un letrero, no una marca.
- */
-.dark .brand-leaf {
-  color: #7ef2a4;
-  filter: drop-shadow(0 0 3px rgba(126, 242, 164, 0.75))
-    drop-shadow(0 0 7px rgba(126, 242, 164, 0.35));
-}
-.dark .brand-rio {
-  stroke: #83b9e0;
 }
 .logo-link {
   margin: 0 12px 40px;

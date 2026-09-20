@@ -461,9 +461,6 @@
   .light .brand :global(.brand-mi i) {
     color: rgb(255 255 255 / 0.78);
   }
-  .light .brand :global(.brand-leaf) {
-    color: #9be49c;
-  }
   .light .lead {
     color: #e3ece6;
   }
