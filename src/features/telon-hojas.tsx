@@ -100,10 +100,6 @@ export function TelonHojas({ listo }: { listo: boolean }) {
         styles.cuatro,
         styles.cinco,
         styles.seis,
-        styles.siete,
-        styles.ocho,
-        styles.nueve,
-        styles.diez,
       ].map((donde) => (
         /* El ancla en el borde y la hoja colgando de ella: así el giro sale del
            peciolo y no del centro de la lámina. */

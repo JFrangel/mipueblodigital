@@ -225,91 +225,55 @@
   }
 }
 
-/* ── Cinco por costado ──────────────────────────────────────────────────
-      Eran tres, y con el fondo verde detrás sus huecos no se veían. Sin
-      fondo, por cada hueco asoma la aplicación a medio tapar: a cinco los
-      limbos se solapan y el cierre queda opaco, que es lo que tiene que
-      hacer un telón. ───────────────────────────────────────────────── */
+/* ── Las tres del costado izquierdo ─────────────────────────────────────── */
 .uno {
   left: 0;
-  top: 0%;
-  --fuera: translateX(-72vmax) rotate(72deg);
-  --cerrada: translateX(0) rotate(86deg);
-  --abierta: translateX(-104vmax) rotate(66deg);
+  top: 6%;
+  --fuera: translateX(-72vmax) rotate(104deg);
+  --cerrada: translateX(0) rotate(84deg);
+  --abierta: translateX(-104vmax) rotate(62deg);
 }
 .dos {
   left: 0;
-  top: 24%;
-  --fuera: translateX(-72vmax) rotate(104deg);
-  --cerrada: translateX(0) rotate(92deg);
-  --abierta: translateX(-104vmax) rotate(80deg);
-  animation-delay: 26ms;
+  top: 46%;
+  --fuera: translateX(-76vmax) rotate(76deg);
+  --cerrada: translateX(0) rotate(96deg);
+  --abierta: translateX(-108vmax) rotate(116deg);
+  animation-delay: 50ms;
 }
 .tres {
   left: 0;
-  top: 48%;
-  --fuera: translateX(-72vmax) rotate(72deg);
-  --cerrada: translateX(0) rotate(98deg);
-  --abierta: translateX(-104vmax) rotate(94deg);
-  animation-delay: 52ms;
-}
-.cuatro {
-  left: 0;
-  top: 72%;
-  --fuera: translateX(-72vmax) rotate(104deg);
-  --cerrada: translateX(0) rotate(104deg);
-  --abierta: translateX(-104vmax) rotate(108deg);
-  animation-delay: 78ms;
-}
-.cinco {
-  left: 0;
-  top: 96%;
-  --fuera: translateX(-72vmax) rotate(72deg);
-  --cerrada: translateX(0) rotate(110deg);
-  --abierta: translateX(-104vmax) rotate(122deg);
-  animation-delay: 104ms;
+  top: 88%;
+  --fuera: translateX(-70vmax) rotate(86deg);
+  --cerrada: translateX(0) rotate(106deg);
+  --abierta: translateX(-102vmax) rotate(132deg);
+  animation-delay: 100ms;
 }
 
-/* ── Y el costado derecho, en espejo ────────────────────────────────── */
+/* ── Y las tres del derecho, en espejo ──────────────────────────────────── */
+.cuatro {
+  right: 0;
+  top: 14%;
+  --fuera: translateX(72vmax) rotate(-106deg);
+  --cerrada: translateX(0) rotate(-88deg);
+  --abierta: translateX(104vmax) rotate(-64deg);
+  animation-delay: 25ms;
+}
+.cinco {
+  right: 0;
+  top: 54%;
+  --fuera: translateX(76vmax) rotate(-78deg);
+  --cerrada: translateX(0) rotate(-98deg);
+  --abierta: translateX(108vmax) rotate(-120deg);
+  animation-delay: 75ms;
+}
 .seis {
   right: 0;
-  top: 11%;
-  --fuera: translateX(72vmax) rotate(-72deg);
-  --cerrada: translateX(0) rotate(-86deg);
-  --abierta: translateX(104vmax) rotate(-66deg);
-  animation-delay: 130ms;
-}
-.siete {
-  right: 0;
-  top: 35%;
-  --fuera: translateX(72vmax) rotate(-104deg);
-  --cerrada: translateX(0) rotate(-92deg);
-  --abierta: translateX(104vmax) rotate(-80deg);
-  animation-delay: 156ms;
-}
-.ocho {
-  right: 0;
-  top: 59%;
-  --fuera: translateX(72vmax) rotate(-72deg);
-  --cerrada: translateX(0) rotate(-98deg);
-  --abierta: translateX(104vmax) rotate(-94deg);
-  animation-delay: 182ms;
-}
-.nueve {
-  right: 0;
-  top: 83%;
-  --fuera: translateX(72vmax) rotate(-104deg);
-  --cerrada: translateX(0) rotate(-104deg);
-  --abierta: translateX(104vmax) rotate(-108deg);
-  animation-delay: 208ms;
-}
-.diez {
-  right: 0;
-  top: 107%;
-  --fuera: translateX(72vmax) rotate(-72deg);
-  --cerrada: translateX(0) rotate(-110deg);
-  --abierta: translateX(104vmax) rotate(-122deg);
-  animation-delay: 234ms;
+  top: 94%;
+  --fuera: translateX(70vmax) rotate(-88deg);
+  --cerrada: translateX(0) rotate(-108deg);
+  --abierta: translateX(102vmax) rotate(-134deg);
+  animation-delay: 125ms;
 }
 
 /**
