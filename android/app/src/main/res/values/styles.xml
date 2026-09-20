@@ -13,6 +13,16 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!--
+            El fondo de la ventana, en el verde de la casa.
+
+            Es lo que se ve en el hueco entre que se retira la pantalla del
+            sistema y la ventana web pinta su primer fotograma. Heredado del
+            tema claro de AppCompat ese hueco era **blanco**, y en un teléfono
+            se veía un destello: verde, blanco, verde. Ahora los tres momentos
+            son el mismo color y el paso no se nota.
+        -->
+        <item name="android:windowBackground">@color/mpd_arranque</item>
     </style>
 
 
@@ -35,7 +45,7 @@
         volver al quitarse; sin él, la ventana se queda con el del arranque.
     -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#123f39</item>
+        <item name="windowSplashScreenBackground">@color/mpd_arranque</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
     </style>

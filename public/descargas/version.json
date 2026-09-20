@@ -1,8 +1,8 @@
 {
-  "versionCode": 7,
-  "versionName": "1.5",
-  "bytes": 7359097,
+  "versionCode": 8,
+  "versionName": "1.6",
+  "bytes": 7359153,
   "fecha": "2026-09-20",
-  "notas": "En la pantalla sin señal ya se puede buscar la foto en los archivos, no solo tomarla con la cámara. Y esa pantalla entra sola cuando hay señal, sin pedir que toques Reintentar.",
+  "notas": "Al abrir ya no sale el logotipo dos veces: la aplicación entra directa a su animación de hojas.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

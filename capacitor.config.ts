@@ -143,19 +143,28 @@ const config: CapacitorConfig = {
     },
     SplashScreen: {
       /**
-       * Lo que se ve mientras la ventana alcanza la aplicación.
+       * **No dibuja nada.** Y eso es la decisión, no un descuido.
        *
-       * **Se retira sola pase lo que pase.** La puse para que la escondiera la
-       * aplicación al estar lista, y sin conexión la aplicación no llegaba a
-       * arrancar: el emblema se quedaba ahí para siempre, sin decir nada, y no
-       * había manera de salir de él. Una pantalla de arranque que puede
-       * atrapar a alguien es peor que no tenerla.
+       * Android ya enseña su propia pantalla al abrir —el icono sobre el verde,
+       * y en Android 12 en adelante no se puede quitar—, así que la de Capacitor
+       * era un segundo logotipo encima del primero. Entre las dos, más la
+       * portada de carga y el telón de hojas, el mismo dibujo aparecía tres
+       * veces antes de que nadie pudiera tocar nada, y la animación de entrada
+       * —que es la que tiene que recibir— llegaba la última y a veces ni se
+       * veía.
        *
-       * Dos segundos: lo suficiente para tapar el arranque, poco para que
-       * estorbe. La aplicación la esconde antes si termina antes.
+       * En cuanto se retira la del sistema queda el fondo de la ventana, que es
+       * este mismo verde (`AppTheme.NoActionBar`, `android:windowBackground`),
+       * y encima entra la aplicación. No hay hueco blanco ni cambio de color:
+       * los tres momentos son del mismo verde.
+       *
+       * Se deja `launchAutoHide` encendido a propósito aunque la duración sea
+       * cero: si algún día alguien vuelve a subirla, que siga retirándose sola.
+       * Una pantalla de arranque que puede atrapar a alguien sin señal es peor
+       * que no tenerla.
        */
       launchAutoHide: true,
-      launchShowDuration: 2000,
+      launchShowDuration: 0,
       backgroundColor: "#123f39",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
