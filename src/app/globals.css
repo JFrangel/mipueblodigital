@@ -12,17 +12,18 @@
    * este se mira durante segundos y tiene que ser un sitio donde reposar, no un
    * cartel.
    *
-   * Son dos, uno por tema. El claro va al verde del monte que cierra el río; el
-   * oscuro al azul hondo del agua de noche, que es el que hace que las olas del
-   * dibujo dejen de flotar sobre un fondo de otra familia y pertenezcan a él.
+   * Son dos, uno por tema. El claro va al verde del manglar, que lleva azul
+   * dentro: sobre él, la casa verde y el agua azul del palafito pertenecen las
+   * dos al fondo y ninguna salta. El oscuro va al azul hondo del agua de noche.
    *
    * **La pantalla de Android solo puede llevar uno** —se pinta antes de que
-   * exista la web y no sabe qué tema tiene puesto nadie—, y lleva el claro,
-   * que es el que trae la aplicación de fábrica. Quien use el tema oscuro verá
-   * pasar un verde a un azul, los dos hondos: se nota poco y es la única
-   * costura que no se puede quitar desde aquí.
+   * exista la web y no sabe qué tema tiene puesto nadie—, y lleva el azul, que
+   * es el del icono que se acaba de tocar para abrir. Con el tema claro se ve
+   * pasar ese azul al verde del manglar: los dos son hondos y el paso dura un
+   * instante, pero está, y es la única costura que no se puede quitar desde
+   * aquí.
    */
-  --arranque: #0e3b2c;
+  --arranque: #16463c;
   --green: #174f3b;
   --soft: #eaf2e9;
   --accent: #b9d8a3;

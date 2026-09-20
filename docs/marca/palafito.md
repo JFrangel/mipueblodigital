@@ -5,9 +5,18 @@ estado, la pantalla de arranque de Android y el dibujo que se traza en la
 portada. Vive en `src/components/palafito.tsx`, y `scripts/marca-hoja.mjs` lo
 repite trazo por trazo para generar los iconos.
 
-El fondo es el azul del río de noche, `#0d3340`. Con fondo verde, el agua del
-dibujo flotaba encima como de otra familia; sobre el azul hondo, el agua del
-palafito y el fondo son lo mismo.
+## Los fondos
+
+| dónde | color | por qué |
+|---|---|---|
+| icono, y la pantalla de arranque de Android | río de noche `#0d3340` | Es donde hay que destacar: a 44 px, compitiendo en el cajón, el palafito se recorta con fuerza contra el azul. Y el agua del dibujo deja de flotar sobre un fondo de otra familia. |
+| portada, tema claro | manglar `#16463c` | Verde con azul dentro: la casa verde y el agua azul pertenecen las dos al fondo y ninguna salta. Ahí el dibujo va grande y no compite con nada, así que puede permitirse ser más parejo. |
+| portada, tema oscuro | río de noche `#0d3340` | El mismo del icono. |
+
+**La pantalla de Android solo admite un color** y no sabe qué tema hay puesto,
+así que con el tema claro se ve pasar el azul al verde del manglar. Los dos son
+hondos y dura un instante, pero está: es la única costura del arranque que no se
+puede quitar desde la web.
 
 ## Las dos versiones
 
