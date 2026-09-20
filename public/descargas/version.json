@@ -1,8 +1,8 @@
 {
-  "versionCode": 5,
-  "versionName": "1.3",
-  "bytes": 7357309,
+  "versionCode": 6,
+  "versionName": "1.4",
+  "bytes": 7358361,
   "fecha": "2026-09-20",
-  "notas": "El icono es ahora las olas del río. Se puede marcar la ubicación en el mapa cuando el teléfono no logra situarte, y la pantalla sin señal ya no promete una «primera conexión» que no existe.",
+  "notas": "El icono es ahora las olas del río. Se puede marcar la ubicación en el mapa cuando el teléfono no logra situarte, y la pantalla sin señal entra sola en vez de pedir que toques Reintentar.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

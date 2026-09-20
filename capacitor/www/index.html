@@ -354,11 +354,91 @@
         sitio y **lo abriría en Chrome**. Eso hacía una versión anterior, medido
         en el emulador.
       */
+      function irALaAplicacion() {
+        if (window.MPD_APP) {
+          location.replace(window.MPD_APP);
+          return true;
+        }
+        $("pista").textContent =
+          "Busca señal, cierra la aplicación y vuelve a abrirla.";
+        return false;
+      }
+
       $("reintentar").addEventListener("click", function () {
-        if (window.MPD_APP) location.replace(window.MPD_APP);
-        else
-          $("pista").textContent =
-            "Busca señal, cierra la aplicación y vuelve a abrirla.";
+        intacto = false;
+        apuntar(0);
+        irALaAplicacion();
+      });
+
+      /*
+        Y lo intenta sola antes de pedirle nada a nadie.
+
+        Esta página salía en un caso que no es el suyo: el teléfono tenía señal,
+        la ventana falló al abrir —arranque en frío, el nombre de dominio sin
+        resolver todavía, la red aún sin engancharse al volver de suspensión— y
+        un segundo después funcionaba. Se notaba porque «Reintentar» entraba a
+        la primera. Hacer tocar un botón para algo que la aplicación puede hacer
+        sola es trabajo que se le pasa a quien menos tiene que entender de esto.
+
+        Dos intentos y para. Se cuentan en la sesión de la ventana, así que si
+        el segundo también falla la página se queda quieta y dice la verdad en
+        vez de dar vueltas. Si no se puede contar, no se reintenta: una página
+        que se recarga sola sin tope es peor que una que no se recarga.
+      */
+      var CUENTA = "mpd-reintentos";
+      var TOPE = 2;
+      var ESPERA_MS = 1200;
+
+      function intentos() {
+        try {
+          return Number(sessionStorage.getItem(CUENTA)) || 0;
+        } catch (e) {
+          return TOPE;
+        }
+      }
+      function apuntar(n) {
+        try {
+          sessionStorage.setItem(CUENTA, String(n));
+        } catch (e) {
+          /* Sin almacenamiento no se reintenta solo. Ver arriba. */
+        }
+      }
+
+      /*
+        **Y se rinde en cuanto alguien toca algo.**
+
+        Debajo hay un formulario de reporte. Llevarse la página por delante
+        mientras alguien escribe es perderle lo escrito, y eso es peor que
+        cualquier espera: quien está aquí ya está sin señal y a lo mejor lejos.
+        Así que el reintento automático solo vale mientras la página siga
+        intacta.
+      */
+      var intacto = true;
+      var reloj = null;
+      ["pointerdown", "keydown", "focusin"].forEach(function (evento) {
+        document.addEventListener(
+          evento,
+          function () {
+            intacto = false;
+            if (reloj) clearTimeout(reloj);
+          },
+          { once: true, capture: true },
+        );
+      });
+
+      if (window.MPD_APP && navigator.onLine && intentos() < TOPE) {
+        apuntar(intentos() + 1);
+        $("pista").textContent = "Buscando la aplicación…";
+        reloj = setTimeout(function () {
+          if (intacto) irALaAplicacion();
+        }, ESPERA_MS);
+      }
+
+      /* Y cuando vuelve la señal, sin que nadie tenga que estar pendiente. */
+      window.addEventListener("online", function () {
+        if (!intacto) return;
+        apuntar(0);
+        irALaAplicacion();
       });
 
       /**
