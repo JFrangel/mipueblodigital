@@ -72,7 +72,12 @@ function porQue(error: unknown): SinPunto {
   /* OS-PLUG-GLOC-0007 y -0017: la ubicación del aparato está apagada. */
   if (/GLOC-(0007|0017)/.test(codigo) || /not enabled|turned off/i.test(dicho))
     return "ubicacion-apagada";
-  if (/GLOC-(0003|0009)/.test(codigo) || /permission.*denied/i.test(dicho))
+  /* -0009 es haberle dicho que no al diálogo de encender la ubicación, que no
+     es lo mismo que negarle el permiso a esta aplicación: el permiso puede
+     estar dado y la ubicación del teléfono seguir apagada. */
+  if (/GLOC-0009/.test(codigo) || /enable location was denied/i.test(dicho))
+    return "ubicacion-apagada";
+  if (/GLOC-0003/.test(codigo) || /permission.*denied/i.test(dicho))
     return "sin-permiso";
   if (/GLOC-0010/.test(codigo) || /timeout|timed out|in time/i.test(dicho))
     return "tarde";
@@ -131,21 +136,24 @@ export async function dondeEstoy(): Promise<Punto | SinPunto> {
   if (!disponible()) return "no-disponible";
   try {
     if (esNativo()) {
-      const { Geolocation } = await modulo();
-      /* El permiso, solo si hace falta. En Android 13 en adelante un «no» a
-         destiempo obliga a entrar en los ajustes del sistema para deshacerlo. */
-      const tiene = await Geolocation.checkPermissions();
-      const permiso =
-        tiene.location === "granted" || tiene.coarseLocation === "granted"
-          ? tiene
-          : await Geolocation.requestPermissions({
-              permissions: ["location", "coarseLocation"],
-            });
-      if (
-        permiso.location !== "granted" &&
-        permiso.coarseLocation !== "granted"
-      )
-        return "sin-permiso";
+      /**
+       * Se va derecho a pedir la posición, **sin comprobar antes el permiso**,
+       * y eso es el arreglo de un fallo real.
+       *
+       * `getCurrentPosition` hace por su cuenta las dos cosas que hacen falta:
+       * pide el permiso si falta, y si el teléfono tiene la ubicación apagada
+       * abre el diálogo de Play Services que la enciende **de un toque y sin
+       * salir de la aplicación**. Pero `checkPermissions` y
+       * `requestPermissions` llevan delante un `checkLocationState` que se
+       * niega en seco con LOCATION_DISABLED cuando está apagada: preguntando
+       * primero por el permiso, nunca se llegaba a ese diálogo y la aplicación
+       * solo sabía decir «enciéndela tú». Le estábamos cerrando la puerta.
+       *
+       * Preguntar el permiso aquí tampoco hacía falta: el complemento solo lo
+       * pide si no está concedido, que es la misma regla. Y esta función no se
+       * llama sola —existe para un botón que se pulsa a propósito—, así que el
+       * momento de preguntar es justo este.
+       */
       try {
         return aceptar(await leer(true));
       } catch (error) {
@@ -186,8 +194,10 @@ export async function dondeEstoy(): Promise<Punto | SinPunto> {
 export const motivos: Record<SinPunto, string> = {
   "sin-permiso":
     "No se autorizó la ubicación. Puedes marcar el punto en el mapa, o darle permiso desde los ajustes de este dispositivo.",
+  /* Se llega aquí habiendo dicho que no al diálogo que la enciende, así que no
+     se repite la instrucción: se ofrece volver a intentarlo, o el mapa. */
   "ubicacion-apagada":
-    "El teléfono tiene la ubicación apagada. Enciéndela y vuelve a intentarlo, o marca el punto en el mapa.",
+    "Para situarte hace falta encender la ubicación del teléfono. Vuelve a intentarlo y acepta, o marca el punto en el mapa.",
   "sin-señal":
     "La señal no alcanza para situarte con precisión. Marca el punto en el mapa: ahí tú sabes mejor que el aparato.",
   tarde:

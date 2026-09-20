@@ -24,8 +24,14 @@ const state = vi.hoisted(() => ({
   fallo: null as { code: number } | null,
   /** Lo que contesta el complemento nativo. */
   permisoNativo: "granted" as string,
+  /** El interruptor de ubicación del teléfono, que no es el permiso. */
+  servicioApagado: false,
+  /** Y si dijeron que no al diálogo que ofrece encenderlo. */
+  encenderRechazado: false,
   /** Lo que lanza el complemento nativo, una entrada por llamada. */
   fallosNativos: [] as ({ code?: string; message?: string } | null)[],
+  /** Veces que se preguntó por el permiso en vez de ir a por la posición. */
+  comprobaciones: 0,
   pedidos: 0,
   opciones: [] as unknown[],
 }));
@@ -46,10 +52,20 @@ function comoCapacitor<T extends object>(impl: T): T {
 
 vi.mock("@capacitor/geolocation", () => ({
   Geolocation: comoCapacitor({
-    checkPermissions: async () => ({
-      location: state.permisoNativo,
-      coarseLocation: state.permisoNativo,
-    }),
+    checkPermissions: async () => {
+      state.comprobaciones += 1;
+      /* Como el de verdad: lleva delante un `checkLocationState` que se niega
+         en seco si el teléfono tiene la ubicación apagada, sin mirar siquiera
+         el permiso. Era esto lo que impedía llegar al diálogo que la enciende. */
+      if (state.servicioApagado)
+        throw Object.assign(new Error("Location services are not enabled."), {
+          code: "OS-PLUG-GLOC-0007",
+        });
+      return {
+        location: state.permisoNativo,
+        coarseLocation: state.permisoNativo,
+      };
+    },
     requestPermissions: async () => {
       state.pedidos += 1;
       return {
@@ -59,6 +75,24 @@ vi.mock("@capacitor/geolocation", () => ({
     },
     getCurrentPosition: async (opciones: unknown) => {
       state.opciones.push(opciones);
+      /* El complemento pide él mismo lo que falte: primero el permiso, y si el
+         teléfono tiene la ubicación apagada, el diálogo que la enciende. */
+      if (state.permisoNativo !== "granted") {
+        state.pedidos += 1;
+        if (state.permisoNativo === "denied")
+          throw Object.assign(
+            new Error("Location permission request was denied."),
+            { code: "OS-PLUG-GLOC-0003" },
+          );
+      }
+      if (state.servicioApagado) {
+        state.pedidos += 1;
+        if (state.encenderRechazado)
+          throw Object.assign(
+            new Error("Request to enable location was denied."),
+            { code: "OS-PLUG-GLOC-0009" },
+          );
+      }
       const fallo = state.fallosNativos.shift();
       if (fallo)
         throw Object.assign(new Error(fallo.message ?? ""), {
@@ -81,6 +115,9 @@ beforeEach(() => {
   state.coords = { latitude: 2.2, longitude: -78.2, accuracy: 12 };
   state.fallo = null;
   state.permisoNativo = "granted";
+  state.servicioApagado = false;
+  state.encenderRechazado = false;
+  state.comprobaciones = 0;
   state.fallosNativos = [];
   state.pedidos = 0;
   state.opciones = [];
@@ -176,11 +213,43 @@ it("el permiso negado se distingue del plazo agotado", async () => {
   expect(await dondeEstoy()).toBe("tarde");
 });
 
-it("en el APK, el permiso negado se dice y no se pide la posición", async () => {
+it("en el APK, el permiso negado se dice", async () => {
   state.nativo = true;
   state.permisoNativo = "denied";
   expect(await dondeEstoy()).toBe("sin-permiso");
-  expect(state.opciones).toEqual([]);
+});
+
+/**
+ * Con la ubicación del teléfono apagada hay que **pedir encenderla**, no
+ * contarlo.
+ *
+ * Android sabe abrir un diálogo que la enciende de un toque y sin salir de la
+ * aplicación, y `getCurrentPosition` lo abre solo. Lo que no se puede es
+ * preguntar antes por el permiso: `checkPermissions` se niega en seco cuando
+ * está apagada, así que preguntando primero nunca se llegaba a ese diálogo y
+ * la aplicación solo sabía decir «enciéndela tú». Esta prueba guarda esa
+ * puerta abierta.
+ */
+it("con la ubicación apagada no se pregunta antes: se va a pedir que la enciendan", async () => {
+  state.nativo = true;
+  state.servicioApagado = true;
+  await dondeEstoy();
+  expect(state.comprobaciones).toBe(0);
+  expect(state.opciones.length).toBeGreaterThan(0);
+});
+
+it("si la ubicación sigue apagada, se dice que hace falta encenderla", async () => {
+  state.nativo = true;
+  state.servicioApagado = true;
+  state.encenderRechazado = true;
+  expect(await dondeEstoy()).toBe("ubicacion-apagada");
+});
+
+/* Y aceptando el diálogo, la posición llega sin que nadie salga de la app. */
+it("aceptando encenderla, el punto llega", async () => {
+  state.nativo = true;
+  state.servicioApagado = true;
+  expect(await dondeEstoy()).toMatchObject({ lat: 2.2, lng: -78.2 });
 });
 
 it("un aparato sin geolocalización lo dice", async () => {
