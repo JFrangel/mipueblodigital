@@ -331,6 +331,52 @@
 }
 
 /**
+ * **Últimas en cerrar, primeras en abrir.**
+ *
+ * El retardo de cada hoja vale para las dos fases, así que las oscuras —que
+ * entran al final, porque son las que cierran— también salían al final: el
+ * telón se abría dejando para el último momento justo lo que más tapaba, y se
+ * veía como si costara. Aquí se les da su propio retardo para la salida.
+ *
+ * El orden invertido no es un capricho: al abrirse, lo primero que tiene que
+ * irse es lo que está más cerca de los ojos —el fondo— para que lo que asome
+ * por detrás sea la aplicación y no otra capa de hojas.
+ */
+.oscura.abriendo {
+  animation-delay: 0ms;
+}
+.segunda.abriendo {
+  animation-delay: 45ms;
+}
+.tercera.abriendo {
+  animation-delay: 90ms;
+}
+.cuarta.abriendo {
+  animation-delay: 135ms;
+}
+
+/* Y las de color salen detrás, conservando entre ellas el mismo escalonado que
+   traían. */
+.uno.abriendo {
+  animation-delay: 240ms;
+}
+.cuatro.abriendo {
+  animation-delay: 265ms;
+}
+.dos.abriendo {
+  animation-delay: 290ms;
+}
+.cinco.abriendo {
+  animation-delay: 315ms;
+}
+.tres.abriendo {
+  animation-delay: 340ms;
+}
+.seis.abriendo {
+  animation-delay: 365ms;
+}
+
+/**
  * Con el movimiento reducido, **no hay telón**.
  *
  * Quien pide menos animación no está pidiendo la misma más lenta. Y aquí no hay

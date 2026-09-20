@@ -8,8 +8,9 @@ import styles from "./telon-hojas.module.css";
 const ENTRADA_MS = 1200;
 /** Lo que se quedan tapando antes de abrirse. */
 const QUIETA_MS = 250;
-/** Y lo que tardan en apartarse. Los mismos números que el CSS. */
-const SALIDA_MS = 900;
+/** Y lo que tardan en apartarse, contando el retardo de las de color, que
+ *  ahora salen detrás de las oscuras. Los mismos números que el CSS. */
+const SALIDA_MS = 1300;
 
 /**
  * Si toca enseñarlo. Se marca **al terminar**, no al decidir.
