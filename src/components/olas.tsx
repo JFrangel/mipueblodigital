@@ -33,6 +33,22 @@ const LINEAS = [
 const TRAMOS = 8;
 
 /**
+ * Los tres trazos, ya armados.
+ *
+ * Se exportan porque los dibuja también la portada de arranque, en grande y
+ * trazándose solos. Dos copias de estas curvas serían dos aguas distintas el
+ * día que alguien retoque una.
+ */
+export const TRAZOS_OLAS = LINEAS.map(
+  ({ y, desde, alto }) =>
+    `M2.8 ${y + alto}` +
+    Array.from(
+      { length: TRAMOS },
+      (_, i) => CUARTOS[(desde + i) % CUARTOS.length],
+    ).join(""),
+);
+
+/**
  * Tres olas, para el botón que abre el menú en el teléfono.
  *
  * **Sigue siendo una hamburguesa.** Son tres trazos horizontales, a la misma
@@ -67,17 +83,8 @@ export function Olas({ size = 22 }: { size?: number }) {
       aria-hidden="true"
       focusable="false"
     >
-      {LINEAS.map(({ y, desde, alto }) => (
-        <path
-          key={y}
-          d={
-            `M2.8 ${y + alto}` +
-            Array.from(
-              { length: TRAMOS },
-              (_, i) => CUARTOS[(desde + i) % CUARTOS.length],
-            ).join("")
-          }
-        />
+      {TRAZOS_OLAS.map((d, i) => (
+        <path key={i} d={d} />
       ))}
     </svg>
   );

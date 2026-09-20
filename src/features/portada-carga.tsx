@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Logo } from "@/components/ui";
+import { TRAZOS_PALAFITO } from "@/components/palafito";
+import { getServerTheme, getTheme, subscribeTheme } from "@/data/theme";
 import styles from "./portada-carga.module.css";
 
 /**
@@ -22,18 +24,30 @@ const FRASES = [
 ] as const;
 
 /**
- * La portada de carga: el rótulo y una frase, mientras la aplicación arranca.
+ * La portada de arranque: el agua, el rótulo y una frase.
  *
- * **Va con el tema del teléfono**, claro u oscuro, y no con un color propio: es
- * la primera pantalla de la aplicación, no un cartel, y una portada que ignora
- * el tema se lee como algo que todavía no ha terminado de cargar.
+ * **Se levanta la casa, llega el agua, y entonces habla.** El palafito se traza
+ * solo, en el orden en que se construye —el techo, las paredes, la plataforma,
+ * los pilotes— y el agua entra la última, que es como llega el río. Es el mismo
+ * dibujo del icono del teléfono, así que quien lo toca en el cajón encuentra lo
+ * mismo al abrir.
  *
- * La hoja del rótulo respira despacio. Es lo único que se mueve, y se mueve por
- * un motivo: una pantalla completamente quieta durante diez segundos parece una
- * aplicación colgada, y con señal de río esos diez segundos pasan a menudo.
+ * Y se mueve por un motivo, no por vistosidad: una pantalla completamente
+ * quieta durante diez segundos parece una aplicación colgada, y con señal de
+ * río esos diez segundos pasan a menudo. El recorrido dura menos de dos; lo que
+ * queda después es el rótulo puesto y la frase cambiando.
  */
 export function PortadaCarga() {
   const [frase, setFrase] = useState<string>(FRASES[0].dice);
+  /**
+   * El tema, leído aquí y no heredado.
+   *
+   * La marca `dark` vive en el contenedor de la aplicación, y esta pantalla se
+   * pinta **antes** de que exista: sin esto, quien tiene el tema oscuro puesto
+   * veía el arranque claro y luego el salto. Es el mismo almacén que lee la
+   * aplicación, así que no hay dos verdades sobre qué tema está puesto.
+   */
+  const oscuro = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
 
   useEffect(() => {
     const relojes = FRASES.slice(1).map((f) =>
@@ -43,7 +57,32 @@ export function PortadaCarga() {
   }, []);
 
   return (
-    <div className={styles.portada}>
+    <div className={`${styles.portada} ${oscuro ? "dark" : ""}`}>
+      {/* `pathLength` normaliza cada curva a uno: así el mismo retardo vale
+          para las tres aunque midan distinto, y sigue valiendo el día que
+          alguien retoque el dibujo. */}
+      <svg
+        className={styles.marcaDibujo}
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        {TRAZOS_PALAFITO.map(([d, cual, opacidad], i) => (
+          <path
+            key={i}
+            d={d}
+            pathLength={1}
+            data-parte={cual}
+            /* El retardo va aquí y no en la hoja de estilo: son diez trazos y
+               escribir diez reglas `nth-child` es pedir que un día alguien
+               añada un trazo y se desordene la entrada sin que nadie lo note. */
+            style={{
+              opacity: opacidad,
+              animationDelay: `${i * 95}ms`,
+            }}
+          />
+        ))}
+      </svg>
       <div className={styles.marca}>
         <Logo />
       </div>

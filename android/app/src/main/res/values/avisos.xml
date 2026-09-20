@@ -13,10 +13,15 @@
     <!-- El verde del Consejo, el mismo de la barra de estado y del manifiesto
          web. Tiñe la silueta del palafito en la bandeja. -->
     <color name="mpd_aviso">#16583F</color>
-    <!-- El verde del arranque. Lo piden la pantalla del sistema y el fondo de
-         la ventana, y tiene que ser el mismo en los dos: si no, al pasar de una
-         a otra se ve un cambio de color donde no ocurre nada. Es también el de
-         `backgroundColor` en `capacitor.config.ts`. -->
-    <color name="mpd_arranque">#123f39</color>
+    <!-- El color del arranque: el azul del río de noche, el mismo del fondo del
+         icono. Lo piden la pantalla del sistema y el fondo de la ventana, y
+         tiene que ser el mismo en los dos: si no, al pasar de una a otra se ve
+         un cambio de color donde no ocurre nada. Es también el de
+         `backgroundColor` en `capacitor.config.ts`.
+
+         **La pantalla de Android solo puede llevar un color.** Se pinta antes
+         de que exista la web, así que no sabe qué tema tiene puesto nadie. Va
+         el del icono, que es lo que se acaba de tocar para abrir. -->
+    <color name="mpd_arranque">#0d3340</color>
     <string name="mpd_canal_avisos" translatable="false">consejo</string>
 </resources>

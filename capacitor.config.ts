@@ -59,7 +59,7 @@ const config: CapacitorConfig = {
    * que se toca el icono hasta que aparece la aplicación no hay un solo
    * cambio de color.
    */
-  backgroundColor: "#123f39",
+  backgroundColor: "#0d3340",
   server: {
     url,
     /* Nunca HTTP en claro: por aquí viajan sesiones y fotografías. */
@@ -165,7 +165,7 @@ const config: CapacitorConfig = {
        */
       launchAutoHide: true,
       launchShowDuration: 0,
-      backgroundColor: "#123f39",
+      backgroundColor: "#0d3340",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },

@@ -4,6 +4,25 @@
   --text: #20372d;
   --muted: #5e7166;
   --line: #e7ece6;
+  /**
+   * El verde del arranque: el campo entero de la primera pantalla.
+   *
+   * Es más hondo que `--green` a propósito. `--green` es color de texto y de
+   * acento sobre claro, y llevado a fondo de pantalla completa resulta chillón;
+   * este se mira durante segundos y tiene que ser un sitio donde reposar, no un
+   * cartel.
+   *
+   * Son dos, uno por tema. El claro va al verde del monte que cierra el río; el
+   * oscuro al azul hondo del agua de noche, que es el que hace que las olas del
+   * dibujo dejen de flotar sobre un fondo de otra familia y pertenezcan a él.
+   *
+   * **La pantalla de Android solo puede llevar uno** —se pinta antes de que
+   * exista la web y no sabe qué tema tiene puesto nadie—, y lleva el claro,
+   * que es el que trae la aplicación de fábrica. Quien use el tema oscuro verá
+   * pasar un verde a un azul, los dos hondos: se nota poco y es la única
+   * costura que no se puede quitar desde aquí.
+   */
+  --arranque: #0e3b2c;
   --green: #174f3b;
   --soft: #eaf2e9;
   --accent: #b9d8a3;
@@ -633,6 +652,7 @@ hr {
   background: #242424;
 }
 .dark {
+  --arranque: #0d3340;
   color-scheme: dark;
   --bg: #111111;
   --surface: #1b1b1b;

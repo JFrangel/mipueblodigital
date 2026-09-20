@@ -98,6 +98,40 @@ export const olas = (color = AZUL, grosor = 2.6) => `
 </svg>`;
 
 /**
+ * El palafito, el mismo de `src/components/palafito.tsx`.
+ *
+ * Los trazos salen de ahí uno a uno. Es la marca del teléfono: el icono del
+ * cajón, el de la barra de estado y la pantalla de arranque.
+ *
+ * **El orden es la profundidad**: patas de atrás, ola de arriba —que las tapa—,
+ * casa, patas de delante, ola de abajo. Cambiarlo deja un dibujo plano.
+ */
+const olaDe = (y) =>
+  `M2.6 ${y}c1.55-1.05 3.1-1.05 4.65 0s3.1 1.05 4.65 0 3.1-1.05 4.65 0 3.1 1.05 4.65 0`;
+
+/** `[d, color, opacidad]`, en orden de pintado. */
+export const palafitoTrazos = (color = VERDE, agua = AZUL) => [
+  ["M10.4 15.3V19.04", color, 0.45],
+  ["M13.6 15.3V17.62", color, 0.45],
+  [olaDe(18.4), agua, 1],
+  ["M2.5 11.3 12 3.7l9.5 7.6", color, 1],
+  ["M6.1 11.2v3.7", color, 1],
+  ["M17.9 11.2v3.7", color, 1],
+  ["M4.1 15.1h15.8", color, 1],
+  ["M7.7 15.3V21.23", color, 1],
+  ["M16.3 15.3V20.79", color, 1],
+  [olaDe(21), agua, 1],
+];
+
+export const palafito = (color = VERDE, grosor = 1.8, agua = AZUL) => `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round">
+  ${palafitoTrazos(color, agua)
+    .map(([d, c, o]) => `<path d="${d}" stroke="${c}" opacity="${o}"/>`)
+    .join("")}
+</svg>`;
+
+/**
  * El fondo de la casa: el verde con la misma inclinación de luz que llevan las
  * tarjetas de la aplicación.
  */
@@ -105,8 +139,8 @@ export const fondo = (lado, radio = 0) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a6048"/>
-      <stop offset="1" stop-color="#0b3428"/>
+      <stop offset="0" stop-color="#15495c"/>
+      <stop offset="1" stop-color="#081f28"/>
     </linearGradient>
   </defs>
   <rect width="${lado}" height="${lado}" rx="${radio}" fill="url(#g)"/>
@@ -117,8 +151,8 @@ export const circulo = (lado) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}">
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1a6048"/>
-      <stop offset="1" stop-color="#0b3428"/>
+      <stop offset="0" stop-color="#15495c"/>
+      <stop offset="1" stop-color="#081f28"/>
     </linearGradient>
   </defs>
   <circle cx="${lado / 2}" cy="${lado / 2}" r="${lado / 2}" fill="url(#g)"/>
@@ -149,7 +183,7 @@ export async function conHoja(sharp, base, lado, fraccion, opciones = {}) {
   );
 }
 
-/** Las olas centradas sobre una base. Es la marca del teléfono. */
+/** Las olas centradas sobre una base. */
 export async function conOlas(sharp, base, lado, fraccion, opciones = {}) {
   return centrado(
     sharp,
@@ -157,5 +191,20 @@ export async function conOlas(sharp, base, lado, fraccion, opciones = {}) {
     lado,
     fraccion,
     olas(opciones.color ?? AZUL, opciones.grosor ?? 2.6),
+  );
+}
+
+/** El palafito centrado sobre una base. Es la marca del teléfono. */
+export async function conPalafito(sharp, base, lado, fraccion, opciones = {}) {
+  return centrado(
+    sharp,
+    base,
+    lado,
+    fraccion,
+    palafito(
+      opciones.color ?? VERDE,
+      opciones.grosor ?? 1.8,
+      opciones.agua ?? AZUL,
+    ),
   );
 }

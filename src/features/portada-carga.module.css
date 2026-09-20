@@ -1,10 +1,15 @@
 /**
- * La portada de carga.
+ * La portada de arranque.
  *
- * Toma el fondo y el color del tema —`--bg`, `--muted`—, así que sale clara u
- * oscura según tenga puesto el teléfono. Es la primera pantalla de la
- * aplicación, no un cartel: una portada con su propio color se lee como algo
- * que todavía no ha terminado de cargar.
+ * **Tiene color propio, y antes no lo tenía.** Seguía el tema del teléfono con
+ * la idea de que una portada con color se lee como algo a medio cargar. En la
+ * web eso es cierto; dentro de la aplicación instalada era justo al revés: la
+ * pantalla que pinta Android va en verde, el telón de hojas que abre va en
+ * verde, y esta quedaba en medio en blanco. El arranque era verde, blanco,
+ * verde —un destello— y lo que se veía no era una portada sencilla, era una
+ * costura.
+ *
+ * Ahora las tres son el mismo campo y el arranque se lee como una sola pieza.
  */
 
 .portada {
@@ -12,41 +17,102 @@
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 18px;
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 13px;
-  padding: 0 24px;
+  gap: 26px;
+  padding: 0 28px;
   text-align: center;
+  background: var(--arranque);
+  color: #cfe0d6;
+  font-size: 13px;
 }
 
 /**
- * La hoja del rótulo respira.
+ * El palafito, trazándose.
  *
- * Es lo único que se mueve, y se mueve por un motivo: una pantalla
- * completamente quieta durante diez segundos parece una aplicación colgada, y
- * con señal de río esos diez segundos pasan a menudo. Respirar dice «sigo
- * aquí» sin prometer nada sobre cuánto falta, que es lo único honesto que se
- * puede decir desde aquí.
+ * Es la firma de esta pantalla: la casa levantándose y el río llegando después.
+ * Se dibuja en el orden en que se construye, y ese orden lo pone el componente
+ * —un retardo por trazo— porque es el mismo que cuenta la profundidad y no
+ * puede vivir en dos sitios.
  *
- * El recorrido es corto a propósito. Un latido grande mueve el rótulo entero y
- * lo convierte en un anuncio.
+ * Se traza con la línea discontinua: `pathLength` normaliza cada trazo a uno,
+ * así que el mismo tiempo vale para todos aunque midan distinto. Sin eso habría
+ * que medir cada curva a mano y volvería a medirse mal el día que alguien las
+ * retoque.
+ *
+ * `overflow: visible` porque el cabo redondo del trazo se sale del recuadro de
+ * 24 por medio grosor, y recortado el dibujo pierde las puntas.
  */
-.marca :global(.brand-leaf) {
-  animation: respirar 2600ms ease-in-out infinite;
-  transform-origin: 50% 70%;
+.marcaDibujo {
+  width: min(52vw, 168px);
+  height: auto;
+  overflow: visible;
+  stroke-width: 1.15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
 
-@keyframes respirar {
-  0%,
-  100% {
-    transform: rotate(-16deg) scale(1);
-    opacity: 0.92;
+.marcaDibujo path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: trazar 900ms cubic-bezier(0.32, 0.72, 0.3, 1) both;
+}
+/* La casa en verde claro, el agua en el azul del río. */
+.marcaDibujo path[data-parte="casa"] {
+  stroke: #a7e6b8;
+}
+.marcaDibujo path[data-parte="agua"] {
+  stroke: #8fd0f0;
+}
+
+@keyframes trazar {
+  to {
+    stroke-dashoffset: 0;
   }
-  50% {
-    transform: rotate(-13deg) scale(1.08);
+}
+
+/**
+ * El rótulo, que sube detrás del agua.
+ *
+ * Entra cuando la primera ola ya se está cerrando, no antes: si los dos
+ * aparecen a la vez no hay entrada, hay una pantalla que se enciende.
+ */
+.marca {
+  animation: subir 700ms ease-out 1180ms both;
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
     opacity: 1;
+    transform: translateY(0);
   }
+}
+
+/**
+ * El rótulo va en claro sobre el verde.
+ *
+ * Los colores del rótulo son los del tema —verde sobre claro— y aquí el fondo
+ * es ese mismo verde, así que sin esto la marca desaparecería dentro de él.
+ */
+.marca :global(.brand) {
+  color: #f1f7f2;
+}
+/* El «Mi» hereda un verde de acento pensado para fondo claro, y sobre este
+   verde se apagaba hasta parecer que no estuviera escrito. */
+.marca :global(.brand-mi) {
+  color: #bfe3cb;
+}
+.marca :global(.brand em) {
+  color: #a7dcb6;
+}
+.marca :global(.brand-leaf) {
+  color: #86dca6;
+}
+.marca :global(.brand-rio) {
+  stroke: #8fd0f0;
 }
 
 /**
@@ -60,7 +126,7 @@
   margin: 0;
   max-width: 30ch;
   line-height: 1.5;
-  animation: llegar 420ms ease-out both;
+  animation: llegar 420ms ease-out 1700ms both;
 }
 
 @keyframes llegar {
@@ -74,10 +140,20 @@
   }
 }
 
-/* Quien pide menos animación no está pidiendo la misma más lenta. */
+/**
+ * Quien pide menos animación no está pidiendo la misma más lenta.
+ *
+ * Se quitan los recorridos y queda la pantalla puesta, con el dibujo ya hecho:
+ * el dibujo estaba para recibir, no para informar de nada, así que no se pierde
+ * ninguna información al dejarlo quieto.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .marca :global(.brand-leaf),
+  .marcaDibujo path,
+  .marca,
   .frase {
     animation: none;
+  }
+  .marcaDibujo path {
+    stroke-dashoffset: 0;
   }
 }

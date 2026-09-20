@@ -20,7 +20,7 @@
  */
 import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
-import { circulo, conOlas, fondo, olas } from "./marca-hoja.mjs";
+import { circulo, conPalafito, fondo, palafito } from "./marca-hoja.mjs";
 
 /* El verde de la pantalla de arranque: el mismo que declara `capacitor.config.ts`
    en `SplashScreen.backgroundColor`. Si cambia allí, cambia aquí, o el dibujo
@@ -83,14 +83,14 @@ for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
   );
   await writeFile(
     `${mip}/ic_launcher_foreground.png`,
-    await conOlas(sharp, transparente(adaptativo), adaptativo, 0.46),
+    await conPalafito(sharp, transparente(adaptativo), adaptativo, 0.46),
   );
 
   /* Los heredados: la marca entera ya compuesta, para lanzadores viejos que no
      entienden el adaptable y enseñarían el PNG tal cual. */
   await writeFile(
     `${mip}/ic_launcher.png`,
-    await conOlas(
+    await conPalafito(
       sharp,
       Buffer.from(fondo(legado, Math.round(legado * 0.22))),
       legado,
@@ -99,7 +99,7 @@ for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
   );
   await writeFile(
     `${mip}/ic_launcher_round.png`,
-    await conOlas(sharp, Buffer.from(circulo(legado)), legado, 0.58),
+    await conPalafito(sharp, Buffer.from(circulo(legado)), legado, 0.58),
   );
 
   /**
@@ -114,7 +114,7 @@ for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
   const margen = Math.round(aviso * 0.09);
   await writeFile(
     `${draw}/ic_stat_notify.png`,
-    await sharp(Buffer.from(olas("#ffffff", 3)))
+    await sharp(Buffer.from(palafito("#ffffff", 1.8, "#ffffff")))
       .resize(dibujo, dibujo)
       .extend({
         top: margen,
@@ -158,7 +158,7 @@ console.log("  icono adaptable");
  */
 async function arranque(ancho, alto, destino) {
   const lado = Math.round(Math.min(ancho, alto) * 0.32);
-  const marca = await sharp(Buffer.from(olas()))
+  const marca = await sharp(Buffer.from(palafito()))
     .resize(lado, lado)
     .png()
     .toBuffer();
