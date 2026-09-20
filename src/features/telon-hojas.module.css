@@ -285,7 +285,10 @@
  * color del fondo, así que lo que cierra del todo tiene forma de hoja hasta el
  * último rincón.
  *
- * Entran las últimas, con su retardo, y por eso el cierre se ve **llegar**.
+ * Entran las últimas, con su retardo, y por eso el cierre se ve **llegar**. El
+ * escalonado entre ellas es corto —35 ms— y no por prisa: con retardos largos
+ * la última llegaba medio segundo después que sus compañeras y se veía
+ * rezagada, como si le costara cerrar.
  *
  * El color va por selector y no en el dibujo porque el dibujo es el mismo
  * componente que usan todas: un atributo de presentación lo gana cualquier
@@ -303,7 +306,7 @@
   --fuera: translateX(-74vmax) rotate(96deg);
   --cerrada: translateX(0) rotate(90deg);
   --abierta: translateX(-106vmax) rotate(118deg);
-  animation-delay: 300ms;
+  animation-delay: 235ms;
 }
 .segunda {
   right: 0;
@@ -311,7 +314,7 @@
   --fuera: translateX(74vmax) rotate(-96deg);
   --cerrada: translateX(0) rotate(-90deg);
   --abierta: translateX(106vmax) rotate(-118deg);
-  animation-delay: 360ms;
+  animation-delay: 270ms;
 }
 .tercera {
   left: 0;
@@ -319,7 +322,7 @@
   --fuera: translateX(-74vmax) rotate(96deg);
   --cerrada: translateX(0) rotate(90deg);
   --abierta: translateX(-106vmax) rotate(118deg);
-  animation-delay: 420ms;
+  animation-delay: 305ms;
 }
 .cuarta {
   right: 0;
@@ -327,7 +330,7 @@
   --fuera: translateX(74vmax) rotate(-96deg);
   --cerrada: translateX(0) rotate(-90deg);
   --abierta: translateX(106vmax) rotate(-118deg);
-  animation-delay: 480ms;
+  animation-delay: 340ms;
 }
 
 /**
