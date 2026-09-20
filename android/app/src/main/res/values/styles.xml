@@ -63,6 +63,16 @@
             la web. No se edita a mano.
         -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/marca_arranque</item>
+        <!--
+            Cuánto se le deja al dibujo para trazarse.
+
+            **Mil es el máximo que Android respeta**, y por eso la animación
+            dura 915: nueve retardos de 55 más 420 de recorrido. Pasado el
+            segundo el sistema puede retirar su pantalla con el palafito a
+            medio dibujar, así que el reparto de tiempos de
+            `scripts/iconos-android.mjs` tiene que caber aquí dentro.
+        -->
+        <item name="windowSplashScreenAnimationDuration">1000</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
     </style>

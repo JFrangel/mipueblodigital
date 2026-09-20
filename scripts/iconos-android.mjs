@@ -208,20 +208,47 @@ console.log(`  ${ARRANQUES.length + 1} pantallas de arranque`);
  * del sistema. El palafito ocupa su recuadro de 24 enterito, así que se mete en
  * un lienzo de 36 centrado: 24 de 36 son exactamente esos dos tercios.
  */
-function marcaDeArranque() {
-  const CAJA = 24;
+/** Lo que tarda el palafito en dibujarse entero, y el retardo entre trazos.
+ *
+ * **Android no espera más de un segundo por esta animación**, así que el último
+ * trazo tiene que haber terminado antes: nueve retardos de 55 más 420 de
+ * recorrido son 915. Pasado el segundo, el sistema puede retirar su pantalla
+ * con el dibujo a medias.
+ *
+ * El orden es el de pintado, que es el que cuenta la profundidad: las patas de
+ * atrás, el agua que las tapa, la casa, las de delante y la ola de abajo. Así
+ * la casa se levanta y el río llega después, que es como pasa. */
+const TRAZO_MS = 420;
+const ESCALON_MS = 55;
+
+/**
+ * Los trazos del arranque, cada uno con nombre y empezando sin dibujar.
+ *
+ * El nombre es lo que busca el animador de al lado, y `trimPathEnd="0"` es lo
+ * que hace que el dibujo nazca vacío: sin eso aparecería entero y la animación
+ * no tendría nada que soltar.
+ *
+ * **Las medidas no son a ojo.** Android da 288dp al icono del arranque y solo
+ * garantiza los dos tercios de dentro; lo de fuera se lo puede comer la máscara
+ * del sistema. El palafito ocupa su recuadro de 24 enterito, así que se mete en
+ * un lienzo de 36 centrado: 24 de 36 son exactamente esos dos tercios.
+ */
+function trazosDelArranque() {
   const LIENZO = 36;
-  const margen = (LIENZO - CAJA) / 2;
+  const margen = (LIENZO - 24) / 2;
   const trazos = trazosPalafito()
-    .map(
-      ([d, parte, opacidad]) =>
-        `        <path\n` +
-        `            android:pathData="${d}"\n` +
-        `            android:strokeColor="${parte === "agua" ? AGUA : CASA}"\n` +
-        `            android:strokeAlpha="${opacidad}"\n` +
-        `            android:strokeWidth="1.15"\n` +
-        `            android:strokeLineCap="round"\n` +
-        `            android:strokeLineJoin="round"/>`,
+    .map(([d, parte, opacidad], i) =>
+      [
+        "        <path",
+        `            android:name="t${i}"`,
+        `            android:pathData="${d}"`,
+        `            android:strokeColor="${parte === "agua" ? AGUA : CASA}"`,
+        `            android:strokeAlpha="${opacidad}"`,
+        '            android:strokeWidth="1.15"',
+        '            android:strokeLineCap="round"',
+        '            android:strokeLineJoin="round"',
+        '            android:trimPathEnd="0"/>',
+      ].join("\n"),
     )
     .join("\n");
   return `<?xml version="1.0" encoding="utf-8"?>
@@ -242,7 +269,57 @@ ${trazos}
 `;
 }
 
-await writeFile(`${res}/drawable/marca_arranque.xml`, marcaDeArranque());
-console.log("  1 marca de arranque (marca_arranque.xml)");
+/**
+ * El palafito **trazándose** en la pantalla que dibuja Android al abrir.
+ *
+ * **Aquí y no en la ventana web, y eso es todo el asunto.** La portada lo
+ * dibujaba antes con CSS, y `stroke-dashoffset` es de lo poco que un navegador
+ * no puede pasarle a la tarjeta gráfica: repinta los diez trazos en cada
+ * fotograma, en el hilo principal, y ese hilo está justo entonces descargando y
+ * ejecutando el paquete entero de la aplicación. La animación competía con la
+ * carga y se veía a tirones. Esto lo compone el sistema, aparte de la ventana,
+ * así que no compite con nada — y además empieza en el instante en que se toca
+ * el icono, no cuando la web llega.
+ *
+ * Y se dibuja **una sola vez**: cuando acaba, las dos portadas que vienen
+ * detrás lo enseñan ya puesto. Repetirlo sería el tartamudeo que hubo que
+ * quitar.
+ *
+ * Los animadores van dentro del propio archivo con `aapt:attr` en vez de en
+ * diez archivos sueltos en `res/animator`: son generados, y diez archivos que
+ * nadie va a abrir a mano es diez sitios donde perder la cuenta.
+ */
+function animacionDeArranque() {
+  const objetivos = trazosPalafito()
+    .map((_, i) =>
+      [
+        `    <target android:name="t${i}">`,
+        '        <aapt:attr name="android:animation">',
+        "            <objectAnimator",
+        '                android:propertyName="trimPathEnd"',
+        '                android:valueFrom="0"',
+        '                android:valueTo="1"',
+        '                android:valueType="floatType"',
+        `                android:duration="${TRAZO_MS}"`,
+        `                android:startOffset="${i * ESCALON_MS}"`,
+        '                android:interpolator="@android:interpolator/fast_out_slow_in"/>',
+        "        </aapt:attr>",
+        "    </target>",
+      ].join("\n"),
+    )
+    .join("\n");
+  return `<?xml version="1.0" encoding="utf-8"?>
+<!-- Lo escribe scripts/iconos-android.mjs. No lo edites a mano. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/marca_arranque_trazos">
+${objetivos}
+</animated-vector>
+`;
+}
+
+await writeFile(`${res}/drawable/marca_arranque_trazos.xml`, trazosDelArranque());
+await writeFile(`${res}/drawable/marca_arranque.xml`, animacionDeArranque());
+console.log("  marca de arranque: trazos + animación");
 
 console.log("\nListo. Recompila con: npm run cap:apk");

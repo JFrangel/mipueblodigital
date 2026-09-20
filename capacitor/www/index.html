@@ -781,16 +781,6 @@
       var arrancando = !!window.MPD_APP && esElArranque();
 
       if (arrancando) {
-        /* Que la portada de la aplicación no vuelva a dibujar lo mismo.
-           Cuando la web entre por detrás, su portada es esta misma pantalla:
-           si repitiera el trazado, el palafito se dibujaría dos veces
-           seguidas y lo que se lee no es una entrada, es un tartamudeo. Lo
-           recoge el guion de `src/app/layout.tsx` antes de pintar nada. */
-        try {
-          sessionStorage.setItem("mpd-portada", "1");
-        } catch (e) {
-          /* Sin almacenamiento se dibuja dos veces. Feo, no roto. */
-        }
         FRASES.forEach(function (f) {
           setTimeout(function () {
             var p = $("fraseArranque");

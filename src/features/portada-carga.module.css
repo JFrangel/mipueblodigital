@@ -188,25 +188,3 @@
     stroke-dashoffset: 0;
   }
 }
-
-/**
- * Si esto ya se vio antes de llegar aquí, se enseña puesto y no se repite.
- *
- * Dentro del APK esta pantalla aparece dos veces: primero desde el archivo, al
- * instante, y otra vez aquí cuando la web acaba de llegar. Son la misma, así
- * que repetir el trazado corta el dibujo a la mitad y lo empieza de cero —un
- * tartamudeo, no una entrada—. Con la marca puesta, esta segunda vez continúa
- * donde lo dejó la primera en lugar de volver a empezar.
- *
- * Quien la pone es un guion al principio del cuerpo, en `app/layout.tsx`, antes
- * del primer fotograma. En el navegador no existe y esta pantalla se dibuja
- * como siempre.
- */
-:global(:root[data-arranque="hecho"]) .marcaDibujo path,
-:global(:root[data-arranque="hecho"]) .marca,
-:global(:root[data-arranque="hecho"]) .frase {
-  animation: none;
-}
-:global(:root[data-arranque="hecho"]) .marcaDibujo path {
-  stroke-dashoffset: 0;
-}
