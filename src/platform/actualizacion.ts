@@ -130,15 +130,53 @@ export type Resultado =
   | "instalando"
   /** Falta permitirle a esta aplicación instalar. Se puede abrir esa pantalla. */
   | "sin-permiso"
+  /**
+   * Esta versión sí sabe descargar, lo intentó, y el archivo no llegó.
+   *
+   * **Es lo que pasa cuando el servidor le dice que no al gestor de descargas
+   * de Android.** Está medido: la protección automática de la plataforma
+   * responde `403` a los clientes que no parecen un navegador, y el gestor de
+   * descargas no lo es —no trae las galletas de la ventana web ni resuelve el
+   * desafío—. La ventana sigue funcionando, así que desde dentro se ve una
+   * aplicación sana que no se puede actualizar. Se levanta sola al cabo de un
+   * rato.
+   *
+   * Se distingue de `navegador` a propósito: aquello es una versión que **no
+   * puede**, y esto es una que **no pudo hoy**. Confundirlos deja a alguien con
+   * el complemento funcionando dando tumbos por el navegador sin saber por qué.
+   */
+  | "no-bajo"
+  /**
+   * El archivo **sí bajó** y lo que falló fue abrir el instalador.
+   *
+   * Tiene su propio nombre porque es el único final en el que **no hay que
+   * descargar nada**: los siete megas están en el teléfono. Metido en el saco
+   * de «no se pudo actualizar», lo que se le ofrecía a la persona era bajarlos
+   * otra vez, y con la señal del río eso son varios minutos y un pedazo del
+   * plan de datos para conseguir el archivo que ya tenía.
+   */
+  | "bajada-sin-abrir"
   /** Versión vieja: se abrió el navegador y la descarga sigue fuera. */
   | "navegador"
   /** No se pudo. Queda decir la dirección para que alguien la escriba. */
   | "a-mano";
 
+/**
+ * El final, y en dos palabras por qué.
+ *
+ * **El motivo no es para leerlo, es para poder repetirlo.** Estas averías pasan
+ * en teléfonos que no están aquí, con redes que no se pueden reproducir, y
+ * cuando alguien avisa por WhatsApp de que «no actualiza» no hay forma de saber
+ * si fue el servidor, el espacio o la señal. Con el motivo en pantalla, esa
+ * persona puede copiarlo sin entenderlo y eso ya basta para arreglarlo.
+ */
+export type Desenlace = { fin: Resultado; detalle?: string };
+
 type Puente = {
   puedeInstalar(): Promise<{ puede: boolean }>;
   pedirPermisoInstalar(): Promise<void>;
   descargarEInstalar(opciones: { url: string }): Promise<void>;
+  abrirInstalador(): Promise<void>;
   addListener(
     evento: "progreso",
     escucha: (avance: Avance) => void,
@@ -173,25 +211,42 @@ export async function permitirInstalar(): Promise<void> {
 export async function instalarActualizacion(
   nueva: Actualizacion,
   alAvanzar: (avance: Avance) => void,
-): Promise<Resultado> {
-  if (!esNativo()) return "a-mano";
+): Promise<Desenlace> {
+  if (!esNativo()) return { fin: "a-mano" };
 
   let quitar: (() => Promise<void>) | null = null;
+  /**
+   * Si el complemento llegó a contestar una sola vez.
+   *
+   * **Es lo único que separa las dos averías**, y separarlas es todo el asunto.
+   * Un APK de la 1.1 no tiene estos métodos y Capacitor no contesta nada —ver
+   * `conPlazo`—, así que la primera llamada se agota: ahí el navegador es la
+   * única salida que existe. Si en cambio contestó, esta versión sí sabe
+   * descargar, y mandarla al navegador porque un archivo no bajó es tirar a la
+   * basura justo lo que el complemento vino a arreglar.
+   */
+  let contesto = false;
   try {
     const plugin = puente();
     /* Se pregunta **antes** de bajar nada: siete megas para chocarse luego con
        un «no» es gastarle a alguien el plan de datos para nada. */
     const { puede } = await conPlazo(plugin.puedeInstalar());
-    if (!puede) return "sin-permiso";
+    contesto = true;
+    if (!puede) return { fin: "sin-permiso" };
 
     const oyente = await conPlazo(plugin.addListener("progreso", alAvanzar));
     quitar = oyente.remove;
     /* Sin plazo: esto dura lo que dure la descarga, que con la señal del río
        pueden ser varios minutos, y cortarla sería el peor error posible. */
     await plugin.descargarEInstalar({ url: nueva.donde });
-    return "instalando";
+    return { fin: "instalando" };
   } catch (error) {
-    if (esFaltaDePermiso(error)) return "sin-permiso";
+    if (codigo(error) === "sin-permiso") return { fin: "sin-permiso" };
+    /* El archivo está bajado; lo único que falta es abrirlo. No se vuelve a
+       descargar y no se manda a nadie al navegador a por lo que ya tiene. */
+    if (codigo(error) === "sin-instalador")
+      return { fin: "bajada-sin-abrir", detalle: mensaje(error) };
+    if (contesto) return { fin: "no-bajo", detalle: mensaje(error) };
   } finally {
     if (quitar) await quitar().catch(() => {});
   }
@@ -199,29 +254,62 @@ export async function instalarActualizacion(
   return await porElNavegador(nueva);
 }
 
-function esFaltaDePermiso(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: string }).code === "sin-permiso"
-  );
+/**
+ * Volver a abrir el instalador de lo que ya está descargado.
+ *
+ * Solo tiene sentido después de `bajada-sin-abrir`. Si el archivo no está —lo
+ * borró el sistema, se limpió la aplicación— lo dice, para que arriba se pueda
+ * ofrecer descargarlo en vez de prometer algo que no existe.
+ */
+export async function abrirInstalador(): Promise<Desenlace> {
+  if (!esNativo()) return { fin: "a-mano" };
+  try {
+    await conPlazo(puente().abrirInstalador());
+    return { fin: "instalando" };
+  } catch (error) {
+    return { fin: "no-bajo", detalle: mensaje(error) };
+  }
+}
+
+function codigo(error: unknown): string | undefined {
+  return typeof error === "object" && error !== null
+    ? (error as { code?: string }).code
+    : undefined;
+}
+
+function mensaje(error: unknown): string | undefined {
+  const texto =
+    typeof error === "object" && error !== null
+      ? (error as { message?: string }).message
+      : undefined;
+  return texto?.trim() || undefined;
 }
 
 /**
- * El camino de la 1.1: sacar la descarga al navegador del teléfono.
+ * Sacar la descarga al navegador del teléfono.
  *
  * La ventana de Capacitor no sabe descargar archivos —no le pone un
  * `DownloadListener` al WebView—, así que un enlace a un `.apk` desde dentro no
  * hace nada. Fuera, la descarga la hace quien sabe hacerla; lo que ya no hace
  * nadie por la persona es encontrar el archivo después y tocarlo.
+ *
+ * **Se llega aquí de dos maneras y solo una es automática.** En un APK de la
+ * 1.1, que no trae el complemento, esto es lo único que hay y se hace sin
+ * preguntar. Cuando el complemento sí está pero la descarga no salió, ya no:
+ * ahí lo pide la persona desde el aviso, porque el navegador es un rodeo largo
+ * —bandeja de descargas, buscar el archivo, tocarlo, entender un diálogo— y
+ * empujar a alguien a él por un fallo que se arregla reintentando es cambiarle
+ * un botón por cuatro pasos fuera de la aplicación.
  */
-async function porElNavegador(nueva: Actualizacion): Promise<Resultado> {
+export async function porElNavegador(
+  nueva: Actualizacion,
+): Promise<Desenlace> {
   try {
     const Ajustes = registerPlugin<{
       abrirEnlace(opciones: { url: string }): Promise<void>;
     }>("Ajustes");
     await conPlazo(Ajustes.abrirEnlace({ url: nueva.donde }));
-    return "navegador";
+    return { fin: "navegador" };
   } catch {
     /* Ni eso: la 1.0. Queda navegar a secas, que solo sirve si el archivo está
        en otro dominio —Capacitor suelta al navegador lo que no es suyo, ver
@@ -234,5 +322,5 @@ async function porElNavegador(nueva: Actualizacion): Promise<Resultado> {
   } catch {
     /* La dirección escrita es lo único que queda. */
   }
-  return "a-mano";
+  return { fin: "a-mano" };
 }

@@ -1,14 +1,24 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowDownToLine, ClipboardCopy, ShieldCheck, X } from "lucide-react";
+import {
+  ArrowDownToLine,
+  ClipboardCopy,
+  Globe,
+  PackageOpen,
+  RotateCw,
+  ShieldCheck,
+  X,
+} from "lucide-react";
 import { HojaPlatano } from "./leaf-fall";
 import {
+  abrirInstalador,
   hayActualizacion,
   instalarActualizacion,
   permitirInstalar,
+  porElNavegador,
   type Actualizacion,
   type Avance,
-  type Resultado,
+  type Desenlace,
 } from "@/platform/actualizacion";
 import styles from "./aviso-actualizacion.module.css";
 
@@ -34,7 +44,7 @@ export function AvisoActualizacion() {
   const [nueva, setNueva] = useState<Actualizacion | null>(null);
   const [yendo, setYendo] = useState(false);
   const [avance, setAvance] = useState<Avance | null>(null);
-  const [desenlace, setDesenlace] = useState<Resultado | null>(null);
+  const [desenlace, setDesenlace] = useState<Desenlace | null>(null);
   const [copiada, setCopiada] = useState(false);
 
   useEffect(() => {
@@ -87,7 +97,7 @@ export function AvisoActualizacion() {
           Versión {nueva.versionName} · {nueva.peso} · tienes la{" "}
           {nueva.instalada}
         </p>
-        {desenlace === "sin-permiso" && (
+        {desenlace?.fin === "sin-permiso" && (
           /* No es un fallo: es un permiso que Android pide una vez y que la
              persona puede conceder de un toque desde aquí. */
           <p className={styles.errores} role="status">
@@ -95,13 +105,82 @@ export function AvisoActualizacion() {
             vez.
           </p>
         )}
-        {desenlace === "navegador" && (
+        {desenlace?.fin === "no-bajo" && (
+          /**
+           * La descarga no salió, y esta versión sí sabe descargar.
+           *
+           * **Se dice que se reintente y no se manda a nadie al navegador.**
+           * La causa medida es que el servidor le contesta `403` al gestor de
+           * descargas de Android cuando la protección automática de la
+           * plataforma está levantada: no es el teléfono, no es la señal, y se
+           * pasa sola. Reintentar dentro de un rato funciona, y es un botón
+           * contra los cuatro pasos fuera de la aplicación que cuesta el
+           * navegador.
+           *
+           * El navegador sigue estando, porque cuando alguien necesita la
+           * versión nueva hoy no se le puede contestar «espera»: pero lo elige
+           * quien lee esto, no lo elige el programa por su cuenta.
+           */
+          <div className={styles.errores} role="status">
+            <p>
+              El archivo no llegó a descargarse. No es tu teléfono: a veces el
+              servidor no se lo entrega a la aplicación durante un rato.
+              Reinténtalo y, si sigue igual, prueba más tarde.
+            </p>
+            <button
+              className="btn"
+              onClick={() => {
+                setDesenlace(null);
+                void porElNavegador(nueva).then(setDesenlace);
+              }}
+            >
+              <Globe size={16} />
+              Descargar con el navegador
+            </button>
+          </div>
+        )}
+        {desenlace?.fin === "bajada-sin-abrir" && (
+          /**
+           * Bajó entero y no se abrió el instalador.
+           *
+           * **Lo que no se puede ofrecer aquí es descargar otra vez.** El
+           * archivo está en el teléfono: repetirlo son los mismos siete megas
+           * del plan de datos de alguien para conseguir lo que ya tiene. El
+           * botón abre lo que hay.
+           */
+          <div className={styles.errores} role="status">
+            <p>
+              La descarga terminó, pero Android no abrió el instalador. El
+              archivo ya está en tu teléfono: no hay que volver a bajarlo.
+            </p>
+            <button
+              className="btn"
+              onClick={() => {
+                setDesenlace(null);
+                void abrirInstalador().then((fin) =>
+                  setDesenlace(fin.fin === "instalando" ? null : fin),
+                );
+              }}
+            >
+              <PackageOpen size={16} />
+              Abrir el instalador
+            </button>
+          </div>
+        )}
+        {desenlace?.detalle && (
+          /* En letra pequeña y sin traducir: no es para leerlo, es para poder
+             copiarlo y mandarlo cuando algo falla en un teléfono que no está
+             aquí. Ver `Desenlace`. */
+          <p className={styles.detalle}>{desenlace.detalle}</p>
+        )}
+        {desenlace?.fin === "navegador" && (
           <p className={styles.errores} role="status">
-            La descarga sigue en el navegador del teléfono. Cuando termine,
-            ábrela desde ahí para instalarla.
+            La descarga sigue en el navegador del teléfono. Si te pide
+            confirmarla, acéptala; cuando termine, ábrela desde ahí para
+            instalarla.
           </p>
         )}
-        {desenlace === "a-mano" && (
+        {desenlace?.fin === "a-mano" && (
           /**
            * El camino de la versión 1.0, que no trae nada de esto dentro.
            *
@@ -159,7 +238,7 @@ export function AvisoActualizacion() {
           </p>
         )}
         <div className={styles.botones}>
-          {desenlace === "sin-permiso" ? (
+          {desenlace?.fin === "sin-permiso" ? (
             <button
               className="btn primary"
               onClick={() => {
@@ -180,13 +259,25 @@ export function AvisoActualizacion() {
                 void instalarActualizacion(nueva, setAvance).then((fin) => {
                   setYendo(false);
                   setAvance(null);
-                  setDesenlace(fin === "instalando" ? null : fin);
+                  setDesenlace(fin.fin === "instalando" ? null : fin);
                 });
               }}
               disabled={yendo}
             >
-              <ArrowDownToLine size={16} />
-              {yendo ? "Descargando…" : "Actualizar"}
+              {/* Después de un intento fallido el botón dice lo que hace de
+                  verdad. «Actualizar» otra vez, igual que la primera, se lee
+                  como que no ha pasado nada y es lo que hace que alguien lo
+                  pulse tres veces seguidas creyendo que no responde. */}
+              {desenlace?.fin === "no-bajo" ? (
+                <RotateCw size={16} />
+              ) : (
+                <ArrowDownToLine size={16} />
+              )}
+              {yendo
+                ? "Descargando…"
+                : desenlace?.fin === "no-bajo"
+                  ? "Reintentar"
+                  : "Actualizar"}
             </button>
           )}
           <button className="btn" onClick={ocultar} disabled={yendo}>

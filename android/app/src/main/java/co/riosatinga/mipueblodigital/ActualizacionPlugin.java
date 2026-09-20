@@ -63,6 +63,29 @@ public class ActualizacionPlugin extends Plugin {
     private static final long SIN_AVANCE_MS = 180_000;
 
     /**
+     * Cuánto se espera a que el gestor confirme una descarga que ya está entera.
+     *
+     * **Existe porque «entero» y «terminado» no son lo mismo para Android**, y
+     * esa diferencia dejaba la actualización clavada en el 99 %. Medido: el
+     * archivo en disco pesaba los 7.351.737 bytes exactos —completo, verificado
+     * contra el tamaño publicado— y el gestor seguía en `WAITING_TO_RETRY`,
+     * reintentando la última lectura que se le había cortado. Nunca llegaba a
+     * `STATUS_SUCCESSFUL`, así que el instalador no se abría nunca.
+     *
+     * Y el plazo de silencio de arriba tampoco salvaba: cada reintento mueve el
+     * contador de bytes aunque sea un poco, así que para `SIN_AVANCE_MS` la
+     * descarga «avanzaba» eternamente. Hacía falta mirar otra cosa: que los
+     * bytes ya estén todos.
+     *
+     * Pasado esto se instala lo que hay. **No se puede cancelar antes**:
+     * `DownloadManager.remove` borra el archivo, que es justo lo que no se
+     * quiere. Y si el archivo estuviera mal, el instalador de Android lo
+     * rechaza él mismo con su propio aviso —la firma no cuadraría—, que es
+     * infinitamente mejor que una barra parada para siempre.
+     */
+    private static final long ENTERO_SIN_CONFIRMAR_MS = 15_000;
+
+    /**
      * ¿Puede esta aplicación lanzar una instalación?
      *
      * Android lo pregunta **por aplicación** desde la versión 8: no basta con
@@ -157,12 +180,44 @@ public class ActualizacionPlugin extends Plugin {
                 .setDescription("Descargando la versión nueva")
                 .setMimeType(TIPO)
                 .setDestinationUri(Uri.fromFile(destino))
+                /* Dicho en voz alta aunque sea el valor de fábrica: aquí no hay
+                   wifi. Si algún día alguien o algún fabricante cambia el
+                   criterio por defecto, la actualización se quedaría en cola
+                   «esperando wifi» para siempre en el único sitio donde no va a
+                   haber wifi nunca, y desde la pantalla parecería colgada. */
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE);
             long id = gestor.enqueue(peticion);
             new Thread(() -> vigilar(call, gestor, id, destino)).start();
         } catch (Exception error) {
             call.reject("no se pudo empezar la descarga", "sin-empezar");
         }
+    }
+
+    /**
+     * Volver a abrir el instalador con el archivo que ya está bajado.
+     *
+     * **Para no cobrarle a nadie dos veces los mismos siete megas.** Si la
+     * descarga terminó y lo que falló fue abrir el instalador, el APK está
+     * entero en la carpeta de la aplicación: lo que hace falta es volver a
+     * intentar lo último, no repetirlo todo. Con la señal del río esa
+     * diferencia son varios minutos y un pedazo del plan de datos.
+     *
+     * Se rechaza si no hay archivo, para que arriba se pueda ofrecer descargar
+     * en vez de prometer algo que no está.
+     */
+    @PluginMethod
+    public void abrirInstalador(PluginCall call) {
+        File archivo = new File(
+            getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+            ARCHIVO
+        );
+        if (!archivo.exists() || archivo.length() == 0) {
+            call.reject("no hay ningún archivo descargado", "sin-archivo");
+            return;
+        }
+        instalar(call, archivo);
     }
 
     /**
@@ -178,6 +233,8 @@ public class ActualizacionPlugin extends Plugin {
         DownloadManager.Query consulta = new DownloadManager.Query().setFilterById(id);
         long ultimosBytes = -1;
         long ultimoAvance = SystemClock.elapsedRealtime();
+        /** Desde cuándo están todos los bytes sin que el gestor lo confirme. */
+        long enteroDesde = 0;
         while (true) {
             try (Cursor fila = gestor.query(consulta)) {
                 if (fila == null || !fila.moveToFirst()) {
@@ -198,12 +255,45 @@ public class ActualizacionPlugin extends Plugin {
                     return;
                 }
                 if (estado == DownloadManager.STATUS_FAILED) {
+                    /**
+                     * Se dice **por qué**, y no solo que no pudo.
+                     *
+                     * Antes todos los finales malos eran el mismo «la descarga
+                     * no pudo terminar», así que desde un teléfono del río —que
+                     * es donde falla— no había manera de saber si fue el
+                     * servidor, el espacio, o la señal. Un fallo que no se
+                     * puede distinguir no se puede arreglar: hay que adivinar,
+                     * y adivinar sobre la red de otra persona no sale bien.
+                     *
+                     * El motivo del gestor es un número, y cuando viene de una
+                     * respuesta del servidor **ese número es el código HTTP**
+                     * —un 403 aquí es la protección automática de la plataforma
+                     * negándole el archivo a la aplicación, que es real y ya
+                     * pasó—. Se manda tal cual: quien lea esto en pantalla
+                     * puede repetirlo por WhatsApp sin entenderlo, y eso basta.
+                     */
+                    int motivo = fila.getInt(fila.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON));
                     gestor.remove(id);
-                    call.reject("la descarga no pudo terminar", "fallo");
+                    call.reject("la descarga no pudo terminar (" + motivo + ")", "fallo");
                     return;
                 }
 
                 long ahora = SystemClock.elapsedRealtime();
+
+                /* Los bytes ya están todos y el gestor no lo confirma. Se le da
+                   un rato por si lo dice él, y si no, se instala lo que hay:
+                   ver `ENTERO_SIN_CONFIRMAR_MS`. */
+                if (total > 0 && hechos >= total) {
+                    if (enteroDesde == 0) enteroDesde = ahora;
+                    else if (ahora - enteroDesde > ENTERO_SIN_CONFIRMAR_MS) {
+                        avisar(100, hechos, total, false);
+                        instalar(call, destino);
+                        return;
+                    }
+                } else {
+                    enteroDesde = 0;
+                }
+
                 if (hechos > ultimosBytes) {
                     ultimosBytes = hechos;
                     ultimoAvance = ahora;
@@ -264,7 +354,19 @@ public class ActualizacionPlugin extends Plugin {
             getContext().startActivity(intent);
             call.resolve();
         } catch (Exception error) {
-            call.reject("se descargó pero no se pudo abrir el instalador", "sin-instalador");
+            /**
+             * El archivo **ya está bajado** y solo falló abrirlo.
+             *
+             * Es la avería que peor se contaba: desde fuera se veía «no se pudo
+             * actualizar» y se mandaba a la persona al navegador a bajar otra
+             * vez los mismos siete megas que ya tenía en el teléfono. Se
+             * distingue con su propio código para que arriba se pueda ofrecer
+             * lo único sensato, que es volver a abrir lo que ya está.
+             */
+            call.reject(
+                "se descargó pero no se pudo abrir el instalador: " + error,
+                "sin-instalador"
+            );
         }
     }
 }
