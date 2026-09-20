@@ -201,11 +201,36 @@ async function nativa(opciones: {
    * «started» rearman el reloj.
    */
   const SILENCIO_MS = 7000;
+  /**
+   * **Cuánto se espera a la frase después de que Android diga que acabó.**
+   *
+   * `onEndOfSpeech` —el «stopped» de `listeningState`— avisa de que la persona
+   * dejó de hablar, y el resultado final llega **después**, cuando el
+   * reconocedor termina de procesar. Cerrar la vuelta al oír «stopped» destruye
+   * el reconocedor justo antes de que entregue la frase: lo dicho se pierde, la
+   * vuelta cuenta como vacía, y a las tres sale «no se detectó voz» habiendo
+   * hablado. Sin micrófono esto no se ve —el «stopped» nunca llega—, así que el
+   * emulador lo daba por bueno y el teléfono no.
+   *
+   * Dos segundos de margen, y en cuanto la frase llega se remata enseguida:
+   * esperar los dos enteros con el texto ya puesto sería una pausa boba entre
+   * frase y frase.
+   */
+  const GRACIA_MS = 2000;
+  const REMATE_MS = 300;
 
   let relojSilencio: ReturnType<typeof setTimeout> | undefined;
-  const rearmar = () => {
+  /** Se está esperando la frase que Android aún no ha entregado. */
+  let enGracia = false;
+  /** Si en esta vuelta llegó a oírse voz. Se reinicia en cada vuelta. */
+  let huboVoz = false;
+  const programar = (ms: number) => {
     clearTimeout(relojSilencio);
-    if (vivo) relojSilencio = setTimeout(() => cerrarVuelta(), SILENCIO_MS);
+    if (vivo) relojSilencio = setTimeout(() => cerrarVuelta(), ms);
+  };
+  const rearmar = () => {
+    enGracia = false;
+    programar(SILENCIO_MS);
   };
 
   const oyenteTexto = await SpeechRecognition.addListener(
@@ -216,7 +241,11 @@ async function nativa(opciones: {
       if (!vivo || !matches?.length) return;
       partes[indice] = matches[0];
       opciones.alTexto(unir(partes));
-      rearmar();
+      /* Si Android ya había dicho que la frase acabó, esto es el resultado
+         final que faltaba: se cierra la vuelta enseguida, no a los dos
+         segundos. Si todavía está hablando, el reloj vuelve a cero. */
+      if (enGracia) programar(REMATE_MS);
+      else rearmar();
     },
   );
 
@@ -226,8 +255,18 @@ async function nativa(opciones: {
       if (!vivo) return;
       /* «started» es que empezó a oír voz: mientras alguien habla, el reloj del
          silencio no tiene por qué correr. */
-      if (status === "started") return rearmar();
-      cerrarVuelta();
+      if (status === "started") {
+        huboVoz = true;
+        return rearmar();
+      }
+      /* «stopped» sin haber oído voz es el reconocedor cerrando en vacío: no
+         hay ninguna frase en camino y esperar el margen solo haría perder dos
+         segundos por vuelta. */
+      if (!huboVoz && !partes[indice]) return cerrarVuelta();
+      /* Con voz de por medio, «stopped» **no cierra la vuelta**: abre el margen
+         para la frase que el reconocedor todavía está terminando de entregar. */
+      enGracia = true;
+      programar(GRACIA_MS);
     },
   );
 
@@ -247,6 +286,7 @@ async function nativa(opciones: {
   const cerrarVuelta = () => {
     if (!vivo) return;
     clearTimeout(relojSilencio);
+    enGracia = false;
     if (partes[indice]?.trim()) {
       indice = partes.length;
       vacias = 0;
@@ -261,6 +301,7 @@ async function nativa(opciones: {
 
   const vuelta = () => {
     if (!vivo) return;
+    huboVoz = false;
     if (++vueltas > VUELTAS_MAXIMAS) {
       cerrar(null);
       return;

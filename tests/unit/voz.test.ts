@@ -97,14 +97,34 @@ vi.mock("@capacitor-community/speech-recognition", () => ({
       /* Un turno de reloj, no un microturno: en el teléfono esto tarda, y así
          el `.then()` de quien llamó corre antes, como allí. */
       setTimeout(() => {
+        const hablo =
+          guion &&
+          typeof guion === "object" &&
+          ((guion.parciales?.length ?? 0) > 0 || Boolean(guion.final));
         if (guion && typeof guion === "object") {
+          /* Android avisa de que empezó a oír voz antes de transcribir nada. */
+          if (hablo) emitir("listeningState", { status: "started" });
           for (const parcial of guion.parciales ?? [])
             emitir("partialResults", { matches: [parcial] });
-          if (guion.final) emitir("partialResults", { matches: [guion.final] });
         }
-        /* Se acabó la frase. Un guion agotado o «falla» es una vuelta que
-           termina sin haber traído nada. */
+        /**
+         * **Y avisa de que la frase acabó ANTES de entregarla.**
+         *
+         * Este orden es el del teléfono y es el que destapa la carrera:
+         * `onEndOfSpeech` llega cuando la persona deja de hablar, y
+         * `onResults` después, cuando el reconocedor termina de procesar.
+         * Quien cierre la vuelta al oír «stopped» destruye el reconocedor justo
+         * antes de que entregue lo dicho. El doble de antes emitía el final
+         * primero, así que no podía ver este fallo; el emulador tampoco, porque
+         * sin micrófono «stopped» no llega nunca.
+         */
         emitir("listeningState", { status: "stopped" });
+        if (guion && typeof guion === "object" && guion.final)
+          setTimeout(
+            () =>
+              emitir("partialResults", { matches: [guion.final as string] }),
+            30,
+          );
       }, 0);
       return {};
     },
