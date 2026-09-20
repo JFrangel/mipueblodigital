@@ -53,10 +53,10 @@
 }
 
 @keyframes verde-entra {
-  from {
+  0%,
+  94% {
     opacity: 0;
   }
-  55%,
   to {
     opacity: 1;
   }
@@ -274,6 +274,60 @@
   --cerrada: translateX(0) rotate(-108deg);
   --abierta: translateX(102vmax) rotate(-134deg);
   animation-delay: 125ms;
+}
+
+/**
+ * **El fondo del telón también son hojas.**
+ *
+ * Van detrás de las de color y de un solo tono, el verde de la casa. Antes lo
+ * que se veía por los huecos entre hojas era un rectángulo liso, y se notaba:
+ * el telón acababa en una cortina. Ahora por esos huecos se ven más hojas, del
+ * color del fondo, así que lo que cierra del todo tiene forma de hoja hasta el
+ * último rincón.
+ *
+ * Entran las últimas, con su retardo, y por eso el cierre se ve **llegar**.
+ *
+ * El color va por selector y no en el dibujo porque el dibujo es el mismo
+ * componente que usan todas: un atributo de presentación lo gana cualquier
+ * regla de CSS, así que aquí se repinta sin tocar la hoja de nadie.
+ */
+.oscura .hoja :global(svg) [fill] {
+  fill: #123f39;
+}
+.oscura .hoja :global(svg) [stroke] {
+  stroke: #123f39;
+}
+.primera {
+  left: 0;
+  top: 24%;
+  --fuera: translateX(-74vmax) rotate(96deg);
+  --cerrada: translateX(0) rotate(90deg);
+  --abierta: translateX(-106vmax) rotate(118deg);
+  animation-delay: 300ms;
+}
+.segunda {
+  right: 0;
+  top: 40%;
+  --fuera: translateX(74vmax) rotate(-96deg);
+  --cerrada: translateX(0) rotate(-90deg);
+  --abierta: translateX(106vmax) rotate(-118deg);
+  animation-delay: 360ms;
+}
+.tercera {
+  left: 0;
+  top: 68%;
+  --fuera: translateX(-74vmax) rotate(96deg);
+  --cerrada: translateX(0) rotate(90deg);
+  --abierta: translateX(-106vmax) rotate(118deg);
+  animation-delay: 420ms;
+}
+.cuarta {
+  right: 0;
+  top: 86%;
+  --fuera: translateX(74vmax) rotate(-96deg);
+  --cerrada: translateX(0) rotate(-90deg);
+  --abierta: translateX(106vmax) rotate(-118deg);
+  animation-delay: 480ms;
 }
 
 /**

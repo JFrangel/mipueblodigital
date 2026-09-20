@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { HojaPlatano } from "./leaf-fall";
 import styles from "./telon-hojas.module.css";
 
-/** Lo que tardan las hojas en entrar y cerrarse. */
-const ENTRADA_MS = 700;
+/** Lo que tardan las hojas en entrar y cerrarse, contando el retardo de las
+ *  últimas, que son las que cierran. */
+const ENTRADA_MS = 1200;
 /** Lo que se quedan tapando antes de abrirse. */
 const QUIETA_MS = 250;
 /** Y lo que tardan en apartarse. Los mismos números que el CSS. */
@@ -93,6 +94,26 @@ export function TelonHojas({ listo }: { listo: boolean }) {
           fase === "abriendo" ? styles.abriendo : "",
         ].join(" ")}
       />
+      {/* Las últimas: silueta plana del verde de la casa. Entran detrás de las
+          demás y son las que cierran del todo. */}
+      {[styles.primera, styles.segunda, styles.tercera, styles.cuarta].map(
+        (donde) => (
+          <div
+            className={[
+              styles.ancla,
+              styles.oscura,
+              donde,
+              styles.entrando,
+              fase === "abriendo" ? styles.abriendo : "",
+            ].join(" ")}
+            key={donde}
+          >
+            <div className={styles.hoja}>
+              <HojaPlatano />
+            </div>
+          </div>
+        ),
+      )}
       {[
         styles.uno,
         styles.dos,
