@@ -119,7 +119,11 @@ export function CouncilPanel({ pending }: { pending: Case[] }) {
         aria-labelledby="council-tab-expedientes"
         hidden={active !== "expedientes"}
       >
-        <CouncilInbox pending={pending} focus={focus} />
+        <CouncilInbox
+          pending={pending}
+          focus={focus}
+          activo={active === "expedientes"}
+        />
       </div>
       <div
         className="council-tabpanel"
