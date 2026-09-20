@@ -29,7 +29,11 @@
 .hoja {
   position: absolute;
   right: -34px;
-  bottom: -52px;
+  /* Hundida más de lo que parece necesario: la hoja mide 132 px y va girada,
+     así que su punta sube mucho más que su caja. A −52 px asomaba por encima
+     del título y dejaba de ser filigrana para competir con lo que hay que
+     leer. */
+  bottom: -84px;
   width: 132px;
   opacity: 0.12;
   pointer-events: none;

@@ -48,6 +48,23 @@ export function sharedView(
      Consejo puede marcarlo después de haber publicado un resumen, y eso lo
      retira. */
   if (String(d.sensitivity) === "sensitive") return null;
+  /**
+   * Y lo descartado tampoco consta.
+   *
+   * «Descartado» es el Consejo diciendo que eso **no era una incidencia**: un
+   * duplicado, una equivocación, algo que al mirarlo no resultó ser lo que
+   * parecía. Dejarlo en el mapa pinta un problema donde no lo hay y le carga a
+   * una vereda algo que no le corresponde.
+   *
+   * **No es lo mismo que los otros finales.** «No solucionado», «bloqueado por
+   * conflicto» y «escalado a otra entidad» son problemas de verdad que siguen
+   * ahí, y esos tienen que verse: esconderlos sería esconder justo lo que la
+   * comunidad necesita saber.
+   *
+   * Quien lo reportó y el Consejo lo siguen viendo entero: los dos salen por
+   * su camino antes de llegar aquí. Esto es solo lo que consta ante los demás.
+   */
+  if (String(d.status) === "descartado") return null;
   const revisado = publico?.published === true;
   if (
     !revisado &&
