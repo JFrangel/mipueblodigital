@@ -1,0 +1,129 @@
+/**
+ * El aviso de versión nueva.
+ *
+ * Toma los colores del tema como cualquier tarjeta de la aplicación: es una
+ * cosa más de la pantalla, no una alarma. Lo único que lo distingue es la hoja,
+ * que en esta aplicación significa **paso** y aquí lo que pasa es una versión.
+ */
+
+.aviso {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+/**
+ * La hoja, en la esquina y por debajo de todo lo que se lee.
+ *
+ * Grande y tenue: es una filigrana, no un icono. Si compitiera con el texto
+ * ganaría ella, y lo que hay que leer aquí son dos cifras —el peso y la
+ * versión— de las que depende que alguien gaste sus datos.
+ */
+.hoja {
+  position: absolute;
+  right: -34px;
+  bottom: -52px;
+  width: 132px;
+  opacity: 0.12;
+  pointer-events: none;
+  rotate: -18deg;
+}
+
+.hoja svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.texto {
+  position: relative;
+  display: grid;
+  gap: 6px;
+}
+
+.texto strong {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.texto p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Las cifras que deciden: el peso y de qué versión a cuál se va. */
+.detalle {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px !important;
+}
+
+.errores {
+  color: var(--danger, #b4472e);
+}
+
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/**
+ * El avance de la descarga.
+ *
+ * La barra es un pseudoelemento y no un elemento más porque no es información
+ * aparte: el número ya la dice. Está para que se vea moverse algo desde lejos,
+ * cuando el teléfono está en la mesa.
+ */
+.avance {
+  position: relative;
+  margin: 10px 0 0;
+  padding-top: 9px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.avance:before,
+.barra {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  border-radius: 999px;
+}
+.avance:before {
+  width: 100%;
+  background: var(--line);
+}
+.barra {
+  width: var(--parte, 18%);
+  background: #4a8751;
+  transition: width 0.35s ease;
+}
+/* Sin porcentaje —el servidor no dijo el tamaño— la barra va y viene, que es
+   lo único honesto: fingir un avance inventado es peor que no enseñar ninguno. */
+.barra:not([style]) {
+  animation: buscando 1.4s ease-in-out infinite alternate;
+}
+@keyframes buscando {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(460%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .barra:not([style]) {
+    animation: none;
+  }
+}

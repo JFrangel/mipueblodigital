@@ -57,6 +57,15 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Instalar la versión nueva desde la propia aplicación.
+         Sin esta línea, Android 8 en adelante rechaza el instalador sin más, y
+         actualizar vuelve a ser: abrir el navegador, bajar el archivo, buscarlo
+         en la bandeja de descargas, tocarlo y entender un diálogo. Son cuatro
+         pasos fuera de la aplicación y cada uno es un sitio donde alguien se
+         queda. El permiso **no instala nada solo**: solo permite pedirlo, y la
+         persona sigue diciendo que sí en la pantalla de Android. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- El dictado. Sin esta línea Android negaba la petición del micrófono
          **sin enseñar ningún diálogo**, y la persona leía «no se autorizó el
          micrófono» sin haber tenido nunca nada que autorizar. -->

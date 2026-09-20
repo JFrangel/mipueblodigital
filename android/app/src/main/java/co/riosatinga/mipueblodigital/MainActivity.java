@@ -8,6 +8,7 @@ public class MainActivity extends BridgeActivity {
         /* Los complementos propios se registran antes de que el puente arranque;
            después, la ventana ya está montada y no los ve. */
         registerPlugin(AjustesPlugin.class);
+        registerPlugin(ActualizacionPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

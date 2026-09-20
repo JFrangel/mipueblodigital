@@ -2,4 +2,9 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-path name="my_images" path="." />
     <cache-path name="my_cache_images" path="." />
+    <!-- De aquí lee el instalador el APK nuevo. Es la carpeta privada de la
+         aplicación, no la de descargas del teléfono: así no hace falta ningún
+         permiso de almacenamiento y el archivo no se queda ocupando siete
+         megas en la memoria de nadie. Ver ActualizacionPlugin. -->
+    <external-files-path name="descargas" path="Download/" />
 </paths>

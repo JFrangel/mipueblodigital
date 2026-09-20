@@ -7,8 +7,16 @@ android {
         applicationId "co.riosatinga.mipueblodigital"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // El número que compara la aplicación para saber si hay versión nueva.
+        // **Sube uno en cada APK que se publique**, sin excepción: es lo único
+        // que distingue el instalado del que está en el servidor, y si no sube,
+        // el aviso de actualización no puede existir. Estuvo en 1 desde el
+        // principio, así que todos los APK repartidos hasta hoy dicen ser el
+        // mismo.
+        versionCode 4
+        // Lo que ve la gente. Se escribe también en public/descargas/version.json
+        // desde scripts/publicar-apk.mjs, para que las dos no se separen.
+        versionName "1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

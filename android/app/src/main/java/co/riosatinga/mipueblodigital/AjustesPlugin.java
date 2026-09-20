@@ -27,6 +27,38 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "Ajustes")
 public class AjustesPlugin extends Plugin {
 
+    /**
+     * Abre una dirección en el navegador del teléfono.
+     *
+     * Existe por el APK nuevo: la ventana de Capacitor **no sabe descargar
+     * archivos**. No le pone un DownloadListener al WebView, así que un enlace
+     * a un .apk desde dentro de la aplicación no hace absolutamente nada —ni
+     * descarga, ni error, ni aviso—. El botón de actualizar parecería roto.
+     *
+     * Sacándolo al navegador del sistema, la descarga la hace quien sabe
+     * hacerla, con su barra de progreso y su aviso al terminar, y el archivo
+     * queda donde la persona ya sabe buscarlo.
+     */
+    @PluginMethod
+    public void abrirEnlace(PluginCall call) {
+        String url = call.getString("url");
+        if (url == null || !url.startsWith("https://")) {
+            /* Solo HTTPS: esto abre lo que le manden desde la ventana web, y
+               una dirección en claro por aquí sería un archivo que cualquiera
+               en el camino puede cambiar antes de que llegue al teléfono. */
+            call.reject("la dirección tiene que ser https");
+            return;
+        }
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            call.resolve();
+        } catch (Exception error) {
+            call.reject("no se pudo abrir");
+        }
+    }
+
     @PluginMethod
     public void abrirPermisos(PluginCall call) {
         try {

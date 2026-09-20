@@ -13,8 +13,9 @@
     "seed:noticias": "node scripts/sembrar-noticias.mjs",
     "cap:sync": "cap sync android && node scripts/pagina-sin-red.mjs",
     "cap:open": "cap open android",
-    "cap:apk": "cd android && gradlew.bat assembleRelease",
-    "test:rules": "firebase emulators:exec --only firestore --project demo-mi-pueblo \"node tests/integration/rules.mjs\""
+    "cap:apk": "cd android && gradlew.bat assembleDebug",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-mi-pueblo \"node tests/integration/rules.mjs\"",
+    "apk:publicar": "node scripts/publicar-apk.mjs"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.1",
