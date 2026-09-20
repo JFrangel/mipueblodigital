@@ -50,6 +50,17 @@
   position: relative;
   display: grid;
   gap: 6px;
+  /**
+   * Sin esto el texto se sale de la tarjeta y se corta.
+   *
+   * La tarjeta es una caja flexible y esto es una rejilla dentro: las dos se
+   * niegan por defecto a encoger por debajo de su contenido. Basta una palabra
+   * que no se pueda partir —la dirección del archivo, que son sesenta
+   * caracteres sin un espacio— para que la columna crezca más que la tarjeta,
+   * y como la tarjeta oculta lo que se desborda, las frases aparecían cortadas
+   * a media palabra.
+   */
+  min-width: 0;
 }
 
 .texto strong {
@@ -72,6 +83,25 @@
 
 .errores {
   color: var(--danger, #b4472e);
+}
+
+/**
+ * La dirección, para copiarla o teclearla.
+ *
+ * Se parte donde haga falta: es una sola palabra de sesenta caracteres y
+ * cualquier teléfono es más estrecho que eso. Y va en letra de máquina porque
+ * lo que se va a hacer con ella es **teclearla**, y ahí un cero y una o no se
+ * pueden parecer.
+ */
+.direccion {
+  display: block;
+  margin-top: 6px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text);
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 
 .botones {

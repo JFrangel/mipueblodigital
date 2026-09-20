@@ -136,6 +136,19 @@ export async function PATCH(
       } else tx.delete(publicRef);
       tx.update(ref, {
         status: input.status,
+        /**
+         * El porqué del descarte, guardado en el expediente.
+         *
+         * Va aquí y no se deduce de la última nota pública: en un caso que
+         * pasó por varias manos, la última nota puede ser de otro cambio y
+         * entonces el historial diría que se descartó por un motivo que no es.
+         * Atado al estado, o es el motivo del descarte o no hay ninguno.
+         *
+         * Se borra al salir de «descartado», porque un caso que vuelve a
+         * abrirse ya no está descartado por nada.
+         */
+        discardReason:
+          input.status === "descartado" ? text.publicNote || null : null,
         priority,
         assignee: text.assignee,
         sensitivity: input.sensitivity,

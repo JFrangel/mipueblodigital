@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ArrowDownToLine, ShieldCheck, X } from "lucide-react";
+import { ArrowDownToLine, ClipboardCopy, ShieldCheck, X } from "lucide-react";
 import { HojaPlatano } from "./leaf-fall";
 import {
   hayActualizacion,
@@ -35,6 +35,7 @@ export function AvisoActualizacion() {
   const [yendo, setYendo] = useState(false);
   const [avance, setAvance] = useState<Avance | null>(null);
   const [desenlace, setDesenlace] = useState<Resultado | null>(null);
+  const [copiada, setCopiada] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -101,11 +102,40 @@ export function AvisoActualizacion() {
           </p>
         )}
         {desenlace === "a-mano" && (
-          /* La dirección va entera y escrita, para poder teclearla. */
-          <p className={styles.errores} role="status">
-            Si no se abrió el navegador, entra a esta dirección desde el
-            teléfono: <strong>{nueva.donde}</strong>
-          </p>
+          /**
+           * El camino de la versión 1.0, que no trae nada de esto dentro.
+           *
+           * Hay que decirlo sin rodeos: **esta versión no puede descargar por
+           * sí sola**. La ventana de Capacitor no sabe bajar archivos y el
+           * método nativo que lo resuelve se añadió después, así que lo único
+           * que queda es abrir el navegador del teléfono a mano. No sirve
+           * tocar la dirección aquí: el enlace lo intercepta la misma ventana
+           * que no sabe descargar.
+           *
+           * Por eso hay un botón que la copia, que es lo que de verdad ahorra
+           * trabajo: sesenta caracteres tecleados sin una errata, en un
+           * teléfono, no los acierta nadie a la primera.
+           */
+          <div className={styles.errores} role="status">
+            <p>
+              Esta versión todavía no sabe descargar sola. Copia la dirección,
+              ábrela en el navegador del teléfono e instala el archivo. A partir
+              de la 1.5 el botón lo hace todo.
+            </p>
+            <code className={styles.direccion}>{nueva.donde}</code>
+            <button
+              className="btn"
+              onClick={() => {
+                navigator.clipboard
+                  ?.writeText(nueva.donde)
+                  .then(() => setCopiada(true))
+                  .catch(() => setCopiada(false));
+              }}
+            >
+              <ClipboardCopy size={16} />
+              {copiada ? "Dirección copiada" : "Copiar la dirección"}
+            </button>
+          </div>
         )}
         {avance && desenlace === null && (
           /* El aviso del sistema queda arriba y tapado. Alguien que no ve

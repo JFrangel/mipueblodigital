@@ -210,17 +210,15 @@ it("un caso resuelto después de publicarse se lee resuelto", async () => {
 });
 
 /**
- * Un caso descartado deja de constar ante la comunidad.
+ * Lo descartado **sigue constando**, y eso es a propósito.
  *
- * «Descartado» es el Consejo diciendo que eso no era una incidencia. Si
- * siguiera saliendo, el mapa pintaría un problema donde no lo hay y le cargaría
- * a una vereda algo que no le corresponde.
- *
- * La prueba vigila las dos mitades, porque esconder de más sería peor que no
- * esconder: «no solucionado», «bloqueado por conflicto» y «escalado» son
- * problemas de verdad que siguen ahí, y esos tienen que verse.
+ * El mapa no lo pinta —«descartado» es el Consejo diciendo que eso no era una
+ * incidencia, y dibujarlo carga a una vereda con algo que no le corresponde—,
+ * pero esa decisión vive en el mapa. Aquí se decide lo que consta, que es
+ * cuestión de privacidad, y borrarlo aquí lo quitaba también del historial:
+ * justo donde tiene que verse qué se descartó y por qué.
  */
-it("esconde lo descartado y deja ver los demás finales", async () => {
+it("deja constar todos los finales, incluido el descartado", async () => {
   const { sharedView } = await import("../../src/server/community-view");
   const base = {
     date: "2020-01-01T00:00:00.000Z",
@@ -230,41 +228,23 @@ it("esconde lo descartado y deja ver los demás finales", async () => {
     category: "infraestructura",
     vereda: "Bellavista",
   };
-  const ver = (status: string) =>
-    sharedView(
-      "c1",
-      { ...base, status },
-      undefined,
-      Date.parse(base.date) + 1e9,
-      24,
-    );
-
-  expect(ver("descartado")).toBeNull();
-  for (const vivo of [
+  for (const status of [
     "pendiente",
     "en_proceso",
     "solucionado",
     "no_solucionado",
+    "descartado",
     "bloqueado_conflicto",
     "escalado",
   ])
-    expect(ver(vivo), `${vivo} tiene que seguir constando`).not.toBeNull();
-});
-
-/** Y tampoco consta el descartado que el Consejo había publicado a mano. */
-it("retira el descartado aunque tuviera resumen publicado", async () => {
-  const { sharedView } = await import("../../src/server/community-view");
-  expect(
-    sharedView(
-      "c2",
-      {
-        date: "2020-01-01T00:00:00.000Z",
-        sensitivity: "safe",
-        status: "descartado",
-      },
-      { published: true, title: "Resumen del Consejo", vereda: "Bellavista" },
-      Date.now(),
-      24,
-    ),
-  ).toBeNull();
+    expect(
+      sharedView(
+        "c1",
+        { ...base, status },
+        undefined,
+        Date.parse(base.date) + 1e9,
+        24,
+      ),
+      `${status} tiene que constar`,
+    ).not.toBeNull();
 });

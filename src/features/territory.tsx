@@ -38,6 +38,26 @@ export function Territory({
     () =>
       everything.filter(
         (c) =>
+          /**
+           * Lo descartado no se pinta.
+           *
+           * «Descartado» es el Consejo diciendo que eso **no era una
+           * incidencia**: un duplicado, una equivocación, algo que al mirarlo
+           * no resultó ser lo que parecía. Dejarlo aquí pinta un problema
+           * donde no lo hay y le carga a una vereda algo que no le
+           * corresponde.
+           *
+           * **Se quita aquí y no de la proyección de la comunidad.** Ahí se
+           * decide lo que *consta*, que es cuestión de privacidad; esto es
+           * cuestión de qué dibuja el mapa. Quitarlo en el origen lo borraba
+           * también del historial, que es justo donde tiene que seguir para
+           * que se vea qué se descartó y por qué.
+           *
+           * Los otros finales sí se pintan: «no solucionado», «bloqueado por
+           * conflicto» y «escalado a otra entidad» son problemas de verdad que
+           * siguen ahí, y esconderlos sería esconder lo que hay que ver.
+           */
+          c.status !== "descartado" &&
           (filter === "all" || c.status === filter) &&
           (category === "all" || c.category === category) &&
           (c.title + " " + c.id + " " + c.vereda)
@@ -412,11 +432,15 @@ export function Territory({
               }}
             >
               <option value="all">Todos los estados</option>
-              {Object.entries(statuses).map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
+              {/* Sin «Descartado»: el mapa no los pinta, y un filtro que
+                  siempre devuelve la lista vacía es una trampa. */}
+              {Object.entries(statuses)
+                .filter(([id]) => id !== "descartado")
+                .map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
             </select>
           </label>
           <div className="map-list-scroll">

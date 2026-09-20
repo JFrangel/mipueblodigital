@@ -23,6 +23,15 @@ export type Shared = {
   vereda: string;
   status: string;
   date: string;
+  /**
+   * Por qué el Consejo descartó el caso. Solo lo llevan los descartados.
+   *
+   * Es la nota **pública** que se escribió al descartarlo, así que no revela
+   * nada del expediente: la interna se queda dentro. Sin esto, el historial
+   * enseñaba «Descartado» a secas, que es el Consejo diciéndole a alguien que
+   * su reporte no valía sin decirle por qué.
+   */
+  discardReason?: string;
 };
 
 /**
@@ -37,6 +46,13 @@ export type Shared = {
  * espera plazo alguno**: el plazo protege lo que consta sin que nadie lo mire,
  * y una revisión es exactamente lo contrario.
  */
+/** El motivo, solo si el caso está descartado y el Consejo escribió uno. */
+function motivo(d: FirebaseFirestore.DocumentData) {
+  return String(d.status) === "descartado" && d.discardReason
+    ? { discardReason: String(d.discardReason) }
+    : {};
+}
+
 export function sharedView(
   id: string,
   d: FirebaseFirestore.DocumentData,
@@ -48,23 +64,6 @@ export function sharedView(
      Consejo puede marcarlo después de haber publicado un resumen, y eso lo
      retira. */
   if (String(d.sensitivity) === "sensitive") return null;
-  /**
-   * Y lo descartado tampoco consta.
-   *
-   * «Descartado» es el Consejo diciendo que eso **no era una incidencia**: un
-   * duplicado, una equivocación, algo que al mirarlo no resultó ser lo que
-   * parecía. Dejarlo en el mapa pinta un problema donde no lo hay y le carga a
-   * una vereda algo que no le corresponde.
-   *
-   * **No es lo mismo que los otros finales.** «No solucionado», «bloqueado por
-   * conflicto» y «escalado a otra entidad» son problemas de verdad que siguen
-   * ahí, y esos tienen que verse: esconderlos sería esconder justo lo que la
-   * comunidad necesita saber.
-   *
-   * Quien lo reportó y el Consejo lo siguen viendo entero: los dos salen por
-   * su camino antes de llegar aquí. Esto es solo lo que consta ante los demás.
-   */
-  if (String(d.status) === "descartado") return null;
   const revisado = publico?.published === true;
   if (
     !revisado &&
@@ -91,6 +90,7 @@ export function sharedView(
          redacta es el relato; en qué va, no. */
       status: String(d.status ?? "pendiente"),
       date: String(publico.createdAt ?? d.date ?? ""),
+      ...motivo(d),
     };
   return {
     id,
@@ -103,5 +103,6 @@ export function sharedView(
     vereda: String(d.vereda ?? ""),
     status: String(d.status ?? "pendiente"),
     date: String(d.date ?? ""),
+    ...motivo(d),
   };
 }

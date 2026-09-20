@@ -13,6 +13,8 @@ type Shared = {
   date: string;
   title?: string;
   summary?: string;
+  /** Por qué el Consejo lo descartó. Solo lo traen los descartados. */
+  discardReason?: string;
 };
 
 /**
@@ -98,7 +100,10 @@ function asMapCase(item: Shared): Case {
     lat: punto?.lat,
     lng: punto?.lng,
     owner: "community",
-    notes: [],
+    /* El porqué del descarte entra como nota de seguimiento, que es donde el
+       expediente ya enseña lo que el Consejo tiene que decir. «Descartado» a
+       secas es decirle a alguien que su reporte no valía sin decirle por qué. */
+    notes: item.discardReason ? [item.discardReason] : [],
     delivery: "enviado",
   };
 }
