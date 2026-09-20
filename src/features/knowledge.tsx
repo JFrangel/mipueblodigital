@@ -21,13 +21,21 @@ export function Knowledge() {
       </div>
       {/* Decía «versión en preparación para el piloto», y eso dejó de ser
           cierto: la aplicación está en uso. Lo que sigue pendiente no es el
-          software sino los acuerdos, y conviene no mezclar las dos cosas. */}
+          software sino los acuerdos, y conviene no mezclar las dos cosas.
+
+          Y la lista de pendientes se quedó vieja **por el lado bueno**: decía
+          que faltaban el empaquetado móvil y las notificaciones del sistema, y
+          las dos cosas están hechas y en manos de la gente. Una lista de
+          pendientes que no se corrige cuando algo se termina deja de ser un
+          aviso honesto y pasa a ser un descuido: quien la lee no puede saber
+          qué parte sigue siendo verdad. */}
       <div className="notice">
-        Esta guía describe la aplicación tal como funciona hoy. Lo que aparece
-        como pendiente lo está de verdad: el empaquetado móvil, las
-        notificaciones del sistema y el piloto con la comunidad. Las
-        responsabilidades, el presupuesto y los criterios de publicación se
-        acuerdan con el Consejo y se dejan en acta.
+        Esta guía describe la aplicación tal como funciona hoy. El empaquetado
+        para Android y los avisos del sistema ya están hechos: la aplicación se
+        instala en el teléfono, avisa por su cuenta y se actualiza desde dentro.
+        Lo que sigue pendiente lo está de verdad, y es el piloto con la
+        comunidad. Las responsabilidades, el presupuesto y los criterios de
+        publicación se acuerdan con el Consejo y se dejan en acta.
       </div>
       <div className="search wide">
         <Search size={18} />
