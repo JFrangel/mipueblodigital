@@ -16,7 +16,27 @@
     </style>
 
 
+    <!--
+        La pantalla de arranque del sistema.
+
+        **El color hay que decirlo.** `Theme.SplashScreen` es el tema de la API
+        de arranque de Android 12 en adelante, y si no se le da
+        `windowSplashScreenBackground` usa el suyo por defecto, que es claro:
+        se veía el icono sobre blanco y justo después el verde de la
+        aplicación, un destello a contraluz cada vez que alguien abría. El
+        `android:background` de abajo no lo tapa, porque en esa versión el
+        sistema ya no dibuja el fondo de la ventana, dibuja el suyo.
+
+        Es el mismo verde que declaran `capacitor.config.ts` y el telón de
+        hojas, así que desde que se toca el icono hasta que aparece la
+        aplicación no hay un solo cambio de color.
+
+        `postSplashScreenTheme` es lo que Android pide para saber a qué tema
+        volver al quitarse; sin él, la ventana se queda con el del arranque.
+    -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#123f39</item>
+        <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
         <item name="android:background">@drawable/splash</item>
     </style>
 </resources>

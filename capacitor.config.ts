@@ -46,6 +46,20 @@ const config: CapacitorConfig = {
      lleva una sola página, la que se ve si la ventana no alcanza el servidor
      en el primer arranque —cuando todavía no hay nada guardado—. */
   webDir: "capacitor/www",
+  /**
+   * El color de la ventana, y no es el mismo ajuste que el de la pantalla de
+   * arranque.
+   *
+   * Se midió grabando un arranque en el emulador: entre que Android retira su
+   * pantalla y la ventana web pinta algo, había **casi un segundo en blanco**
+   * —un destello a contraluz cada vez que alguien abre la aplicación—. Esto
+   * es el color de la ventana mientras no hay nada dibujado dentro.
+   *
+   * El mismo verde de `styles.xml`, del telón de hojas y del arranque: desde
+   * que se toca el icono hasta que aparece la aplicación no hay un solo
+   * cambio de color.
+   */
+  backgroundColor: "#123f39",
   server: {
     url,
     /* Nunca HTTP en claro: por aquí viajan sesiones y fotografías. */
