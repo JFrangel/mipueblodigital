@@ -60,6 +60,44 @@ export const hoja = (color = VERDE, grosor = 2.4, rio = AZUL) => `
 </svg>`;
 
 /**
+ * Las tres olas, las mismas del botón del menú.
+ *
+ * Salen de `src/components/olas.tsx` trazo por trazo: un cuarto de onda cada
+ * tramo —de la línea a la cresta, de la cresta a la línea, de la línea al seno,
+ * del seno a la línea— encadenados de a ocho, y cada línea empezando por un
+ * cuarto distinto, que es lo que las escalona sin que ninguna quede al revés.
+ *
+ * **Van más gruesas que en el botón.** Allí miden veintidós píxeles en pantalla
+ * y 1,8 basta; aquí el dibujo se estira a cuarenta y ocho o a ciento noventa y
+ * dos, y a ese tamaño un trazo fino se vuelve un rayado de tres pelos que a
+ * cuarenta y ocho dedos de distancia no se lee como agua.
+ */
+const CUARTOS = [
+  "c.77 -.55 1.53 -1.05 2.3 -1.05",
+  "c.77 0 1.53 .5 2.3 1.05",
+  "c.77 .55 1.53 1.05 2.3 1.05",
+  "c.77 0 1.53 -.5 2.3 -1.05",
+];
+
+const LINEAS = [
+  { y: 6.8, desde: 2, alto: 0 },
+  { y: 12, desde: 3, alto: 1.05 },
+  { y: 17.2, desde: 0, alto: 0 },
+];
+
+export const OLAS = LINEAS.map(
+  ({ y, desde, alto }) =>
+    `M2.8 ${y + alto}` +
+    Array.from({ length: 8 }, (_, i) => CUARTOS[(desde + i) % 4]).join(""),
+);
+
+export const olas = (color = AZUL, grosor = 2.6) => `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+     stroke="${color}" stroke-width="${grosor}" stroke-linecap="round">
+  ${OLAS.map((d) => `<path d="${d}"/>`).join("")}
+</svg>`;
+
+/**
  * El fondo de la casa: el verde con la misma inclinación de luz que llevan las
  * tarjetas de la aplicación.
  */
@@ -86,12 +124,10 @@ export const circulo = (lado) => `
   <circle cx="${lado / 2}" cy="${lado / 2}" r="${lado / 2}" fill="url(#g)"/>
 </svg>`;
 
-/** La hoja centrada sobre una base, ocupando la fracción que se le diga. */
-export async function conHoja(sharp, base, lado, fraccion, opciones = {}) {
+/** Un dibujo centrado sobre una base, ocupando la fracción que se le diga. */
+async function centrado(sharp, base, lado, fraccion, svg) {
   const dibujo = Math.round(lado * fraccion);
-  const marca = await sharp(
-    Buffer.from(hoja(opciones.color ?? VERDE, opciones.grosor ?? 2.4, opciones.rio ?? AZUL)),
-  )
+  const marca = await sharp(Buffer.from(svg))
     .resize(dibujo, dibujo)
     .png()
     .toBuffer();
@@ -100,4 +136,26 @@ export async function conHoja(sharp, base, lado, fraccion, opciones = {}) {
     .composite([{ input: marca, top: borde, left: borde }])
     .png()
     .toBuffer();
+}
+
+/** La hoja centrada sobre una base. Es la marca de la web. */
+export async function conHoja(sharp, base, lado, fraccion, opciones = {}) {
+  return centrado(
+    sharp,
+    base,
+    lado,
+    fraccion,
+    hoja(opciones.color ?? VERDE, opciones.grosor ?? 2.4, opciones.rio ?? AZUL),
+  );
+}
+
+/** Las olas centradas sobre una base. Es la marca del teléfono. */
+export async function conOlas(sharp, base, lado, fraccion, opciones = {}) {
+  return centrado(
+    sharp,
+    base,
+    lado,
+    fraccion,
+    olas(opciones.color ?? AZUL, opciones.grosor ?? 2.6),
+  );
 }

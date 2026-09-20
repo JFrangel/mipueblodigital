@@ -8,13 +8,19 @@
  * teléfono aparece con el logo de una herramienta de programación no parece del
  * Consejo: parece una prueba de alguien.
  *
- * Todo sale de `marca-hoja.mjs`, que es la misma hoja-A que lleva el rótulo de
- * la aplicación web, así que no hay dos marcas que mantener. Se vuelve a
- * ejecutar cuando cambie la marca, junto a `refresh-brand.mjs`.
+ * Todo sale de `marca-hoja.mjs`, así que no hay dos dibujos que mantener. Se
+ * vuelve a ejecutar cuando cambie la marca, junto a `refresh-brand.mjs`.
+ *
+ * **El teléfono lleva las olas; la web lleva la hoja-A.** No es un descuido: en
+ * el cajón del teléfono el icono compite con decenas de aplicaciones a cuarenta
+ * y ocho píxeles, y tres trazos de agua se reconocen de un vistazo donde una
+ * hoja con un río dentro se vuelve una mancha verde más. Son la misma agua que
+ * abre el menú dentro de la aplicación, así que quien toca el icono encuentra
+ * el mismo dibujo al entrar.
  */
 import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
-import { circulo, conHoja, fondo, hoja } from "./marca-hoja.mjs";
+import { circulo, conOlas, fondo, olas } from "./marca-hoja.mjs";
 
 /* El verde de la pantalla de arranque: el mismo que declara `capacitor.config.ts`
    en `SplashScreen.backgroundColor`. Si cambia allí, cambia aquí, o el dibujo
@@ -62,27 +68,29 @@ for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
   await mkdir(draw, { recursive: true });
 
   /**
-   * El icono adaptable: el fondo a sangre y la hoja dentro de la ventana.
+   * El icono adaptable: el fondo a sangre y las olas dentro de la ventana.
    *
    * Android recorta el lienzo de 108 dp con la forma que use el lanzador
    * —círculo, cuadrado redondeado, gota— y solo garantiza los 72 dp centrales,
-   * que son dos tercios. La hoja va a 0,46 del lienzo entero: deja aire por
-   * dentro de esa ventana, así que ninguna forma de recorte le muerde la punta.
+   * que son dos tercios. El dibujo va a 0,46 del lienzo entero: deja aire por
+   * dentro de esa ventana, así que ninguna forma de recorte le corta una ola.
    */
   await writeFile(
     `${mip}/ic_launcher_background.png`,
-    await sharp(Buffer.from(fondo(adaptativo))).png().toBuffer(),
+    await sharp(Buffer.from(fondo(adaptativo)))
+      .png()
+      .toBuffer(),
   );
   await writeFile(
     `${mip}/ic_launcher_foreground.png`,
-    await conHoja(sharp, transparente(adaptativo), adaptativo, 0.46),
+    await conOlas(sharp, transparente(adaptativo), adaptativo, 0.46),
   );
 
   /* Los heredados: la marca entera ya compuesta, para lanzadores viejos que no
      entienden el adaptable y enseñarían el PNG tal cual. */
   await writeFile(
     `${mip}/ic_launcher.png`,
-    await conHoja(
+    await conOlas(
       sharp,
       Buffer.from(fondo(legado, Math.round(legado * 0.22))),
       legado,
@@ -91,22 +99,22 @@ for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
   );
   await writeFile(
     `${mip}/ic_launcher_round.png`,
-    await conHoja(sharp, Buffer.from(circulo(legado)), legado, 0.58),
+    await conOlas(sharp, Buffer.from(circulo(legado)), legado, 0.58),
   );
 
   /**
    * El icono del aviso en la barra de estado.
    *
    * Android usa **solo el canal alfa** de este archivo y lo tiñe él según el
-   * tema, así que se dibuja en blanco puro y sin el azul del río: allí el río
-   * solo puede ser forma. Y los tamaños son los de notificación, que son la
-   * mitad de los del cajón.
+   * tema, así que se dibuja en blanco puro: el azul del agua allí no existe, y
+   * lo único que queda de las olas es su forma. Y los tamaños son los de
+   * notificación, que son la mitad de los del cajón.
    */
   const dibujo = Math.round(aviso * 0.82);
   const margen = Math.round(aviso * 0.09);
   await writeFile(
     `${draw}/ic_stat_notify.png`,
-    await sharp(Buffer.from(hoja("#ffffff", 2.6, "#ffffff")))
+    await sharp(Buffer.from(olas("#ffffff", 3)))
       .resize(dibujo, dibujo)
       .extend({
         top: margen,
@@ -144,14 +152,23 @@ console.log("  icono adaptable");
  * La pantalla de arranque: la marca centrada sobre el verde del Consejo.
  *
  * Es lo que se ve mientras la ventana alcanza la aplicación, y sin ella ese
- * momento es un rectángulo blanco. Va la misma hoja que el cajón: abrir con un
- * logotipo y aterrizar en otro hace dudar de en qué aplicación se ha entrado.
+ * momento es un rectángulo blanco. Van las mismas olas que el cajón: abrir con
+ * un logotipo y aterrizar en otro hace dudar de en qué aplicación se ha
+ * entrado.
  */
 async function arranque(ancho, alto, destino) {
   const lado = Math.round(Math.min(ancho, alto) * 0.32);
-  const marca = await sharp(Buffer.from(hoja())).resize(lado, lado).png().toBuffer();
+  const marca = await sharp(Buffer.from(olas()))
+    .resize(lado, lado)
+    .png()
+    .toBuffer();
   await sharp({
-    create: { width: ancho, height: alto, channels: 4, background: FONDO_ARRANQUE },
+    create: {
+      width: ancho,
+      height: alto,
+      channels: 4,
+      background: FONDO_ARRANQUE,
+    },
   })
     .composite([{ input: marca, gravity: "centre" }])
     .png()
