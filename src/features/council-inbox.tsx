@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { memberHeaders } from "@/data/remote-reports";
 import { useSession } from "@/data/session";
 import { statuses, categories, shortDate } from "@/data/catalog";
@@ -393,33 +393,35 @@ export function CouncilInbox({
     }
     if (cursor) load(cursor, () => setPage((current) => current + 1));
   }
-  /* Si hay un expediente abierto, en una referencia. Hace falta para decidir
-     si se refresca, pero **no** para provocar un refresco al abrirlo o
-     cerrarlo: como dependencia, cerrar una ficha recargaría la bandeja. */
-  const abierto = useRef(false);
+  /**
+   * Cuándo toca pedir la bandeja: **cuando esta pestaña está a la vista y no
+   * hay ningún expediente abierto encima.**
+   *
+   * Es una sola regla y cubre los cuatro momentos que importan. Al montar, que
+   * es el trabajo de esta pantalla y no una opción —antes había que pulsar un
+   * botón y el puesto del Consejo empezaba siempre vacío—. Al volver a la
+   * pestaña, porque las pestañas del panel **no se desmontan** al cambiar: se
+   * esconden, así que sin esto la bandeja se quedaba en lo que hubiera al abrir
+   * el panel y en un puesto abierto toda la mañana eso es no enterarse de nada.
+   * Y **al cerrar un expediente**, que es cuando la fila de la lista todavía
+   * dice lo que decía antes de guardarlo.
+   *
+   * Lo que la regla deja fuera es lo importante: mientras hay una ficha
+   * abierta no se pide nada. Recibir una bandeja nueva la cierra —lo hace
+   * `receive`— y eso con algo a medio escribir es perder el trabajo. Es la
+   * misma razón por la que el botón de actualizar tampoco se ofrece entonces.
+   *
+   * No da vueltas: `receive` deja `selected` en nulo, que es donde ya estaba,
+   * así que la condición no cambia y el efecto no vuelve a correr.
+   */
+  const tocaPedirla = activo && selected === null;
   useEffect(() => {
-    abierto.current = selected !== null;
-  }, [selected]);
-
-  /* La bandeja es el trabajo de esta pantalla, no una opción: se pide al
-     entrar. Antes había que pulsar un botón, así que el puesto del Consejo
-     empezaba siempre vacío. Se repite al cambiar de cuenta, que es cuando lo
-     cargado deja de ser de quien mira.
-
-     **Y cada vez que se vuelve a la pestaña.** Las pestañas del panel no se
-     desmontan al cambiar, así que esto solo corría una vez por sesión: la
-     bandeja se quedaba en lo que hubiera al abrir el panel y había que pulsar
-     «Actualizar bandeja» para ver lo que llegó entretanto. En un puesto que
-     está abierto toda la mañana, eso es no enterarse de nada.
-
-     Salvo con un expediente abierto: recibir una bandeja nueva lo cierra
-     —lo hace `receive`— y eso con algo a medio escribir es perder el trabajo.
-     Es la misma razón por la que el botón de actualizar tampoco se ofrece
-     entonces. */
-  useEffect(() => {
-    if (!activo || abierto.current) return;
+    if (!tocaPedirla) return;
+    /* Sin anunciar la espera. La primera vez `busy` ya arranca en cierto; en
+       las siguientes hay una bandeja dibujada y cambiarla por «Consultando…»
+       sería quitar de la pantalla lo que se está mirando para poner un rótulo.
+       La lista se reemplaza cuando llega, y mientras tanto sirve la de antes. */
     let alive = true;
-    setBusy(true);
     requestPage()
       .then((page) => {
         if (alive) receive(page);
@@ -433,7 +435,7 @@ export function CouncilInbox({
     return () => {
       alive = false;
     };
-  }, [activo, requestPage, receive]);
+  }, [tocaPedirla, requestPage, receive]);
   function open(item: Incident) {
     setSelected({ ...item, priority: item.priority ?? DEFAULT_PRIORITY });
     /* La versión pública parte de lo que el expediente ya dice. Quien revisa
