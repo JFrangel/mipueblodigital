@@ -3,14 +3,23 @@ import { useEffect, useState } from "react";
 import { HojaPlatano } from "./leaf-fall";
 import styles from "./telon-hojas.module.css";
 
-/** Lo que tardan las hojas en entrar y cerrarse, contando el retardo de las
- *  últimas, que son las que cierran. */
-const ENTRADA_MS = 930;
+/**
+ * Los tiempos del telón. **Los mismos números que el CSS**, que es quien mueve
+ * las hojas: aquí solo se cuenta para saber cuándo pasar de un acto al otro.
+ *
+ * Duraban 2,48 s entre los tres y ahora duran 1,43. No es que la coreografía
+ * fuera larga de más mirándola sola: es que va **al final** del arranque, detrás
+ * de la pantalla de Android, de la portada y de la espera de la red, y a esas
+ * alturas quien mira ya ha esperado lo suyo. Cada acto conserva su proporción
+ * con los otros, así que el gesto es el mismo, contado más rápido.
+ *
+ * Entrada y salida llevan sumado el retardo de la última hoja —las que entran
+ * escalonadas—, porque el acto no acaba cuando termina la primera.
+ */
+const ENTRADA_MS = 590;
 /** Lo que se quedan tapando antes de abrirse. */
-const QUIETA_MS = 250;
-/** Y lo que tardan en apartarse, contando el retardo de las de color, que
- *  ahora salen detrás de las oscuras. Los mismos números que el CSS. */
-const SALIDA_MS = 1300;
+const QUIETA_MS = 140;
+const SALIDA_MS = 700;
 
 /**
  * Si toca enseñarlo. Se marca **al terminar**, no al decidir.
@@ -49,11 +58,39 @@ let yaSeVio = false;
  * toques —`pointer-events: none`—, así que aunque algo fallara, la aplicación
  * de debajo se sigue pudiendo usar.
  */
-export function TelonHojas({ listo }: { listo: boolean }) {
+export function TelonHojas({
+  listo,
+  alTapar,
+}: {
+  listo: boolean;
+  /**
+   * Avisa cuando las hojas ya tapan del todo.
+   *
+   * **Es lo que permite que el telón cubra un cambio en vez de esconder algo
+   * que ya se veía.** Sin esto, la aplicación y el telón arrancaban en el mismo
+   * instante —los dos cuelgan de `visited`—, así que en pantalla se veía el
+   * inicio entero, las hojas cerrándose encima de él y abriéndose sobre lo
+   * mismo. Medido fotograma a fotograma: aparecía en el 39 y volvía a taparse
+   * en el 41.
+   *
+   * Quien recibe esto cambia lo que hay debajo mientras está tapado, y lo que
+   * las hojas descubren al abrirse es algo que no estaba antes, que es lo único
+   * que justifica un telón.
+   */
+  alTapar: () => void;
+}) {
   const [fase, setFase] = useState<"fuera" | "entrando" | "abriendo">("fuera");
 
   useEffect(() => {
-    if (!listo || yaSeVio || fase !== "fuera") return;
+    if (!listo) return;
+    /* El telón ya se vio en esta carga y no va a volver: no hay nada que
+       esperar, así que se descubre en el acto. Sin esto, quien se mueve por la
+       aplicación se quedaría mirando la portada para siempre. */
+    if (yaSeVio) {
+      alTapar();
+      return;
+    }
+    if (fase !== "fuera") return;
     /* La entrada arranca en el primer fotograma que se pinta de verdad, no al
        aplicar los estilos: en la ventana del APK entre una cosa y otra pasa
        casi un segundo, y una animación empezada a oscuras no se ve. */
@@ -65,13 +102,20 @@ export function TelonHojas({ listo }: { listo: boolean }) {
       cancelAnimationFrame(primero);
       cancelAnimationFrame(segundo);
     };
-  }, [listo, fase]);
+  }, [listo, fase, alTapar]);
 
   useEffect(() => {
     if (fase !== "entrando") return;
+    /* Se avisa al cerrarse del todo y no al empezar a abrir: deja el rato
+       quieto entero —y la salida por delante— para que lo que entra debajo
+       tenga tiempo de pintarse antes de que nadie lo vea. */
+    const tapa = setTimeout(alTapar, ENTRADA_MS);
     const abre = setTimeout(() => setFase("abriendo"), ENTRADA_MS + QUIETA_MS);
-    return () => clearTimeout(abre);
-  }, [fase]);
+    return () => {
+      clearTimeout(tapa);
+      clearTimeout(abre);
+    };
+  }, [fase, alTapar]);
 
   useEffect(() => {
     if (fase !== "abriendo") return;

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Workspace } from "@/components/workspace";
 import { PortadaCarga } from "./portada-carga";
@@ -22,6 +22,18 @@ export function FirstRun() {
     hasVisited,
     getServerVisited,
   );
+  /**
+   * Si el telón ya tapa la pantalla.
+   *
+   * **Es lo que hace que las hojas cubran un cambio y no lo que ya se veía.**
+   * Antes esta decisión y la del telón colgaban las dos de `visited`, así que
+   * ocurrían en el mismo fotograma: la aplicación aparecía entera, las hojas se
+   * cerraban encima y se abrían sobre lo mismo. En una grabación se ve aparecer
+   * el inicio y taparse dos décimas después. Ahora la portada aguanta hasta que
+   * está tapado, y lo que las hojas descubren al abrirse no estaba antes.
+   */
+  const [tapado, setTapado] = useState(false);
+  const tapar = useCallback(() => setTapado(true), []);
   useEffect(() => {
     if (visited === false) router.replace("/bienvenida/");
   }, [visited, router]);
@@ -42,8 +54,8 @@ export function FirstRun() {
           aplicación: entra cuando ya hay algo que enseñar, tapa lo que había,
           y se abre sobre lo que viene. Mientras se decide, quien cubre la
           espera es la portada, que para eso está. */}
-      <TelonHojas listo={visited !== null} />
-      {visited ? <Workspace section="inicio" /> : <PortadaCarga />}
+      <TelonHojas listo={visited !== null} alTapar={tapar} />
+      {visited && tapado ? <Workspace section="inicio" /> : <PortadaCarga />}
     </>
   );
 }
