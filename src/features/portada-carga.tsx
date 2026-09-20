@@ -54,7 +54,7 @@ export function PortadaCarga() {
           para las tres aunque midan distinto, y sigue valiendo el día que
           alguien retoque el dibujo. */}
       <svg
-        className={styles.marcaDibujo}
+        className={`${styles.marcaDibujo} ${styles.marcaCentro}`}
         viewBox="0 0 24 24"
         aria-hidden="true"
         focusable="false"
@@ -75,14 +75,16 @@ export function PortadaCarga() {
           />
         ))}
       </svg>
-      <div className={styles.marca}>
-        <Logo />
-      </div>
+      <div className={styles.pie}>
+        <div className={styles.marca}>
+          <Logo />
+        </div>
       {/* `key` para que al cambiar la frase entre de nuevo en vez de sustituirse
           de golpe: el cambio de texto es la única señal de que algo avanza. */}
-      <p className={styles.frase} role="status" key={frase}>
-        {frase}
-      </p>
+        <p className={styles.frase} role="status" key={frase}>
+          {frase}
+        </p>
+      </div>
     </div>
   );
 }

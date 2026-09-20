@@ -13,16 +13,43 @@
  */
 
 .portada {
+  position: relative;
   min-height: 100dvh;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 26px;
-  padding: 0 28px;
   text-align: center;
   background: var(--arranque);
   color: #cfe0d6;
   font-size: 13px;
+}
+
+/**
+ * El palafito, clavado en el centro de la pantalla.
+ *
+ * **No centrado con el rótulo, sino donde lo ponen las otras dos.** Esta
+ * pantalla es la tercera de una fila: la dibuja Android con su icono en el
+ * centro exacto, la repite la portada que va dentro del archivo, y entonces
+ * llega esta. Centrando el grupo entero —dibujo, rótulo y frase— el palafito
+ * quedaba más arriba que en las anteriores y en el relevo pegaba un salto.
+ * Ahora las tres lo tienen en el mismo sitio y lo único que cambia es lo que se
+ * le suma debajo.
+ */
+.marcaCentro {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* El texto cuelga del palafito: medio dibujo desde el centro, y un respiro.
+   `min(26vw, 84px)` es la mitad del ancho del dibujo y cambia con él. */
+.pie {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% + min(26vw, 84px) + 26px);
+  padding: 0 28px;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
 }
 
 /**
