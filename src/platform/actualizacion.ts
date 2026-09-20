@@ -68,11 +68,15 @@ export async function hayActualizacion(): Promise<Actualizacion | null> {
     });
     if (!respuesta.ok) return null;
     const publicada = (await respuesta.json()) as VersionPublicada;
-    if (
-      typeof publicada?.versionCode !== "number" ||
-      publicada.versionCode <= instalado
-    )
+    if (typeof publicada?.versionCode !== "number") return null;
+    if (publicada.versionCode <= instalado) {
+      /* El servidor contestó y lo instalado ya es lo suyo: si quedó un archivo
+         de una actualización anterior, son ocho megas de nadie ocupando un
+         teléfono donde caben pocos. **Solo aquí**, que es el único punto donde
+         consta que no hay nada esperando; ver `limpiarDescarga`. */
+      void olvidarDescarga();
       return null;
+    }
 
     return {
       ...publicada,
@@ -177,6 +181,7 @@ type Puente = {
   pedirPermisoInstalar(): Promise<void>;
   descargarEInstalar(opciones: { url: string }): Promise<void>;
   abrirInstalador(): Promise<void>;
+  limpiarDescarga(): Promise<{ borrado: boolean }>;
   addListener(
     evento: "progreso",
     escucha: (avance: Avance) => void,
@@ -184,6 +189,22 @@ type Puente = {
 };
 
 const puente = () => registerPlugin<Puente>("Actualizacion");
+
+/**
+ * Tirar el APK que quedó de una actualización ya instalada.
+ *
+ * **Calla siempre.** Quien tenga un APK anterior a este método no lo trae —el
+ * puente no contesta y salta el plazo de `conPlazo`—, y quedarse con ocho megas
+ * de más no es algo que haya que contarle a nadie ni que valga un aviso en
+ * pantalla. Se recogen a la siguiente.
+ */
+async function olvidarDescarga(): Promise<void> {
+  try {
+    await conPlazo(puente().limpiarDescarga());
+  } catch {
+    /* Versión sin el método, o no había nada que borrar. */
+  }
+}
 
 /** Abrir la pantalla de Android donde se permite instalar a esta aplicación. */
 export async function permitirInstalar(): Promise<void> {

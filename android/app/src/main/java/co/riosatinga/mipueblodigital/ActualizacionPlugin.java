@@ -37,9 +37,17 @@ import java.io.File;
  * instalador. La persona solo dice «Instalar».
  *
  * **Se descarga a la carpeta privada de la aplicación**, no a la de descargas
- * del teléfono. Así no hace falta ningún permiso de almacenamiento, el archivo
- * no se queda de recuerdo ocupando siete megas en la memoria de nadie, y el
- * instalador lo lee por el `FileProvider` que Capacitor ya declara.
+ * del teléfono. Así no hace falta ningún permiso de almacenamiento, no aparece
+ * suelto en la bandeja de descargas de nadie, y el instalador lo lee por el
+ * `FileProvider` que Capacitor ya declara.
+ *
+ * **Lo que no hace es borrarse solo al terminar**, y decía que sí. Comprobado
+ * en el emulador después de una actualización de verdad: instalada la versión
+ * nueva, el archivo seguía ahí ocupando sus casi ocho megas. No se puede borrar
+ * al abrir el instalador —el instalador lo está leyendo en ese momento, por el
+ * `FileProvider`, y quitárselo de debajo rompe la instalación—, así que lo
+ * recoge `limpiarDescarga` en el arranque siguiente, cuando ya consta que no
+ * hay ninguna actualización esperando.
  */
 @CapacitorPlugin(name = "Actualizacion")
 public class ActualizacionPlugin extends Plugin {
@@ -193,6 +201,29 @@ public class ActualizacionPlugin extends Plugin {
         } catch (Exception error) {
             call.reject("no se pudo empezar la descarga", "sin-empezar");
         }
+    }
+
+    /**
+     * Tirar el archivo que ya no hace falta.
+     *
+     * **Se llama cuando consta que no hay actualización esperando**, y ese
+     * «consta» es estrecho a propósito: el servidor contestó y dijo que la
+     * versión instalada ya es la suya. No vale «no se pudo comprobar» —sin red,
+     * con el JSON ilegible—, porque entonces podría haber una instalación a
+     * medio empezar, con el diálogo de Android abierto encima leyendo justo
+     * este archivo, y borrarlo ahí la rompe.
+     *
+     * Casi ocho megas en un teléfono donde caben pocos. No es un detalle.
+     */
+    @PluginMethod
+    public void limpiarDescarga(PluginCall call) {
+        File archivo = new File(
+            getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+            ARCHIVO
+        );
+        JSObject respuesta = new JSObject();
+        respuesta.put("borrado", archivo.exists() && archivo.delete());
+        call.resolve(respuesta);
     }
 
     /**
