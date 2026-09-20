@@ -75,6 +75,21 @@
    * sin moverse.
    */
   transform: var(--fuera);
+  /**
+   * **Las capas se preparan antes, no durante.**
+   *
+   * Cada hoja mide 475 × 1.267 px, y en un teléfono a densidad 2,6 eso son
+   * cuatro megapíxeles por hoja. Sin avisar, el navegador crea esas seis
+   * capas en el primer fotograma de la animación —que es justo cuando además
+   * está hidratando la aplicación entera por debajo— y el arranque da un
+   * tirón. Avisando, las tiene listas antes de que nada se mueva.
+   *
+   * La segunda línea no está por la cara de atrás: es la manera corta de
+   * pedirle al navegador que la capa viva en la tarjeta gráfica y no vuelva a
+   * pintarse entera en cada fotograma.
+   */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Se arranca desde el navegador, en el primer fotograma que se pinta de
