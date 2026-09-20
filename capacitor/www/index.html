@@ -403,19 +403,54 @@
     html.fuentes .portada .rotulo {
       animation: subir 620ms ease-out both;
     }
-    /* El posesivo: escrito a mano, porque quien lo dice es una persona. Los
-       mismos ajustes que `.brand-mi` en `globals.css`. */
+    /* El posesivo: escrito a mano, porque quien lo dice es una persona.
+       **Los mismos números que `.brand-mi` en `globals.css`, medidos, no
+       redondeados**: allí el cuerpo sale de `calc(--rotulo * 1.12)` con
+       `--rotulo: 28px`, que da 31,36 y no 31. Tres décimas no se ven en un
+       renglón suelto, pero aquí el mismo texto se pinta dos veces seguidas
+       —esta portada y la de la web— y cualquier diferencia entre las dos se
+       lee como un cambio de letra al relevo. */
+    /**
+     * El posesivo, con **la misma estructura que `.brand-mi` en la aplicación**,
+     * no solo con los mismos números.
+     *
+     * Se intentó primero poniéndole el relleno y la interlínea al propio hijo de
+     * la rejilla, y no valió: un hijo de rejilla se convierte a `block`, y en
+     * una caja de bloque el relleno vertical no entra en el renglón. Medido, su
+     * caja quedaba en 36,05 donde la de la web mide 37,80 —punto y tres cuartos
+     * de diferencia— y como la rejilla alinea por línea base, el «Mi» se
+     * asentaba distinto respecto a «Pueblo». La letra era la misma y el rótulo
+     * se veía cambiar igual.
+     *
+     * Allí el relleno lo lleva una `<i>` por dentro, que sí es en línea. Aquí
+     * también.
+     */
     .portada .rotulo .mi {
-      font-family: "Caveat Variable", cursive;
-      font-size: 31px;
+      font-size: 31.36px;
+      /* **Medido, no deducido.** Con la interlínea heredada —1,2— la caja de
+         este renglón salía dos píxeles más alta que en la web y «DIGITAL» caía
+         dos píxeles más abajo. Se probaron 1, 1,05, 1,1, 1,15 y 1,2 midiendo el
+         alto del rótulo y la posición del descriptor: 1,05 da 54,59 y 40,80,
+         que son exactamente los de la aplicación. */
+      line-height: 1.05;
+      margin-right: 5px;
+    }
+    .portada .rotulo .mi i {
+      display: inline-block;
+      font-family: "Caveat Variable", "Segoe Script", cursive;
+      font-style: normal;
+      font-size: 1em;
       font-weight: 700;
+      letter-spacing: 0;
       line-height: 1.05;
       padding: 0.04em 0.1em 0.06em;
       color: #bfe3cb;
-      margin-right: 5px;
     }
+    /* Y el nombre, con la pila de reserva entera de `globals.css`: si un día
+       Bricolage no cargara, las dos portadas caerían a la misma letra. */
     .portada .rotulo .nombre {
-      font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
+      font-family: "Bricolage Grotesque Variable", "DM Sans Variable", Arial,
+        sans-serif;
       font-size: 28px;
       font-weight: 800;
       line-height: 0.92;
@@ -470,7 +505,7 @@
   <div class="portada" id="portada">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><!--PALAFITO--></svg>
     <div class="pie">
-      <p class="rotulo"><span class="mi">Mi</span><span class="nombre">Pueblo</span><em>Digital</em></p>
+      <p class="rotulo"><span class="mi"><i>Mi</i></span><span class="nombre">Pueblo</span><em>Digital</em></p>
       <p class="frase" id="fraseArranque" role="status">Preparando tu comunidad…</p>
     </div>
   </div>
