@@ -177,7 +177,31 @@ async function nativa(opciones: {
    * vuelta escribe en la suya, y `unir()` se ocupa del resto.
    */
   let vacias = 0;
-  const SILENCIOS = 3;
+  /**
+   * **Cuántas vueltas en silencio se aguantan, y por qué no son las mismas
+   * antes y después de haber dicho algo.**
+   *
+   * El reconocedor de Android reconoce una frase y se detiene, así que para
+   * dictar un reporte entero hay que reabrirlo entre frase y frase. Eso es lo
+   * que permite hacer pausas —para pensar, para mirar el derrumbe— y no se
+   * toca.
+   *
+   * Lo que sí cambia es cuánto se insiste. Antes de la primera palabra
+   * conviene ser paciente: quien nunca ha dictado tarda en arrancar, y cortarle
+   * a los siete segundos es decirle que no funciona. Pero **después** de que ya
+   * dijo algo, tres vueltas más son veintiún segundos de micrófono abriéndose
+   * solo delante de alguien que ya terminó, con su aviso y su luz cada vez. Una
+   * dos llegan: una deja sitio a la pausa y la siguiente cierra.
+   *
+   * **Una sola no puede ser**, y esto lo tumbó una prueba: con una, la primera
+   * pausa termina el dictado. Tampoco se arregla esperando más en la misma
+   * vuelta —el reconocedor de Android se calla solo a los cinco segundos y a
+   * partir de ahí está muerto sin avisar—, así que para oír lo que venga
+   * después de una pausa **hay que reabrir**. Dos es el suelo, no una
+   * preferencia.
+   */
+  const SILENCIOS_ANTES = 3;
+  const SILENCIOS_DESPUES = 2;
   let vueltas = 0;
   const VUELTAS_MAXIMAS = 60;
   /* Reintentos por «ocupado», con su propio cupo: el reconocedor de Android
@@ -290,7 +314,9 @@ async function nativa(opciones: {
     if (partes[indice]?.trim()) {
       indice = partes.length;
       vacias = 0;
-    } else if (++vacias >= SILENCIOS) {
+    } else if (
+      ++vacias >= (partes.length ? SILENCIOS_DESPUES : SILENCIOS_ANTES)
+    ) {
       /* Sin una sola palabra en toda la escucha, el problema es el micrófono y
          se dice. Con algo dicho, el silencio es el final normal del dictado. */
       cerrar(partes.length ? null : "sin-voz");
@@ -313,9 +339,21 @@ async function nativa(opciones: {
          la vista del texto que se está escribiendo. */
       popup: false,
     })
-      /* Resuelve en cuanto está escuchando, sin traer nada: lo que se oiga
-         llegará por los oyentes de arriba. */
-      .then(() => rearmar())
+      .then(() => {
+        /* Resuelve en cuanto está escuchando, sin traer nada: lo que se oiga
+           llegará por los oyentes de arriba.
+
+           Salvo que la escucha ya se haya cerrado mientras este arranque venía
+           de camino. Pasa al pulsar «Detener dictado»: `stop()` llega antes de
+           que el complemento haya hecho su `startListening`, que va encolado en
+           el hilo de la ventana, así que no para nada y el micrófono se abre
+           **después** de haberlo apagado. Se vuelve a parar aquí. */
+        if (!vivo) {
+          void SpeechRecognition.stop().catch(() => undefined);
+          return;
+        }
+        rearmar();
+      })
       .catch((error: unknown) => {
         const suceso = queDijo(error);
         if (suceso === "vacia") return cerrarVuelta();

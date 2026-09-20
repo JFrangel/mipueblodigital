@@ -25,6 +25,8 @@ const state = vi.hoisted(() => ({
   >,
   vueltaActual: 0,
   arranques: [] as unknown[],
+  /** Que `start()` tarde en resolver, como tarda en el teléfono. */
+  arranqueLento: false,
   paradas: 0,
   oyentes: {} as Record<string, Array<(datos: never) => void>>,
   quitados: 0,
@@ -86,6 +88,10 @@ vi.mock("@capacitor-community/speech-recognition", () => ({
      */
     start: async (opciones: unknown) => {
       state.arranques.push(opciones);
+      /* En el teléfono el complemento encola `startListening` en el hilo de la
+         ventana, así que entre pedirlo y estar escuchando pasa un rato. */
+      if (state.arranqueLento)
+        await new Promise((listo) => setTimeout(listo, 40));
       const guion = state.vueltas[state.vueltaActual++];
       /* Lo que falla antes de empezar a escuchar sí se ve desde la promesa. */
       if (guion && typeof guion === "object" && "error" in guion)
@@ -164,6 +170,7 @@ beforeEach(() => {
   state.vueltas = [];
   state.vueltaActual = 0;
   state.arranques = [];
+  state.arranqueLento = false;
   state.paradas = 0;
   state.oyentes = {};
   state.quitados = 0;
@@ -344,6 +351,52 @@ it("un fallo de red se dice como fallo de red", async () => {
   state.vueltas = [{ error: "Network error" }];
   expect((await dictar()).motivo).toBe("sin-conexion");
   expect(state.arranques).toHaveLength(1);
+});
+
+/**
+ * **Habiendo dicho algo, el micrófono no se reabre tres veces más.**
+ *
+ * Reabrir entre frases es lo que permite dictar con pausas y no se toca. Lo que
+ * sí se toca es cuánto se insiste después: tres vueltas más son veintiún
+ * segundos de micrófono abriéndose solo delante de alguien que ya terminó, con
+ * su aviso y su luz cada vez. Dos es el suelo —una deja sitio a la pausa y la
+ * siguiente cierra— y por debajo la primera pausa terminaría el dictado.
+ */
+it("después de dictar algo, se reabre dos veces y no tres", async () => {
+  state.vueltas = [{ final: "Hubo un derrumbe." }];
+  const { ultimo, motivo } = await dictar();
+  expect(ultimo).toBe("Hubo un derrumbe.");
+  expect(motivo).toBeNull();
+  /* El que oyó, más las dos vueltas en silencio que cierran. */
+  expect(state.arranques).toHaveLength(3);
+});
+
+/* Y antes de la primera palabra se sigue siendo paciente: quien nunca ha
+   dictado tarda en arrancar, y cortarle enseguida es decirle que no funciona. */
+it("antes de la primera palabra se aguanta más", async () => {
+  state.vueltas = [];
+  expect((await dictar()).motivo).toBe("sin-voz");
+  expect(state.arranques).toHaveLength(3);
+});
+
+/**
+ * **Parar para, aunque el arranque venga de camino.**
+ *
+ * El complemento encola `startListening` en el hilo de la ventana, así que al
+ * pulsar «Detener dictado» el `stop()` puede llegar antes de que el micrófono
+ * se haya abierto: no para nada, y el micrófono se enciende **después** de
+ * haberlo apagado. Eso es lo que se veía como una reapertura suelta al final.
+ */
+it("al parar no queda un micrófono abriéndose por detrás", async () => {
+  state.arranqueLento = true;
+  state.vueltas = [{ final: "Algo." }];
+  const abierta = await escuchar({ alTexto: () => {}, alTerminar: () => {} });
+  if (typeof abierta === "string") throw new Error("no abrió: " + abierta);
+  abierta.parar();
+  /* Se deja resolver el arranque que iba de camino. */
+  await new Promise((listo) => setTimeout(listo, 80));
+  /* Dos paradas: la del cierre y la del arranque que llegó tarde. */
+  expect(state.paradas).toBeGreaterThanOrEqual(2);
 });
 
 /* Al terminar se suelta el oyente y se para el reconocedor. Sin esto, salir del
