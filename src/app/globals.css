@@ -670,8 +670,23 @@ hr {
   display: flex;
   flex-direction: column;
   z-index: 30;
-  /* La hoja del fondo entra por la esquina y se recorta contra la barra. */
-  overflow: hidden;
+  /**
+   * Se desplaza cuando no cabe, y se recorta a lo ancho.
+   *
+   * Estaba en `overflow: hidden` por la hoja del fondo, que entra por la
+   * esquina y tiene que cortarse contra el canto. Pero el cajón mide una
+   * pantalla exacta, y en un teléfono corto la fila de «Mi cuenta» —que es la
+   * última— caía por debajo del borde: no se veía **y no se podía alcanzar**,
+   * porque lo oculto no se desplaza. Quien quisiera cerrar sesión o mirar sus
+   * datos no tenía por dónde.
+   *
+   * A lo ancho se sigue recortando, que es lo que la hoja necesita. Y el
+   * desplazamiento no se contagia a la página de debajo: sin eso, llegar al
+   * final del cajón empieza a mover lo que hay detrás.
+   */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
 }
 /* Todo lo que se lee va por delante del dibujo. */
 .sidebar > *:not([aria-hidden="true"]) {
