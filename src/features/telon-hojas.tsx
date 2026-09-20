@@ -40,10 +40,20 @@ const TOPE_MS = 4000;
  */
 let yaSeVio = false;
 
+/**
+ * **Se marca al terminar, no al decidir.**
+ *
+ * Marcándolo al decidir volvía el fallo de siempre: React monta los efectos
+ * dos veces en desarrollo, la primera vuelta decía «sí» y dejaba la marca, y
+ * la segunda leía esa marca y concluía «esto ya se vio». El telón se retiraba
+ * en el acto. En producción habría funcionado igual —allí el efecto corre una
+ * sola vez—, que es justo el código que aguanta mientras nadie lo mire.
+ *
+ * Marcándolo cuando el telón **acaba**, un montaje que se deshace sin haber
+ * llegado al final no deja rastro, y el siguiente vuelve a enseñarlo.
+ */
 function tocaEnsenarlo(): boolean {
-  if (yaSeVio) return false;
-  yaSeVio = true;
-  return true;
+  return !yaSeVio;
 }
 
 /**
@@ -127,7 +137,11 @@ export function TelonHojas({ listo }: { listo: boolean }) {
 
   useEffect(() => {
     if (!abriendo) return;
-    const fin = setTimeout(() => setPuesto(false), SALIDA_MS);
+    const fin = setTimeout(() => {
+      /* Aquí, y no antes: el telón llegó al final, así que ya se vio. */
+      yaSeVio = true;
+      setPuesto(false);
+    }, SALIDA_MS);
     return () => clearTimeout(fin);
   }, [abriendo]);
 
