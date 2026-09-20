@@ -1,0 +1,83 @@
+/**
+ * La portada de carga.
+ *
+ * Toma el fondo y el color del tema —`--bg`, `--muted`—, así que sale clara u
+ * oscura según tenga puesto el teléfono. Es la primera pantalla de la
+ * aplicación, no un cartel: una portada con su propio color se lee como algo
+ * que todavía no ha terminado de cargar.
+ */
+
+.portada {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 0 24px;
+  text-align: center;
+}
+
+/**
+ * La hoja del rótulo respira.
+ *
+ * Es lo único que se mueve, y se mueve por un motivo: una pantalla
+ * completamente quieta durante diez segundos parece una aplicación colgada, y
+ * con señal de río esos diez segundos pasan a menudo. Respirar dice «sigo
+ * aquí» sin prometer nada sobre cuánto falta, que es lo único honesto que se
+ * puede decir desde aquí.
+ *
+ * El recorrido es corto a propósito. Un latido grande mueve el rótulo entero y
+ * lo convierte en un anuncio.
+ */
+.marca :global(.brand-leaf) {
+  animation: respirar 2600ms ease-in-out infinite;
+  transform-origin: 50% 70%;
+}
+
+@keyframes respirar {
+  0%,
+  100% {
+    transform: rotate(-16deg) scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: rotate(-13deg) scale(1.08);
+    opacity: 1;
+  }
+}
+
+/**
+ * La frase entra desde abajo cada vez que cambia.
+ *
+ * Cambia sola a los cinco y a los catorce segundos, y ese cambio es la única
+ * señal de que el tiempo corre. Sustituyéndola de golpe se pierde: con el
+ * movimiento se nota que ha pasado algo.
+ */
+.frase {
+  margin: 0;
+  max-width: 30ch;
+  line-height: 1.5;
+  animation: llegar 420ms ease-out both;
+}
+
+@keyframes llegar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Quien pide menos animación no está pidiendo la misma más lenta. */
+@media (prefers-reduced-motion: reduce) {
+  .marca :global(.brand-leaf),
+  .frase {
+    animation: none;
+  }
+}

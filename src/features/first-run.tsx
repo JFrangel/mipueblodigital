@@ -2,7 +2,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Workspace } from "@/components/workspace";
-import { Logo } from "@/components/ui";
+import { PortadaCarga } from "./portada-carga";
+import { descubrirVentana } from "@/platform/arranque";
 import { TelonHojas } from "./telon-hojas";
 import {
   getServerVisited,
@@ -25,6 +26,22 @@ export function FirstRun() {
   useEffect(() => {
     if (visited === false) router.replace("/bienvenida/");
   }, [visited, router]);
+
+  /* En cuanto la ventana web pinta su primer fotograma se retira la pantalla
+     de arranque de Capacitor: hasta entonces tapaba la portada de carga y el
+     telón enteros, y lo único que llegaba a verse era el final de la
+     animación. Dos vueltas de reloj de animación porque la primera se
+     programa antes de que el navegador dibuje. */
+  useEffect(() => {
+    let segundo = 0;
+    const primero = requestAnimationFrame(() => {
+      segundo = requestAnimationFrame(() => void descubrirVentana());
+    });
+    return () => {
+      cancelAnimationFrame(primero);
+      cancelAnimationFrame(segundo);
+    };
+  }, []);
   /* El telón va por encima de las dos salidas, y no dentro de la portada.
      Esa portada solo se pinta mientras se decide si es la primera visita, y
      cuando la respuesta ya está guardada se resuelve en el mismo fotograma:
@@ -32,19 +49,12 @@ export function FirstRun() {
      de una carrera. */
   return (
     <>
-      {/* El telón no se aparta hasta que hay algo detrás. `visited` es null
-          mientras se lee el almacenamiento, y ese rato es justo el de la
-          portada de carga: abriendo a ciegas, las hojas descubrían un
-          «Preparando tu comunidad…». */}
+      {/* El telón es lo que pasa **entre** la portada de carga y la
+          aplicación: entra cuando ya hay algo que enseñar, tapa lo que había,
+          y se abre sobre lo que viene. Mientras se decide, quien cubre la
+          espera es la portada, que para eso está. */}
       <TelonHojas listo={visited !== null} />
-      {visited ? (
-        <Workspace section="inicio" />
-      ) : (
-        <div className="splash">
-          <Logo />
-          <p role="status">Preparando tu comunidad…</p>
-        </div>
-      )}
+      {visited ? <Workspace section="inicio" /> : <PortadaCarga />}
     </>
   );
 }
