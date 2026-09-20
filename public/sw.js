@@ -18,7 +18,7 @@ const esComunicado = pathname =>
 /* Lo imprescindible sin red: reportar, consultar lo propio y la página de
    respaldo. La fotografía entra aquí porque la usa /offline.html y pedirla en
    ese momento sería justo cuando no hay señal. */
-const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/brand/emblem.svg", "/brand/river-welcome.webp", "/brand/pwa-192.png", "/brand/pwa-512.png", "/brand/pwa-maskable-512.png"];
+const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/brand/river-welcome.webp", "/brand/pwa-192.png", "/brand/pwa-512.png", "/brand/pwa-maskable-512.png"];
 /* El resto de pantallas: sin ellas, navegar sin señal a cualquier otra parte
    caía en la página de respaldo aunque la aplicación pudiera dibujarlas. Van
    aparte y una por una porque addAll es todo o nada: que falte el mapa no debe

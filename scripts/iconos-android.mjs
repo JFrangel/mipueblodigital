@@ -8,24 +8,28 @@
  * teléfono aparece con el logo de una herramienta de programación no parece del
  * Consejo: parece una prueba de alguien.
  *
- * Todo sale del mismo emblema que ya usa la aplicación web, así que no hay dos
- * marcas que mantener. Se vuelve a ejecutar cuando cambie el emblema, junto a
- * `refresh-brand.mjs`.
+ * Todo sale de `marca-hoja.mjs`, que es la misma hoja-A que lleva el rótulo de
+ * la aplicación web, así que no hay dos marcas que mantener. Se vuelve a
+ * ejecutar cuando cambie la marca, junto a `refresh-brand.mjs`.
  */
 import sharp from "sharp";
 import { mkdir, writeFile } from "node:fs/promises";
+import { circulo, conHoja, fondo, hoja } from "./marca-hoja.mjs";
 
-const EMBLEMA = "public/brand/emblem.svg";
-/* El verde del Consejo: el mismo del manifiesto y de la barra de estado. */
-const FONDO = "#123f39";
+/* El verde de la pantalla de arranque: el mismo que declara `capacitor.config.ts`
+   en `SplashScreen.backgroundColor`. Si cambia allí, cambia aquí, o el dibujo
+   aparece sobre un color y el resto de la pantalla sobre otro. */
+const FONDO_ARRANQUE = "#123f39";
 
-/** Los cinco tamaños que Android pide, por densidad de pantalla. */
+const res = "android/app/src/main/res";
+
+/** Los tamaños del cajón, por densidad, y el lienzo del icono adaptable. */
 const DENSIDADES = [
-  ["mdpi", 48],
-  ["hdpi", 72],
-  ["xhdpi", 96],
-  ["xxhdpi", 144],
-  ["xxxhdpi", 192],
+  ["mdpi", 48, 108, 24],
+  ["hdpi", 72, 162, 36],
+  ["xhdpi", 96, 216, 48],
+  ["xxhdpi", 144, 324, 72],
+  ["xxxhdpi", 192, 432, 96],
 ];
 
 /** Las pantallas de arranque, en vertical y apaisado. */
@@ -42,77 +46,93 @@ const ARRANQUES = [
   ["land-xxxhdpi", 1920, 1280],
 ];
 
-const res = "android/app/src/main/res";
+const transparente = (lado) => ({
+  create: {
+    width: lado,
+    height: lado,
+    channels: 4,
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+  },
+});
 
-/** El icono del cajón: emblema sobre el verde, con margen. */
-async function icono(lado) {
-  const emblema = await sharp(EMBLEMA)
-    .resize(Math.round(lado * 0.64), Math.round(lado * 0.64))
-    .png()
-    .toBuffer();
-  const borde = Math.round(lado * 0.18);
-  return sharp({
-    create: { width: lado, height: lado, channels: 4, background: FONDO },
-  })
-    .composite([{ input: emblema, left: borde, top: borde }])
-    .png()
-    .toBuffer();
-}
+for (const [densidad, legado, adaptativo, aviso] of DENSIDADES) {
+  const mip = `${res}/mipmap-${densidad}`;
+  const draw = `${res}/drawable-${densidad}`;
+  await mkdir(mip, { recursive: true });
+  await mkdir(draw, { recursive: true });
 
-for (const [densidad, lado] of DENSIDADES) {
-  const carpeta = `${res}/mipmap-${densidad}`;
-  await mkdir(carpeta, { recursive: true });
-  const cuadrado = await icono(lado);
-  await writeFile(`${carpeta}/ic_launcher.png`, cuadrado);
-  await writeFile(`${carpeta}/ic_launcher_round.png`, cuadrado);
   /**
-   * La capa de delante del icono adaptable.
+   * El icono adaptable: el fondo a sangre y la hoja dentro de la ventana.
    *
-   * Android recorta el icono a la forma del lanzador —círculo, cuadrado
-   * redondeado, gota— y solo garantiza el 72 % central. Sin ese margen, la
-   * máscara se lleva el palafito.
+   * Android recorta el lienzo de 108 dp con la forma que use el lanzador
+   * —círculo, cuadrado redondeado, gota— y solo garantiza los 72 dp centrales,
+   * que son dos tercios. La hoja va a 0,46 del lienzo entero: deja aire por
+   * dentro de esa ventana, así que ninguna forma de recorte le muerde la punta.
    */
-  const seguro = Math.round(lado * 0.5);
-  const emblema = await sharp(EMBLEMA).resize(seguro, seguro).png().toBuffer();
-  const delante = await sharp({
-    create: {
-      width: lado,
-      height: lado,
-      channels: 4,
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    },
-  })
-    .composite([
-      {
-        input: emblema,
-        left: Math.round((lado - seguro) / 2),
-        top: Math.round((lado - seguro) / 2),
-      },
-    ])
-    .png()
-    .toBuffer();
-  await writeFile(`${carpeta}/ic_launcher_foreground.png`, delante);
-  console.log(`  icono ${densidad} (${lado}px)`);
+  await writeFile(
+    `${mip}/ic_launcher_background.png`,
+    await sharp(Buffer.from(fondo(adaptativo))).png().toBuffer(),
+  );
+  await writeFile(
+    `${mip}/ic_launcher_foreground.png`,
+    await conHoja(sharp, transparente(adaptativo), adaptativo, 0.46),
+  );
+
+  /* Los heredados: la marca entera ya compuesta, para lanzadores viejos que no
+     entienden el adaptable y enseñarían el PNG tal cual. */
+  await writeFile(
+    `${mip}/ic_launcher.png`,
+    await conHoja(
+      sharp,
+      Buffer.from(fondo(legado, Math.round(legado * 0.22))),
+      legado,
+      0.62,
+    ),
+  );
+  await writeFile(
+    `${mip}/ic_launcher_round.png`,
+    await conHoja(sharp, Buffer.from(circulo(legado)), legado, 0.58),
+  );
+
+  /**
+   * El icono del aviso en la barra de estado.
+   *
+   * Android usa **solo el canal alfa** de este archivo y lo tiñe él según el
+   * tema, así que se dibuja en blanco puro y sin el azul del río: allí el río
+   * solo puede ser forma. Y los tamaños son los de notificación, que son la
+   * mitad de los del cajón.
+   */
+  const dibujo = Math.round(aviso * 0.82);
+  const margen = Math.round(aviso * 0.09);
+  await writeFile(
+    `${draw}/ic_stat_notify.png`,
+    await sharp(Buffer.from(hoja("#ffffff", 2.6, "#ffffff")))
+      .resize(dibujo, dibujo)
+      .extend({
+        top: margen,
+        bottom: aviso - dibujo - margen,
+        left: margen,
+        right: aviso - dibujo - margen,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .png()
+      .toBuffer(),
+  );
+  console.log(`  ${densidad}: cajón, adaptable y aviso`);
 }
 
-/* El fondo del icono adaptable pasa de ser un dibujo de Capacitor a un color
-   plano: el emblema ya lleva el suyo. */
-await writeFile(
-  `${res}/drawable/ic_launcher_background.xml`,
-  `<?xml version="1.0" encoding="utf-8"?>
-<!-- El verde del Consejo, detrás del emblema del icono adaptable. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
-    <solid android:color="${FONDO}" />
-</shape>
-`,
-);
+/* El icono adaptable apunta a los dos PNG de arriba. El fondo **no** es un
+   color plano: es el mismo degradado de la marca, para que el vaivén del
+   lanzador no descubra un borde ni un color que no sea de la casa. */
+await mkdir(`${res}/mipmap-anydpi-v26`, { recursive: true });
 for (const cual of ["ic_launcher", "ic_launcher_round"]) {
   await writeFile(
     `${res}/mipmap-anydpi-v26/${cual}.xml`,
     `<?xml version="1.0" encoding="utf-8"?>
+<!-- El lanzador recorta este lienzo con la forma que use el teléfono. Delante,
+     la marca dentro de la ventana de 72 dp; detrás, el degradado a sangre. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
+    <background android:drawable="@mipmap/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
 </adaptive-icon>
 `,
@@ -120,58 +140,32 @@ for (const cual of ["ic_launcher", "ic_launcher_round"]) {
 }
 console.log("  icono adaptable");
 
-/* La pantalla de arranque: el emblema centrado sobre el verde. Es lo que se ve
-   mientras la ventana alcanza la aplicación, y sin ella ese momento es un
-   rectángulo blanco. */
+/**
+ * La pantalla de arranque: la marca centrada sobre el verde del Consejo.
+ *
+ * Es lo que se ve mientras la ventana alcanza la aplicación, y sin ella ese
+ * momento es un rectángulo blanco. Va la misma hoja que el cajón: abrir con un
+ * logotipo y aterrizar en otro hace dudar de en qué aplicación se ha entrado.
+ */
+async function arranque(ancho, alto, destino) {
+  const lado = Math.round(Math.min(ancho, alto) * 0.32);
+  const marca = await sharp(Buffer.from(hoja())).resize(lado, lado).png().toBuffer();
+  await sharp({
+    create: { width: ancho, height: alto, channels: 4, background: FONDO_ARRANQUE },
+  })
+    .composite([{ input: marca, gravity: "centre" }])
+    .png()
+    .toFile(destino);
+}
+
 for (const [nombre, ancho, alto] of ARRANQUES) {
   const carpeta = `${res}/drawable-${nombre}`;
   await mkdir(carpeta, { recursive: true });
-  const lado = Math.round(Math.min(ancho, alto) * 0.32);
-  const emblema = await sharp(EMBLEMA).resize(lado, lado).png().toBuffer();
-  await sharp({
-    create: { width: ancho, height: alto, channels: 4, background: FONDO },
-  })
-    .composite([{ input: emblema, gravity: "centre" }])
-    .png()
-    .toFile(`${carpeta}/splash.png`);
+  await arranque(ancho, alto, `${carpeta}/splash.png`);
 }
 /* Y el de reserva, sin densidad, que es el que Android usa si no encaja. */
 await mkdir(`${res}/drawable`, { recursive: true });
-const emblema = await sharp(EMBLEMA).resize(240, 240).png().toBuffer();
-await sharp({
-  create: { width: 720, height: 1280, channels: 4, background: FONDO },
-})
-  .composite([{ input: emblema, gravity: "centre" }])
-  .png()
-  .toFile(`${res}/drawable/splash.png`);
+await arranque(720, 1280, `${res}/drawable/splash.png`);
 console.log(`  ${ARRANQUES.length + 1} pantallas de arranque`);
-
-/* El icono del aviso en la barra de estado.
-
-   Va de su propio archivo y no del emblema. De un icono de notificación
-   Android solo usa la transparencia, y el emblema es una escena entera dentro
-   de un recorte redondeado: su canal alfa es un rectángulo lleno. Se comprobó
-   midiéndolo —87 % de píxeles opacos—, así que sacar de ahí una silueta daba
-   exactamente el cuadrado blanco que hace que una aplicación parezca rota.
-   `notify-mark.svg` es esa misma imagen, el palafito sobre el río, reducida a
-   lo que sobrevive a 24 dp.
-
-   Y los tamaños son los de notificación, que son la mitad de los del cajón. */
-const AVISO = [
-  ["mdpi", 24],
-  ["hdpi", 36],
-  ["xhdpi", 48],
-  ["xxhdpi", 72],
-  ["xxxhdpi", 96],
-];
-for (const [densidad, lado] of AVISO) {
-  const carpeta = `${res}/drawable-${densidad}`;
-  await mkdir(carpeta, { recursive: true });
-  await sharp("public/brand/notify-mark.svg")
-    .resize(lado, lado)
-    .png()
-    .toFile(`${carpeta}/ic_stat_notify.png`);
-}
-console.log(`  icono de aviso en ${AVISO.length} densidades`);
 
 console.log("\nListo. Recompila con: npm run cap:apk");

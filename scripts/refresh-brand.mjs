@@ -1,18 +1,35 @@
+/**
+ * Los iconos instalables de la aplicación web.
+ *
+ *   node scripts/refresh-brand.mjs
+ *
+ * Una sola fuente con los iconos de Android —`marca-hoja.mjs`— para que la
+ * marca sea la misma en el cajón del teléfono y en la pantalla de inicio de
+ * quien la instala desde el navegador.
+ */
 import sharp from "sharp";
-// Una sola fuente para los iconos instalables; la variante maskable respeta el área segura.
-for (const size of [192, 512]) {
-  await sharp("public/brand/emblem.svg")
-    .resize(size, size)
+import { conHoja, fondo } from "./marca-hoja.mjs";
+
+for (const [archivo, lado, fraccion, redondeo] of [
+  ["public/brand/pwa-192.png", 192, 0.62, 0.22],
+  ["public/brand/pwa-512.png", 512, 0.62, 0.22],
+  /**
+   * El enmascarable deja el margen que Android se come al recortar: la hoja
+   * baja a 0,46 del lienzo y el fondo va a sangre, sin esquinas redondeadas,
+   * porque las pone el sistema. Con el margen de los otros, el recorte
+   * circular se llevaba la punta.
+   */
+  ["public/brand/pwa-maskable-512.png", 512, 0.46, 0],
+]) {
+  await sharp(
+    await conHoja(
+      sharp,
+      Buffer.from(fondo(lado, Math.round(lado * redondeo))),
+      lado,
+      fraccion,
+    ),
+  )
     .png()
-    .toFile(`public/brand/pwa-${size}.png`);
+    .toFile(archivo);
+  console.log("  " + archivo);
 }
-const emblem = await sharp("public/brand/emblem.svg")
-  .resize(350, 350)
-  .png()
-  .toBuffer();
-await sharp({
-  create: { width: 512, height: 512, channels: 4, background: "#123f39" },
-})
-  .composite([{ input: emblem, left: 81, top: 81 }])
-  .png()
-  .toFile("public/brand/pwa-maskable-512.png");
