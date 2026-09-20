@@ -1,9 +1,10 @@
 /**
  * El telón de hojas que abre la aplicación.
  *
- * Seis hojas cerradas sobre el verde de la casa, que se apartan y dejan ver lo
- * que hay detrás. La idea es la de siempre aquí: las hojas significan **paso**,
- * y no hay paso más literal que el de entrar.
+ * Tres actos: las hojas **entran por los costados** y se cierran, aguantan un
+ * instante tapando, y se apartan hacia su orilla dejando ver lo que hay detrás.
+ * La idea es la de siempre aquí: las hojas significan paso, y no hay paso más
+ * literal que el de entrar.
  */
 
 .telon {
@@ -11,15 +12,32 @@
   inset: 0;
   z-index: 60;
   overflow: hidden;
-  background: #123f39;
   pointer-events: none;
-  animation: fondo 1100ms ease-in forwards;
 }
 
-/* El fondo aguanta cerrado y se va cuando las hojas ya han abierto hueco. */
+/**
+ * El verde va en su propia capa, **y eso es lo que hace que se vea abrir**.
+ *
+ * Estando en la misma capa que las hojas, desvanecer el telón las desvanecía a
+ * ellas también: el movimiento quedaba tapado por su propia transparencia y la
+ * animación se leía como un fundido, no como algo que se aparta. Separadas, el
+ * verde se va por detrás mientras las hojas siguen enteras, y lo que se ve es
+ * la abertura.
+ *
+ * Es el mismo verde que declara `capacitor.config.ts` para la pantalla de
+ * arranque de Android, así que lo primero que enseña el sistema y lo primero
+ * que enseña la aplicación son el mismo color: no hay salto entre los dos.
+ */
+.fondo {
+  position: absolute;
+  inset: 0;
+  background: #123f39;
+  animation: fondo 1600ms ease-in forwards;
+}
+
 @keyframes fondo {
   0%,
-  45% {
+  62% {
     opacity: 1;
   }
   100% {
@@ -27,16 +45,41 @@
   }
 }
 
+/**
+ * El ancla: un punto sin tamaño pegado al borde de la pantalla.
+ *
+ * **Es lo que hace que la hoja gire sobre su peciolo y no sobre su centro.**
+ * Rotando la hoja directamente, el origen cae dentro de la lámina y el dibujo
+ * se mueve como un aspa; con el ancla en el canto, el giro sale de donde la
+ * hoja nacería si estuviera sembrada ahí. Y como el ancla no mide nada, su
+ * centro —el origen del giro por defecto— es exactamente ese punto del borde.
+ */
+.ancla {
+  position: absolute;
+  width: 0;
+  height: 0;
+  animation: telon 1600ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
+}
+
+/**
+ * La hoja cuelga del ancla, bajada 44.
+ *
+ * En el lienzo de 120 × 320 el limbo ocupa de y 14 a y 219: lo de abajo es
+ * peciolo. Con el borde inferior pegado al ancla, el giro salía del extremo del
+ * tallo y el limbo quedaba a más de una pantalla de distancia: se veían los
+ * nervios cruzando y ninguna hoja. Bajándola 0,316 de su alto, el punto donde
+ * nace el limbo cae justo sobre el ancla, que es de donde gira una hoja de
+ * verdad.
+ *
+ * El dibujo mide 120 × 320, así que su largo es 2,67 veces su ancho: con 52 de
+ * ancho el largo pasa de 138, más que cualquier pantalla por su lado mayor.
+ * Tumbada, ese largo es el que cruza de un costado al otro y tapa.
+ */
 .hoja {
   position: absolute;
-  /* Anchas a propósito: tienen que **tapar**, y en una pantalla apaisada seis
-     hojas estrechas dejan pasillos por los que se ve la aplicación antes de
-     tiempo. Se miden contra la diagonal para que cubran en las dos
-     orientaciones. */
-  width: 78vmax;
-  height: auto;
-  transform-origin: 50% 100%;
-  animation: abrir 1100ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  bottom: -44vmax;
+  left: -26vmax;
+  width: 52vmax;
 }
 
 .hoja svg {
@@ -46,71 +89,92 @@
 }
 
 /**
- * Cada hoja sale por donde entró.
+ * Entrar, tapar, apartarse.
  *
- * El giro y el desplazamiento van juntos: una hoja que solo se desliza parece
- * una lámina de cartón, y una que solo gira parece una aspa. Las de abajo
- * salen un poco después que las de arriba —el escalonado está en el retardo de
- * cada una— porque una cortina que se abre de golpe por los seis lados se lee
- * como un corte de escena, no como algo que se aparta.
+ * Entran desde más afuera y con otra inclinación de la que tendrán al salir: si
+ * el gesto de irse fuera el de venir al revés, se leería como una cinta
+ * rebobinada y no como una cortina.
+ *
+ * El desplazamiento va **antes** que el giro, y eso no es estilo: puesto
+ * después, la hoja se movería a lo largo de su propio eje ya girado —o sea
+ * hacia abajo— en vez de hacia el costado por donde entró.
  */
-@keyframes abrir {
-  0%,
-  25% {
+@keyframes telon {
+  0% {
+    transform: var(--fuera);
+    opacity: 0.85;
+  }
+  /* Ya han tapado. */
+  32% {
     transform: var(--cerrada);
+    opacity: 1;
+  }
+  /* Un instante quietas: sin esta pausa, entrar y salir se funden en un solo
+     barrido y no se entiende que hubo un telón. */
+  50% {
+    transform: var(--cerrada);
+    opacity: 1;
+  }
+  /* Y siguen enteras casi hasta el final: primero se apartan, y solo al salir
+     se van. Desvanecerlas antes convierte el gesto en un fundido. */
+  80% {
+    opacity: 1;
   }
   100% {
     transform: var(--abierta);
-    opacity: 0.85;
+    opacity: 0;
   }
 }
 
-/* Arriba a la izquierda */
+/* ── Las tres del costado izquierdo ─────────────────────────────────────── */
 .uno {
-  top: -18vmax;
-  left: -26vmax;
-  --cerrada: rotate(150deg);
-  --abierta: rotate(108deg) translate(-30vmax, 14vmax);
+  left: 0;
+  top: 6%;
+  --fuera: translateX(-72vmax) rotate(104deg);
+  --cerrada: translateX(0) rotate(84deg);
+  --abierta: translateX(-52vmax) rotate(68deg);
 }
-/* Arriba a la derecha */
 .dos {
-  top: -20vmax;
-  right: -26vmax;
-  --cerrada: rotate(210deg);
-  --abierta: rotate(250deg) translate(30vmax, 12vmax);
-  animation-delay: 60ms;
+  left: 0;
+  top: 46%;
+  --fuera: translateX(-76vmax) rotate(76deg);
+  --cerrada: translateX(0) rotate(96deg);
+  --abierta: translateX(-56vmax) rotate(110deg);
+  animation-delay: 50ms;
 }
-/* El centro, por la izquierda */
 .tres {
-  top: 14vmax;
-  left: -34vmax;
-  --cerrada: rotate(112deg);
-  --abierta: rotate(84deg) translate(-34vmax, 4vmax);
-  animation-delay: 30ms;
+  left: 0;
+  top: 88%;
+  --fuera: translateX(-70vmax) rotate(86deg);
+  --cerrada: translateX(0) rotate(106deg);
+  --abierta: translateX(-50vmax) rotate(126deg);
+  animation-delay: 100ms;
 }
-/* El centro, por la derecha */
+
+/* ── Y las tres del derecho, en espejo ──────────────────────────────────── */
 .cuatro {
-  top: 10vmax;
-  right: -34vmax;
-  --cerrada: rotate(248deg);
-  --abierta: rotate(276deg) translate(34vmax, 6vmax);
-  animation-delay: 90ms;
+  right: 0;
+  top: 14%;
+  --fuera: translateX(72vmax) rotate(-106deg);
+  --cerrada: translateX(0) rotate(-88deg);
+  --abierta: translateX(52vmax) rotate(-70deg);
+  animation-delay: 25ms;
 }
-/* Abajo a la izquierda */
 .cinco {
-  bottom: -24vmax;
-  left: -22vmax;
-  --cerrada: rotate(42deg);
-  --abierta: rotate(18deg) translate(-26vmax, 18vmax);
-  animation-delay: 120ms;
+  right: 0;
+  top: 54%;
+  --fuera: translateX(76vmax) rotate(-78deg);
+  --cerrada: translateX(0) rotate(-98deg);
+  --abierta: translateX(56vmax) rotate(-114deg);
+  animation-delay: 75ms;
 }
-/* Abajo a la derecha */
 .seis {
-  bottom: -26vmax;
-  right: -22vmax;
-  --cerrada: rotate(318deg);
-  --abierta: rotate(342deg) translate(26vmax, 18vmax);
-  animation-delay: 150ms;
+  right: 0;
+  top: 94%;
+  --fuera: translateX(70vmax) rotate(-88deg);
+  --cerrada: translateX(0) rotate(-108deg);
+  --abierta: translateX(50vmax) rotate(-128deg);
+  animation-delay: 125ms;
 }
 
 /**
@@ -121,10 +185,10 @@
  * casa, sin nada girando.
  */
 @media (prefers-reduced-motion: reduce) {
-  .telon {
+  .fondo {
     animation: fondo 400ms ease-out forwards;
   }
-  .hoja {
+  .ancla {
     display: none;
   }
 }

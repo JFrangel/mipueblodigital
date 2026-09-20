@@ -4,7 +4,7 @@ import { HojaPlatano } from "./leaf-fall";
 import styles from "./telon-hojas.module.css";
 
 /** Cuánto dura el telón. El mismo número que la animación del CSS. */
-const DURACION_MS = 1100;
+const DURACION_MS = 1600;
 
 /**
  * Si toca enseñarlo, decidido **una sola vez por carga de página**.
@@ -77,6 +77,7 @@ export function TelonHojas() {
   if (!puesto) return null;
   return (
     <div className={styles.telon} aria-hidden="true">
+      <div className={styles.fondo} />
       {[
         styles.uno,
         styles.dos,
@@ -85,8 +86,12 @@ export function TelonHojas() {
         styles.cinco,
         styles.seis,
       ].map((donde) => (
-        <div className={`${styles.hoja} ${donde}`} key={donde}>
-          <HojaPlatano />
+        /* El ancla en el borde y la hoja colgando de ella: así el giro sale
+           del peciolo y no del centro de la lámina. */
+        <div className={`${styles.ancla} ${donde}`} key={donde}>
+          <div className={styles.hoja}>
+            <HojaPlatano />
+          </div>
         </div>
       ))}
     </div>
