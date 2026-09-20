@@ -26,7 +26,7 @@ const state = vi.hoisted(() => ({
   vueltaActual: 0,
   arranques: [] as unknown[],
   paradas: 0,
-  oyentes: [] as Array<(datos: { matches: string[] }) => void>,
+  oyentes: {} as Record<string, Array<(datos: never) => void>>,
   quitados: 0,
   /** El navegador. */
   hayConstructor: true,
@@ -68,23 +68,45 @@ vi.mock("@capacitor-community/speech-recognition", () => ({
       state.pedidos += 1;
       return { speechRecognition: state.permisoNativo };
     },
-    addListener: async (
-      _evento: string,
-      fn: (datos: { matches: string[] }) => void,
-    ) => {
-      state.oyentes.push(fn);
+    addListener: async (evento: string, fn: (datos: never) => void) => {
+      (state.oyentes[evento] ??= []).push(fn);
       return { remove: async () => void (state.quitados += 1) };
     },
+    /**
+     * **Resuelve en cuanto está escuchando, sin traer nada.**
+     *
+     * Es lo que hace el complemento con `partialResults: true` —lo dice su
+     * `.d.ts`: «the function respond directly without result»— y es justo lo
+     * que el doble de antes no hacía: devolvía la frase en la promesa, así que
+     * las pruebas pasaban sobre un contrato que el teléfono no cumple y el
+     * dictado se apagaba solo en la mano de la gente.
+     *
+     * Lo que se oiga llega **después**, por los oyentes: los parciales y
+     * también el final. Y el fin de cada frase lo dice `listeningState`.
+     */
     start: async (opciones: unknown) => {
       state.arranques.push(opciones);
       const guion = state.vueltas[state.vueltaActual++];
-      if (guion === undefined) return { matches: [] };
-      if (guion === "falla") throw new Error("No match");
-      if ("error" in guion) throw new Error(guion.error);
-      /* Los parciales llegan por el oyente, como en el teléfono. */
-      for (const parcial of guion.parciales ?? [])
-        for (const oyente of state.oyentes) oyente({ matches: [parcial] });
-      return { matches: guion.final ? [guion.final] : [] };
+      /* Lo que falla antes de empezar a escuchar sí se ve desde la promesa. */
+      if (guion && typeof guion === "object" && "error" in guion)
+        throw new Error(guion.error);
+      const emitir = (evento: string, datos: unknown) => {
+        for (const oyente of state.oyentes[evento] ?? [])
+          (oyente as (d: unknown) => void)(datos);
+      };
+      /* Un turno de reloj, no un microturno: en el teléfono esto tarda, y así
+         el `.then()` de quien llamó corre antes, como allí. */
+      setTimeout(() => {
+        if (guion && typeof guion === "object") {
+          for (const parcial of guion.parciales ?? [])
+            emitir("partialResults", { matches: [parcial] });
+          if (guion.final) emitir("partialResults", { matches: [guion.final] });
+        }
+        /* Se acabó la frase. Un guion agotado o «falla» es una vuelta que
+           termina sin haber traído nada. */
+        emitir("listeningState", { status: "stopped" });
+      }, 0);
+      return {};
     },
     stop: async () => void (state.paradas += 1),
   }),
@@ -123,7 +145,7 @@ beforeEach(() => {
   state.vueltaActual = 0;
   state.arranques = [];
   state.paradas = 0;
-  state.oyentes = [];
+  state.oyentes = {};
   state.quitados = 0;
   state.hayConstructor = true;
   state.instancia = null;
@@ -245,6 +267,34 @@ it("sin haber oído nada lo dice; habiendo oído algo, no", async () => {
 });
 
 /**
+ * **El micrófono no se reinicia antes de haber oído nada.**
+ *
+ * Esta es la prueba del fallo que apagaba el dictado en la mano de la gente.
+ * Con `partialResults: true` el complemento resuelve `start()` en cuanto
+ * empieza a escuchar, sin traer nada; el código leía esa resolución vacía como
+ * «esta vuelta no oyó», reintentaba, y cada reintento destruye el reconocedor
+ * que acababa de arrancar. Se pulsaba «Activar micrófono» y la tarjeta se
+ * apagaba sola pidiendo hablar más cerca, sin que el micrófono hubiera llegado
+ * a abrirse.
+ *
+ * Se mide por lo único que lo delata: cuántas veces se arrancó el reconocedor
+ * antes de que llegara la primera palabra. Tiene que ser una.
+ */
+it("no se reinicia el reconocedor antes de haber oído nada", async () => {
+  state.vueltas = [{ parciales: ["hubo"], final: "hubo un derrumbe" }];
+  let arranquesAlOir = -1;
+  await new Promise<void>((listo) => {
+    void escuchar({
+      alTexto: () => {
+        if (arranquesAlOir < 0) arranquesAlOir = state.arranques.length;
+      },
+      alTerminar: () => listo(),
+    });
+  });
+  expect(arranquesAlOir).toBe(1);
+});
+
+/**
  * «Ocupado» no es «no se detectó voz».
  *
  * Esto sale de un fallo real en el APK: se pulsaba «Activar micrófono» y la
@@ -281,7 +331,8 @@ it("un fallo de red se dice como fallo de red", async () => {
 it("al terminar suelta el micrófono", async () => {
   state.vueltas = [{ final: "Algo." }, "falla", "falla", "falla"];
   await dictar();
-  expect(state.quitados).toBe(1);
+  /* Dos oyentes: el de las transcripciones y el del fin de frase. */
+  expect(state.quitados).toBe(2);
   expect(state.paradas).toBeGreaterThan(0);
 });
 

@@ -141,6 +141,29 @@ async function nativa(opciones: {
   if (permiso.speechRecognition !== "granted") return "sin-permiso";
 
   /**
+   * **`start()` no espera a nada, y sobre esa confusión estaba montado todo.**
+   *
+   * Con `partialResults: true` el complemento llama a `startListening` y
+   * resuelve la promesa en la misma línea, sin resultado —lo dice su propio
+   * `.d.ts`: «the function respond directly without result»—. El código de
+   * antes leía esa resolución vacía como «esta vuelta no oyó nada», reintentaba,
+   * y cada reintento hace `cancel()` y `destroy()` del reconocedor que acababa
+   * de arrancar. Tres vueltas en milisegundos, el micrófono destruido antes de
+   * oír una sílaba, y la tarjeta pidiendo hablar más cerca.
+   *
+   * Con `partialResults` todo llega por los oyentes: las transcripciones
+   * provisionales y **también la final**. Y los errores del reconocedor se
+   * rechazan sobre una promesa ya resuelta, así que no se ven desde aquí: por
+   * eso el silencio se mide con un reloj propio y no esperando un aviso que no
+   * va a venir.
+   *
+   * Así que `start()` significa «ya está escuchando», y el final de cada frase
+   * lo dice `listeningState`.
+   */
+  const partes: string[] = [];
+  let indice = 0;
+  let vivo = true;
+  /**
    * Una frase por vuelta, y cada frase en su sitio.
    *
    * **El reconocedor de Android no escucha un minuto seguido: reconoce una
@@ -152,30 +175,40 @@ async function nativa(opciones: {
    * vuelta escribiera en la misma posición, la segunda frase **borraría la
    * primera** y el dictado se iría perdiendo por detrás mientras se habla. Cada
    * vuelta escribe en la suya, y `unir()` se ocupa del resto.
-   *
-   * La transcripción buena no es el último trozo provisional: es la que llega
-   * al resolverse `start()`, ya corregida y con sus tildes. Se guarda encima.
    */
-  const partes: string[] = [];
-  let indice = 0;
-  let vivo = true;
-  /* Vueltas seguidas que no trajeron nada. Tres, no una: una vuelta vacía es
-     alguien pensando, tres seguidas es alguien que dejó de hablar. */
   let vacias = 0;
   const SILENCIOS = 3;
-  /* Y un tope duro de vueltas, para que un reconocedor que contestara al
-     instante no dejara esto girando: el reloj de abajo es de tiempo, y el
-     tiempo no corre si cada vuelta dura cero. */
   let vueltas = 0;
   const VUELTAS_MAXIMAS = 60;
-  /* Reintentos por «ocupado», con su propio cupo: no son vueltas vacías —no
-     ha habido micrófono todavía— y por eso no gastan el cupo de silencios.
-     La pausa es lo que separa reintentar de atragantarse. */
+  /* Reintentos por «ocupado», con su propio cupo: el reconocedor de Android
+     tarda un momento en soltarse cuando viene de otra escucha, y eso no es una
+     vuelta vacía. La pausa es lo que separa reintentar de atragantarse. */
   let ocupados = 0;
   const OCUPADOS_MAXIMOS = 5;
   const PAUSA_MS = 400;
+  /**
+   * Cuánto se espera sin oír nada antes de dar la vuelta por vacía.
+   *
+   * Android se planta solo tras unos cinco segundos sin oír voz, y lo avisa
+   * con un error que aquí no llega: se rechaza sobre una promesa ya resuelta.
+   * A partir de ese momento el reconocedor está muerto y nadie lo sabe, así
+   * que cada segundo de más en este reloj es un segundo en el que alguien
+   * habla contra un micrófono apagado. Siete: lo justo por encima del plazo
+   * de Android para no reiniciar una escucha que aún vive, y lo bastante poco
+   * para que la ventana muerta no se note.
+   *
+   * A quien sí está hablando no le corta nada: cada transcripción y cada
+   * «started» rearman el reloj.
+   */
+  const SILENCIO_MS = 7000;
 
-  const oyente = await SpeechRecognition.addListener(
+  let relojSilencio: ReturnType<typeof setTimeout> | undefined;
+  const rearmar = () => {
+    clearTimeout(relojSilencio);
+    if (vivo) relojSilencio = setTimeout(() => cerrarVuelta(), SILENCIO_MS);
+  };
+
+  const oyenteTexto = await SpeechRecognition.addListener(
     "partialResults",
     ({ matches }) => {
       /* La primera coincidencia es la que el reconocedor considera más
@@ -183,6 +216,18 @@ async function nativa(opciones: {
       if (!vivo || !matches?.length) return;
       partes[indice] = matches[0];
       opciones.alTexto(unir(partes));
+      rearmar();
+    },
+  );
+
+  const oyenteEstado = await SpeechRecognition.addListener(
+    "listeningState",
+    ({ status }) => {
+      if (!vivo) return;
+      /* «started» es que empezó a oír voz: mientras alguien habla, el reloj del
+         silencio no tiene por qué correr. */
+      if (status === "started") return rearmar();
+      cerrarVuelta();
     },
   );
 
@@ -190,15 +235,19 @@ async function nativa(opciones: {
     if (!vivo) return;
     vivo = false;
     clearTimeout(reloj);
-    void oyente.remove();
+    clearTimeout(relojSilencio);
+    void oyenteTexto.remove();
+    void oyenteEstado.remove();
     void SpeechRecognition.stop().catch(() => undefined);
     opciones.alTerminar(motivo);
   };
   const reloj = setTimeout(() => cerrar(null), TOPE_MS);
 
-  const seguir = (hubo: boolean) => {
+  /** Se acabó una frase: se guarda si trajo algo, y se abre la siguiente. */
+  const cerrarVuelta = () => {
     if (!vivo) return;
-    if (hubo) {
+    clearTimeout(relojSilencio);
+    if (partes[indice]?.trim()) {
       indice = partes.length;
       vacias = 0;
     } else if (++vacias >= SILENCIOS) {
@@ -223,17 +272,12 @@ async function nativa(opciones: {
          la vista del texto que se está escribiendo. */
       popup: false,
     })
-      .then(({ matches }) => {
-        const dicho = matches?.[0]?.trim();
-        if (dicho) {
-          partes[indice] = dicho;
-          opciones.alTexto(unir(partes));
-        }
-        seguir(Boolean(dicho));
-      })
+      /* Resuelve en cuanto está escuchando, sin traer nada: lo que se oiga
+         llegará por los oyentes de arriba. */
+      .then(() => rearmar())
       .catch((error: unknown) => {
         const suceso = queDijo(error);
-        if (suceso === "vacia") return seguir(false);
+        if (suceso === "vacia") return cerrarVuelta();
         if (suceso === "ocupado") {
           /* Agotado el cupo se cierra sin motivo: hubo micrófono, lo que no
              hubo fue turno, y eso no es culpa de quien habla. */
