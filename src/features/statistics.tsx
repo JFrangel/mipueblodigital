@@ -166,6 +166,7 @@ export function Statistics({
         </div>
         <AccesoNecesario
           icono={BarChart3}
+          motivo="atarraya"
           titulo="Las cifras son de la comunidad"
           cifras={["Reportes", "Solucionados", "Espera mediana"]}
         >

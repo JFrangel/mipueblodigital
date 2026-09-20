@@ -58,6 +58,7 @@ import { useReportLookup, type Removed } from "@/data/report-lookup";
 import { useOfflinePages } from "@/data/offline-pages";
 import { Toasts } from "./toasts";
 import { Knowledge } from "@/features/knowledge";
+import { LeafFall } from "@/features/leaf-fall";
 import { Territory } from "@/features/territory";
 import { Statistics } from "@/features/statistics";
 import { Report } from "@/features/report";
@@ -341,6 +342,10 @@ export function Workspace({
         Saltar al contenido
       </Link>
       <aside className={`sidebar ${menu ? "open" : ""}`}>
+        {/* La hoja de la aplicación, en reposo y por el canto.
+            Empezó centrada, y centrada se lee como un objeto puesto encima del
+            hueco. Entrando por la esquina pertenece al recuadro. */}
+        <LeafFall calm />
         <Link
           href="/inicio/"
           className="logo-link"
@@ -658,6 +663,7 @@ export function Workspace({
             esperandoSinCuenta === 0 && (
               <AccesoNecesario
                 icono={Files}
+                motivo="canoa"
                 titulo="Tus reportes están a nombre de tu cuenta"
                 cifras={["Registrados", "En proceso", "Solucionados"]}
               >
@@ -744,6 +750,7 @@ export function Workspace({
                 <AccesoNecesario
                   compacta
                   icono={Map}
+                  motivo="brujula"
                   titulo="Los puntos son de la comunidad"
                 >
                   El territorio se ve sin entrar; los puntos no. Entra y verás
@@ -953,6 +960,7 @@ function Dashboard({
       {!session.uid ? (
         <AccesoNecesario
           icono={Files}
+          motivo="palma"
           titulo="Tu participación vive en tu cuenta"
           cifras={["Mis reportes", "En proceso", "Solucionados", "Pendientes"]}
         >
@@ -1353,7 +1361,7 @@ function CaseBrowser({
           ))}
         </select>
       </div>
-      <section className="panel">
+      <section className="panel lista-casos">
         <div className="panel-heading">
           <h2>{mine ? "Tus reportes" : "Historial de incidencias"}</h2>
           <span className="tag">{filtered.length} reportes</span>

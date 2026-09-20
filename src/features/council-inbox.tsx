@@ -26,6 +26,7 @@ import { Badge, CategoryIcon } from "@/components/ui";
    hoja: quien la leyó en su reporte la reconoce aquí sin aprenderla otra vez. */
 import styles from "./report-detail.module.css";
 import { PrivateEvidence } from "./private-evidence";
+import { MiniaturaExpediente } from "./miniatura-expediente";
 import { RemoteHistory } from "./remote-history";
 import type { Case } from "@/data/catalog";
 import { deliveryLabel, deliveryOf } from "@/domain/delivery";
@@ -590,9 +591,7 @@ export function CouncilInbox({
         <div className="case-list council-cases">
           {shown.map((i) => (
             <button className="case-row" key={i.id} onClick={() => open(i)}>
-              <span className={`case-art ${i.category}`}>
-                <CategoryIcon category={i.category} size={25} />
-              </span>
+              <MiniaturaExpediente id={i.id} category={i.category} />
               <span className="case-copy">
                 <strong>{i.title}</strong>
                 <small title={i.id}>

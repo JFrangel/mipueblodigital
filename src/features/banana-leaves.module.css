@@ -53,8 +53,101 @@
     transform: translateX(var(--entry)) rotate(var(--turn));
   }
 }
+/**
+ * Apartarse y quedarse.
+ *
+ * `unfurl` entra, se ve y **se vuelve a ir**: es el gesto de algo que pasó por
+ * aquí. Lo que espera señal no ha pasado por ningún lado todavía, así que sus
+ * hojas se apartan y se quedan abiertas. Es la misma pareja, en la misma
+ * postura, que enseña la página del primer arranque sin red, y por lo mismo.
+ */
+.waiting .left,
+.waiting .right {
+  animation-name: hold;
+  animation-duration: 2.4s;
+  animation-timing-function: cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+@keyframes hold {
+  from {
+    opacity: 0;
+    transform: translateX(var(--entry)) rotate(var(--turn));
+  }
+  to {
+    opacity: 0.5;
+    transform: translateX(0) rotate(0);
+  }
+}
+/* En una franja de aviso la hoja se encoge, y además se mete dentro: el aviso
+   le reserva una columna a cada lado para que el texto no le pase por encima.
+   Un adorno que estorba la lectura de un aviso no vale lo que cuesta. */
+.small .left,
+.small .right {
+  width: 46px;
+  bottom: -26px;
+}
+.small .left {
+  left: 4px;
+}
+.small .right {
+  right: 4px;
+}
+
+/**
+ * En calma.
+ *
+ * Para donde las hojas no acompañan a nada que esté pasando —la barra lateral,
+ * que está siempre a la vista—: ni entran ni se van, **solo respiran**. Una
+ * animación de entrada en algo que se ve en todas las pantallas cansa a la
+ * tercera vez, y aquí no hay ningún envío que anunciar.
+ *
+ * Es el mismo estado de reposo que enseña la página del primer arranque sin
+ * red, y con esos tres el vocabulario queda cerrado: se apartan y se cierran
+ * cuando algo sale, se quedan abiertas cuando algo espera, y respiran cuando
+ * no pasa nada.
+ */
+/**
+ * En calma la hoja no es una figura: es el canto del recuadro.
+ *
+ * Centrada se leía como un objeto puesto dentro de un hueco, y además obligaba
+ * a cuadrar su medida con un alto que cambia solo —los apartados de cada
+ * cuenta, el alto de la pantalla, el largo de un comunicado—. Entrando por la
+ * esquina de abajo y saliéndose por los dos cantos no hay nada que cuadrar y
+ * el dibujo pertenece al recuadro en vez de estar encima de él.
+ *
+ * Y va muy tenue, porque por encima pasa texto.
+ */
+.calm .left {
+  left: -56px;
+  bottom: -104px;
+  top: auto;
+  width: 216px;
+  opacity: 0.15;
+  transform-origin: 40% 100%;
+  animation: brisa 14s ease-in-out infinite;
+}
+/* Siempre algo ladeada, nunca a plomo: una hoja recta es un icono. Y el
+   vaivén, mínimo: esto sale en todas las pantallas a la vez. */
+@keyframes brisa {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(-4.5deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .frame {
     display: none;
+  }
+  /* Las de la barra no son el acompañamiento de un envío: son el dibujo de una
+     pantalla que está siempre. Se quedan puestas, quietas. */
+  .calm {
+    display: block;
+  }
+  .calm .left {
+    animation: none;
+    transform: rotate(-6deg);
   }
 }

@@ -8,11 +8,13 @@ import {
   outgoingFor,
   pendingAnnouncements,
   retryOutgoing,
+  traspasar,
   OUTBOX_LIMIT,
   SIN_CUENTA,
   type Outgoing,
 } from "@/data/outbox";
 import { onFlushRequest, syncOutbox } from "@/data/sync-outbox";
+import { LeafFall } from "./leaf-fall";
 import { askDeliveryAlerts, useDeliveryAlerts } from "@/data/delivery-alert";
 import { toast } from "@/data/toasts";
 const labels: Record<Outgoing["state"], string> = {
@@ -33,6 +35,22 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
    */
   const anonima = !session.uid;
   const owner = session.uid ?? SIN_CUENTA;
+  /**
+   * Lo que quedó a nombre de nadie, visto desde una sesión.
+   *
+   * El traspaso automático al entrar va atado a una marca de `sessionStorage`
+   * que **muere al cerrar la aplicación**, y eso deja fuera el caso que más
+   * importa: alguien escribe un reporte sin señal —o sin cuenta—, cierra,
+   * busca señal, vuelve a abrir y entra. Ahí no hay marca, no hay traspaso, y
+   * el reporte se queda a nombre de nadie **invisible**, porque esta bandeja
+   * pasa a enseñar la de su cuenta.
+   *
+   * La marca no se puede mudar a un almacén que sobreviva: en el río los
+   * teléfonos se prestan, y entonces quien entrara se llevaría el reporte de
+   * otra persona sin enterarse. Así que no se adivina: **se pregunta.**
+   */
+  const [huerfanos, setHuerfanos] = useState<Outgoing[]>([]);
+  const [reclamando, setReclamando] = useState(false);
   const [items, setItems] = useState<Outgoing[]>([]),
     [online, setOnline] = useState(true),
     [error, setError] = useState("");
@@ -47,6 +65,11 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       try {
         const values = await outgoingFor(owner);
         if (active) setItems(values);
+        /* Solo con sesión: sin ella, lo de «nadie» ya es lo que se enseña. */
+        if (anonima) return;
+        const sueltos = await outgoingFor(SIN_CUENTA);
+        if (active)
+          setHuerfanos(sueltos.filter((e) => e.state !== "confirmed"));
       } catch {
         if (active) setError("No se pudo leer la bandeja local.");
       }
@@ -100,6 +123,11 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
     if (delivered.length)
       return (
         <div className="sync-status delivered" role="status" aria-live="polite">
+          {/* El gesto de la aplicación para «esto salió de aquí», en el único
+              sitio fuera del formulario donde de verdad sale algo: un reporte
+              que llevaba esperando señal y ya está en manos del Consejo. Pasa
+              una vez, como el aviso. */}
+          <LeafFall drifting small />
           <span>
             {delivered.length === 1
               ? `Salió de la bandeja: «${delivered[0].title}». El Consejo ya lo tiene.`
@@ -132,9 +160,71 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
      los reportes que no hay, y la lista de los ya confirmados —que además
      salen otra vez en Mis reportes, con su ficha y su fotografía—. Lo
      entregado es historia y vive allí; aquí solo está lo que falta por salir. */
-  if (!pending.length && !error) return null;
+  /**
+   * La pregunta, cuando hay algo a nombre de nadie y alguien con sesión mirando.
+   *
+   * **No dice lo que el reporte cuenta.** El teléfono puede no ser suyo, y el
+   * relato de quien escribió un derrumbe —o algo peor— no es de quien resulte
+   * entrar después. Se dice de dónde y cuándo, que es lo que basta para
+   * reconocer lo tuyo sin exponer lo ajeno.
+   */
+  const reclamo = !anonima && huerfanos.length > 0 && (
+    <section className="panel remote-panel">
+      <div className="remote-panel-body">
+        <span className="eyebrow">ESTE DISPOSITIVO</span>
+        <h2>
+          {huerfanos.length === 1
+            ? "Hay un reporte guardado sin cuenta"
+            : `Hay ${huerfanos.length} reportes guardados sin cuenta`}
+        </h2>
+        <p>
+          Se escribieron en este teléfono antes de entrar —puede que sin
+          señal—. <strong>Si son tuyos</strong>, pasan a tu nombre y salen
+          solos. Si este teléfono es prestado y no los escribiste tú, déjalos:
+          esperarán a quien los escribió.
+        </p>
+        <ul className="outbox-list">
+          {huerfanos.map((item) => (
+            <li key={item.key}>
+              {/* La fecha y nada más. Quien lo escribió lo reconoce; quien no,
+                  no se entera de lo que dice. El título de un envío es el
+                  principio del relato, y eso no se enseña aquí. */}
+              <strong>Reporte guardado</strong>
+              <small>{new Date(item.createdAt).toLocaleString("es-CO")}</small>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="btn primary"
+          disabled={reclamando}
+          onClick={() => {
+            setReclamando(true);
+            traspasar(SIN_CUENTA, owner)
+              .then((cuantos) => {
+                setHuerfanos([]);
+                toast(
+                  cuantos === 1
+                    ? "El reporte pasó a tu nombre y sale con la próxima conexión."
+                    : `${cuantos} reportes pasaron a tu nombre y salen con la próxima conexión.`,
+                );
+              })
+              .catch(() =>
+                toast("No se pudieron pasar a tu nombre.", "error"),
+              )
+              .finally(() => setReclamando(false));
+          }}
+        >
+          {huerfanos.length === 1 ? "Es mío, enviarlo" : "Son míos, enviarlos"}
+        </button>
+      </div>
+    </section>
+  );
+
+  if (!pending.length && !error) return reclamo || null;
   const megabytes = pending.reduce((sum, i) => sum + i.bytes, 0) / 1024 / 1024;
   return (
+    <>
+      {reclamo}
     <section className="panel remote-panel">
       <div className="remote-panel-body">
         <span className="eyebrow">ESTE DISPOSITIVO</span>
@@ -190,41 +280,10 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
         )}
         {error && <p role="alert">{error}</p>}
       </div>
-      <div className="panel-artwork" aria-hidden="true">
-        <svg
-          className="panel-artwork-svg"
-          viewBox="0 0 200 200"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle
-            cx="160"
-            cy="40"
-            r="110"
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-          <circle
-            cx="160"
-            cy="40"
-            r="150"
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-          <circle
-            cx="160"
-            cy="40"
-            r="190"
-            stroke="currentColor"
-            strokeWidth="1"
-            strokeDasharray="6 6"
-          />
-        </svg>
-        <span className="panel-artwork-text">
-          CONEXIÓN Y<br />
-          RESGUARDO.
-        </span>
-      </div>
+      {/* Aquí se probaron las hojas y **no van**: este panel mide 745 px con
+          tres envíos, así que su pie queda debajo de la barra de navegación y
+          casi nadie lo ve. Un dibujo que no se ve no es un dibujo, es peso.
+          El gesto de esta bandeja está arriba, en el aviso de entrega. */}
       {pending.map((item) => (
         <div className="outbox-row" key={item.key}>
           <strong>{item.title}</strong>
@@ -268,5 +327,6 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
         los datos del navegador mientras haya envíos pendientes.
       </p>
     </section>
+    </>
   );
 }

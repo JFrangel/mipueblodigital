@@ -27,6 +27,7 @@ import type { ReactNode } from "react";
 export function AccesoNecesario({
   icono: Icono,
   titulo,
+  motivo,
   cifras,
   compacta = false,
   children,
@@ -40,6 +41,17 @@ export function AccesoNecesario({
    * fuera de la pantalla, que era justo lo que la persona venía a ver.
    */
   compacta?: boolean;
+  /**
+   * El elemento del territorio que va de filigrana, según lo que hay al otro
+   * lado: la canoa para los reportes, la brújula para el mapa, la palma para
+   * lo tuyo y la atarraya para las cifras —la red recoge de una vez lo que hay
+   * abajo, que es de lo que trata una estadística—.
+   *
+   * Lo pide cada pantalla y no lo decide la tarjeta porque **la regla de esta
+   * aplicación es que dos tarjetas seguidas no lleven el mismo elemento**, y
+   * eso solo se sabe mirando dónde va cada una.
+   */
+  motivo?: "canoa" | "brujula" | "palma" | "atarraya";
   /** Los rótulos de lo que se vería. Se pintan con la raya de «no se sabe». */
   cifras?: readonly string[];
   /** Qué vería esta persona si entrara. No «inicia sesión»: eso lo dice el botón. */
@@ -61,7 +73,11 @@ export function AccesoNecesario({
   ) : null;
 
   return (
-    <section className={`panel acceso-necesario${compacta ? " compacta" : ""}`}>
+    <section
+      className={`panel acceso-necesario${compacta ? " compacta" : ""}${
+        motivo ? ` acceso-${motivo}` : ""
+      }`}
+    >
       <span className="acceso-icono">
         <Icono size={22} />
       </span>
