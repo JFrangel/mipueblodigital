@@ -1,17 +1,23 @@
 /**
  * La marca de Mi Pueblo Digital, en un solo sitio.
  *
- * Es la hoja-A del rótulo: la misma pieza que lleva «DIGITAL» en la cabecera de
- * la aplicación, recortada de ahí. El rótulo entero no puede ser el icono —el
- * lanzador lo recorta a círculo o a cuadrado y «Mi Pueblo DIGITAL» a 48 dp sale
- * ilegible y con las puntas cortadas—, pero la hoja sí: está dibujada para
- * sobrevivir en pequeño.
+ * Es el palafito: la casa levantada sobre el agua. El icono del cajón del
+ * teléfono, el de la pestaña del navegador, el de la pantalla de inicio de quien
+ * instala desde la web, el de la barra de estado y el de la pantalla de
+ * arranque. Se eligió porque a cuarenta y ocho píxeles, compitiendo en el cajón
+ * con decenas de aplicaciones, ninguna otra es una casa sobre pilotes — y
+ * porque es lo que esto es: en el Satinga se vive sobre el agua.
  *
- * **Vive aquí y no en cada guion** porque son dos los que la dibujan, el de
+ * **Vive aquí y no en cada guion** porque son dos los que lo dibujan, el de
  * Android y el de la web, y dos copias de unos trazos es garantizar que un día
- * el teléfono y el navegador enseñen marcas distintas. Si cambia el rótulo en
- * `src/components/ui.tsx`, cambia aquí, y se vuelven a ejecutar los dos.
+ * el teléfono y el navegador enseñen marcas distintas. Y los trazos ni siquiera
+ * están aquí: se leen de `src/components/palafito-trazos.ts`, que es la misma
+ * fuente que usa la aplicación.
+ *
+ * La hoja-A sigue existiendo, pero como rótulo y no como icono: es la pieza que
+ * lleva «DIGITAL» en la cabecera, y ahí tiene sitio para leerse.
  */
+import { trazosPalafito } from "./palafito.mjs";
 
 /** Los mismos trazos que `.brand-leaf` en `src/components/ui.tsx`. */
 export const LAMINA =
@@ -98,30 +104,23 @@ export const olas = (color = AZUL, grosor = 2.6) => `
 </svg>`;
 
 /**
- * El palafito, el mismo de `src/components/palafito.tsx`.
- *
- * Los trazos salen de ahí uno a uno. Es la marca del teléfono: el icono del
- * cajón, el de la barra de estado y la pantalla de arranque.
+ * `[d, color, opacidad]`, en orden de pintado.
  *
  * **El orden es la profundidad**: patas de atrás, ola de arriba —que las tapa—,
  * casa, patas de delante, ola de abajo. Cambiarlo deja un dibujo plano.
+ *
+ * **Los trazos no están escritos aquí: se leen.** Eran una copia —la cuarta— de
+ * las mismas curvas que dibuja la aplicación, y el día que alguien retocara una
+ * el teléfono habría enseñado dos casas distintas. Vienen de
+ * `src/components/palafito-trazos.ts`, que es de donde las leen también la web,
+ * la portada del archivo y la pantalla de arranque de Android.
  */
-const olaDe = (y) =>
-  `M2.6 ${y}c1.55-1.05 3.1-1.05 4.65 0s3.1 1.05 4.65 0 3.1-1.05 4.65 0 3.1 1.05 4.65 0`;
-
-/** `[d, color, opacidad]`, en orden de pintado. */
-export const palafitoTrazos = (color = VERDE, agua = AZUL) => [
-  ["M10.4 15.3V19.04", color, 0.45],
-  ["M13.6 15.3V17.62", color, 0.45],
-  [olaDe(18.4), agua, 1],
-  ["M2.5 11.3 12 3.7l9.5 7.6", color, 1],
-  ["M6.1 11.2v3.7", color, 1],
-  ["M17.9 11.2v3.7", color, 1],
-  ["M4.1 15.1h15.8", color, 1],
-  ["M7.7 15.3V21.23", color, 1],
-  ["M16.3 15.3V20.79", color, 1],
-  [olaDe(21), agua, 1],
-];
+export const palafitoTrazos = (color = VERDE, agua = AZUL) =>
+  trazosPalafito().map(([d, cual, opacidad]) => [
+    d,
+    cual === "agua" ? agua : color,
+    opacidad,
+  ]);
 
 export const palafito = (color = VERDE, grosor = 1.8, agua = AZUL) => `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
@@ -132,8 +131,10 @@ export const palafito = (color = VERDE, grosor = 1.8, agua = AZUL) => `
 </svg>`;
 
 /**
- * El fondo de la casa: el verde con la misma inclinación de luz que llevan las
- * tarjetas de la aplicación.
+ * El fondo de la casa: el azul hondo del río de noche, con la misma inclinación
+ * de luz que llevan las tarjetas de la aplicación. Contra él, el agua del
+ * palafito pertenece al fondo en vez de flotar encima de otra familia de color,
+ * y la casa verde se recorta con fuerza a tamaño de icono.
  */
 export const fondo = (lado, radio = 0) => `
 <svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}">
@@ -145,6 +146,39 @@ export const fondo = (lado, radio = 0) => `
   </defs>
   <rect width="${lado}" height="${lado}" rx="${radio}" fill="url(#g)"/>
 </svg>`;
+
+/**
+ * La marca entera en un solo SVG: el fondo y el palafito encima.
+ *
+ * **Existe para el icono de la pestaña del navegador**, que es el único sitio
+ * donde hace falta la marca completa en vectorial. Los demás iconos se componen
+ * en mapa de bits con `sharp` porque Android los quiere así; un navegador
+ * prefiere el vectorial, que pesa unos cientos de bytes y se ve nítido lo mismo
+ * a dieciséis píxeles que a doscientos.
+ *
+ * El grosor del trazo se engorda a propósito: a dieciséis píxeles el dibujo
+ * entero mide menos que la uña de un dedo, y con el grosor de los iconos
+ * grandes las diez líneas se emborronan en una mancha.
+ */
+export const marcaSvg = (lado, radio = 0, fraccion = 0.62, grosor = 2.2) => {
+  const dibujo = lado * fraccion;
+  const margen = (lado - dibujo) / 2;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${lado}" height="${lado}" viewBox="0 0 ${lado} ${lado}">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15495c"/>
+      <stop offset="1" stop-color="#081f28"/>
+    </linearGradient>
+  </defs>
+  <rect width="${lado}" height="${lado}" rx="${radio}" fill="url(#g)"/>
+  <g transform="translate(${margen} ${margen}) scale(${dibujo / 24})"
+     fill="none" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round">
+    ${palafitoTrazos()
+      .map(([d, c, o]) => `<path d="${d}" stroke="${c}" opacity="${o}"/>`)
+      .join("\n    ")}
+  </g>
+</svg>`;
+};
 
 /** El mismo fondo, redondo, para los lanzadores que piden icono circular. */
 export const circulo = (lado) => `
@@ -170,28 +204,6 @@ async function centrado(sharp, base, lado, fraccion, svg) {
     .composite([{ input: marca, top: borde, left: borde }])
     .png()
     .toBuffer();
-}
-
-/** La hoja centrada sobre una base. Es la marca de la web. */
-export async function conHoja(sharp, base, lado, fraccion, opciones = {}) {
-  return centrado(
-    sharp,
-    base,
-    lado,
-    fraccion,
-    hoja(opciones.color ?? VERDE, opciones.grosor ?? 2.4, opciones.rio ?? AZUL),
-  );
-}
-
-/** Las olas centradas sobre una base. */
-export async function conOlas(sharp, base, lado, fraccion, opciones = {}) {
-  return centrado(
-    sharp,
-    base,
-    lado,
-    fraccion,
-    olas(opciones.color ?? AZUL, opciones.grosor ?? 2.6),
-  );
 }
 
 /** El palafito centrado sobre una base. Es la marca del teléfono. */
