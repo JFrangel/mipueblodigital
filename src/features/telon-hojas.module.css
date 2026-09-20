@@ -32,12 +32,17 @@
   position: absolute;
   inset: 0;
   background: #123f39;
-  animation: fondo 1600ms ease-in forwards;
+}
+
+/* Se va cuando las hojas empiezan a apartarse, no antes: es lo que hay
+   detrás de ellas mientras tapan. */
+.yendose {
+  animation: fondo 900ms ease-in forwards;
 }
 
 @keyframes fondo {
   0%,
-  62% {
+  30% {
     opacity: 1;
   }
   100% {
@@ -58,7 +63,7 @@
   position: absolute;
   width: 0;
   height: 0;
-  animation: telon 1600ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
+  animation: entrar 700ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
 }
 
 /**
@@ -99,25 +104,37 @@
  * después, la hoja se movería a lo largo de su propio eje ya girado —o sea
  * hacia abajo— en vez de hacia el costado por donde entró.
  */
-@keyframes telon {
+@keyframes entrar {
   0% {
     transform: var(--fuera);
     opacity: 0.85;
   }
-  /* Ya han tapado. */
-  32% {
+  100% {
     transform: var(--cerrada);
     opacity: 1;
   }
-  /* Un instante quietas: sin esta pausa, entrar y salir se funden en un solo
-     barrido y no se entiende que hubo un telón. */
-  50% {
+}
+
+/**
+ * Y se apartan **cuando se les dice**, no cuando toca por reloj.
+ *
+ * Son dos animaciones y no una con una pausa en medio porque lo que separa un
+ * acto del otro no es tiempo: es que detrás ya haya aplicación. Una sola
+ * animación tendría que adivinar cuánto tarda el teléfono en estar listo, y en
+ * el río eso no se adivina.
+ */
+.abriendo {
+  animation: salir 900ms cubic-bezier(0.33, 0, 0.3, 1) forwards;
+}
+
+@keyframes salir {
+  0% {
     transform: var(--cerrada);
     opacity: 1;
   }
-  /* Y siguen enteras casi hasta el final: primero se apartan, y solo al salir
-     se van. Desvanecerlas antes convierte el gesto en un fundido. */
-  80% {
+  /* Siguen enteras casi hasta el final: primero se apartan, y solo al salir se
+     van. Desvanecerlas antes convierte el gesto en un fundido. */
+  60% {
     opacity: 1;
   }
   100% {

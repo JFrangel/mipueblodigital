@@ -32,7 +32,11 @@ export function FirstRun() {
      de una carrera. */
   return (
     <>
-      <TelonHojas />
+      {/* El telón no se aparta hasta que hay algo detrás. `visited` es null
+          mientras se lee el almacenamiento, y ese rato es justo el de la
+          portada de carga: abriendo a ciegas, las hojas descubrían un
+          «Preparando tu comunidad…». */}
+      <TelonHojas listo={visited !== null} />
       {visited ? (
         <Workspace section="inicio" />
       ) : (
