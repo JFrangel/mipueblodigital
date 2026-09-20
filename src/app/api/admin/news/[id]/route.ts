@@ -1,4 +1,5 @@
 import { ApiError, requireAdmin } from "@/server/admin-auth";
+import { avisar } from "@/server/push";
 import { validateNews } from "@/domain/news";
 export async function PUT(
   request: Request,
@@ -80,9 +81,34 @@ export async function PUT(
         });
       else tx.delete(announcement);
       tx.create(ref.collection("history").doc(), { ...next, actorUid: uid });
-      return { id, ...next };
+      /* Si esto es una publicación nueva, y no una corrección de una que ya
+         estaba publicada. Es **la misma regla que decide la hora del aviso de
+         la campana**, unas líneas más arriba: publicar avisa una vez, corregir
+         una coma no vuelve a avisar, y retirar y volver a publicar sí. Que el
+         teléfono y la campana suenen por lo mismo no es una coincidencia que
+         haya que mantener a mano: sale del mismo dato. */
+      const estrena = input.status === "published" && !announced?.exists;
+      return { id, ...next, estrena };
     });
-    return Response.json(result, { headers: { "Cache-Control": "no-store" } });
+    /* Un comunicado es de todos por definición: ya está en la pantalla de
+       inicio de cualquiera cuando esto sale. El aviso no adelanta nada. */
+    const { estrena, ...respuesta } = result;
+    if (estrena)
+      void avisar(
+        db,
+        { todos: true },
+        {
+          title:
+            input.kind === "Alerta"
+              ? "Alerta del Consejo"
+              : "Nuevo comunicado del Consejo",
+          body: input.title,
+          url: `/noticia/${id}/`,
+        },
+      );
+    return Response.json(respuesta, {
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (e) {
     return Response.json(
       {

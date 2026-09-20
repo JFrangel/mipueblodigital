@@ -78,6 +78,43 @@ export async function olvidarUno(db: Firestore, uid: string, token: string) {
   await db.doc(ruta(uid, token)).delete();
 }
 
+/**
+ * Todos los aparatos de todo el mundo, para lo que de verdad es de todos.
+ *
+ * **Lo usan dos cosas y solo dos**: un comunicado nuevo del Consejo y una
+ * incidencia que pasa a ser pública. Las dos ya están escritas a la vista de
+ * cualquiera cuando esto se llama, así que el aviso no revela nada que no
+ * estuviera ya en la pantalla de inicio.
+ *
+ * **Por qué una consulta de grupo aquí sí y en la deduplicación no.** El
+ * comentario de arriba dice que cerrar lo de los tokens repetidos exigiría un
+ * índice; es cierto, porque aquella consulta filtra por el token. Esta no
+ * filtra ni ordena nada: pide la colección entera, que Firestore sirve con el
+ * índice automático del nombre del documento. No hay índice que desplegar.
+ *
+ * **Y por qué no un tema de FCM**, que sería una llamada en vez de leer todo.
+ * Porque suscribirse a un tema es una operación aparte que solo ocurre al
+ * registrar el aparato: los teléfonos ya registrados se quedarían fuera hasta
+ * que volvieran a pasar por ahí, y no hay manera de saber cuáles son. Además,
+ * un tema no devuelve qué tokens murieron, que es de lo que vive la limpieza
+ * de `avisar`. Enumerar cuesta una lectura por aparato y en este territorio
+ * eso son cientos, no millones.
+ *
+ * El `uid` no está escrito en el documento —la clave es el token y el espacio
+ * de nombres es la ruta—, así que se recupera del padre del padre, que es
+ * exactamente `pushTokens/{uid}`.
+ */
+export async function aparatosDeTodos(
+  db: Firestore,
+  /** A quién no avisar. Se usa para no avisar a alguien de su propio caso. */
+  salvo?: string,
+): Promise<Aparato[]> {
+  const pagina = await db.collectionGroup("devices").get();
+  return pagina.docs
+    .map((d) => ({ uid: d.ref.parent.parent?.id ?? "", token: d.id }))
+    .filter((a) => a.uid !== "" && a.uid !== salvo);
+}
+
 export async function aparatosDe(
   db: Firestore,
   uid: string,

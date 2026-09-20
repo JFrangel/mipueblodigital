@@ -176,6 +176,17 @@ export async function PATCH(
       });
       return {
         version: old.version + 1,
+        /* Y si el caso **acaba de** hacerse público. No basta con que lo sea:
+           corregir el resumen de uno ya publicado no es una novedad para
+           nadie, y volvería a sonar cada teléfono del río por una coma. */
+        estrena:
+          input.publication === "public" && old.publication !== "public"
+            ? {
+                titulo: String(text.publicTitle),
+                vereda: String(text.publicVereda),
+                dueño: old.owner ? String(old.owner) : undefined,
+              }
+            : null,
         aviso: novedad
           ? {
               uid: String(old.owner),
@@ -196,12 +207,29 @@ export async function PATCH(
 
        El aviso no viaja en la respuesta —lleva dentro de quién es el caso, y
        eso no es asunto del panel—, así que se aparta antes de contestar. */
-    const { aviso, ...respuesta } = result;
+    const { aviso, estrena, ...respuesta } = result;
     if (aviso)
       void avisar(
         db,
         { uid: aviso.uid },
         { title: aviso.title, body: aviso.body, url: aviso.url },
+      );
+    /* Y a la comunidad, **solo cuando el caso pasa a ser público**. Lo que se
+       manda es lo que ya está publicado —el título y la vereda que escribió el
+       Consejo—, nunca el relato ni nada del expediente: si el aviso dijera más
+       que la ficha, el aviso sería la filtración.
+
+       A quien reportó no: acaba de recibir el suyo dos líneas más arriba, y
+       sonarle otra vez por el mismo caso es sonar dos veces por lo mismo. */
+    if (estrena)
+      void avisar(
+        db,
+        { todos: true, salvo: estrena.dueño },
+        {
+          title: "Un caso nuevo en la comunidad",
+          body: `${estrena.titulo} · ${estrena.vereda}`,
+          url: `/comunidad/`,
+        },
       );
     return Response.json(respuesta, {
       headers: { "Cache-Control": "no-store" },

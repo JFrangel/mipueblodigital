@@ -4,6 +4,7 @@ import { getMessaging } from "firebase-admin/messaging";
 import {
   aparatosDe,
   aparatosDelConsejo,
+  aparatosDeTodos,
   olvidar,
   type Aparato,
 } from "./push-tokens";
@@ -16,7 +17,16 @@ export type Aviso = {
   url: string;
 };
 
-export type Destino = { uid: string } | { consejo: true };
+/**
+ * A quién va el aviso.
+ *
+ * `todos` es el único que sale del círculo de los interesados, y por eso lleva
+ * `salvo`: quien reportó un caso ya recibe el suyo cuando el Consejo lo toca, y
+ * sonarle otra vez por la versión pública del mismo caso es sonar dos veces por
+ * lo mismo.
+ */
+export type Destino =
+  { uid: string } | { consejo: true } | { todos: true; salvo?: string };
 
 /** FCM acepta 500 destinatarios por llamada. */
 const TANDA = 500;
@@ -60,7 +70,9 @@ export async function avisar(
     const aparatos: Aparato[] =
       "consejo" in destino
         ? await aparatosDelConsejo(db)
-        : await aparatosDe(db, destino.uid);
+        : "todos" in destino
+          ? await aparatosDeTodos(db, destino.salvo)
+          : await aparatosDe(db, destino.uid);
     if (!aparatos.length) return;
 
     const muertos: Aparato[] = [];
