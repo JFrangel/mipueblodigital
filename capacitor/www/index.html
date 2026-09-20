@@ -3,6 +3,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mi Pueblo Digital</title>
+  <!--
+    Las tipografías del rótulo, pedidas desde el principio.
+
+    Un navegador no busca una tipografía hasta que encuentra texto que la use, y
+    eso ocurre después de leer los estilos y armar la página. Aunque estén en el
+    teléfono, ese retraso se veía: durante unas tres décimas el rótulo salía sin
+    «Mi Pueblo» —con `font-display: block` el texto espera invisible— y solo se
+    leía «DIGITAL», que va en la del sistema y no espera a nadie. Pidiéndolas
+    aquí arriba se cargan a la vez que el resto y llegan antes que el rótulo.
+  -->
+  <link rel="preload" as="font" type="font/woff2" href="fuentes/bricolage.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="fuentes/caveat.woff2" crossorigin>
   <!--MODULOS-->
   <!--
     La única página que lleva el APK dentro.
@@ -33,6 +45,38 @@
     en que se ve no hay de dónde traerlas.
   -->
   <style>
+    /*
+      Las dos tipografías del rótulo, **dentro del archivo**.
+
+      La página dice arriba que no trae tipografías de fuera, y sigue siendo
+      cierto: estas no vienen de fuera, viajan en el APK. Son los ciento veinte
+      kilobytes que cuesta que el relevo con la portada de la web no se note.
+
+      Sin ellas el rótulo salía en la del sistema: mismo tamaño, mismo peso y
+      mismo sitio, pero otra letra —y sobre todo otra «Mi», que allí va escrita
+      a mano—. En pantalla eso es un rótulo que cambia de forma a mitad del
+      arranque, que es justo lo que se quería quitar.
+
+      Solo el tramo latino de cada una, que es lo único que hacen falta para
+      escribir «Mi Pueblo»: el paquete completo trae además cirílico, griego y
+      vietnamita, y aquí no se escribe nada de eso nunca. `font-display: block`
+      y no `swap` porque están en el teléfono y tardan un parpadeo: cambiar de
+      letra a la vista es peor que ese parpadeo.
+    */
+    @font-face {
+      font-family: 'Bricolage Grotesque Variable';
+      font-style: normal;
+      font-display: block;
+      font-weight: 200 800;
+      src: url(fuentes/bricolage.woff2) format('woff2-variations');
+    }
+    @font-face {
+      font-family: 'Caveat Variable';
+      font-style: normal;
+      font-display: block;
+      font-weight: 400 700;
+      src: url(fuentes/caveat.woff2) format('woff2-variations');
+    }
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
     body {
@@ -327,14 +371,71 @@
     .portada svg path[data-parte="casa"] { stroke: #a7e6b8; }
     .portada svg path[data-parte="agua"] { stroke: #8fd0f0; }
 
-    /* El rótulo y la frase son lo único que entra, y entran seguidos: es lo que
-       convierte el dibujo que ya estaba en una pantalla terminada. */
-    .portada .marca {
+    /*
+      El rótulo, armado como el de la aplicación y no como un título cualquiera.
+
+      **Porque esta pantalla y la siguiente son la misma.** Detrás de esta llega
+      la portada de la web, con el rótulo de verdad, y si aquí fuera una línea de
+      texto corriente lo que se vería en el relevo es un cambio de rótulo: dos
+      marcas distintas seguidas. Así que se repite su estructura —«Mi» y
+      «Pueblo» en una fila, «DIGITAL» centrado debajo, cruzando las dos
+      columnas—, sus tamaños y su espaciado.
+
+      **«DIGITAL» queda idéntico**, y eso no es suerte: allí también va en la
+      monoespaciada del sistema, que el teléfono ya tiene. Lo que no se puede
+      igualar desde aquí es «Mi Pueblo»: son dos tipografías que viajan con la
+      aplicación y esta página se pinta antes de que haya de dónde traerlas. Se
+      queda con la del sistema al mismo cuerpo y con el mismo peso, así que
+      ocupa lo mismo y cae en el mismo sitio; cambia la letra, no el renglón.
+    */
+    /* Hasta que las tipografías estén, el rótulo no se enseña: ver el guion que
+       pone la marca `fuentes`. Entero o nada. */
+    .portada .rotulo {
+      opacity: 0;
       margin: 0;
+      display: grid;
+      grid-template-columns: auto auto;
+      justify-content: center;
+      align-items: baseline;
+      line-height: 1.2;
       color: #f1f7f2;
-      animation: subir 620ms ease-out 240ms both;
     }
-    .portada .marca em { color: #a7dcb6; }
+    html.fuentes .portada .rotulo {
+      animation: subir 620ms ease-out both;
+    }
+    /* El posesivo: escrito a mano, porque quien lo dice es una persona. Los
+       mismos ajustes que `.brand-mi` en `globals.css`. */
+    .portada .rotulo .mi {
+      font-family: "Caveat Variable", cursive;
+      font-size: 31px;
+      font-weight: 700;
+      line-height: 1.05;
+      padding: 0.04em 0.1em 0.06em;
+      color: #bfe3cb;
+      margin-right: 5px;
+    }
+    .portada .rotulo .nombre {
+      font-family: "Bricolage Grotesque Variable", system-ui, sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 0.92;
+      letter-spacing: -1.3px;
+    }
+    /* El descriptor, cruzando las dos columnas para centrarse bajo el nombre
+       entero y no bajo «Pueblo». Los mismos números que `globals.css`. */
+    .portada .rotulo em {
+      grid-column: 1 / -1;
+      justify-self: center;
+      margin-top: 3px;
+      font-family: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono",
+        "DejaVu Sans Mono", monospace;
+      font-style: normal;
+      font-size: 11.5px;
+      font-weight: 500;
+      letter-spacing: 3.4px;
+      text-transform: uppercase;
+      color: #a7dcb6;
+    }
     @keyframes subir {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -354,7 +455,8 @@
        el recorrido y queda el dibujo hecho. Estaba para recibir, no para
        informar de nada. */
     @media (prefers-reduced-motion: reduce) {
-      .portada .marca, .portada .frase { animation: none; }
+      .portada .rotulo, html.fuentes .portada .rotulo, .portada .frase { animation: none; }
+      .portada .rotulo { opacity: 1; }
     }
   </style>
   <!--
@@ -368,7 +470,7 @@
   <div class="portada" id="portada">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><!--PALAFITO--></svg>
     <div class="pie">
-      <p class="marca">Mi Pueblo <em>Digital</em></p>
+      <p class="rotulo"><span class="mi">Mi</span><span class="nombre">Pueblo</span><em>Digital</em></p>
       <p class="frase" id="fraseArranque" role="status">Preparando tu comunidad…</p>
     </div>
   </div>
@@ -500,6 +602,36 @@
   <script>
     (function () {
       var $ = function (id) { return document.getElementById(id); };
+
+      /*
+        El rótulo entra **entero o no entra**.
+
+        Va en dos tipografías que viajan dentro del archivo, y aunque estén en
+        el teléfono tardan unas tres décimas en estar listas. Con
+        `font-display: block` el texto que las usa espera invisible, así que en
+        ese rato se leía «DIGITAL» solo —esa va en la monoespaciada del sistema
+        y no espera a nadie— y el rótulo aparecía a medias, como si le faltara
+        una línea. Medido: de 3,00 a 3,30 segundos.
+
+        Esperando aquí, el rótulo entra cuando puede escribirse completo.
+
+        El reloj de reserva es para un navegador sin `document.fonts` o para el
+        día que una de las dos no cargue: entonces entra con la letra que haya,
+        que es infinitamente mejor que no entrar.
+      */
+      function conFuentes() {
+        document.documentElement.classList.add("fuentes");
+      }
+      try {
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(conFuentes);
+          setTimeout(conFuentes, 1200);
+        } else {
+          conFuentes();
+        }
+      } catch (e) {
+        conFuentes();
+      }
 
       /*
         Retirar la pantalla de arranque, también desde aquí.

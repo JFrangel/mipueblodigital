@@ -1,8 +1,8 @@
 {
-  "versionCode": 11,
-  "versionName": "1.9",
-  "bytes": 7356902,
+  "versionCode": 12,
+  "versionName": "2.0",
+  "bytes": 7503861,
   "fecha": "2026-09-20",
-  "notas": "El arranque va entero en el azul del río de noche: la pantalla de Android, la portada y el telón de hojas son ahora el mismo color, sin el verde que cruzaba por en medio.",
+  "notas": "La portada que ves al abrir y la que llega después son ya la misma: mismo rótulo, misma letra y el palafito en el mismo sitio, sin saltos. Y el telón de hojas tapa la portada y descubre el inicio, en vez de esconder lo que ya estaba.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

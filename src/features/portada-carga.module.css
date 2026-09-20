@@ -127,9 +127,19 @@
 .marca :global(.brand) {
   color: #f1f7f2;
 }
-/* El «Mi» hereda un verde de acento pensado para fondo claro, y sobre este
-   verde se apagaba hasta parecer que no estuviera escrito. */
-.marca :global(.brand-mi) {
+/**
+ * El «Mi», y **también la letra de dentro**.
+ *
+ * Esta regla existía ya, y no llegaba: el «Mi» va escrito dentro de una `<i>`
+ * —es manuscrita, es el posesivo— y esa `<i>` lleva su propio `color:
+ * var(--muted)`, que le gana a lo que se le ponga al padre. Sobre este fondo
+ * hondo, `--muted` es `#5e7166`: un gris apagado que se leía a duras penas,
+ * justo lo que esta regla decía estar arreglando. Se comprobó comparándolo con
+ * el mismo rótulo de la portada que va dentro del archivo: el mismo texto, la
+ * misma letra, dos colores distintos.
+ */
+.marca :global(.brand-mi),
+.marca :global(.brand-mi i) {
   color: #bfe3cb;
 }
 .marca :global(.brand em) {

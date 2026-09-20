@@ -55,9 +55,23 @@ export default function RootLayout({
          * exactamente el «sale el logo dos veces» que ya hubo que quitar una
          * vez—.
          *
-         * La marca la deja `capacitor/www/index.html` en el almacén de la
-         * sesión, que comparten porque comparten origen. Aquí solo se traslada
-         * a un atributo para que la hoja de estilos pueda mirarlo.
+         * **Manda `window.Capacitor`, no la marca.** La marca la deja la página
+         * del archivo en el almacén de la sesión, y funciona… cuando esa página
+         * llegó a correr. No siempre: si la ventana se recarga sola, si el
+         * almacén no está, si se volvió por el camino del error. Entonces la
+         * marca falta, esta portada se traza, y desde fuera lo que se ve es un
+         * palafito que unas veces se dibuja y otras aparece puesto, sin que se
+         * entienda de qué depende.
+         *
+         * El puente de Capacitor sí está siempre, y desde antes que nada
+         * nuestro: lo inyecta la ventana en cuanto abre el documento. Su
+         * presencia responde a la única pregunta que importa aquí —«¿venimos de
+         * una pantalla que ya enseñó este dibujo?»— y la responde igual todas
+         * las veces. La marca se queda debajo por si algún día el puente
+         * cambiara de nombre.
+         *
+         * En el navegador no hay puente ni marca, y la portada se traza como
+         * siempre: allí es la primera vez que se ve el dibujo.
          *
          * **Va al principio del cuerpo y no en un efecto** porque tiene que
          * estar puesto antes del primer fotograma: decidido después, ya se
@@ -66,7 +80,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(sessionStorage.getItem('mpd-portada'))" +
+              "try{if(window.Capacitor||sessionStorage.getItem('mpd-portada'))" +
               "document.documentElement.setAttribute('data-arranque','hecho');}catch(e){}",
           }}
         />
