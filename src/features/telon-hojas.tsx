@@ -19,27 +19,31 @@ const SALIDA_MS = 900;
 const TOPE_MS = 4000;
 
 /**
- * Si toca enseñarlo, decidido **una sola vez por carga de página**.
+ * Si toca enseñarlo. Se decide **una vez por carga de página**.
  *
- * Vive fuera de React porque dentro no funcionaba: en desarrollo los efectos se
- * montan dos veces, y la segunda vuelta leía la marca que acababa de escribir
- * la primera y concluía «esto ya se vio». El telón no llegaba a verse nunca, y
- * en producción funcionaba de milagro —porque allí el efecto corre una sola
- * vez—, que es la peor clase de código: el que aguanta mientras nadie lo mire.
+ * Esta variable vive en el módulo, así que nace de nuevo cada vez que el
+ * navegador vuelve a ejecutar el paquete: al abrir la aplicación y **al
+ * recargar**. Dentro, moviéndose por la aplicación, no vuelve a cero y el
+ * telón no reaparece, que es lo que se quiere: es el gesto de entrar, no una
+ * cortinilla entre pantallas.
+ *
+ * Antes esto miraba , y esa marca sobrevive a las recargas:
+ * recargando la página no se veía nada. Aquí sobra almacenamiento —la pregunta
+ * es «¿es la primera vez en esta ejecución?» y eso ya lo contesta el módulo—,
+ * y de paso desaparece el caso de la ventana privada, donde escribir falla.
+ *
+ * Y vive fuera de React porque dentro no funcionaba: en desarrollo los efectos
+ * se montan dos veces, y la segunda leía la marca que acababa de escribir la
+ * primera y concluía «esto ya se vio». El telón no se veía nunca, y en
+ * producción funcionaba de milagro —porque allí el efecto corre una sola vez—,
+ * que es la peor clase de código: el que aguanta mientras nadie lo mire.
  */
-let decidido: boolean | null = null;
+let yaSeVio = false;
 
 function tocaEnsenarlo(): boolean {
-  if (decidido !== null) return decidido;
-  let yaFue = false;
-  try {
-    yaFue = sessionStorage.getItem("mpd-telon") === "1";
-    sessionStorage.setItem("mpd-telon", "1");
-  } catch {
-    /* Sin almacenamiento se enseña: molesta menos que esconderlo. */
-  }
-  decidido = !yaFue;
-  return decidido;
+  if (yaSeVio) return false;
+  yaSeVio = true;
+  return true;
 }
 
 /**
@@ -67,9 +71,8 @@ function tocaEnsenarlo(): boolean {
  * toques —`pointer-events: none`—, así que aunque se quedara, la aplicación de
  * debajo se sigue pudiendo usar.
  *
- * **Y solo una vez por arranque**, marcado en `sessionStorage`, que se borra al
- * cerrar la ventana: al abrir la aplicación se ve, y al moverse por dentro no
- * vuelve a aparecer.
+ * **Se ve al abrir y al recargar**, no al moverse por dentro: es el gesto de
+ * entrar, no una cortinilla entre pantallas.
  */
 export function TelonHojas({ listo }: { listo: boolean }) {
   /* Empieza **puesto**, y por eso se pinta ya en el HTML del servidor: si
