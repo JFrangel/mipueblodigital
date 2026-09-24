@@ -3,6 +3,7 @@ import { FieldPath } from "firebase-admin/firestore";
 import { ApiError, requireMember } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
 import {
+  archivePhoto,
   buildBackup,
   evidenceRequest,
   validateOriginal,
@@ -153,7 +154,17 @@ export async function POST(request: Request) {
         "Para proponer una vereda que no está en la lista, usa tu ubicación desde el sitio. Si no estás allí, elige la vereda más cercana del catálogo.",
       );
 
-    const photo = await validateOriginal(input.photo);
+    /**
+     * Se valida el archivo tal como llegó —formato, peso, que no esté
+     * dañado ni disfrazado— y se archiva otra cosa: una recodificación de
+     * alta fidelidad, acotada en peso, porque el plan gratuito de Supabase
+     * (500 MB) no aguanta cientos de fotografías de teléfono sin recomprimir.
+     * Ver `archivePhoto` en `evidence.ts` para el porqué exacto.
+     */
+    const subida = await validateOriginal(input.photo);
+    const photo = await archivePhoto(
+      Buffer.from(subida.content_base64, "base64"),
+    );
     const id = createHash("sha256")
       .update(`${uid}:${input.requestId}`)
       .digest("hex");

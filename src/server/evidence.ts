@@ -26,7 +26,10 @@ export async function validateAvatarPhoto(value: string) {
   )
     throw new ApiError(400, "El archivo del avatar no es válido.");
   try {
-    const image = sharp(bytes, { limitInputPixels: 1000000, failOn: "warning" });
+    const image = sharp(bytes, {
+      limitInputPixels: 1000000,
+      failOn: "warning",
+    });
     const metadata = await image.metadata();
     if (
       metadata.format !== "webp" ||
@@ -85,6 +88,66 @@ export async function validateOriginal(value: unknown) {
   };
 }
 
+/**
+ * Tope de lo que se archiva en Supabase.
+ *
+ * **Por qué el original deja de viajar intacto.** El plan gratuito de
+ * Supabase da 500 MB de base de datos —bastante menos que el gigabyte de
+ * Firestore—, y una fotografía de teléfono sin recomprimir pesa fácil 3-8 MB
+ * en Base64: a ese ritmo el archivo se llena en un puñado de cientos de
+ * reportes, o menos. Con este tope, cada fotografía cabe en torno a un
+ * megabyte de texto y el mismo plan gratuito aguanta varios cientos de casos
+ * más.
+ *
+ * Sigue siendo la copia de mayor fidelidad —2200 píxeles, muy por encima de
+ * los 1600 del respaldo de `buildBackup`, pensada para poder examinar un
+ * detalle, no solo para mirar—, pero ya no son los bytes exactos que subió
+ * quien reportó. Esa garantía la sigue dando `validateOriginal`, que decodifica
+ * y comprueba el archivo tal como llegó; lo que sigue es una decisión aparte
+ * sobre qué se archiva, no sobre qué se acepta.
+ */
+const ARCHIVE_BASE64 = 1024 * 1024;
+
+/**
+ * La fotografía tal como se archiva, no tal como llegó.
+ *
+ * Reduce a 2200 píxeles como máximo y recodifica en WebP, bajando la calidad
+ * en tres pasos hasta caber en `ARCHIVE_BASE64`. Si ni con la más agresiva
+ * cupiera —una imagen extremadamente ruidosa, en la práctica no ocurre con
+ * las entradas que ya limita `validateOriginal`— se guarda igual el intento
+ * más pequeño: un reporte necesita su fotografía, y negarla por unos
+ * kilobytes de más sería peor que pasarse un poco del presupuesto de
+ * almacenamiento.
+ */
+export async function archivePhoto(bytes: Buffer) {
+  let mejor = { content_base64: "", byte_size: 0 };
+  for (const quality of [82, 68, 54]) {
+    const copia = await sharp(bytes, { limitInputPixels: 24000000 })
+      .rotate()
+      .resize({
+        width: 2200,
+        height: 2200,
+        fit: "inside",
+        withoutEnlargement: true,
+      })
+      .webp({ quality })
+      .toBuffer();
+    mejor = {
+      content_base64: copia.toString("base64"),
+      byte_size: copia.length,
+    };
+    if (mejor.content_base64.length <= ARCHIVE_BASE64) break;
+  }
+  return {
+    mime_type: "image/webp" as const,
+    byte_size: mejor.byte_size,
+    sha256: createHash("sha256")
+      .update(Buffer.from(mejor.content_base64, "base64"))
+      .digest("hex"),
+    content_base64: mejor.content_base64,
+  };
+}
+
 /* Tope del respaldo: Firestore admite un mega por documento. Se deja margen
    para el resto de campos y para el 33 % que añade el Base64. */
 const BACKUP_BASE64 = 700 * 1024;
@@ -111,7 +174,12 @@ export async function buildBackup(base64: string) {
     for (const quality of [78, 62, 48]) {
       const copia = await sharp(bytes, { limitInputPixels: 24000000 })
         .rotate()
-        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+        .resize({
+          width: 1600,
+          height: 1600,
+          fit: "inside",
+          withoutEnlargement: true,
+        })
         .webp({ quality })
         .toBuffer();
       const texto = copia.toString("base64");
