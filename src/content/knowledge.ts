@@ -24,7 +24,8 @@ export const knowledgeSections: KnowledgeSection[] = [
     entries: [
       {
         question: "¿Cómo se usa la nueva asistencia de redacción?",
-        answer: "En Reportar, completa la descripción y abre Mejorar redacción con IA. La función solicita sesión, correo verificado y perfil ciudadano activo. Envía únicamente el relato a OpenRouter y permite comparar la propuesta con el original. No modifica el reporte hasta que aceptas y bloquea la aceptación si editaste el texto mientras esperaba. Máximo diez intentos diarios por usuario (UTC), separados por un minuto. La conexión completa depende de las credenciales privadas del servidor; un fallo conserva tu texto. La calidad de las sugerencias aún requiere evaluación comunitaria.",
+        answer:
+          "En Reportar, completa la descripción y abre Mejorar redacción con IA. La función solicita sesión, correo verificado y perfil ciudadano activo. Envía únicamente el relato a OpenRouter y permite comparar la propuesta con el original. No modifica el reporte hasta que aceptas y bloquea la aceptación si editaste el texto mientras esperaba. Máximo diez intentos diarios por usuario (UTC), separados por un minuto. La conexión completa depende de las credenciales privadas del servidor; un fallo conserva tu texto. La calidad de las sugerencias aún requiere evaluación comunitaria.",
       },
       {
         question: "¿Cómo funciona el dictado de voz?",
@@ -98,7 +99,7 @@ export const knowledgeSections: KnowledgeSection[] = [
       {
         question: "¿Por qué dice que mi cuenta no está habilitada?",
         answer:
-          "Enviar al Consejo exige, además de la sesión, un perfil ciudadano activo en el servidor. Se crea solo al abrir la aplicación, sin necesidad de verificar el correo, así que lo normal es no tener que hacer nada. Si el aviso sigue, en Mi cuenta aparece «Activar mi perfil». Otra cosa es que diga que la cuenta está deshabilitada: eso es una decisión del Consejo y no se resuelve desde la aplicación. El perfil no da rol de administrador. Ese se concede por dos caminos: desde el Panel del Consejo, que lo sella en el token de la persona, o escribiendo `role: \"admin\"` en su documento de cuenta desde la consola de la base. El segundo surte efecto en cuanto vuelve a abrir la aplicación; el primero, al renovarse su token, lo que ocurre en menos de una hora o de inmediato si cierra sesión y vuelve a entrar. Escribir en la cuenta es seguro porque las reglas de Firestore prohíben a todo cliente tocar esos documentos: solo llegan ahí el servidor y la consola del proyecto.",
+          'Enviar al Consejo exige, además de la sesión, un perfil ciudadano activo en el servidor. Se crea solo al abrir la aplicación, sin necesidad de verificar el correo, así que lo normal es no tener que hacer nada. Si el aviso sigue, en Mi cuenta aparece «Activar mi perfil». Otra cosa es que diga que la cuenta está deshabilitada: eso es una decisión del Consejo y no se resuelve desde la aplicación. El perfil no da rol de administrador. Ese se concede por dos caminos: desde el Panel del Consejo, que lo sella en el token de la persona, o escribiendo `role: "admin"` en su documento de cuenta desde la consola de la base. El segundo surte efecto en cuanto vuelve a abrir la aplicación; el primero, al renovarse su token, lo que ocurre en menos de una hora o de inmediato si cierra sesión y vuelve a entrar. Escribir en la cuenta es seguro porque las reglas de Firestore prohíben a todo cliente tocar esos documentos: solo llegan ahí el servidor y la consola del proyecto.',
       },
       {
         question: "¿Y si dos administradores editan el mismo caso?",
@@ -265,7 +266,7 @@ export const knowledgeSections: KnowledgeSection[] = [
       {
         question: "¿Cuántos reportes aguanta el plan gratuito?",
         answer:
-          "Esta aplicación ya pone su propio límite antes de acercarse al de Firebase: diez reportes nuevos por cuenta y por día. Aparte, el plan gratuito de Firestore publica un tope diario de lecturas y escrituras para todo el proyecto junto —del orden de decenas de miles al día—, que Google puede cambiar cuando quiera y que esta aplicación no fija ni promete. Con la actividad de un territorio como este no debería alcanzarse en el uso normal, pero no se ha medido con tráfico real todavía, y conviene vigilarlo desde que empiece el piloto.",
+          "Son dos preguntas distintas. Cuántos se pueden crear por día: esta aplicación ya pone su propio límite antes de acercarse al de Firebase —diez reportes nuevos por cuenta y por día—, y aparte el plan gratuito de Firestore publica un tope diario de lecturas y escrituras para todo el proyecto junto, del orden de decenas de miles, que Google puede cambiar cuando quiera y que esta aplicación no fija ni promete. Cuántos caben guardados en total es la pregunta que de verdad limita: cada reporte guarda en Firestore una copia reducida de su fotografía de hasta 700 KB, y contra el gigabyte gratuito eso da, a ojo, entre mil quinientos y cuatro mil expedientes. Pero el original de cada fotografía viaja completo y sin recomprimir a Supabase, y el plan gratuito típico de una base de datos ahí es bastante más pequeño que el de Firestore —unos cientos de megas, no un gigabyte—, así que con fotografías de teléfono corrientes ese archivo externo se llenaría antes, del orden de unos cientos de expedientes, no de miles. Esta segunda cifra no está medida contra la cuenta real del proyecto: es un cálculo a partir de lo que cada proveedor anuncia, y ambos números cambian con el tiempo. Vigilarlo desde que empiece el piloto importa más que memorizar la cifra.",
       },
       {
         question:
@@ -286,7 +287,8 @@ export const knowledgeSections: KnowledgeSection[] = [
     summary: "Cómo se comprueba que funciona, y cómo se protege lo que guarda.",
     entries: [
       {
-        question: "¿Cuántas pruebas automáticas tiene la aplicación ahora mismo?",
+        question:
+          "¿Cuántas pruebas automáticas tiene la aplicación ahora mismo?",
         answer:
           "Las que se ven en la imagen, ejecutadas justo antes de escribir esto: cada archivo prueba una regla concreta —quién puede publicar qué, qué sale hacia la IA, qué conserva la bandeja sin señal, qué campos nunca salen de un expediente privado— no el aspecto de una pantalla. La cifra crece con cada función nueva y se vuelve a comprobar en cada cambio: si una sola prueba falla, no se publica.",
         image: {
@@ -310,7 +312,8 @@ export const knowledgeSections: KnowledgeSection[] = [
           "Se borra la fotografía del archivo externo, se sustituye a la persona por un nombre al azar en cada uno de sus expedientes y en su historial, se vacía el teléfono y el relato, y se cancelan sus avisos y sus cupos. Se conserva la categoría, la vereda, el estado y la fecha, para que las estadísticas de la comunidad sigan siendo ciertas. Si algo de esto falla a medias —por ejemplo, el archivo externo no responde— el resultado lo dice, en vez de darlo por hecho.",
       },
       {
-        question: "¿Alguien podría leer la base de datos por fuera de la aplicación?",
+        question:
+          "¿Alguien podría leer la base de datos por fuera de la aplicación?",
         answer:
           "Las reglas de la base de datos rechazan por defecto cualquier lectura o escritura directa: un expediente privado no se puede leer ni escribir salvo desde el propio servidor, y ni siquiera la versión pública puede leerse con más campos de los que la regla permite por su nombre, uno por uno. Es una segunda cerradura, aparte de la que ya comprueba cada ruta del servidor: aunque alguien encontrara una manera de saltarse una, seguiría topando con la otra.",
       },
