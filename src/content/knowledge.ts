@@ -1,4 +1,22 @@
-export const knowledgeSections = [
+/**
+ * Una entrada de la guía: una pregunta y su respuesta.
+ *
+ * `image` es la excepción, no la norma —de más de cuarenta entradas, solo la
+ * lleva la que muestra la salida real de las pruebas—, así que va opcional en
+ * vez de forzar a todas las demás a declarar que no tienen ninguna.
+ */
+export type KnowledgeEntry = {
+  question: string;
+  answer: string;
+  image?: { src: string; alt: string };
+};
+export type KnowledgeSection = {
+  id: string;
+  title: string;
+  summary: string;
+  entries: KnowledgeEntry[];
+};
+export const knowledgeSections: KnowledgeSection[] = [
   {
     id: "flujo",
     title: "Entradas, procesos y salidas",
@@ -238,6 +256,79 @@ export const knowledgeSections = [
         question: "¿Cómo saben que el mapa escala?",
         answer:
           "Una prueba automática recorre 300 casos en las mismas coordenadas y comprueba que el agrupador no pierde ninguno y que la lista se puede paginar. Eso prueba el agrupador, no el sistema: falta medir con miles de registros, con dispositivos del territorio y con sus redes. No se extrapola esa prueba a un número ilimitado de personas usándola a la vez.",
+      },
+      {
+        question: "¿Por qué a veces la fotografía tarda más en guardarse?",
+        answer:
+          "El archivo externo que guarda las fotografías puede quedarse en pausa tras varios días sin uso —así funcionan los proyectos gratuitos— y despertarlo desde cero toma unos segundos más la primera vez que alguien vuelve a usarlo. El reporte no se queda esperando por eso: el recibo llega igual, con la copia reducida ya guardada junto al expediente por si ese archivo tarda. No es un fallo, es el proveedor arrancando de nuevo.",
+      },
+      {
+        question: "¿Cuántos reportes aguanta el plan gratuito?",
+        answer:
+          "Esta aplicación ya pone su propio límite antes de acercarse al de Firebase: diez reportes nuevos por cuenta y por día. Aparte, el plan gratuito de Firestore publica un tope diario de lecturas y escrituras para todo el proyecto junto —del orden de decenas de miles al día—, que Google puede cambiar cuando quiera y que esta aplicación no fija ni promete. Con la actividad de un territorio como este no debería alcanzarse en el uso normal, pero no se ha medido con tráfico real todavía, y conviene vigilarlo desde que empiece el piloto.",
+      },
+      {
+        question:
+          "¿Qué otros límites tiene el plan gratuito, además de los reportes?",
+        answer:
+          "Casi todos los límites que se notan al usar la aplicación no son de Firebase ni de Supabase: los puso esta aplicación a propósito, para no acercarse a los de ellos. Diez usos diarios de la asistencia de IA por cuenta, fotografías de hasta 10 MiB y 24 megapíxeles, diez reportes o 50 MB en la bandeja de salida de este teléfono, e historial paginado de 25 en 25. Los que sí dependen del proveedor están en la pregunta anterior.",
+      },
+      {
+        question: "¿Firebase le va a cobrar algo al Consejo?",
+        answer:
+          "Mientras el uso se mantenga dentro de los topes gratuitos, no. Si algún mes hay mucha más actividad que de costumbre y el proyecto entero pasa esos topes, Firestore cobra por lo que se pasó, no por todo. No se promete gratuidad permanente: antes del piloto conviene fijar alertas de consumo y un presupuesto mensual, tal como ya se plantea en la sección de mantenimiento y continuidad.",
+      },
+    ],
+  },
+  {
+    id: "calidad",
+    title: "Calidad y seguridad",
+    summary: "Cómo se comprueba que funciona, y cómo se protege lo que guarda.",
+    entries: [
+      {
+        question: "¿Cuántas pruebas automáticas tiene la aplicación ahora mismo?",
+        answer:
+          "Las que se ven en la imagen, ejecutadas justo antes de escribir esto: cada archivo prueba una regla concreta —quién puede publicar qué, qué sale hacia la IA, qué conserva la bandeja sin señal, qué campos nunca salen de un expediente privado— no el aspecto de una pantalla. La cifra crece con cada función nueva y se vuelve a comprobar en cada cambio: si una sola prueba falla, no se publica.",
+        image: {
+          src: "/documentacion/pruebas-unitarias.png",
+          alt: "Salida real de «npx vitest run»: 51 archivos, 425 pruebas, todas en verde.",
+        },
+      },
+      {
+        question: "¿Cómo se protege el acceso a una cuenta?",
+        answer:
+          "Con Firebase Auth, no con nada propio: esta aplicación nunca recibe ni guarda una contraseña, en ningún punto de todo el código. Cada petición al servidor viaja con un token que el propio Firebase firma y que el servidor vuelve a comprobar, incluida su revocación. El rol de administrador se verifica en el servidor en cada petición, nunca se decide en la pantalla.",
+      },
+      {
+        question: "¿Cuándo pasa un reporte de privado a público?",
+        answer:
+          "Nunca por accidente. Al enviarse, un reporte nace privado y sin revisar. Se hace público de dos maneras: el Consejo lo revisa, lo declara sin contenido sensible y redacta un resumen sin datos personales; o pasa un plazo —24 horas por defecto, ajustable por el Consejo— sin que nadie, ni quien lo reportó ni el Consejo, lo haya marcado como delicado. Un caso marcado como delicado no se publica por ninguna de las dos vías.",
+      },
+      {
+        question: "¿Qué pasa técnicamente cuando alguien elimina su cuenta?",
+        answer:
+          "Se borra la fotografía del archivo externo, se sustituye a la persona por un nombre al azar en cada uno de sus expedientes y en su historial, se vacía el teléfono y el relato, y se cancelan sus avisos y sus cupos. Se conserva la categoría, la vereda, el estado y la fecha, para que las estadísticas de la comunidad sigan siendo ciertas. Si algo de esto falla a medias —por ejemplo, el archivo externo no responde— el resultado lo dice, en vez de darlo por hecho.",
+      },
+      {
+        question: "¿Alguien podría leer la base de datos por fuera de la aplicación?",
+        answer:
+          "Las reglas de la base de datos rechazan por defecto cualquier lectura o escritura directa: un expediente privado no se puede leer ni escribir salvo desde el propio servidor, y ni siquiera la versión pública puede leerse con más campos de los que la regla permite por su nombre, uno por uno. Es una segunda cerradura, aparte de la que ya comprueba cada ruta del servidor: aunque alguien encontrara una manera de saltarse una, seguiría topando con la otra.",
+      },
+      {
+        question: "¿Los datos viajan y se guardan cifrados?",
+        answer:
+          "En tránsito sí: la aplicación exige HTTPS —lo comprueba hasta en tiempo de compilación del APK— y avisa al navegador que no acepte nunca una conexión sin cifrar durante los próximos dos años. En reposo, la base de datos y el archivo de fotografías quedan bajo el cifrado por defecto de la infraestructura donde viven, sin que esta aplicación tenga que configurar nada aparte; no hay, hoy, ningún cifrado propio añadido encima. Aclarando algo que puede confundir: las fotografías se guardan codificadas en Base64 para que quepan enteras, y Base64 no es cifrado, es solo una forma de representar los mismos bytes.",
+      },
+      {
+        question:
+          "¿Qué pasa si dos personas del Consejo editan el mismo caso a la vez, o si el reporte se reenvía por mala señal?",
+        answer:
+          "El servidor compara versiones dentro de una transacción: si alguien ya guardó un cambio, el segundo intento recibe un aviso de conflicto en vez de pisar el primero en silencio. Y cada envío lleva su propia clave: reenviar el mismo reporte, o el mismo cambio, dos veces por culpa de la señal nunca crea un duplicado.",
+      },
+      {
+        question: "¿Dónde están los términos legales de todo esto?",
+        answer:
+          "En la página de Términos y tratamiento de datos: qué información se recoge, para qué la usa el Consejo, y qué derechos tiene quien reporta. Esta sección cuenta el cómo; aquella cuenta el qué y el porqué.",
       },
     ],
   },

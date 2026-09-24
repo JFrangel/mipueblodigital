@@ -57,7 +57,7 @@ contra `.next`**: ejecutarlo sin compilar verifica la compilación anterior. La
 primera vez hace falta `npx playwright install chromium`. Ejecutar `build` y
 `dev` a la vez compite por `.next`.
 
-Estado: **191 pruebas unitarias** (33 archivos) y **60 de navegador**, con lint y
+Estado: **425 pruebas unitarias** (51 archivos) y **60 de navegador**, con lint y
 typecheck limpios.
 
 ## Desplegar
@@ -72,19 +72,19 @@ ahí, desde el propio Panel del Consejo.
 
 ## Documentación
 
-| Documento                                                                 | Para quién                              |
-| ------------------------------------------------------------------------- | --------------------------------------- |
-| [Arquitectura](docs/arquitectura.md)                                      | Quien va a tocar el código o sostenerlo |
+| Documento                                                                 | Para quién                                       |
+| ------------------------------------------------------------------------- | ------------------------------------------------ |
+| [Arquitectura](docs/arquitectura.md)                                      | Quien va a tocar el código o sostenerlo          |
 | [Integraciones externas](docs/integraciones.md)                           | Quien sostenga la aplicación o responda por ella |
-| [Empaquetado Android](docs/empaquetado-android.md)                        | Quien compile y publique la aplicación  |
-| [Auditoría del modo sin conexión](docs/auditoria-offline-2026-09-16.md)   | Quien dude de qué funciona sin señal    |
-| [Manual del ciudadano](docs/manual-ciudadano.md)                          | Quien reporta                           |
-| [Manual operativo del Consejo](docs/manual-consejo.md)                    | Quien gestiona                          |
-| [Plan de salida a producción](docs/plan-produccion-2026-09-14.md)         | Quien coordina el piloto                |
-| [Especificación de producto](docs/specs/producto.md)                      | Sustentación                            |
-| [21 historias y criterios originales](docs/specs/criterios-originales.md) | Sustentación                            |
-| [Límites de operación y defensa](docs/specs/limites-operacion-defensa.md) | Sustentación                            |
-| [Conexiones y credenciales](docs/conexiones-2026-09-08.md)                | Quien opera el servidor                 |
+| [Empaquetado Android](docs/empaquetado-android.md)                        | Quien compile y publique la aplicación           |
+| [Auditoría del modo sin conexión](docs/auditoria-offline-2026-09-16.md)   | Quien dude de qué funciona sin señal             |
+| [Manual del ciudadano](docs/manual-ciudadano.md)                          | Quien reporta                                    |
+| [Manual operativo del Consejo](docs/manual-consejo.md)                    | Quien gestiona                                   |
+| [Plan de salida a producción](docs/plan-produccion-2026-09-14.md)         | Quien coordina el piloto                         |
+| [Especificación de producto](docs/specs/producto.md)                      | Sustentación                                     |
+| [21 historias y criterios originales](docs/specs/criterios-originales.md) | Sustentación                                     |
+| [Límites de operación y defensa](docs/specs/limites-operacion-defensa.md) | Sustentación                                     |
+| [Conexiones y credenciales](docs/conexiones-2026-09-08.md)                | Quien opera el servidor                          |
 
 La guía `/documentacion/`, dentro de la aplicación, explica entradas, procesos,
 salidas y variantes en el lenguaje del territorio.

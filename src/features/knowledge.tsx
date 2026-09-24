@@ -82,6 +82,18 @@ export function Knowledge() {
                     <details key={e.question} open={query ? true : undefined}>
                       <summary>{e.question}</summary>
                       <p>{e.answer}</p>
+                      {/* La excepción, no la norma: de toda la guía, solo la
+                          entrada que muestra la salida real de las pruebas
+                          necesita enseñar algo en vez de solo decirlo. */}
+                      {e.image && (
+                        // eslint-disable-next-line @next/next/no-img-element -- vive dentro de un <details> colapsado por defecto; resolver dimensiones fijas para next/image no aporta nada aquí.
+                        <img
+                          className="knowledge-image"
+                          src={e.image.src}
+                          alt={e.image.alt}
+                          loading="lazy"
+                        />
+                      )}
                     </details>
                   ))}
                 </section>

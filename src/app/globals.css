@@ -2570,6 +2570,17 @@ details p {
   margin-top: 14px;
   max-width: 800px;
 }
+/* La captura de las pruebas pasando: la única imagen que lleva esta guía, así
+   que no le hace falta más que caber y no chocar con el recuadro que la
+   contiene. */
+.knowledge-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
 .report-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
