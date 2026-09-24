@@ -108,6 +108,43 @@ it("al Consejo se le sirve el expediente aunque no sea suyo", async () => {
   expect(item.description).toContain("paso de tablas");
 });
 
+/**
+ * Y con lo que hace falta para gestionarlo desde la propia ficha.
+ *
+ * La versión es la que manda: sin ella no se puede cambiar un expediente, y la
+ * copia que guarda el teléfono no la lleva. Va aparte de `item` porque no es el
+ * reporte, es su gestión, y no es de quien lo firmó.
+ */
+it("y con la versión, que es lo que permite cambiarlo", async () => {
+  state.quien = "ana";
+  state.consejo = true;
+  state.incidente = expediente({
+    version: 7,
+    assignee: "Cuadrilla del muelle",
+    publication: "public",
+  });
+  state.publico = undefined;
+  state.acta = undefined;
+  const { gestion } = await (await pedir()).json();
+  expect(gestion).toEqual({
+    version: 7,
+    status: "en_proceso",
+    assignee: "Cuadrilla del muelle",
+    publication: "public",
+  });
+});
+
+it("a quien lo reportó no, que no gestiona nada", async () => {
+  state.quien = "uid-de-quien-reporto";
+  state.consejo = false;
+  state.incidente = expediente({ version: 7, assignee: "Cuadrilla" });
+  state.publico = undefined;
+  state.acta = undefined;
+  const cuerpo = await (await pedir()).text();
+  expect(JSON.parse(cuerpo).gestion).toBeUndefined();
+  expect(cuerpo).not.toContain("Cuadrilla");
+});
+
 /* El caso que trajo todo esto: se abre un reporte de otra persona desde el
    mapa o desde el historial. Consta, pero solo hasta donde consta. */
 it("a otra persona se le sirve lo que la comunidad ve, y nada más", async () => {

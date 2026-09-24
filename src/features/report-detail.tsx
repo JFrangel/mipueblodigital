@@ -19,6 +19,7 @@ import { shortId } from "@/domain/short-id";
 import { relativeTime } from "@/domain/relative-time";
 import { Badge, CategoryIcon, StatusIcon } from "@/components/ui";
 import { AdminEditor } from "./admin-editor";
+import { GestionConsejo } from "./gestion-consejo";
 import { PrivateEvidence } from "./private-evidence";
 import { PhotoView } from "@/components/photo-view";
 import { useRemoteHistory } from "@/data/remote-history";
@@ -353,7 +354,28 @@ export function ReportDetail({
           </section>
         </div>
       </div>
-      {admin && <AdminEditor item={item} onChange={onChange} />}
+      {/**
+       * Quién gestiona qué, y dónde queda.
+       *
+       * Son dos gestiones distintas con la misma pinta, y lo que las separa no
+       * es el rol de quien mira sino **dónde vive el expediente**:
+       *
+       * - Llegó al servidor: se gestiona allí, con historial y aviso a quien
+       *   reportó. Antes había que salir de esta ficha, abrir el panel y buscar
+       *   el mismo caso otra vez para cambiar un estado que ya se tenía
+       *   delante.
+       * - Se quedó en este aparato: solo cabe anotar en este aparato, porque no
+       *   hay expediente al que escribirle.
+       *
+       * Nunca las dos: sobre un caso enviado, una anotación local sería una
+       * segunda verdad que nadie más ve.
+       */}
+      {admin &&
+        (delivery === "enviado" ? (
+          <GestionConsejo item={item} onChange={onChange} />
+        ) : (
+          <AdminEditor item={item} onChange={onChange} />
+        ))}
       {/* Solo cuando hay algo que decir. De un expediente entregado ya lo
           cuentan la etiqueta de arriba y el seguimiento; repetirlo abajo era
           la tercera vez que la misma pantalla decía lo mismo. */}

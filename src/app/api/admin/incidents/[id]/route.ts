@@ -60,24 +60,47 @@ export async function PATCH(
         400,
         "Revisa los límites: notas públicas y resumen de hasta 30 palabras.",
       );
+    /**
+     * La clasificación y la prioridad, **si llegan**.
+     *
+     * Antes eran obligatorias, y eso ataba esta ruta a un único cliente: el
+     * panel del Consejo, que las tiene todas delante. Desde la ficha de un
+     * expediente solo se quiere cambiar el estado y dejar dicho por qué —quien
+     * la mira no está clasificando nada— y con el contrato viejo habría que
+     * mandarlas igual. Mandarlas a ciegas es el peor de los fallos posibles
+     * aquí: los valores por defecto son «sin revisar» y «privado», así que un
+     * cambio de estado podría **despublicar** un caso, y unos valores
+     * inventados podrían **publicar** uno que el Consejo había dejado privado.
+     *
+     * Ausentes, se conservan las que ya tiene el expediente. Lo que no se
+     * manda no se toca: es la única regla con la que un cliente parcial no
+     * puede hacer daño.
+     */
     if (
-      !["unreviewed", "sensitive", "safe"].includes(
-        String(input.sensitivity),
-      ) ||
+      input.sensitivity !== undefined &&
+      !["unreviewed", "sensitive", "safe"].includes(String(input.sensitivity))
+    )
+      throw new ApiError(400, "Clasificación inválida.");
+    if (
+      input.publication !== undefined &&
       !["private", "public"].includes(String(input.publication))
     )
       throw new ApiError(400, "Clasificación inválida.");
     if (input.priority !== undefined && !isPriority(input.priority))
       throw new ApiError(400, "Prioridad inválida.");
-    const priority = isPriority(input.priority)
-      ? input.priority
-      : DEFAULT_PRIORITY;
+    /* Lo que se pidió, no lo que se aplicó: es lo que firma el `hash` que hace
+       idempotente el reintento, así que tiene que ser exactamente lo que mandó
+       quien llamó. Lo omitido se queda fuera y no entra en la firma. */
     const command = {
       ...text,
       status: input.status,
-      priority,
-      sensitivity: input.sensitivity,
-      publication: input.publication,
+      ...(input.priority !== undefined ? { priority: input.priority } : {}),
+      ...(input.sensitivity !== undefined
+        ? { sensitivity: input.sensitivity }
+        : {}),
+      ...(input.publication !== undefined
+        ? { publication: input.publication }
+        : {}),
       version: input.version,
     };
     const hash = createHash("sha256")
@@ -85,10 +108,12 @@ export async function PATCH(
       .digest("hex");
     const result = await db.runTransaction(async (tx) => {
       const ref = db.doc(`incidents/${id}`),
+        publicRef = db.doc(`publicIncidents/${id}`),
         event = ref.collection("events").doc(input.mutationId as string);
-      const [snapshot, previous] = await Promise.all([
+      const [snapshot, previous, publicado] = await Promise.all([
         tx.get(ref),
         tx.get(event),
+        tx.get(publicRef),
       ]);
       const old = snapshot.data();
       if (!old) throw new ApiError(404, "Caso no encontrado.");
@@ -108,31 +133,63 @@ export async function PATCH(
         );
       const now = Date.now(),
         at = new Date(now).toISOString();
-      const publicRef = db.doc(`publicIncidents/${id}`);
-      if (input.publication === "public") {
+      /* Lo que de verdad va a quedar guardado: lo que llegó, y donde no llegó
+         nada, lo que ya había. Ver la nota de arriba sobre por qué son
+         opcionales. */
+      const sensitivity =
+        input.sensitivity !== undefined
+          ? String(input.sensitivity)
+          : String(old.sensitivity ?? "unreviewed");
+      const publication =
+        input.publication !== undefined
+          ? String(input.publication)
+          : String(old.publication ?? "private");
+      const priority = isPriority(input.priority)
+        ? input.priority
+        : isPriority(old.priority)
+          ? old.priority
+          : DEFAULT_PRIORITY;
+      /* El responsable igual: `text.assignee` es cadena vacía cuando no viene,
+         y guardarla sin más borraría a quien tuviera el caso asignado. */
+      const assignee =
+        input.assignee !== undefined ? text.assignee : String(old.assignee ?? "");
+      if (publication === "public") {
         /* El resumen revisado no espera plazo: lo escribió una persona del
            Consejo que antes leyó el caso. El plazo protege lo que consta sin
            que nadie lo mire, y esto no es eso. */
-        if (!publicationReady(String(input.sensitivity)))
+        if (!publicationReady(sensitivity))
           throw new ApiError(
             409,
             "Para compartir el resumen, la revisión de sensibilidad tiene que quedar en «Revisado · sin contenido sensible».",
           );
-        if (!text.publicTitle || !text.publicSummary || !text.publicVereda)
+        const traeFicha =
+          text.publicTitle && text.publicSummary && text.publicVereda;
+        if (traeFicha)
+          tx.set(publicRef, {
+            published: true,
+            title: text.publicTitle,
+            summary: text.publicSummary,
+            vereda: text.publicVereda,
+            category: old.category,
+            status: input.status,
+            publishedAt: at,
+            createdAt: old.date,
+          });
+        /**
+         * Un caso **ya publicado** al que solo se le cambia el estado.
+         *
+         * Es lo que pasa cuando el cambio viene de la ficha del expediente y no
+         * del panel: allí no se escribe la versión pública, así que los tres
+         * textos no llegan. Reescribir la ficha con lo que no vino la dejaría
+         * en blanco, y exigirlos impediría mover de estado un caso publicado
+         * desde donde se está mirando. Se actualiza lo único que cambió.
+         */ else if (publicado.exists)
+          tx.update(publicRef, { status: input.status });
+        else
           throw new ApiError(
             400,
             "Escribe título, resumen y vereda públicos sin datos personales.",
           );
-        tx.set(publicRef, {
-          published: true,
-          title: text.publicTitle,
-          summary: text.publicSummary,
-          vereda: text.publicVereda,
-          category: old.category,
-          status: input.status,
-          publishedAt: at,
-          createdAt: old.date,
-        });
       } else tx.delete(publicRef);
       tx.update(ref, {
         status: input.status,
@@ -150,9 +207,9 @@ export async function PATCH(
         discardReason:
           input.status === "descartado" ? text.publicNote || null : null,
         priority,
-        assignee: text.assignee,
-        sensitivity: input.sensitivity,
-        publication: input.publication,
+        assignee,
+        sensitivity,
+        publication,
         version: old.version + 1,
         updatedAt: at,
       });
@@ -193,7 +250,7 @@ export async function PATCH(
            corregir el resumen de uno ya publicado no es una novedad para
            nadie, y volvería a sonar cada teléfono del río por una coma. */
         estrena:
-          input.publication === "public" && old.publication !== "public"
+          publication === "public" && old.publication !== "public"
             ? {
                 titulo: String(text.publicTitle),
                 vereda: String(text.publicVereda),

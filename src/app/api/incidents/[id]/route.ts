@@ -80,6 +80,37 @@ export async function GET(
             lat: typeof d.lat === "number" ? d.lat : null,
             lng: typeof d.lng === "number" ? d.lng : null,
           },
+          /**
+           * Lo que hace falta para **gestionarlo desde aquí**, y solo al
+           * Consejo.
+           *
+           * Va aparte de `item` a propósito: `item` es el reporte, lo mismo
+           * para quien lo firmó que para quien lo gestiona, y esto es la
+           * gestión. Mezclarlo obligaría a filtrar por rol campo a campo, que
+           * es como se filtra mal.
+           *
+           * **La versión es lo que lo hace posible.** Cambiar un expediente
+           * exige decir sobre qué versión se cambia, y la copia que guarda el
+           * teléfono no la lleva: se guardó el día que salió el reporte y desde
+           * entonces el caso pudo cambiar de manos. Sin esto, gestionar desde
+           * la ficha fallaría siempre con «otra persona actualizó el caso», que
+           * además sería mentira.
+           *
+           * El estado y el responsable vienen por lo mismo: es lo que el caso
+           * es **ahora**, no lo que este aparato recuerda. Y `publication`
+           * porque cambiar de estado un caso publicado se ve en la comunidad, y
+           * quien lo cambia tiene derecho a saberlo antes.
+           */
+          ...(identity.admin === true
+            ? {
+                gestion: {
+                  version: Number(d.version ?? 0),
+                  status: String(d.status ?? "pendiente"),
+                  assignee: String(d.assignee ?? ""),
+                  publication: String(d.publication ?? "private"),
+                },
+              }
+            : {}),
         },
         { headers: { "Cache-Control": "no-store" } },
       );

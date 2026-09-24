@@ -558,14 +558,17 @@ export function Workspace({
               {selected ? (
                 <ReportDetail
                   item={selected}
-                  /* La gestión local vive ahora dentro del panel del Consejo,
-                     que es quien la usa para lo que este aparato no ha
-                     enviado. Se decide por el rol, no por la dirección desde
-                     la que se llegó: un parámetro en la barra no es permiso.
-                     Y solo sobre lo que este aparato guarda: escribe en el
-                     almacén del navegador, así que sobre un expediente traído
-                     del servidor anotaría en una copia que no existe. */
-                  admin={session.admin && !!local}
+                  /* Se decide por el rol, no por la dirección desde la que se
+                     llegó: un parámetro en la barra no es permiso.
+
+                     **Ya no se exige que el caso esté guardado aquí.** Lo
+                     estaba porque la única gestión que había escribía en el
+                     almacén del navegador, y sobre un expediente traído del
+                     servidor eso anota en una copia que no existe. Ahora hay
+                     dos gestiones —una al servidor y otra al aparato— y cuál
+                     toca lo sabe la ficha, que es quien tiene delante en qué
+                     punto del camino está el reporte. */
+                  admin={session.admin}
                   onChange={(updated) =>
                     setItems((current) =>
                       current.map((item) =>
