@@ -58,6 +58,13 @@ service cloud.firestore {
     match /pushTokens/{uid}/devices/{token} {
       allow read, write: if false;
     }
+    // Archivos de exportacion ya calculados en el aparato (CSV, informe),
+    // a la espera de que el navegador del sistema los recoja por su billete.
+    // Se escriben y se leen solo desde /api/statistics/export/, con el SDK
+    // de servidor.
+    match /exportTickets/{ticket} {
+      allow read, write: if false;
+    }
     match /{document=**} { allow read, write: if false; }
   }
 }
