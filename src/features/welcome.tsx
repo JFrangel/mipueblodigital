@@ -183,7 +183,7 @@ export function Welcome() {
           <Link href="/inicio/" className={styles.enter} onClick={markVisited}>
             Entrar a la aplicación <ArrowUpRight size={18} />
           </Link>
-          <Link href="/documentacion/" className={styles.guide}>
+          <Link href="/terminos/" className={styles.guide}>
             Privacidad, alcance y mantenimiento
           </Link>
           {/* Lo que sigue sin estar cerrado, y solo eso. Decía «versión en

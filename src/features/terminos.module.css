@@ -1,0 +1,84 @@
+/**
+ * Términos y tratamiento de datos.
+ *
+ * Es la única página de la aplicación que es, ante todo, un documento para
+ * leer: por eso no sigue el patrón de columna centrada de la bienvenida ni el
+ * de paneles de la guía, sino uno de texto corrido, con el ancho de lectura
+ * cómoda que ya usan las respuestas de la guía (`details p { max-width:
+ * 800px }`) y alineado a la izquierda, no al centro, porque un documento largo
+ * centrado se lee peor cuanto más crece.
+ */
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+
+.head {
+  margin-bottom: 8px;
+}
+
+.head h1 {
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.25;
+  letter-spacing: -0.6px;
+  margin: 14px 0 10px;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 34px;
+}
+
+.page section {
+  margin-bottom: 30px;
+}
+
+.page h2 {
+  font-size: 17px;
+  margin: 0 0 10px;
+}
+
+.page p,
+.page li {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+.page p + p {
+  margin-top: 10px;
+}
+
+.page ul {
+  margin: 10px 0 0;
+  padding-left: 20px;
+}
+
+.page li + li {
+  margin-top: 6px;
+}
+
+.foot {
+  margin-top: 46px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.foot a {
+  color: var(--green);
+  font-weight: 600;
+}
