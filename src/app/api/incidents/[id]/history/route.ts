@@ -7,13 +7,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { uid, db, identity } = await requireMember(request),
+    const { uid, db, identity, account } = await requireMember(request),
       { id } = await params;
+    const council = identity.admin === true || account?.role === "admin";
     if (!/^[0-9a-f]{64}$/.test(id))
       throw new ApiError(404, "Reporte no encontrado.");
     const ref = db.doc(`incidents/${id}`),
       incident = (await ref.get()).data();
-    if (!incident || (incident.owner !== uid && identity.admin !== true))
+    if (!incident || (incident.owner !== uid && !council))
       throw new ApiError(404, "Reporte no encontrado.");
     const after = new URL(request.url).searchParams.get("after");
     let query = ref.collection("events").orderBy("at", "desc").limit(26);
@@ -26,10 +27,9 @@ export async function GET(
     }
     const docs = (await query.get()).docs;
     const page = docs.slice(0, 25);
-    const names =
-      identity.admin === true
-        ? await namesOf(page.map((doc) => String(doc.data().actor ?? "")))
-        : new Map<string, string>();
+    const names = council
+      ? await namesOf(page.map((doc) => String(doc.data().actor ?? "")))
+      : new Map<string, string>();
     const items = page.map((doc) => {
       const d = doc.data();
       const actor = String(d.actor ?? "");
@@ -39,7 +39,7 @@ export async function GET(
         type: d.type ?? "update",
         status: d.status ?? "pendiente",
         note: d.publicNote ?? "",
-        ...(identity.admin === true
+        ...(council
           ? {
               internalNote: d.internalNote ?? "",
               actor: nameOf(names, actor),

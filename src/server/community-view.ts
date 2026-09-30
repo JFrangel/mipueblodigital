@@ -1,4 +1,4 @@
-import { autoPublicationReady } from "@/domain/publication";
+import { reviewedPublicationReady } from "@/domain/publication";
 
 /**
  * Lo que la comunidad ve de un reporte, decidido en un solo sitio.
@@ -16,7 +16,7 @@ import { autoPublicationReady } from "@/domain/publication";
  */
 export type Shared = {
   id: string;
-  scope: "automatico" | "revisado";
+  scope: "revisado";
   title: string;
   summary: string;
   category: string;
@@ -37,14 +37,8 @@ export type Shared = {
 /**
  * La ficha pública de un reporte, o nada.
  *
- * Devuelve `null` cuando el reporte no le consta a la comunidad: marcado como
- * delicado —lo puede hacer quien reporta al enviarlo y el Consejo en cualquier
- * momento—, o sin revisar y todavía dentro de las horas de gracia.
- *
- * `publico` es el documento de `publicIncidents/{id}`, si lo hay. Cuando el
- * Consejo lo ha revisado y publicado, su texto reemplaza al automático y **no
- * espera plazo alguno**: el plazo protege lo que consta sin que nadie lo mire,
- * y una revisión es exactamente lo contrario.
+ * Devuelve `null` si falta revisión, si es delicado o si aún no transcurrieron
+ * 24 horas desde la aprobación. Nunca publica el relato original sin revisión.
  */
 /** El motivo, solo si el caso está descartado y el Consejo escribió uno. */
 function motivo(d: FirebaseFirestore.DocumentData) {
@@ -64,45 +58,30 @@ export function sharedView(
      Consejo puede marcarlo después de haber publicado un resumen, y eso lo
      retira. */
   if (String(d.sensitivity) === "sensitive") return null;
-  const revisado = publico?.published === true;
   if (
-    !revisado &&
-    !autoPublicationReady(
-      String(d.date),
+    publico?.published !== true ||
+    !reviewedPublicationReady(
+      String(publico.publishedAt ?? ""),
       String(d.sensitivity),
       now,
       delayHours,
     )
   )
     return null;
-  if (revisado)
-    return {
-      id,
-      scope: "revisado",
-      /* El texto, del resumen que redactó el Consejo. */
-      title: String(publico.title ?? ""),
-      summary: String(publico.summary ?? ""),
-      vereda: String(publico.vereda ?? ""),
-      category: String(publico.category ?? ""),
-      /* Pero el estado y la fecha, del expediente vivo. En el resumen son una
+  return {
+    id,
+    scope: "revisado",
+    /* El texto, del resumen que redactó el Consejo. */
+    title: String(publico.title ?? ""),
+    summary: String(publico.summary ?? ""),
+    vereda: String(publico.vereda ?? ""),
+    category: String(publico.category ?? ""),
+    /* Pero el estado y la fecha, del expediente vivo. En el resumen son una
          foto del día en que se publicó: si el caso se resolvía después, la
          comunidad seguía leyendo «en proceso» para siempre. Lo que el Consejo
          redacta es el relato; en qué va, no. */
-      status: String(d.status ?? "pendiente"),
-      date: String(publico.createdAt ?? d.date ?? ""),
-      ...motivo(d),
-    };
-  return {
-    id,
-    scope: "automatico",
-    /* Tal como lo escribió quien reportó. Campo a campo: el documento trae al
-       lado el teléfono, el dueño y el identificador de la evidencia. */
-    title: String(d.title ?? ""),
-    summary: String(d.description ?? ""),
-    category: String(d.category ?? ""),
-    vereda: String(d.vereda ?? ""),
     status: String(d.status ?? "pendiente"),
-    date: String(d.date ?? ""),
+    date: String(publico.createdAt ?? d.date ?? ""),
     ...motivo(d),
   };
 }

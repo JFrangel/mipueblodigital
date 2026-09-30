@@ -10,6 +10,7 @@ export function CommunityNav({ section }: { section: string }) {
            lo que la comunidad puede ver de los reportes de los demás. */
         ["historial", "Reportes"],
         ["estadisticas", "Estadísticas"],
+        ["memoria", "El Consejo"],
       ].map(([id, label]) => (
         <Link
           key={id}

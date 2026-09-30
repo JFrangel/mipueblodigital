@@ -98,8 +98,8 @@ public/
   sw.js           Service worker
   offline.html    Página de respaldo, con su propio estilo
 tests/
-  unit/           33 archivos, 191 pruebas (Vitest)
-  e2e/            60 pruebas de navegador (Playwright)
+  unit/           Casos Vitest; inventario actualizado en catálogo-pruebas.md
+  e2e/            Casos Playwright; inventario actualizado en catálogo-pruebas.md
   fixtures/       Casos de muestra; el producto no lleva datos inventados
 docs/             Esta documentación
 scripts/          Utilidades de operación (§13.3)
@@ -109,8 +109,8 @@ firebase/         Reglas de Firestore
 Dos reglas de colocación que el código respeta:
 
 - **`domain/` no importa nada de `data/`, `app/` ni React.** Por eso se puede
-  probar entera sin navegador, y por eso las 191 pruebas unitarias corren en dos
-  segundos.
+  probar sin navegador; el recuento y tiempo vigentes están en
+  [pruebas y rendimiento](pruebas-y-rendimiento.md).
 - **`server/` no se importa nunca desde el cliente.** Contiene las credenciales
   y las proyecciones.
 
@@ -341,23 +341,16 @@ precisamente por eso: la usan el listado y la consulta de un expediente suelto,
 y dos copias de una decisión de privacidad se separan la primera vez que alguien
 añade un campo en una y no en la otra.
 
-Dos niveles:
+Solo se comparte un **resumen revisado**. El Consejo estudia el expediente,
+lo declara seguro y redacta título, resumen y vereda públicos. La API espera
+`PUBLIC_REPORT_DELAY_HOURS` horas **desde la aprobación** (24 por defecto).
+El relato original nunca se publica automáticamente. La lectura directa de
+`publicIncidents` por SDK está cerrada para impedir eludir el plazo.
 
-- **Automático.** Pasadas las horas de gracia (`PUBLIC_REPORT_DELAY_HOURS`, 24
-  por defecto), un reporte que nadie marcó como delicado consta **tal como lo
-  escribió quien reportó**: su título y su relato, con categoría, vereda, estado
-  y fecha. Ese texto no lo ha leído nadie antes de publicarse; la marca de
-  sensible es el freno, y el Consejo puede ponerla en cualquier momento.
-- **Revisado.** Cuando el Consejo lo estudia, lo declara seguro y redacta un
-  título, un resumen y una vereda públicos, esa versión reemplaza a la
-  automática y **no espera plazo alguno**: el plazo protege lo que consta sin que
-  nadie lo mire, y una revisión es exactamente lo contrario.
-
-En los dos niveles, **el estado y la fecha salen del expediente vivo**, no del
-resumen. Si no fuera así, un caso resuelto después de publicarse seguiría
+**El estado sale del expediente vivo**, no del resumen. Si no fuera así, un caso resuelto después de publicarse seguiría
 leyéndose «en proceso» para siempre.
 
-**La fotografía no entra en ninguno de los dos.** Es evidencia: la ven quien
+**La fotografía no entra en el resumen.** Es evidencia: la ven quien
 reportó y el Consejo, por una ruta que comprueba quién pide.
 
 ### 7.2. El historial propio
@@ -702,7 +695,7 @@ sesión sin ningún mensaje.
 
 ## 13. Verificación y operación
 
-### 12.1. Las cinco comprobaciones
+### 13.1. Las cinco comprobaciones
 
 ```bash
 npm run lint
@@ -716,8 +709,10 @@ npx playwright test
 `.next`**, así que una prueba e2e sin compilar antes verifica el build anterior
 —es un error fácil y silencioso—. La primera vez: `npx playwright install chromium`.
 
-Estado actual: **191 pruebas unitarias en 33 archivos** y **60 de navegador**,
-con lint y typecheck limpios.
+El inventario de cada caso, los resultados de ejecución y los límites de la
+medición están en [pruebas y rendimiento](pruebas-y-rendimiento.md) y
+[catálogo de pruebas](catalogo-pruebas.md). No inferir que una prueba de
+navegador pasó solo porque Playwright la liste.
 
 Qué prueba cada capa: `domain/` se prueba entera sin navegador y es donde está
 la lógica que decide; las rutas de la API se prueban con dobles de Firestore, y
@@ -726,13 +721,13 @@ recorren los caminos completos —reportar, gestionar, publicar, retirar— y vi
 lo que solo se ve en pantalla: desbordes en el teléfono, contraste en oscuro, la
 simetría de los mandos.
 
-### 12.2. Despliegue
+### 13.2. Despliegue
 
 Servidor Next.js, no exportación estática: las rutas protegidas y los detalles
 dinámicos lo necesitan. `npm run build` y `npm start`. Conviene ejecutar `build`
 y `dev` por separado: compiten por `.next`.
 
-### 12.3. Utilidades
+### 13.3. Utilidades
 
 | Guion                                                     | Qué hace                                                                 |
 | --------------------------------------------------------- | ------------------------------------------------------------------------ |

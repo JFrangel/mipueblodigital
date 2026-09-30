@@ -53,7 +53,7 @@ test("dictado no disponible conserva el formulario", async ({ page }) => {
   await openDetails(page);
   await page.getByRole("button", { name: "Activar micrófono" }).click();
   await expect(
-    page.getByRole("alert").filter({ hasText: "no admite dictado" }),
+    page.getByRole("alert").filter({ hasText: "no puede dictar" }),
   ).toBeVisible();
   await expect(
     page.getByRole("textbox", { name: "Descripción", exact: true }),

@@ -10,12 +10,17 @@ export async function GET(
     "X-Content-Type-Options": "nosniff",
   };
   try {
-    const { uid, db, identity } = await requireMember(request),
+    const { uid, db, identity, account } = await requireMember(request),
       { id } = await params;
     if (!/^[0-9a-f]{64}$/.test(id))
       throw new ApiError(404, "Reporte no encontrado.");
     const incident = (await db.doc(`incidents/${id}`).get()).data();
-    if (!incident || (incident.owner !== uid && identity.admin !== true))
+    if (
+      !incident ||
+      (incident.owner !== uid &&
+        identity.admin !== true &&
+        account?.role !== "admin")
+    )
       throw new ApiError(404, "Reporte no encontrado.");
     if (
       typeof incident.evidenceId !== "string" ||

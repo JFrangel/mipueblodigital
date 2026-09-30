@@ -94,7 +94,7 @@ export const knowledgeSections: KnowledgeSection[] = [
       {
         question: "¿Qué ven los demás de mi reporte?",
         answer:
-          "En dos niveles, y conviene leerlo entero. Pasado el plazo, si nadie lo marcó como delicado, tu reporte consta ante la comunidad tal como lo escribiste: tu título y tu relato, con la categoría, la vereda, el estado y la fecha. Cada tarjeta advierte que ese texto no lo ha revisado nadie todavía. Cuando el Consejo estudia el caso y lo declara seguro, redacta un título y un resumen públicos y esa versión reemplaza a la anterior. La fotografía no entra en ninguno de los dos niveles: la ven quien reportó y el Consejo, y nadie más. Marcarlo como sensible lo saca de los dos, y pueden hacerlo tanto quien reporta al enviarlo como el Consejo en cualquier momento. El plazo se configura en el servidor entre 1 y 720 horas; por defecto 24.",
+          "Tu reporte nace privado. Solo podrá aparecer un resumen después de que el Consejo lo revise, declare seguro el contenido, redacte una versión pública y transcurran 24 horas desde su aprobación. El relato original, la fotografía y el contacto no se publican. Si lo marcas como sensible, no aparece; el Consejo también puede retirarlo después. El plazo se configura en el servidor entre 1 y 720 horas; por defecto 24.",
       },
       {
         question: "¿Por qué dice que mi cuenta no está habilitada?",
@@ -211,7 +211,7 @@ export const knowledgeSections: KnowledgeSection[] = [
       {
         question: "¿Qué está funcionando hoy y qué falta?",
         answer:
-          "Funcionan la sesión con Firebase, los expedientes con su historial y sus avisos en el servidor, la bandeja de salida con recibo, el archivo privado de fotografías con copia de respaldo, el mapa del territorio, las estadísticas con su informe y su tablero de gestión, los comunicados con portada e imágenes, la publicación comunitaria por plazo o por revisión, la administración de roles desde el propio panel y la asistencia de IA por OpenRouter. Sin señal se reporta, se lee lo guardado y se consultan los últimos comunicados. En el teléfono está la aplicación de Android, con avisos del sistema que llegan con ella abierta o cerrada y llevan al caso que los provocó, y con aviso de versión nueva que se descarga e instala sin salir de la aplicación. Falta el piloto con la comunidad; quedan pendientes de acta la validación del catálogo territorial por el Consejo y el ensayo de recuperación de respaldos. Cada integración se acredita con pruebas automáticas, no con el aspecto de la pantalla.",
+          "Funcionan la sesión con Firebase, los expedientes con su historial y sus avisos en el servidor, la bandeja de salida con recibo, el archivo privado de fotografías con copia de respaldo, el mapa del territorio, las estadísticas con su informe y su tablero de gestión, los comunicados con portada e imágenes, la publicación comunitaria revisada con espera de 24 horas, la administración de roles desde el propio panel y la asistencia de IA por OpenRouter. Sin señal se reporta, se lee lo guardado y se consultan los últimos comunicados. En el teléfono está la aplicación de Android, con avisos del sistema que llegan con ella abierta o cerrada y llevan al caso que los provocó, y con aviso de versión nueva que se descarga e instala sin salir de la aplicación. Falta el piloto con la comunidad; quedan pendientes de acta la validación del catálogo territorial por el Consejo y el ensayo de recuperación de respaldos. Cada integración se acredita con pruebas automáticas, no con el aspecto de la pantalla.",
       },
       {
         question: "¿Cómo demuestran que no se pierden reportes?",
@@ -293,7 +293,7 @@ export const knowledgeSections: KnowledgeSection[] = [
           "Las que se ven en la imagen, ejecutadas justo antes de escribir esto: cada archivo prueba una regla concreta —quién puede publicar qué, qué sale hacia la IA, qué conserva la bandeja sin señal, qué campos nunca salen de un expediente privado— no el aspecto de una pantalla. La cifra crece con cada función nueva y se vuelve a comprobar en cada cambio: si una sola prueba falla, no se publica.",
         image: {
           src: "/documentacion/pruebas-unitarias.png",
-          alt: "Salida real de «npx vitest run»: 51 archivos, 425 pruebas, todas en verde.",
+          alt: "Captura histórica de una ejecución de Vitest; el número vigente está en el catálogo del repositorio.",
         },
       },
       {
@@ -304,7 +304,7 @@ export const knowledgeSections: KnowledgeSection[] = [
       {
         question: "¿Cuándo pasa un reporte de privado a público?",
         answer:
-          "Nunca por accidente. Al enviarse, un reporte nace privado y sin revisar. Se hace público de dos maneras: el Consejo lo revisa, lo declara sin contenido sensible y redacta un resumen sin datos personales; o pasa un plazo —24 horas por defecto, ajustable por el Consejo— sin que nadie, ni quien lo reportó ni el Consejo, lo haya marcado como delicado. Un caso marcado como delicado no se publica por ninguna de las dos vías.",
+          "Al enviarse, un reporte nace privado y sin revisar. Solo aparece ante otros miembros cuando el Consejo lo revisa, lo declara sin contenido sensible, redacta un resumen sin datos personales y transcurren 24 horas desde esa aprobación. Un caso marcado como delicado no se publica. El relato original y la fotografía siguen privados.",
       },
       {
         question: "¿Qué pasa técnicamente cuando alguien elimina su cuenta?",

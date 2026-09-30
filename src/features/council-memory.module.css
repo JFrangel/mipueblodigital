@@ -1,0 +1,458 @@
+.memory {
+  display: grid;
+  gap: clamp(28px, 5vw, 52px);
+  padding-bottom: 28px;
+}
+.memory h1,
+.memory h2,
+.memory h3,
+.memory p {
+  margin-top: 0;
+}
+.memory h2 {
+  font-size: clamp(23px, 3vw, 34px);
+  line-height: 1.14;
+  letter-spacing: -0.035em;
+}
+.intro {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: clamp(30px, 6vw, 68px);
+  background:
+    linear-gradient(90deg, #103c31f2 0%, #103c31dc 48%, #103c3199 100%),
+    url("/brand/river-welcome.webp") 57% 46% / cover;
+  color: #f8fcf4;
+}
+.intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, #072b2780, transparent 34%);
+  pointer-events: none;
+}
+.intro > * {
+  position: relative;
+  z-index: 1;
+}
+.intro :global(.eyebrow) {
+  color: #c4dfa9;
+}
+.intro h1 {
+  font-size: clamp(32px, 5.2vw, 61px);
+  line-height: 1.02;
+  max-width: 15ch;
+  letter-spacing: -0.055em;
+  margin: 18px 0;
+}
+.intro > p {
+  max-width: 59ch;
+  color: #e4f0e5;
+  font-size: clamp(15px, 1.5vw, 17px);
+  line-height: 1.65;
+}
+.introFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 25px;
+}
+.introFacts span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid #ffffff45;
+  border-radius: 10px;
+  background: #082c2870;
+  color: #e2ece3;
+  font-size: 12px;
+}
+.introFacts strong {
+  color: #fff;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.introFoot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 20px;
+  margin-top: 28px;
+  padding-top: 17px;
+  border-top: 1px solid #ffffff42;
+  color: #d8e9d8;
+  font-size: 12px;
+}
+.context {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(220px, 1.2fr);
+  gap: 24px;
+  align-items: start;
+  border-top: 1px solid var(--line);
+  padding-top: 27px;
+}
+.context h2 {
+  max-width: 15ch;
+  margin: 8px 0 0;
+}
+.context p {
+  max-width: 74ch;
+  line-height: 1.8;
+  color: var(--muted);
+  font-size: 15px;
+}
+.territoryNote {
+  border-left: 3px solid var(--green);
+  padding: 4px 0 4px 22px;
+  max-width: 74ch;
+}
+.territoryNote p {
+  color: var(--muted);
+  line-height: 1.75;
+  margin: 10px 0;
+}
+.territoryNote a {
+  color: var(--green);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.territoryNote a svg {
+  vertical-align: middle;
+}
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: end;
+}
+.sectionHead h2 {
+  margin: 8px 0 0;
+}
+.sectionHead > p {
+  max-width: 34ch;
+  color: var(--muted);
+}
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 22px 0 29px;
+}
+.filters {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+}
+.filters button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  white-space: nowrap;
+  padding: 10px 15px;
+  min-height: 44px;
+}
+.filters button.selected {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--surface);
+}
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: min(250px, 100%);
+  min-height: 44px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+}
+.search input {
+  background: transparent;
+  color: var(--text);
+  outline: 0;
+  border: 0;
+  min-width: 0;
+  width: 100%;
+}
+.search:focus-within {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+  border-left: 1px solid var(--line);
+}
+.milestone {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: clamp(10px, 2vw, 32px);
+  margin: 0 0 15px;
+  padding: 0 0 13px 23px;
+}
+.timeMark {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 2px;
+}
+.milestone::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  position: absolute;
+  left: -23px;
+  top: 18px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 6px var(--bg);
+}
+.date {
+  color: var(--green);
+  font-size: 19px;
+  font-weight: 700;
+  padding-top: 13px;
+  letter-spacing: -0.03em;
+}
+.periodBadge {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.story {
+  padding: 21px 23px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: var(--surface);
+}
+@media (hover: hover) {
+  .story:hover {
+    border-color: var(--green);
+  }
+}
+.story h3 {
+  font-size: 17px;
+  line-height: 1.3;
+  margin: 0 0 8px;
+}
+.story p {
+  color: var(--muted);
+  line-height: 1.68;
+  margin: 0;
+}
+.story .qualification {
+  margin-top: 12px;
+  padding-left: 12px;
+  border-left: 2px solid var(--green);
+  font-size: 13px;
+}
+.sourceRow {
+  display: flex;
+  gap: 8px 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.sourceRow > span {
+  color: var(--muted);
+}
+.sourceRow a,
+.legalNote a {
+  color: var(--green);
+  font-weight: 700;
+}
+.sourceRow a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: var(--soft);
+  text-decoration: none;
+}
+.sourceRow a:hover,
+.sourceRow a:focus-visible {
+  border-color: var(--green);
+}
+.legalNote a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sourceRow a svg,
+.legalNote a svg {
+  vertical-align: middle;
+}
+.empty {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--muted);
+}
+.governance,
+.library {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.governance h2 {
+  max-width: 22ch;
+  margin: 8px 0 25px;
+}
+.governanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.governance article {
+  padding: 22px;
+  border-radius: 15px;
+  background: var(--soft);
+}
+.governance article > span {
+  color: var(--green);
+  font-weight: 700;
+  font-size: 12px;
+}
+.governance article h3 {
+  margin: 14px 0 8px;
+  font-size: 18px;
+}
+.governance article p,
+.legalNote,
+.libraryNote {
+  color: var(--muted);
+  line-height: 1.7;
+}
+.legalNote {
+  margin: 20px 0 0;
+  font-size: 13px;
+}
+.library .sectionHead {
+  align-items: center;
+}
+.library ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 25px 0;
+}
+.library li a {
+  min-height: 69px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  text-decoration: none;
+}
+.library li a:hover,
+.library li a:focus-visible {
+  border-color: var(--green);
+}
+.library li a > span {
+  display: grid;
+  gap: 3px;
+}
+.library li strong {
+  font-size: 13px;
+}
+.library li small {
+  color: var(--muted);
+}
+.libraryNote {
+  margin: 0;
+  font-size: 12px;
+}
+@media (max-width: 720px) {
+  .intro {
+    background-position: center, 68% 50%;
+  }
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .filters button {
+    white-space: normal;
+  }
+  .context {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .controls {
+    display: grid;
+  }
+  .search {
+    width: 100%;
+  }
+  .sectionHead {
+    display: block;
+  }
+  .sectionHead > p {
+    max-width: 65ch;
+    margin: 10px 0 0;
+  }
+  .milestone {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .timeMark {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 11px;
+  }
+  .date {
+    padding-top: 0;
+  }
+  .library ul {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 420px) {
+  .intro {
+    border-radius: 18px;
+    padding: 27px 21px;
+  }
+  .introFacts {
+    gap: 7px;
+  }
+  .introFacts span {
+    padding: 7px 9px;
+  }
+  .introFoot {
+    margin-top: 32px;
+  }
+  .governanceGrid {
+    grid-template-columns: 1fr;
+  }
+  .milestone {
+    padding-left: 17px;
+  }
+  .timeline {
+    padding-left: 14px;
+  }
+  .milestone::before {
+    left: -19px;
+  }
+  .story {
+    padding: 17px;
+  }
+}

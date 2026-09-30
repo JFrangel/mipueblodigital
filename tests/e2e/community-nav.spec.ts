@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test";
 
-test("comunidad conserva sus tres secciones al navegar y recargar", async ({
+test("comunidad conserva sus cuatro secciones al navegar y recargar", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 436, height: 698 });
   await page.goto("/comunidad/");
   const nav = page.getByRole("navigation", { name: "Secciones de comunidad" });
-  for (const name of ["Reportes", "Estadísticas", "Noticias"]) {
+  for (const name of ["Reportes", "Estadísticas", "Noticias", "El Consejo"]) {
     await nav.getByRole("link", { name, exact: true }).click();
-    await expect(nav.getByRole("link")).toHaveCount(3);
+    await expect(nav.getByRole("link")).toHaveCount(4);
     await expect(nav.getByRole("link", { name, exact: true })).toHaveAttribute(
       "aria-current",
       "page",

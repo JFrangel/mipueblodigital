@@ -58,6 +58,7 @@ function baseDeDatos() {
   return {
     doc: (path: string) => ({
       path,
+      get: async () => ({ data: () => state.existentes.get(path) }),
       set: async (data: unknown) => {
         state.escrito.push({ path, data });
       },
@@ -174,9 +175,9 @@ it("un cambio de estado le suena al vecino dueño del reporte", async () => {
    Avisar a cinco personas de lo que hizo la sexta es spam. */
 it("al Consejo no le suena lo que acaba de hacer uno de ellos", async () => {
   await cambiar();
-  expect(state.avisos.filter((a) => "consejo" in (a.destino as object))).toEqual(
-    [],
-  );
+  expect(
+    state.avisos.filter((a) => "consejo" in (a.destino as object)),
+  ).toEqual([]);
 });
 
 /* El aviso de la bandeja solo se escribe si algo cambió para el vecino. El

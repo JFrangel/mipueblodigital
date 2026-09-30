@@ -12,8 +12,8 @@ territorio; el Consejo lo recibe, lo gestiona y responde.
   cuenta, no del aparato.
 - **Bandeja del Consejo** con estado, prioridad, responsable, control de versión
   optimista y auditoría de cada actuación.
-- **Publicación comunitaria en dos niveles**: la ficha que consta sola pasadas
-  las horas de gracia, y el resumen que el Consejo redacta tras revisar.
+- **Publicación comunitaria revisada**: solo un resumen aprobado por el Consejo
+  puede aparecer, 24 horas después de su aprobación. El relato original queda privado.
 - **Retirada de un expediente con su motivo**, que le llega a quien reportó.
 - **Comunicados** con portada, imágenes y anclado.
 - **Mapa, estadísticas y calendario** sobre los reportes reales del territorio.
@@ -57,18 +57,21 @@ contra `.next`**: ejecutarlo sin compilar verifica la compilación anterior. La
 primera vez hace falta `npx playwright install chromium`. Ejecutar `build` y
 `dev` a la vez compite por `.next`.
 
-Estado: **425 pruebas unitarias** (51 archivos) y **60 de navegador**, con lint y
-typecheck limpios.
+El inventario verificable, resultados y límites se mantienen en
+[pruebas y rendimiento](docs/pruebas-y-rendimiento.md) y en el
+[catálogo de cada prueba](docs/catalogo-pruebas.md). La
+[guía por archivo](docs/guia-pruebas-por-archivo.md) explica la intención de cada suite.
 
 ## Desplegar
 
 Servidor Next.js, no exportación estática: las rutas protegidas y los detalles
 dinámicos lo necesitan. `npm run build` y `npm start`.
 
-El rol del Consejo es una reivindicación del token, no un campo de la base:
-escribirlo a mano en Firestore no hace administrador a nadie. El primero se
-concede con `node scripts/conceder-admin.mjs correo@ejemplo.com`; a partir de
-ahí, desde el propio Panel del Consejo.
+El rol del Consejo se verifica en servidor mediante la reivindicación del token
+o el campo `role: "admin"` de `accounts/{uid}`, que las reglas impiden modificar
+desde clientes. Se concede mediante `node scripts/conceder-admin.mjs
+correo@ejemplo.com` o desde el Panel del Consejo. Véase
+[seguridad y privacidad](docs/seguridad-y-privacidad.md).
 
 ## Documentación
 
@@ -85,6 +88,11 @@ ahí, desde el propio Panel del Consejo.
 | [21 historias y criterios originales](docs/specs/criterios-originales.md) | Sustentación                                     |
 | [Límites de operación y defensa](docs/specs/limites-operacion-defensa.md) | Sustentación                                     |
 | [Conexiones y credenciales](docs/conexiones-2026-09-08.md)                | Quien opera el servidor                          |
+| [Memoria documentada del Consejo](docs/investigacion-consejo-rio-satinga.md) | Consejo, comunidad e investigadores             |
+| [Pruebas y rendimiento](docs/pruebas-y-rendimiento.md)                    | Quien valida y opera la app                      |
+| [Catálogo de pruebas](docs/catalogo-pruebas.md)                           | Quien revisa cada caso automatizado              |
+| [Guía de pruebas por archivo](docs/guia-pruebas-por-archivo.md)           | Quien necesita entender el alcance de cada suite |
+| [Seguridad y privacidad](docs/seguridad-y-privacidad.md)                  | Consejo, operador y responsable de datos         |
 
 La guía `/documentacion/`, dentro de la aplicación, explica entradas, procesos,
 salidas y variantes en el lenguaje del territorio.

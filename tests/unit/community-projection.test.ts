@@ -75,20 +75,11 @@ const pedir = () =>
     }),
   );
 
-it("pasado el plazo consta el reporte tal como lo escribieron", async () => {
+it("el relato original nunca se publica automáticamente", async () => {
   state.incidentes = [expediente()];
   state.publicos = [undefined];
   const { items } = await (await pedir()).json();
-  expect(items[0]).toEqual({
-    id: "uno",
-    scope: "automatico",
-    title: "Creciente en la quebrada",
-    summary: "El río se desbordó y se llevó el paso de tablas.",
-    category: "infraestructura",
-    vereda: "Bellavista",
-    status: "en_proceso",
-    date: viejo,
-  });
+  expect(items).toHaveLength(0);
 });
 
 it("nunca salen el teléfono, el dueño ni la evidencia", async () => {
@@ -111,7 +102,7 @@ it("lo marcado como delicado no consta de ninguna manera", async () => {
 });
 
 it("el resumen del Consejo reemplaza al automático", async () => {
-  state.incidentes = [expediente()];
+  state.incidentes = [expediente({ sensitivity: "safe" })];
   state.publicos = [
     {
       published: true,
@@ -121,6 +112,7 @@ it("el resumen del Consejo reemplaza al automático", async () => {
       category: "infraestructura",
       status: "en_proceso",
       createdAt: viejo,
+      publishedAt: viejo,
     },
   ];
   const { items } = await (await pedir()).json();
@@ -130,17 +122,10 @@ it("el resumen del Consejo reemplaza al automático", async () => {
   );
 });
 
-/**
- * El resumen revisado no espera plazo.
- *
- * La consulta recortaba por fecha antes de mirar nada más, así que un caso que
- * el Consejo acababa de revisar y publicar no constaba ante la comunidad hasta
- * que pasaban las horas de gracia. El plazo protege lo que consta **sin que
- * nadie lo mire**; una revisión es exactamente lo contrario.
- */
+/** La espera comienza al aprobar el resumen, no al recibir el reporte. */
 const reciente = new Date(Date.now() - 3600000).toISOString();
 
-it("un caso revisado hoy consta hoy, sin esperar el plazo", async () => {
+it("un caso revisado hoy espera 24 horas", async () => {
   state.incidentes = [expediente({ date: reciente })];
   state.publicos = [
     {
@@ -151,11 +136,11 @@ it("un caso revisado hoy consta hoy, sin esperar el plazo", async () => {
       category: "infraestructura",
       status: "en_proceso",
       createdAt: reciente,
+      publishedAt: reciente,
     },
   ];
   const { items } = await (await pedir()).json();
-  expect(items).toHaveLength(1);
-  expect(items[0].scope).toBe("revisado");
+  expect(items).toHaveLength(0);
 });
 
 it("sin revisar, lo recién llegado sigue esperando su plazo", async () => {
@@ -176,6 +161,7 @@ it("marcarlo como delicado lo retira aunque ya tuviera resumen publicado", async
       category: "infraestructura",
       status: "en_proceso",
       createdAt: viejo,
+      publishedAt: viejo,
     },
   ];
   const { items } = await (await pedir()).json();
@@ -190,7 +176,9 @@ it("marcarlo como delicado lo retira aunque ya tuviera resumen publicado", async
  * cerraba el caso y nadie fuera se enteraba.
  */
 it("un caso resuelto después de publicarse se lee resuelto", async () => {
-  state.incidentes = [expediente({ status: "solucionado" })];
+  state.incidentes = [
+    expediente({ status: "solucionado", sensitivity: "safe" }),
+  ];
   state.publicos = [
     {
       published: true,
@@ -201,6 +189,7 @@ it("un caso resuelto después de publicarse se lee resuelto", async () => {
       /* Lo que había cuando se redactó el resumen. */
       status: "en_proceso",
       createdAt: viejo,
+      publishedAt: viejo,
     },
   ];
   const { items } = await (await pedir()).json();
@@ -241,7 +230,14 @@ it("deja constar todos los finales, incluido el descartado", async () => {
       sharedView(
         "c1",
         { ...base, status },
-        undefined,
+        {
+          published: true,
+          publishedAt: "2020-01-01T00:00:00.000Z",
+          title: "Resumen revisado",
+          summary: "Síntesis del Consejo",
+          category: "infraestructura",
+          vereda: "Bellavista",
+        },
         Date.parse(base.date) + 1e9,
         24,
       ),

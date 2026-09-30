@@ -633,8 +633,8 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                        dice con el botón al lado. Decirlo dos veces empuja fuera
                        de la pantalla justo lo que hay que pulsar. */
                     <p>
-                      Con tu ubicación y la de otros reportes, tu vereda entra al
-                      mapa con su nombre.
+                      Con tu ubicación y la de otros reportes, tu vereda entra
+                      al mapa con su nombre.
                     </p>
                   )
                 ) : (
@@ -817,9 +817,9 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 <small>
                   Por ejemplo, lesiones, menores o personas identificables. Si
                   lo marcas, el reporte no aparece en el historial de la
-                  comunidad. Si no, a las 24 horas constará allí con su
-                  categoría, vereda, estado y fecha —nunca tu relato, tu
-                  contacto ni la fotografía, que solo ve el Consejo—.
+                  comunidad. Si no, el Consejo debe revisarlo, declarar seguro
+                  un resumen y esperar 24 horas para compartirlo. Tu relato,
+                  contacto y fotografía permanecen privados.
                 </small>
               </label>
             </>

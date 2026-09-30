@@ -6,7 +6,9 @@ test("abrir un comunicado lleva a su pantalla de lectura con enlace propio", asy
 }) => {
   await page.goto("/comunidad/");
   // El feed se llena desde el servidor: hay que esperar a que responda.
-  await expect(page.getByText("Cargando comunicados…")).toHaveCount(0);
+  await expect(page.getByText("Cargando comunicados…")).toHaveCount(0, {
+    timeout: 20000,
+  });
   const cards = page.locator(".news-card");
   await expect(cards.first()).toBeVisible();
 

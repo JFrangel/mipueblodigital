@@ -147,16 +147,15 @@ it("a quien lo reportó no, que no gestiona nada", async () => {
 
 /* El caso que trajo todo esto: se abre un reporte de otra persona desde el
    mapa o desde el historial. Consta, pero solo hasta donde consta. */
-it("a otra persona se le sirve lo que la comunidad ve, y nada más", async () => {
+it("a otra persona no se le sirve un reporte aún no revisado", async () => {
   state.quien = "ana";
   state.consejo = false;
   state.incidente = expediente();
   state.publico = undefined;
   state.acta = undefined;
   const respuesta = await pedir();
-  expect(respuesta.status).toBe(200);
+  expect(respuesta.status).toBe(404);
   const cuerpo = await respuesta.text();
-  expect(JSON.parse(cuerpo).item.scope).toBe("automatico");
   for (const secreto of [
     "3001234567",
     "uid-de-quien-reporto",
@@ -168,7 +167,7 @@ it("a otra persona se le sirve lo que la comunidad ve, y nada más", async () =>
 it("el resumen del Consejo reemplaza al automático también aquí", async () => {
   state.quien = "ana";
   state.consejo = false;
-  state.incidente = expediente({ status: "solucionado" });
+  state.incidente = expediente({ status: "solucionado", sensitivity: "safe" });
   state.publico = {
     published: true,
     title: "Paso de tablas en Bellavista",
@@ -176,6 +175,7 @@ it("el resumen del Consejo reemplaza al automático también aquí", async () =>
     vereda: "Bellavista",
     category: "infraestructura",
     createdAt: viejo,
+    publishedAt: viejo,
   };
   const { item } = await (await pedir()).json();
   expect(item.scope).toBe("revisado");

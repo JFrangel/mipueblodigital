@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:perf": "node scripts/medir-rendimiento.mjs",
     "test:e2e": "npm run build && playwright test",
     "seed:noticias": "node scripts/sembrar-noticias.mjs",
     "cap:sync": "cap sync android && node scripts/pagina-sin-red.mjs",

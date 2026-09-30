@@ -81,6 +81,7 @@ import { CuentaRestablecida } from "@/features/cuenta-restablecida";
 import { refrescarSituadas } from "@/data/territorio-vivo";
 import { Account } from "@/features/account";
 import { CommunityFeed } from "@/features/community-feed";
+import { CouncilMemory } from "@/features/council-memory";
 import { NewsDetail } from "@/features/news-detail";
 import { TerritoryPulse } from "./territory-pulse";
 import { useSession } from "@/data/session";
@@ -640,9 +641,9 @@ export function Workspace({
               )}
             </section>
           )}
-          {["comunidad", "historial", "estadisticas"].includes(section) && (
-            <CommunityNav section={section} />
-          )}
+          {["comunidad", "historial", "estadisticas", "memoria"].includes(
+            section,
+          ) && <CommunityNav section={section} />}
           {storageError && (
             <p className="errors" role="alert">
               {storageError}
@@ -792,6 +793,7 @@ export function Workspace({
           {section === "documentacion" && <Knowledge />}
           {section === "reportar" && <Report onSave={save} />}
           {section === "comunidad" && <CommunityFeed />}
+          {section === "memoria" && <CouncilMemory />}
           {section === "noticia" && newsId && <NewsDetail id={newsId} />}
           {section === "cuenta" && <Account dark={dark} onTheme={theme} />}
         </main>
@@ -818,7 +820,7 @@ export function Workspace({
         ].map(({ id, label, Icon }) => (
           <Link
             key={id}
-            className={`${section === id || (id === "comunidad" && ["historial", "estadisticas"].includes(section)) ? "active" : ""} ${id === "reportar" ? "add" : ""}`}
+            className={`${section === id || (id === "comunidad" && ["historial", "estadisticas", "memoria"].includes(section)) ? "active" : ""} ${id === "reportar" ? "add" : ""}`}
             href={`/${id}/`}
           >
             <Icon size={22} />
@@ -1302,16 +1304,12 @@ function CaseBrowser({
           )}
         </div>
       </div>
-      {/* Por qué consta aquí el reporte de otra persona. Sin decirlo, la lista
-          parece completa y no lo es: falta lo que alguien marcó como delicado y
-          lo que todavía está dentro de sus horas de gracia. Lo contaba una
-          tarjeta aparte, encima de esta misma lista repetida. */}
+      {/* La lista pública contiene solo resúmenes revisados después del plazo. */}
       {!mine && (
         <p className="list-source">
-          Un reporte que nadie marcó como delicado consta ante la comunidad
-          pasadas sus horas de gracia, tal como lo escribió quien reportó. Si el
-          Consejo lo revisa, lo reemplaza por un resumen suyo. La fotografía y
-          el contacto no salen nunca de aquí.
+          Aquí aparecen los resúmenes revisados por el Consejo 24 horas después
+          de su aprobación. Tu relato original, la fotografía y el contacto no
+          se comparten.
         </p>
       )}
       {notice && (

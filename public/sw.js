@@ -23,7 +23,7 @@ const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/br
    caía en la página de respaldo aunque la aplicación pudiera dibujarlas. Van
    aparte y una por una porque addAll es todo o nada: que falte el mapa no debe
    dejar sin instalar el formulario de reportes. */
-const EXTRA = ["/mapa/", "/comunidad/", "/historial/", "/estadisticas/", "/cuenta/", "/documentacion/"];
+const EXTRA = ["/mapa/", "/comunidad/", "/historial/", "/estadisticas/", "/memoria/", "/cuenta/", "/documentacion/"];
 async function fill(cache, routes) {
   await Promise.all(routes.map(async route => {
     try { await cache.add(route); } catch { /* Se intentará de nuevo en la próxima visita con red. */ }

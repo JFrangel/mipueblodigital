@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises";
 import {
   initializeTestEnvironment,
   assertFails,
-  assertSucceeds,
 } from "@firebase/rules-unit-testing";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 const env = await initializeTestEnvironment({
@@ -57,7 +56,10 @@ try {
     setDoc(doc(admin, "incidents/one"), { status: "solucionado" }),
   );
   await assertFails(getDoc(doc(anon, "publicIncidents/one")));
-  await assertSucceeds(getDoc(doc(alice, "publicIncidents/one")));
+  // Solo la API aplica clasificación sensible y embargo de 24 horas; ningún
+  // cliente SDK puede saltarse esos controles, aunque el documento diga published.
+  await assertFails(getDoc(doc(alice, "publicIncidents/one")));
+  await assertFails(getDoc(doc(admin, "publicIncidents/one")));
   await assertFails(getDoc(doc(alice, "publicIncidents/leaked")));
   await assertFails(getDoc(doc(alice, "incidentIntake/secret")));
   await assertFails(getDoc(doc(alice, "councilNotifications/secret")));
@@ -77,7 +79,7 @@ try {
     setDoc(doc(alice, "pushTokens/alice/devices/tok-1"), { platform: "web" }),
   );
   console.log(
-    "PASS: aislamiento por autor, administrador activo, cuenta desactivada, proyección pública, aparatos de avisos y rechazo a escrituras directas.",
+    "PASS: aislamiento por autor, administrador activo, cuenta desactivada, resumen público solo vía API, aparatos de avisos y rechazo a escrituras directas.",
   );
 } finally {
   await env.cleanup();

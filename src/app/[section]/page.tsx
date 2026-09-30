@@ -22,6 +22,7 @@ const sections = [
   "documentacion",
   "cuenta",
   "historial",
+  "memoria",
 ] as const;
 
 export function generateStaticParams() {

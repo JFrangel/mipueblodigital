@@ -152,11 +152,12 @@ export async function PATCH(
       /* El responsable igual: `text.assignee` es cadena vacía cuando no viene,
          y guardarla sin más borraría a quien tuviera el caso asignado. */
       const assignee =
-        input.assignee !== undefined ? text.assignee : String(old.assignee ?? "");
+        input.assignee !== undefined
+          ? text.assignee
+          : String(old.assignee ?? "");
       if (publication === "public") {
-        /* El resumen revisado no espera plazo: lo escribió una persona del
-           Consejo que antes leyó el caso. El plazo protege lo que consta sin
-           que nadie lo mire, y esto no es eso. */
+        /* El resumen revisado se almacena ahora; la API comunitaria espera
+           24 horas desde `publishedAt` antes de mostrarlo. */
         if (!publicationReady(sensitivity))
           throw new ApiError(
             409,

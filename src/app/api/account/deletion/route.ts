@@ -16,7 +16,10 @@ export async function POST(request: Request) {
   try {
     const { identity, db } = await requireIdentity(request);
     const uid = identity.uid;
-    if (identity.admin === true)
+    if (
+      identity.admin === true ||
+      (await db.doc(`accounts/${uid}`).get()).data()?.role === "admin"
+    )
       throw new ApiError(
         403,
         "Las cuentas del Consejo se retiran con el procedimiento administrativo documentado.",

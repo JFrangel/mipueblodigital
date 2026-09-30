@@ -3,9 +3,13 @@ import { readJson } from "@/server/request-body";
 import { nameOf, namesOf } from "@/server/people";
 export async function GET(request: Request) {
   try {
-    const { uid, db, identity } = await requireMember(request);
+    const { uid, db, identity, account } = await requireMember(request);
     const scope = new URL(request.url).searchParams.get("scope");
-    if (scope === "council" && identity.admin !== true)
+    if (
+      scope === "council" &&
+      identity.admin !== true &&
+      account?.role !== "admin"
+    )
       throw new ApiError(403, "Solo el Consejo puede acceder a esta bandeja.");
     const docs = (
       await db

@@ -19,8 +19,8 @@ export const runtime = "nodejs";
  *   su título y su relato. Es la misma ficha que sirve el listado propio; la
  *   fotografía no va aquí, se pide por su ruta y solo cuando alguien la abre.
  * - **Cualquier otro miembro de la comunidad** recibe, si acaso, lo que la
- *   comunidad ve de ese reporte, que lo decide `sharedView`: el resumen que
- *   revisó el Consejo, o la ficha automática pasadas las horas de gracia.
+ *   comunidad ve de ese reporte, que lo decide `sharedView`: únicamente el
+ *   resumen revisado y aprobado por el Consejo después de 24 horas.
  *
  * Y si no le toca ninguna de las dos, «no encontrado», sin distinguir entre lo
  * que no existe y lo que no es para esta cuenta: decir cuál de las dos es ya
@@ -31,8 +31,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { uid, db, identity } = await requireMember(request),
+    const { uid, db, identity, account } = await requireMember(request),
       { id } = await params;
+    const council = identity.admin === true || account?.role === "admin";
     if (!/^[0-9a-f]{64}$/.test(id))
       throw new ApiError(404, "Reporte no encontrado.");
     const d = (await db.doc(`incidents/${id}`).get()).data();
@@ -50,7 +51,7 @@ export async function GET(
      */
     if (!d) {
       const acta = (await db.doc(`removedIncidents/${id}`).get()).data();
-      if (acta && (acta.owner === uid || identity.admin === true))
+      if (acta && (acta.owner === uid || council))
         return Response.json(
           {
             removed: {
@@ -65,7 +66,7 @@ export async function GET(
         );
       throw new ApiError(404, "Reporte no encontrado.");
     }
-    if (d.owner === uid || identity.admin === true)
+    if (d.owner === uid || council)
       return Response.json(
         {
           item: {
@@ -101,7 +102,7 @@ export async function GET(
            * porque cambiar de estado un caso publicado se ve en la comunidad, y
            * quien lo cambia tiene derecho a saberlo antes.
            */
-          ...(identity.admin === true
+          ...(council
             ? {
                 gestion: {
                   version: Number(d.version ?? 0),

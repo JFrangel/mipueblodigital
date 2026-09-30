@@ -5,7 +5,6 @@ import { useSession } from "@/data/session";
 import { statuses, categories, shortDate } from "@/data/catalog";
 import { veredaNames } from "@/domain/territory";
 import { priorities, DEFAULT_PRIORITY } from "@/domain/priority";
-import { autoPublicationReady } from "@/domain/publication";
 import { relativeTime } from "@/domain/relative-time";
 import { toast } from "@/data/toasts";
 import Link from "next/link";
@@ -72,12 +71,9 @@ function firstWords(text: string, limit: number) {
 function visibility(item: Incident, delay: number) {
   if (item.sensitivity === "sensitive")
     return "No consta: marcado como delicado";
-  if (item.publication === "published") return "Ve el resumen del Consejo";
-  if (!item.date) return "Sin fecha de recepción";
-  if (autoPublicationReady(item.date, item.sensitivity, Date.now(), delay))
-    return "Consta con lo que escribió quien reportó";
-  const opens = new Date(Date.parse(item.date) + delay * 3600000);
-  return `Constará el ${shortDate(opens.toISOString())}`;
+  if (item.publication === "public")
+    return `Resumen aprobado: visible ${delay} horas después de su aprobación`;
+  return "Privado: pendiente de revisión y resumen público";
 }
 /**
  * Lo que impide compartir el resumen, si algo lo impide.

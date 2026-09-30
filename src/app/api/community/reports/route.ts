@@ -3,30 +3,13 @@ import { publicationDelayHours } from "@/domain/publication";
 import { sharedView, type Shared } from "@/server/community-view";
 
 /**
- * Lo que la comunidad ve de los reportes de los demás, en dos niveles.
- *
- * **Automático.** Pasadas las horas de gracia, un reporte que nadie marcó como
- * delicado consta ante la comunidad **como lo escribió quien reportó**: su
- * título y su relato, con la categoría, la vereda, el estado y la fecha. El
- * plazo es solo de este nivel.
- *
- * Llevaba solo los cuatro datos, sin una palabra de nadie, y el Consejo decidió
- * abrirlo: un reporte que nadie reservó es de la comunidad, y saber que existe
- * un caso sin poder saber de qué trata no sirve de mucho. Lo que se paga por
- * ello: ese texto no lo ha leído nadie antes de publicarse, así que puede
- * nombrar a alguien o contar de más. La marca de sensible sigue siendo el
- * freno, y el Consejo puede ponerla en cualquier momento.
- *
- * **Resumen revisado.** Cuando el Consejo lo estudia, lo declara seguro y
- * redacta un título, un resumen y una vereda públicos, esa versión reemplaza a
- * la automática y **no espera plazo alguno**: el plazo protege lo que consta
- * sin que nadie lo mire, y una revisión es exactamente lo contrario. Es texto
- * que respondió el Consejo, no quien reportó.
+ * La comunidad solo ve resúmenes redactados y aprobados por el Consejo después
+ * de 24 horas. El relato original nunca se publica automáticamente.
  *
  * Marcarlo como sensible —lo puede hacer quien reporta al enviarlo, y el
- * Consejo en cualquier momento— lo saca de las dos.
+ * Consejo en cualquier momento— lo retira.
  *
- * **La fotografía no entra en ninguna.** Es evidencia: la ven quien reportó y
+ * **La fotografía no entra.** Es evidencia: la ven quien reportó y
  * el Consejo, por una ruta que comprueba quién pide.
  *
  * La proyección se arma campo a campo, nunca esparciendo el documento: aquí un
@@ -40,17 +23,7 @@ export async function GET(request: Request) {
       throw new ApiError(400, "Página inválida.");
     const delay = publicationDelayHours(process.env.PUBLIC_REPORT_DELAY_HOURS);
     const now = Date.now();
-    /**
-     * La consulta ya no recorta por fecha.
-     *
-     * Lo hacía, y con eso escondía los resúmenes que el Consejo acababa de
-     * revisar: un caso publicado a mano no aparecía ante la comunidad hasta
-     * que pasaban las horas de gracia, aunque una persona ya lo hubiera
-     * leído y declarado seguro. El plazo protege lo que consta **sin que
-     * nadie lo mire**; una revisión es exactamente lo contrario.
-     *
-     * Así que el plazo se aplica abajo, y solo al nivel automático.
-     */
+    // El plazo se aplica en sharedView a la fecha de aprobación del resumen.
     let query = db.collection("incidents").orderBy("date", "desc").limit(26);
     if (cursor) query = query.startAfter(cursor);
     const docs = (await query.get()).docs;

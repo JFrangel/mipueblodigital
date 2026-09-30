@@ -36,7 +36,9 @@ service cloud.firestore {
       allow write: if false;
     }
     match /publicIncidents/{id} {
-      allow get, list: if active() && resource.data.published == true && resource.data.keys().hasOnly(['published','title','summary','category','vereda','status','createdAt','publishedAt']);
+      // The API applies the 24-hour embargo and sensitivity check against the
+      // live private case. Direct SDK reads could bypass both checks.
+      allow get, list: if false;
       allow write: if false;
     }
     // Los aparatos que reciben avisos. Se escriben solo desde /api/push/,

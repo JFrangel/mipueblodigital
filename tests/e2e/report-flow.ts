@@ -33,8 +33,15 @@ export async function chooseCategory(page: Page) {
 /** Deja el formulario abierto en «Ubicación», con la categoría ya elegida. */
 export async function openLocation(page: Page) {
   await page.goto("/reportar/");
-  await chooseCategory(page);
-  await advance(page, /¿Dónde está ocurriendo\?/);
+  await expect(async () => {
+    // La hidratación puede reemplazar la selección inicial después del clic.
+    // Elegir de nuevo en cada intento evita avanzar con la categoría vacía.
+    await chooseCategory(page);
+    await page.getByRole("button", { name: "Continuar", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: /¿Dónde está ocurriendo\?/ }),
+    ).toBeVisible({ timeout: 2000 });
+  }).toPass({ timeout: 30000 });
 }
 
 /** Deja el formulario abierto en «Detalles», con tipo y vereda elegidos. */

@@ -92,14 +92,14 @@ test("el formulario ofrece el catálogo territorial documentado y advierte su es
   await expect(page.getByText("Vuelta Larga")).toHaveCount(0);
 });
 
-test("la cabecera lleva identidad y estado de red en el teléfono, no en escritorio", async ({
+test("la cabecera lleva identidad y reserva el estado de red para cuando falta señal", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto("/inicio/");
   const bar = page.locator("header.topbar");
   await expect(bar.getByText("Mi Pueblo")).toBeVisible();
-  await expect(bar.getByText("En línea")).toBeVisible();
+  await expect(bar.getByText("En línea")).toBeHidden();
   // El territorio salió de la barra —le quitaba ancho a la marca— y lo nombra
   // el saludo, con el nombre completo del Consejo.
   await expect(bar.getByText("Río Satinga", { exact: false })).toHaveCount(0);

@@ -711,7 +711,7 @@ hr {
    */
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
+  overscroll-behavior: none;
 }
 /* Todo lo que se lee va por delante del dibujo. */
 .sidebar > *:not([aria-hidden="true"]) {
@@ -3779,7 +3779,7 @@ textarea {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: none;
   }
   .sidebar-report {
     margin-top: 12px;

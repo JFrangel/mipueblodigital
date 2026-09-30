@@ -1,15 +1,24 @@
-# Evidencias originales en Base64
+# Evidencias fotográficas y Base64
 
-La captura conserva el archivo original mediante FileReader.readAsDataURL. Se valida que la imagen sea legible, pero no se dibuja en canvas ni se recomprime. El tipo, resolución, contenido y metadatos originales se conservan. Las imágenes anteriormente comprimidas no recuperan su calidad: requieren volver a adjuntar el original.
+Estado verificado en el código el 29 de septiembre de 2026. Base64 es una codificación reversible, **no cifrado**. Véase [seguridad y privacidad](seguridad-y-privacidad.md) para permisos y riesgos.
 
-Límites actuales de captura: JPG/PNG/WebP, 10 MiB de archivo y 24 megapíxeles. Los límites provocan un mensaje explícito, nunca una compresión silenciosa. El Base64 añade aproximadamente un tercio al tamaño original; no es cifrado.
+## Entrada y validación
 
-La prueba E2E compara SHA-256 de los bytes originales con los decodificados desde Base64, tanto en la previsualización como después de guardar y recargar IndexedDB. Las ilustraciones de interfaz permanecen como recursos WebP, independientes de las evidencias.
+El cliente envía la imagen como `data:image/...;base64,...`. `validateOriginal` en `src/server/evidence.ts` admite JPEG, PNG y WebP de hasta 10 MiB y 24 megapíxeles. Comprueba la sintaxis Base64, el tamaño, formato declarado y que Sharp pueda decodificar **todos** los píxeles. Un hash SHA-256 identifica los bytes recibidos antes de archivar, pero no los cifra.
 
-## Base de datos remota
+## Lo que realmente se persiste
 
-Firestore Standard admite [1 MiB por documento](https://firebase.google.com/docs/firestore/quotas). Un original de 10 MiB convertido a Base64 ocupa aproximadamente 13,33 MiB, por lo que no puede colocarse en un campo del documento de incidencia. Aún no se han enviado imágenes a una base remota.
+`POST /api/incidents` **recodifica** el archivo a WebP, lo rota y limita a 2200 px con calidades descendentes. Esa versión de mayor fidelidad se guarda en una tabla privada Supabase `mpd_evidence_originals`, como texto Base64, y se comprueba allí su hash SHA-256 antes de emitir recibo del caso en Firestore. Por tanto, el nombre heredado “originals” identifica la tabla, **no implica conservar el archivo exacto que llegó del teléfono**. El archivo inicial puede perder metadatos y detalles por recodificación.
 
-El requisito aprobado es persistir el Base64 literalmente en una base de datos. Esto reemplaza el almacenamiento de archivos previsto por una tabla privada de evidencias separada, con metadatos/referencias en Firestore. Quedan por implementar la tabla con capacidad adecuada, la autorización mediante identidad verificada, la descarga bajo demanda y la comprobación de integridad del lado servidor. No dividir la imagen en documentos públicos ni ampliar permisos para sortear límites. La conexión remota sigue pendiente; IndexedDB no equivale a una entrega al Consejo.
+Una copia de respaldo de hasta 1600 px se prepara después del recibo y se guarda de forma asíncrona en `incidentEvidence/{id}` de Firestore. Si falla esta operación no se revoca el acuse: el archivo de Supabase ya fue verificado. Un documento Firestore tiene límite de 1 MiB; por eso no se incluye el Base64 de la foto en el expediente ni en listados.
 
-Conservar el original también conserva EXIF. El original debe mantenerse privado; cualquier versión pública debe pasar por una política explícita de metadatos. No se debe adjuntar la imagen Base64 a las consultas de listados o estadísticas.
+`GET /api/incidents/{id}/evidence` comprueba identidad, dueño o rol del Consejo. `?vista=copia` prefiere el respaldo liviano; de lo contrario intenta el archivo de mayor fidelidad y usa respaldo si ese servicio no responde. La cabecera `X-Evidencia` indica cuál se sirvió, aunque el valor heredado `original` se refiere al WebP archivado, no a los bytes capturados. La respuesta es privada y no se almacena en caché. Las fotografías jamás forman parte del resumen comunitario.
+
+## Comprobaciones que importan
+
+- Formato y decodificación completa: `tests/unit/evidence.test.ts` y `tests/unit/incident-api.test.ts`.
+- Reintento idempotente: el mismo `requestId` no crea otro expediente; si cambia el contenido reservado, responde conflicto.
+- Falla del archivo privado: no se emite un recibo falso; la bandeja local conserva el envío para reintento.
+- Acceso a fotografía de otra persona y contenido sensible: verificar con cuentas reales y emulador además de dobles unitarios.
+
+La retención, peritaje de una copia recodificada y preservación exacta de una evidencia futura son decisiones institucionales pendientes. Si un proceso exige cadena de custodia de los bytes originales, esta implementación no la acredita.
