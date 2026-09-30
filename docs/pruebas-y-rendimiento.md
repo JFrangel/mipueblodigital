@@ -57,17 +57,8 @@ npm run test:perf
 
 Propuesta de aceptación para un piloto, **no resultado medido**: en teléfonos de gama media y red acordada con el Consejo, p75 LCP < 2,5 s, p75 INP < 200 ms, p75 CLS < 0,1; sin conexión, respuesta de guardado en cola < 2 s para foto típica; con 300 marcadores en una zona, interacción fluida y sin duplicar expedientes. Son objetivos a validar con medición real, no certificación Lighthouse ni garantía en el territorio. Instrumentar además tasa de envío confirmado, tiempo cola→recibo, errores por tipo y consumo de datos, siempre sin registrar relatos o fotos en telemetría.
 
-## 3. Pruebas operativas que siguen pendientes
 
-1. **Firestore y datos reales aislados:** ejecutar reglas en emulador; luego entorno de prueba separado con cuentas ciudadana, ajena, desactivada y Consejo. Comprobar 401/403/404, fotografía, notificaciones, 24 horas de embargo y revocación de rol.
-2. **Respaldo y restauración:** exportar, restaurar en entorno aislado, cotejar expedientes, fotos, eventos y permisos; registrar RPO/RTO efectivos. Una copia creada sin restauración probada no es garantía.
-3. **Carga y resistencia:** simular volumen de casos y 300 puntos coincidentes sin usuarios reales, comparar latencias p50/p95/p99, consumo Firestore y memoria de mapa. No ejecutar una carga contra el proyecto comunitario activo.
-4. **Dispositivo y territorio:** APK firmado y Android de distintas versiones; cámara/micrófono, permisos, cierre forzado, reconexión, batería, datos móviles, almacenamiento casi lleno; 5–8 habitantes y 2 miembros del Consejo con observación, SUS y registro de incidentes de usabilidad.
-5. **Accesibilidad:** navegación de teclado, lector de pantalla, contraste medido en ambos temas, zoom 200–400 %, reducido movimiento, tamaños táctiles y lectura comprensible en el contexto local.
-
-Estas actividades requieren responsable, entorno, acta de ejecución, versión exacta, resultado, evidencia sin PII y resolución de defectos. No se presentan como pruebas ya superadas.
-
-## 4. Registro de esta revisión
+## 3. Registro de esta revisión
 
 La ejecución final después de la segunda ampliación de contenido del Consejo obtuvo:
 
