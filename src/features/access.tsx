@@ -35,6 +35,7 @@ import {
   cerrarSesion,
   entrarConGoogleNativo,
   esNativo,
+  entrarCorreoNativo,
 } from "@/platform/native";
 import { GoogleMark } from "@/components/google-mark";
 import { Logo } from "@/components/ui";
@@ -116,6 +117,10 @@ export function Access() {
           email.trim(),
           password,
         );
+        const backgroundReady = await entrarCorreoNativo(
+          email.trim(),
+          password,
+        );
         setPassword("");
         setConfirmation("");
         try {
@@ -129,12 +134,22 @@ export function Access() {
             "Tu cuenta se creó y ya puedes reportar. No se pudo enviar el correo de verificación; puedes pedirlo más tarde desde Mi cuenta.",
           );
         }
-      } else
+        if (!backgroundReady)
+          setMessage(
+            (current) =>
+              `${current} El envío con la app cerrada no está listo: vuelve a entrar con conexión para activarlo.`,
+          );
+      } else {
         await signInWithEmailAndPassword(
           firebaseClient().auth,
           email.trim(),
           password,
         );
+        if (!(await entrarCorreoNativo(email.trim(), password)))
+          setMessage(
+            "Entraste, pero la sincronización con la app cerrada no está lista. Los envíos se reintentarán al abrirla.",
+          );
+      }
       setPassword("");
     } catch (error) {
       setError(authError(error));

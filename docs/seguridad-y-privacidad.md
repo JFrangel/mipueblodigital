@@ -1,6 +1,6 @@
 # Seguridad y privacidad: estado verificable
 
-Revisión del código local: 29 de septiembre de 2026. Este documento describe mecanismos implementados y límites; no certifica una auditoría externa ni la configuración vigente de las consolas de Firebase, Supabase o del alojamiento. Para controles legales y manejo de datos personales, el Consejo debe aprobar una política de tratamiento y designar responsables.
+Revisión del código local: 2 de octubre de 2026. Este documento describe mecanismos implementados y límites; no certifica una auditoría externa ni la configuración vigente de las consolas de Firebase, Supabase o del alojamiento. Para controles legales y manejo de datos personales, el Consejo debe aprobar una política de tratamiento y designar responsables.
 
 ## 1. Qué datos existen y por dónde pasan
 
@@ -9,7 +9,7 @@ Revisión del código local: 29 de septiembre de 2026. Este documento describe m
 | Identidad, correo y sesión | Firebase Authentication | Firebase Auth; `accounts/{uid}` en Firestore | Cuenta propia y servidor; el rol lo comprueba la API |
 | Reporte, contacto, vereda, punto exacto y notas | `POST /api/incidents` | `incidents/{id}` y eventos en Firestore | Dueño y Consejo; otros miembros reciben solo resumen público aprobado |
 | Fotografía de evidencia | Imagen JPG/PNG/WebP en Base64 | Tabla privada `mpd_evidence_originals` de Supabase, como WebP recodificado; copia menor en `incidentEvidence/{id}` | Ruta `/api/incidents/{id}/evidence`, con identidad y propiedad/rol comprobados |
-| Borradores y envíos sin señal | Formulario | IndexedDB del **dispositivo** (`local-store`, `mi-pueblo-outbox`) | Quien tenga acceso al perfil del navegador o al teléfono podría inspeccionarlos |
+| Borradores y envíos sin señal | Formulario | IndexedDB del **dispositivo** (`local-store`, `mi-pueblo-outbox`); en APK, copia de la cola en `noBackupFilesDir` para WorkManager | Quien tenga acceso al perfil del navegador o al teléfono podría inspeccionarlos |
 | Avisos y tokens push | Dispositivo | Firestore, colecciones de notificaciones y tokens | API autenticada; los avisos del sistema muestran títulos breves, no relatos |
 | Texto para asistencia IA | Petición optativa | OpenRouter recibe solo lo que envía la función elegida | Estadísticas: agregados y hasta 20 notas **públicas** de cierres, sin relatos ni notas internas; revisar otros flujos por separado |
 | Memoria histórica | Fuentes públicas citadas | Código versionado en `src/content/council-history.ts` y caché PWA | Pública; no contiene actas privadas ni padrón |
@@ -42,7 +42,7 @@ La recodificación suele descartar metadatos EXIF, pero no se ha auditado cada v
 
 El caso nace privado. La API pública exige tres condiciones simultáneas: un resumen `publicIncidents/{id}` aprobado, clasificación `safe` en el expediente vivo y **24 horas transcurridas desde `publishedAt`** (configurable entre 1 y 720 horas; 24 por defecto). El relato sin revisar nunca se publica de forma automática. Marcarlo sensible después retira el acceso a cualquier resumen. Las reglas deniegan lectura directa del documento público para impedir saltar el plazo. Los resúmenes antiguos sin `publishedAt` permanecen privados hasta reaprobarse: decisión segura frente a una fecha desconocida.
 
-La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borrar datos del sitio o del dispositivo puede perder pendientes. El service worker no conserva el token, así que con la app totalmente cerrada no puede enviar por sí solo. El cierre de cuenta anonimiza expedientes y desactiva acceso; conserva categoría, vereda, estado y fecha para trazabilidad. Antes de abrir al público faltan un calendario de retención aprobado, prueba de restauración de copias y un procedimiento documentado para solicitudes de titulares y actas sensibles.
+La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borrar datos del sitio o del dispositivo puede perder pendientes. El service worker no conserva el token. En Android, WorkManager usa una segunda sesión Firebase nativa para renovar un token en el momento del envío; la cola privada **no almacena contraseñas ni tokens**. La copia nativa se cifra con **AES-256-GCM**, IV aleatorio por escritura y clave no exportable del **Android Keystore**; queda en `noBackupFilesDir`, fuera de las copias automáticas del sistema. La copia de IndexedDB depende del aislamiento y cifrado del dispositivo, no de esta clave. Al cerrar sesión se cancelan los trabajos y se borra la copia nativa del titular. Las notificaciones de envío no incluyen relato, vereda, fotografía ni nombre. Si se niega el permiso de avisos, el envío sigue y el estado queda en la app. El cierre de cuenta anonimiza expedientes y desactiva acceso; conserva categoría, vereda, estado y fecha para trazabilidad. Antes de abrir al público faltan un calendario de retención aprobado, prueba de restauración de copias y un procedimiento documentado para solicitudes de titulares y actas sensibles.
 
 ## 6. Riesgos y verificaciones antes de producción
 

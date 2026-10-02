@@ -2,6 +2,7 @@ import { claimOutgoing, outgoingFor, settleOutgoing } from "./outbox";
 import { announceDelivery } from "./delivery-alert";
 import { markCaseDelivered } from "./local-store";
 import { DeliveryError, sendReport } from "./remote-reports";
+import { acknowledgeNative } from "@/platform/native-outbox";
 const running = new Set<string>();
 export async function syncOutbox(
   owner: string,
@@ -24,6 +25,7 @@ export async function syncOutbox(
       try {
         const receipt = await sendReport(item.payload, item.requestId, owner);
         await settleOutgoing(item, { receipt }, !announce);
+        void acknowledgeNative(owner, item.requestId);
         /* El espejo local deja de decir «esperando señal»: ya llegó, y con
            fecha del servidor. Sin esto el reporte se quedaba en ese estado
            para siempre aunque el Consejo lo tuviera desde el primer día. */

@@ -10,6 +10,8 @@ import {
   readPayload,
   pendingAnnouncements,
   markDeliveriesSeen,
+  confirmNativeReceipt,
+  markNativeAttention,
 } from "../../src/data/outbox";
 const payload = {
   category: "infraestructura",
@@ -87,7 +89,11 @@ describe("bandeja persistente", () => {
     const owner = crypto.randomUUID();
     const watched = await enqueue(owner, payload);
     const receipt = { id: "a", receivedAt: new Date().toISOString() };
-    await settleOutgoing((await claimOutgoing(watched.key, owner))!, { receipt }, true);
+    await settleOutgoing(
+      (await claimOutgoing(watched.key, owner))!,
+      { receipt },
+      true,
+    );
     // Enviado con el formulario delante: el recibo ya se mostró allí.
     expect(pendingAnnouncements(await outgoingFor(owner))).toHaveLength(0);
 
@@ -121,5 +127,42 @@ describe("bandeja persistente", () => {
     expect(retryDelay(1)).toBe(5000);
     expect(retryDelay(2)).toBe(10000);
     expect(retryDelay(100)).toBe(900000);
+  });
+  it("un fallo web tardío no reactiva un rechazo nativo definitivo", async () => {
+    const owner = crypto.randomUUID();
+    const entry = await enqueue(owner, payload);
+    const attempt = (await claimOutgoing(entry.key, owner))!;
+    await markNativeAttention(entry.key, owner, entry.requestId);
+    await settleOutgoing(attempt, { error: "sin señal", permanent: false });
+    expect((await outgoingFor(owner))[0].state).toBe("attention");
+    expect(await readPayload(entry.key)).toBeDefined();
+  });
+  it("acepta el recibo nativo al reabrir sin entregar el caso a otra cuenta", async () => {
+    const owner = crypto.randomUUID();
+    const item = await enqueue(owner, {
+      ...payload,
+      description: "Desde Android",
+    });
+    const receipt = { id: "consejo-1", receivedAt: new Date().toISOString() };
+    expect(
+      await confirmNativeReceipt(item.key, "otro", item.requestId, receipt),
+    ).toBe(false);
+    expect(await readPayload(item.key)).toBeDefined();
+    expect(
+      await confirmNativeReceipt(item.key, owner, "otro-id", receipt),
+    ).toBe(false);
+    const webAttempt = (await claimOutgoing(item.key, owner))!;
+    expect(
+      await confirmNativeReceipt(item.key, owner, item.requestId, receipt),
+    ).toBe(true);
+    // La ventana web pudo quedar enviando al mismo tiempo: su error tardío no
+    // puede volver a poner en cola un caso confirmado por Android.
+    await settleOutgoing(webAttempt, {
+      error: "red inestable",
+      permanent: false,
+    });
+    expect((await outgoingFor(owner))[0].receipt).toEqual(receipt);
+    expect(await readPayload(item.key)).toBeUndefined();
+    expect(pendingAnnouncements(await outgoingFor(owner))).toHaveLength(1);
   });
 });

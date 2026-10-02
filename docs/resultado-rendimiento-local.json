@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-09-30T01:47:36.897Z",
+  "measuredAt": "2026-10-02T19:27:11.656Z",
   "environment": {
     "node": "v24.18.0",
     "base": "http://127.0.0.1:3100",
@@ -13,127 +13,127 @@
       "samples": [
         {
           "status": 200,
-          "domContentLoadedMs": 90.60000000149012,
-          "loadMs": 160.30000000074506,
-          "responseMs": 10.899999998509884,
-          "transferBytes": 4932
+          "domContentLoadedMs": 71,
+          "loadMs": 186.30000000074506,
+          "responseMs": 45.600000001490116,
+          "transferBytes": 4937
         },
         {
           "status": 200,
-          "domContentLoadedMs": 21.599999997764826,
-          "loadMs": 142.80000000074506,
-          "responseMs": 3.300000000745058,
-          "transferBytes": 4932
+          "domContentLoadedMs": 23.900000002235174,
+          "loadMs": 141.20000000298023,
+          "responseMs": 5.5,
+          "transferBytes": 4937
         },
         {
           "status": 200,
-          "domContentLoadedMs": 22.300000000745058,
-          "loadMs": 110.10000000149012,
-          "responseMs": 3.199999999254942,
-          "transferBytes": 4932
+          "domContentLoadedMs": 25.400000002235174,
+          "loadMs": 137.60000000149012,
+          "responseMs": 4.400000002235174,
+          "transferBytes": 4937
         },
         {
           "status": 200,
-          "domContentLoadedMs": 77.70000000298023,
-          "loadMs": 149.80000000074506,
-          "responseMs": 3.300000000745058,
-          "transferBytes": 4932
+          "domContentLoadedMs": 25.100000001490116,
+          "loadMs": 112.90000000223517,
+          "responseMs": 3.800000000745058,
+          "transferBytes": 4937
         },
         {
           "status": 200,
-          "domContentLoadedMs": 22,
-          "loadMs": 121.59999999776483,
-          "responseMs": 4.5,
-          "transferBytes": 4932
+          "domContentLoadedMs": 28.199999999254942,
+          "loadMs": 138.79999999701977,
+          "responseMs": 3.599999997764826,
+          "transferBytes": 4937
         }
       ],
-      "p50LoadMs": 143,
-      "p95LoadMs": 160,
-      "p95DomContentLoadedMs": 91
+      "p50LoadMs": 139,
+      "p95LoadMs": 186,
+      "p95DomContentLoadedMs": 71
     },
     "/comunidad/": {
       "samples": [
         {
           "status": 200,
-          "domContentLoadedMs": 28.300000000745058,
-          "loadMs": 145.20000000298023,
-          "responseMs": 4,
-          "transferBytes": 7460
+          "domContentLoadedMs": 30.900000002235174,
+          "loadMs": 140.10000000149012,
+          "responseMs": 10.5,
+          "transferBytes": 7468
         },
         {
           "status": 200,
-          "domContentLoadedMs": 27.699999999254942,
-          "loadMs": 145.40000000223517,
-          "responseMs": 4,
-          "transferBytes": 7460
-        },
-        {
-          "status": 200,
-          "domContentLoadedMs": 27.699999999254942,
-          "loadMs": 138.39999999850988,
-          "responseMs": 4.199999999254942,
-          "transferBytes": 7460
-        },
-        {
-          "status": 200,
-          "domContentLoadedMs": 22,
+          "domContentLoadedMs": 23.200000002980232,
           "loadMs": 135.80000000074506,
-          "responseMs": 3.5,
-          "transferBytes": 7460
+          "responseMs": 4.300000000745058,
+          "transferBytes": 7468
         },
         {
           "status": 200,
-          "domContentLoadedMs": 27.799999997019768,
-          "loadMs": 146.39999999850988,
-          "responseMs": 3.2999999970197678,
-          "transferBytes": 7460
+          "domContentLoadedMs": 27.899999998509884,
+          "loadMs": 135.30000000074506,
+          "responseMs": 3.899999998509884,
+          "transferBytes": 7468
+        },
+        {
+          "status": 200,
+          "domContentLoadedMs": 23.5,
+          "loadMs": 128.30000000074506,
+          "responseMs": 4.300000000745058,
+          "transferBytes": 7468
+        },
+        {
+          "status": 200,
+          "domContentLoadedMs": 27.900000002235174,
+          "loadMs": 144,
+          "responseMs": 5.5,
+          "transferBytes": 7468
         }
       ],
-      "p50LoadMs": 145,
-      "p95LoadMs": 146,
-      "p95DomContentLoadedMs": 28
+      "p50LoadMs": 136,
+      "p95LoadMs": 144,
+      "p95DomContentLoadedMs": 31
     },
     "/memoria/": {
       "samples": [
         {
           "status": 200,
-          "domContentLoadedMs": 26,
-          "loadMs": 171.69999999925494,
-          "responseMs": 3.800000000745058,
-          "transferBytes": 11336
+          "domContentLoadedMs": 26.899999998509884,
+          "loadMs": 193.69999999925494,
+          "responseMs": 7.300000000745058,
+          "transferBytes": 11473
         },
         {
           "status": 200,
-          "domContentLoadedMs": 22.100000001490116,
-          "loadMs": 154.5,
-          "responseMs": 4.100000001490116,
-          "transferBytes": 11336
+          "domContentLoadedMs": 23.800000000745058,
+          "loadMs": 136.89999999850988,
+          "responseMs": 3.600000001490116,
+          "transferBytes": 11473
         },
         {
           "status": 200,
-          "domContentLoadedMs": 23.699999999254942,
-          "loadMs": 163.89999999850988,
-          "responseMs": 4.599999997764826,
-          "transferBytes": 11336
+          "domContentLoadedMs": 21.199999999254942,
+          "loadMs": 140.39999999850988,
+          "responseMs": 3.599999997764826,
+          "transferBytes": 11473
         },
         {
           "status": 200,
-          "domContentLoadedMs": 24.300000000745058,
-          "loadMs": 145.80000000074506,
-          "responseMs": 4.099999997764826,
-          "transferBytes": 11336
+          "domContentLoadedMs": 28.100000001490116,
+          "loadMs": 147.30000000074506,
+          "responseMs": 4,
+          "transferBytes": 11473
         },
         {
           "status": 200,
-          "domContentLoadedMs": 108.5,
-          "loadMs": 173.5,
-          "responseMs": 4.5,
-          "transferBytes": 11336
+          "domContentLoadedMs": 23.5,
+          "loadMs": 135.19999999925494,
+          "responseMs": 4.300000000745058,
+          "transferBytes": 11473
         }
       ],
-      "p50LoadMs": 164,
-      "p95LoadMs": 174,
-      "p95DomContentLoadedMs": 109
+      "p50LoadMs": 140,
+      "p95LoadMs": 194,
+      "p95DomContentLoadedMs": 28
     }
   }
 }

@@ -17,6 +17,7 @@ import { onFlushRequest, syncOutbox } from "@/data/sync-outbox";
 import { LeafFall } from "./leaf-fall";
 import { askDeliveryAlerts, useDeliveryAlerts } from "@/data/delivery-alert";
 import { toast } from "@/data/toasts";
+import { reconcileNative, stagePendingNative } from "@/platform/native-outbox";
 const labels: Record<Outgoing["state"], string> = {
   queued: "En cola · sin confirmar",
   sending: "Enviando…",
@@ -91,8 +92,16 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
       setOnline(navigator.onLine);
       // Con la pestaña oculta no se consulta el disco ni la red.
       if (document.visibilityState === "hidden") return;
-      flush();
-      void refresh();
+      void (async () => {
+        if (!anonima) {
+          await reconcileNative(owner);
+          await stagePendingNative(owner);
+        }
+        flush();
+        await refresh();
+      })().catch(() => {
+        if (active) setError("No se pudo revisar la bandeja local.");
+      });
     };
     tick();
     const timer = setInterval(tick, 30000);
@@ -178,10 +187,10 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
             : `Hay ${huerfanos.length} reportes guardados sin cuenta`}
         </h2>
         <p>
-          Se escribieron en este teléfono antes de entrar —puede que sin
-          señal—. <strong>Si son tuyos</strong>, pasan a tu nombre y salen
-          solos. Si este teléfono es prestado y no los escribiste tú, déjalos:
-          esperarán a quien los escribió.
+          Se escribieron en este teléfono antes de entrar —puede que sin señal—.{" "}
+          <strong>Si son tuyos</strong>, pasan a tu nombre y salen solos. Si
+          este teléfono es prestado y no los escribiste tú, déjalos: esperarán a
+          quien los escribió.
         </p>
         <ul className="outbox-list">
           {huerfanos.map((item) => (
@@ -208,9 +217,7 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
                     : `${cuantos} reportes pasaron a tu nombre y salen con la próxima conexión.`,
                 );
               })
-              .catch(() =>
-                toast("No se pudieron pasar a tu nombre.", "error"),
-              )
+              .catch(() => toast("No se pudieron pasar a tu nombre.", "error"))
               .finally(() => setReclamando(false));
           }}
         >
@@ -225,108 +232,112 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
   return (
     <>
       {reclamo}
-    <section className="panel remote-panel">
-      <div className="remote-panel-body">
-        <span className="eyebrow">ESTE DISPOSITIVO</span>
-        <h2>
-          {anonima
-            ? pending.length === 1
-              ? "Un reporte espera a que entres"
-              : `${pending.length} reportes esperan a que entres`
-            : pending.length === 1
-              ? "Un reporte espera señal"
-              : `${pending.length} reportes esperan señal`}
-        </h2>
-        {anonima ? (
-          <p>
-            Están guardados en este dispositivo y no se han perdido. Los
-            reportes de este Consejo llevan nombre, así que{" "}
-            <strong>hace falta tu cuenta para enviarlos</strong>: al entrar
-            pasan a tu nombre y salen solos, sin que tengas que escribirlos otra
-            vez. Puedes seguir preparando más mientras tanto.
-          </p>
-        ) : (
-          <p>
-            Están guardados en este dispositivo: <strong>se enviarán</strong> en
-            cuanto haya red o al abrir la aplicación con tu sesión, sin que
-            tengas que hacer nada. Un borrador es lo contrario —espera a que tú
-            lo mandes— y vive en Mis reportes.
-          </p>
-        )}
-        {anonima && (
-          <Link className="btn primary" href="/acceso/?volver=reporte">
-            Entrar y enviarlos
-          </Link>
-        )}
-        {/* El permiso se ofrece aquí, donde se entiende para qué sirve, y no
+      <section className="panel remote-panel">
+        <div className="remote-panel-body">
+          <span className="eyebrow">ESTE DISPOSITIVO</span>
+          <h2>
+            {anonima
+              ? pending.length === 1
+                ? "Un reporte espera a que entres"
+                : `${pending.length} reportes esperan a que entres`
+              : pending.length === 1
+                ? "Un reporte espera señal"
+                : `${pending.length} reportes esperan señal`}
+          </h2>
+          {anonima ? (
+            <p>
+              Están guardados en este dispositivo y no se han perdido. Los
+              reportes de este Consejo llevan nombre, así que{" "}
+              <strong>hace falta tu cuenta para enviarlos</strong>: al entrar
+              pasan a tu nombre y salen solos, sin que tengas que escribirlos
+              otra vez. Puedes seguir preparando más mientras tanto.
+            </p>
+          ) : (
+            <p>
+              Están guardados en este dispositivo. En la APK, Android
+              reintentará al volver la red aunque esté cerrada, si la sesión
+              nativa quedó activa. En el navegador se reintentarán con la página
+              abierta o al volver a abrirla. Un borrador espera a que tú lo
+              mandes y vive en Mis reportes.
+            </p>
+          )}
+          {anonima && (
+            <Link className="btn primary" href="/acceso/?volver=reporte">
+              Entrar y enviarlos
+            </Link>
+          )}
+          {/* El permiso se ofrece aquí, donde se entiende para qué sirve, y no
             con una ventana del navegador nada más entrar. */}
-        {!anonima && alerts === "default" && (
-          <button className="btn" onClick={() => void askDeliveryAlerts()}>
-            <BellRing size={17} /> Avisarme cuando salgan
-          </button>
-        )}
-        {!anonima && alerts === "granted" && (
-          <p className="subtle-note">
-            Te avisaremos cuando un reporte en espera salga con la aplicación en
-            segundo plano. Cerrada del todo, el envío aguarda a que la abras.
-          </p>
-        )}
-        {!anonima && alerts === "denied" && (
-          <p className="subtle-note">
-            Los avisos están bloqueados para este sitio. Puedes permitirlos
-            desde los ajustes del navegador; la bandeja sigue contando aquí lo
-            que salió.
-          </p>
-        )}
-        {error && <p role="alert">{error}</p>}
-      </div>
-      {/* Aquí se probaron las hojas y **no van**: este panel mide 745 px con
+          {!anonima && alerts === "default" && (
+            <button className="btn" onClick={() => void askDeliveryAlerts()}>
+              <BellRing size={17} /> Avisarme cuando salgan
+            </button>
+          )}
+          {!anonima && alerts === "granted" && (
+            <p className="subtle-note">
+              Te avisaremos cuando salga un reporte en espera. En Android la
+              cola nativa puede enviarlo con la app cerrada; en el navegador
+              necesita que la página siga abierta o vuelvas a abrirla.
+            </p>
+          )}
+          {!anonima && alerts === "denied" && (
+            <p className="subtle-note">
+              Los avisos están bloqueados. Puedes permitirlos desde los ajustes
+              de notificaciones de la app o del navegador; la bandeja cuenta
+              aquí lo que salió.
+            </p>
+          )}
+          {error && <p role="alert">{error}</p>}
+        </div>
+        {/* Aquí se probaron las hojas y **no van**: este panel mide 745 px con
           tres envíos, así que su pie queda debajo de la barra de navegación y
           casi nadie lo ve. Un dibujo que no se ve no es un dibujo, es peso.
           El gesto de esta bandeja está arriba, en el aviso de entrega. */}
-      {pending.map((item) => (
-        <div className="outbox-row" key={item.key}>
-          <strong>{item.title}</strong>
-          <span>{labels[item.state]}</span>
-          {item.error && item.state !== "confirmed" && <p>{item.error}</p>}
-          {/* Sin cuenta no hay a dónde reintentar: lo que falta no es la red,
+        {pending.map((item) => (
+          <div className="outbox-row" key={item.key}>
+            <strong>{item.title}</strong>
+            <span>{labels[item.state]}</span>
+            {item.error && item.state !== "confirmed" && <p>{item.error}</p>}
+            {/* Sin cuenta no hay a dónde reintentar: lo que falta no es la red,
               es la sesión, y el botón de entrar ya está arriba. */}
-          {!anonima &&
-            (item.state === "attention" || item.state === "queued") && (
-              <button
-                className="btn"
-                disabled={!online}
-                onClick={() =>
-                  void retryOutgoing(item.key, item.owner)
-                    /* Reintento a la vista: el resultado aparece en esta misma
+            {!anonima &&
+              (item.state === "attention" || item.state === "queued") && (
+                <button
+                  className="btn"
+                  disabled={!online}
+                  onClick={() =>
+                    void reconcileNative(item.owner)
+                      .then(() => retryOutgoing(item.key, item.owner))
+                      .then(() => stagePendingNative(item.owner))
+                      /* Reintento a la vista: el resultado aparece en esta misma
                      fila, así que no hay nada que anunciar por el sistema. */
-                    .then(() =>
-                      syncOutbox(
-                        item.owner,
-                        () => getSession().uid === item.owner,
-                        false,
-                      ),
-                    )
-                    .catch(() => {
-                      setError("No se pudo reintentar.");
-                      toast("No se pudo reintentar el envío.", "error");
-                    })
-                }
-              >
-                Reintentar ahora
-              </button>
-            )}
-        </div>
-      ))}
-      {/* Los límites, al pie y en pequeño: importan cuando uno lleva varios
+                      .then(() =>
+                        syncOutbox(
+                          item.owner,
+                          () => getSession().uid === item.owner,
+                          false,
+                        ),
+                      )
+                      .catch(() => {
+                        setError("No se pudo reintentar.");
+                        toast("No se pudo reintentar el envío.", "error");
+                      })
+                  }
+                >
+                  Reintentar ahora
+                </button>
+              )}
+          </div>
+        ))}
+        {/* Los límites, al pie y en pequeño: importan cuando uno lleva varios
           reportes acumulados sin señal, no antes. */}
-      <p className="subtle-note">
-        {pending.length} de {OUTBOX_LIMIT} reportes y {megabytes.toFixed(1)} de
-        50 MB guardados en este teléfono.{" "}
-        {online ? "Hay conexión." : "Ahora mismo no hay conexión."} No borres
-        los datos del navegador mientras haya envíos pendientes.
-      </p>
-    </section>
+        <p className="subtle-note">
+          {pending.length} de {OUTBOX_LIMIT} reportes y {megabytes.toFixed(1)}{" "}
+          de 50 MB guardados en este teléfono.{" "}
+          {online ? "Hay conexión." : "Ahora mismo no hay conexión."} No borres
+          los datos del navegador mientras haya envíos pendientes.
+        </p>
+      </section>
     </>
   );
 }

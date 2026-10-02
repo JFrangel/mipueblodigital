@@ -22,6 +22,44 @@ volver la red, los expedientes guardados, los comunicados con su marca de copia.
 Ver [arquitectura.md §9](arquitectura.md#9-sin-conexión) y la
 [auditoría del modo sin conexión](auditoria-offline-2026-09-16.md).
 
+Desde esta versión, **la cola sí puede enviarse con la app cerrada**: el
+complemento nativo `EnviosPlugin` guarda una copia privada de cada envío y
+`EnvioWorker` espera la red con WorkManager. El envío lleva el mismo
+identificador idempotente que la cola web. Debe probarse en un teléfono real
+apagando la red, cerrando la actividad, recuperando señal y comprobando recibo
+y aviso del sistema. Android puede aplazar el trabajo por batería o restricciones
+del fabricante y no lo ejecuta tras una detención forzada por el usuario.
+
+**Prueba de aceptación en Android real antes de ampliar el piloto:**
+
+1. Con una cuenta de correo y luego con Google, empezar un reporte, escribir y
+   adjuntar una foto. Ir a otra sección, cerrar y reabrir: el borrador debe
+   conservar texto, vereda, punto y foto, sin haberse enviado.
+2. Dar permiso de avisos, activar modo avión, completar y **enviar** otro
+   reporte. Debe aparecer en Mis envíos como en cola. Quitar la app de recientes
+   (sin usar «Forzar detención»), recuperar datos móviles y esperar: la barra de
+   Android debe pasar por «Enviando reporte» y «Reporte entregado» sin abrirla.
+3. Abrir la app y comprobar que el mismo `requestId` produjo **un solo** caso y
+   un recibo. Repetir dejando el teléfono sin red más de una hora para probar
+   renovación del token. Repetir con dos reportes y señal intermitente.
+4. Repetir con permiso de avisos denegado: el envío y el recibo deben funcionar
+   aunque no haya notificación del sistema. Cerrar sesión con envíos pendientes,
+   entrar con otra cuenta y comprobar que no recibe ni ve datos de la anterior.
+
+La compilación de Gradle y las pruebas de navegador no sustituyen esta prueba:
+la hora a la que Android ejecuta WorkManager depende del equipo y su política
+de batería. «Forzar detención» desde Ajustes es una excepción del sistema y no
+se debe presentar como una avería del envío.
+
+Comprobado el 2 de octubre de 2026: `assembleDebug` y
+`connectedDebugAndroidTest` pasaron en el emulador API 35 (`mpd35`). La prueba
+instrumentada `EnviosStorageTest` escribió un reporte con foto en el directorio
+privado, verificó que el texto y el prefijo Base64 no aparecieran en los bytes
+del archivo y lo recuperó con el mismo `requestId`. Esto verifica el cifrado y
+la lectura con Android Keystore; **no** demuestra todavía que el fabricante
+despierte WorkManager con la app cerrada al volver la red. Ese escenario sigue
+en la lista de aceptación del teléfono real.
+
 La única página que viaja dentro del APK es
 [`capacitor/www/index.html`](../capacitor/www/index.html), y se ve en un solo
 caso: **el primer arranque sin señal de una instalación recién hecha**, cuando
@@ -155,23 +193,12 @@ para que no se declaren hechas por haber compilado:
 
 ---
 
-## 6. Estado
+## 6. Estado al 2 de octubre de 2026
 
-|                                                      |                           |
-| ---------------------------------------------------- | ------------------------- |
-| Capacitor 8.5.2 instalado                            | hecho                     |
-| `capacitor.config.ts`, con la dirección por variable | hecho                     |
-| Proyecto Android generado (`android/`, 65 archivos)  | hecho                     |
-| Página de respaldo del primer arranque               | hecho                     |
-| Órdenes `cap:sync`, `cap:open`, `cap:apk`            | hecho                     |
-| Llave de firma fuera del repositorio                 | hecho                     |
-| JDK 21, SDK y variables del equipo                   | hecho                     |
-| **APK de depuración compilado** (7,83 MB)            | **hecho**                 |
-| Avisos al teléfono: silueta, color y canal           | hecho                     |
-| **Probar en un teléfono**                            | **pendiente**             |
-| **APK de publicación, firmado**                      | **pendiente de la llave** |
-| **Dominio, identificador y firma confirmados**       | **pendiente del Consejo** |
+La distribución actual es un APK de depuración firmado con la misma clave que la versión 2.1, para preservar las actualizaciones de los teléfonos existentes. La versión 2.2 tiene `versionCode 14`, paquete `co.riosatinga.mipueblodigital`, Android mínimo API 24 y servidor `https://mipueblodigital.vercel.app`. Se verifica el certificado con `apksigner` y la versión interna con `aapt` antes de copiarla a `public/descargas/`.
 
-El APK que hay compilado apunta a `https://ejemplo.invalid`: sirve para
-acreditar que la cadena de compilación funciona, **no para instalarlo**. El
-primero que valga saldrá con el dominio de verdad.
+Esta distribución no acredita una firma de lanzamiento para Play Store. Acordar la custodia de una clave de publicación con el Consejo y planificar la transición: una APK firmada con una clave distinta no reemplaza automáticamente las instaladas. No cambiar la firma sin un plan de conservación de borradores y envíos locales.
+
+Las cuatro pruebas instrumentadas de API 35 comprobaron: identidad del paquete; foto y relato cifrados y recuperación del mismo identificador; IV nuevo por escritura y rechazo de archivo alterado; bloqueo de envío con cuenta ajena y estado que requiere atención. La prueba de reconexión y notificaciones con una sesión real y actividad cerrada sigue siendo una aceptación de campo pendiente.
+
+El proceso de actualización, los comandos reproducibles y la evidencia de esta entrega están en [auditoría de la versión 2.2](auditoria-entrega-2026-10-02.md).

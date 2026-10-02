@@ -1,6 +1,6 @@
 # Pruebas, resultados y rendimiento
 
-Fecha de corte: 30 de septiembre de 2026 (UTC). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
+Fecha de corte: 2 de octubre de 2026 (UTC). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
 
 ## 1. Matriz de verificación
 
@@ -8,9 +8,9 @@ Fecha de corte: 30 de septiembre de 2026 (UTC). El [catálogo individual](catalo
 | --- | --- | --- | --- |
 | Formato/lint | `npm run lint` | Reglas estáticas ESLint de todo el proyecto | Comportamiento, accesibilidad o seguridad de servicios externos |
 | Tipos | `npm run typecheck` | Contratos TypeScript | Permisos efectivos, errores de red, experiencia en teléfono |
-| Unitarias y rutas aisladas | `npm test` | 430 casos en 51 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
+| Unitarias y rutas aisladas | `npm test` | 435 casos en 52 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
 | Build | `npm run build` | Compilación de producción Next, rutas y empaquetado web | Que el backend esté configurado ni que las cuentas reales funcionen |
-| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 72 casos en 15 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
+| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 73 casos en 15 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
 | Reglas de base | `npm run test:rules` | Reglas de Firestore en emulador con los casos de [`rules.mjs`](../tests/integration/rules.mjs) | API Admin, consola real, configuración de producción |
 | Integraciones manuales | [`auth.mjs`](../tests/integration/auth.mjs) y [`remote-incidents.mjs`](../tests/integration/remote-incidents.mjs) | Flujos reales si se facilitan credenciales y entorno aislado | No deben ejecutarse sobre datos comunitarios sin preparar el entorno |
 | Rendimiento local | `npm run test:perf` con servidor de producción local | Cinco cargas nuevas por ruta, DOMContentLoaded, load y tiempo de respuesta | Carga concurrente, experiencia de campo o Web Vitals reales |
@@ -82,3 +82,7 @@ La [medición JSON reproducible](resultado-rendimiento-local.json) se efectuó s
 | `/memoria/` | 164 ms | 174 ms | 109 ms |
 
 La primera carga de bienvenida fue la más lenta de su serie (160 ms) y el cálculo p95 con solo cinco observaciones debe leerse como máximo cercano, no como percentil estable. El `transferBytes` registrado corresponde a la **navegación principal**, no al peso de todas las imágenes, fuentes y scripts. No se simuló red lenta, CPU limitada, usuarios simultáneos ni backend remoto. Estas cifras sirven para detectar regresiones locales bajo la misma metodología; la aceptación de campo continúa pendiente. También se inspeccionó visualmente `/memoria/` a 390 y 1280 px después del build: la cronología y la biblioteca conservaron legibilidad, fuentes y adaptación de columnas; las capturas de revisión son temporales y no contienen datos de usuarios.
+
+## Verificación de la entrega 2.2 — 2 de octubre de 2026
+
+435 unitarias, 73 recorridos de navegador y cuatro pruebas Android instrumentadas pasaron. Las reglas Firestore pasaron en el emulador; tipos, lint sin errores y build de producción también. Se repitió la medición local de cinco cargas por ruta: p95 load de bienvenida 186 ms, comunidad 144 ms, memoria 194 ms. La evidencia, alcance, comandos y limitaciones están en [la auditoría de entrega](auditoria-entrega-2026-10-02.md). Las ejecuciones históricas de este documento conservan sus fechas; la copia JSON de rendimiento corresponde a esta última medición.

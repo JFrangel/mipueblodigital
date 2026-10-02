@@ -509,11 +509,19 @@ funciona igual y no queda copia— y lo fijan dos pruebas de navegador.
 ### 9.2. La cola de envío
 
 [`src/data/outbox.ts`](../src/data/outbox.ts). Hasta **10 reportes y 50 MB**.
-Un reporte encolado sale solo en cuanto vuelva la señal, por Background Sync
-(`mpd-outbox`): el worker no recibe nunca el token, así que le pide a una
-pestaña abierta que vacíe la cola. Si no hay ninguna, el navegador reintenta más
-tarde. Al llegar el acuse, `markCaseDelivered` cierra el viaje en la copia
-local, que si no seguiría diciendo «esperando señal» meses después.
+En navegador, Background Sync (`mpd-outbox`) solo avisa a una pestaña abierta:
+el service worker no tiene el token y no puede transmitir con todas las
+ventanas cerradas. En la APK, `EnviosPlugin` copia cada envío a un archivo
+privado excluido del respaldo del sistema y programa `EnvioWorker` con
+WorkManager y requisito de red. Esa copia se cifra con AES-256-GCM y una clave
+del Android Keystore. El trabajador renueva el token de Firebase Auth
+nativo y transmite aunque la actividad esté cerrada. Web y Android usan el
+mismo `requestId`, así que el servidor devuelve el mismo expediente si ambos
+alcanzan la red a la vez. Al reabrir, `reconcileNative` aplica el recibo a
+IndexedDB y `markCaseDelivered` actualiza la copia local. Android decide el
+momento exacto de despertar según batería y restricciones: se garantiza el
+reintento persistente, no un plazo de segundos ni la ejecución después de un
+«Forzar detención» manual.
 
 ### 9.3. Lo que no funciona sin señal
 

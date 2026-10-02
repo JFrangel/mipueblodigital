@@ -56,6 +56,9 @@
     <!-- Permisos -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- La barra de Android muestra el envío y el recibo aun con la app cerrada.
+         Desde Android 13 se solicita al ciudadano; si lo niega, la cola sigue. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Instalar la versión nueva desde la propia aplicación.
          Sin esta línea, Android 8 en adelante rechaza el instalador sin más, y

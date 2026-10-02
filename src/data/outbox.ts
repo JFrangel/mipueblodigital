@@ -384,3 +384,84 @@ export async function traspasar(de: string, a: string): Promise<number> {
     };
   });
 }
+
+/** Recibo que obtuvo WorkManager mientras la WebView estaba cerrada.
+ * Solo se aplica al mismo dueño y requestId: una sesión posterior en un
+ * teléfono compartido nunca puede adjudicarse el envío de otra persona. */
+export async function confirmNativeReceipt(
+  key: string,
+  owner: string,
+  requestId: string,
+  receipt: { id: string; receivedAt: string },
+) {
+  const db = await openDb();
+  return new Promise<boolean>((resolve, reject) => {
+    const tx = db.transaction(["reports", "payloads"], "readwrite");
+    const store = tx.objectStore("reports");
+    const req = store.get(key);
+    let matched = false;
+    req.onsuccess = () => {
+      const item: Outgoing | undefined = req.result;
+      if (!item || item.owner !== owner || item.requestId !== requestId) return;
+      matched = true;
+      if (item.state === "confirmed") return;
+      store.put({
+        ...item,
+        state: "confirmed",
+        receipt,
+        bytes: 0,
+        lease: undefined,
+        leaseUntil: 0,
+        seen: false,
+      });
+      tx.objectStore("payloads").delete(key);
+    };
+    tx.oncomplete = () => {
+      db.close();
+      if (matched) changed();
+      resolve(matched);
+    };
+    tx.onabort = tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}
+
+export async function markNativeAttention(
+  key: string,
+  owner: string,
+  requestId: string,
+) {
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction("reports", "readwrite");
+    const store = tx.objectStore("reports");
+    const req = store.get(key);
+    req.onsuccess = () => {
+      const item: Outgoing | undefined = req.result;
+      if (
+        item &&
+        item.owner === owner &&
+        item.requestId === requestId &&
+        item.state !== "confirmed"
+      )
+        store.put({
+          ...item,
+          state: "attention",
+          lease: undefined,
+          leaseUntil: 0,
+          error: "El servidor rechazó el envío. Revísalo antes de reintentar.",
+        });
+    };
+    tx.oncomplete = () => {
+      db.close();
+      changed();
+      resolve();
+    };
+    tx.onabort = tx.onerror = () => {
+      db.close();
+      reject(tx.error);
+    };
+  });
+}

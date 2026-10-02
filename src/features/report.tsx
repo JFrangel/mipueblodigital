@@ -33,6 +33,8 @@ import { validateReport } from "@/domain/logic";
 import { CategoryIcon } from "@/components/ui";
 import { LeafFall } from "./leaf-fall";
 import { registrar } from "@/platform/push";
+import { stageNativeOutgoing } from "@/platform/native-outbox";
+import { esNativo } from "@/platform/native";
 const blank = { category: "", vereda: "", description: "", phone: "" };
 /** Para comparar nombres como se teclean: sin tildes y en minúsculas. */
 const plain = (text: string) =>
@@ -86,15 +88,39 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
   } | null>(null);
   const [queued, setQueued] = useState(false),
     [sensitive, setSensitive] = useState(false);
+  const [nativeQueuedReady, setNativeQueuedReady] = useState(true);
   /* Punto marcado a mano sobre el mapa; nulo si se deja el de la vereda. */
   const [point, setPoint] = useState<Point | null>(null);
   const router = useRouter();
   const draftOwner = useRef<string | undefined>(undefined);
+  const [draftReady, setDraftReady] = useState(false);
+  const [autoSave, setAutoSave] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const draftWrites = useRef<Promise<void>>(Promise.resolve());
+  const draftSnapshot = useRef<Parameters<typeof writeDraft>[0]>(null);
+  const draftTouched = useRef(false);
+  const draftVersion = useRef(0);
+  const queueDraft = (
+    value: Parameters<typeof writeDraft>[0],
+    owner?: string,
+  ) => {
+    const next = draftWrites.current
+      .catch(() => undefined)
+      .then(() => writeDraft(value, owner));
+    draftWrites.current = next;
+    return next;
+  };
   /* El borrador es por cuenta: cambiar de sesión descarta el de la anterior. */
   useEffect(() => {
     let active = true,
       generation = 0;
     function restore(owner?: string) {
+      draftVersion.current++;
+      draftSnapshot.current = null;
+      draftTouched.current = false;
+      setDraftReady(false);
+      setAutoSave("idle");
       draftOwner.current = owner;
       const current = ++generation;
       setData(blank);
@@ -105,6 +131,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       setSaved(false);
       setReceipt(null);
       setQueued(false);
+      setNativeQueuedReady(true);
       setSensitive(false);
       setPoint(null);
       setEvidence(null);
@@ -125,7 +152,8 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
           return readDraft(owner);
         })
         .then((saved) => {
-          if (active && current === generation && saved) {
+          if (!active || current !== generation) return;
+          if (saved) {
             setData(saved);
             setPhotos(saved.photos);
             setSensitive(saved.sensitive === true);
@@ -151,9 +179,15 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
             setStep(donde);
             setReached(donde);
           }
+          setDraftReady(true);
         })
         .catch(() => {
-          if (active) setErrors(["El borrador no se pudo recuperar."]);
+          if (active && current === generation) {
+            setErrors([
+              "El borrador no se pudo recuperar. Escribe de nuevo y guardaremos lo que avances.",
+            ]);
+            setDraftReady(true);
+          }
         });
     }
     let unsubscribe = () => {};
@@ -170,6 +204,65 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       unsubscribe();
     };
   }, []);
+  /* Cada cambio sustancial queda en IndexedDB sin exigir el botón. La cadena
+     ordena las escrituras: una fotografía grande puede tardar más que un cambio
+     de texto posterior, y jamás debe terminar pisándolo. */
+  useEffect(() => {
+    if (!draftReady || done || saved || busy) return;
+    const meaningful = Boolean(
+      data.category ||
+      data.vereda ||
+      data.description.trim() ||
+      data.phone.trim() ||
+      photos.length ||
+      point,
+    );
+    if (!meaningful && !draftTouched.current) return;
+    const snapshot = meaningful
+      ? { ...data, photos, sensitive, ...(point ?? {}) }
+      : null;
+    draftTouched.current = true;
+    draftSnapshot.current = snapshot;
+    const owner = draftOwner.current;
+    const version = draftVersion.current;
+    const timer = window.setTimeout(() => {
+      if (version !== draftVersion.current) return;
+      if (snapshot) setAutoSave("saving");
+      void queueDraft(snapshot, owner)
+        .then(() => {
+          if (version === draftVersion.current)
+            setAutoSave(snapshot ? "saved" : "idle");
+        })
+        .catch(() => {
+          if (version === draftVersion.current) setAutoSave("error");
+        });
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, [data, photos, sensitive, point, draftReady, done, saved, busy]);
+  /* Al pasar a otra aplicación, no esperamos al temporizador. Si Android mata
+     el proceso durante la pausa, el último cambio ya habrá empezado a guardarse. */
+  useEffect(() => {
+    const flush = () => {
+      if (document.visibilityState !== "hidden" || !draftReady || done) return;
+      if (draftTouched.current)
+        void queueDraft(draftSnapshot.current, draftOwner.current).catch(
+          () => undefined,
+        );
+    };
+    document.addEventListener("visibilitychange", flush);
+    return () => document.removeEventListener("visibilitychange", flush);
+  }, [draftReady, done]);
+  /* Navegar a otra ruta no siempre oculta la ventana; conserva el último
+     cambio también al desmontar el formulario. */
+  useEffect(
+    () => () => {
+      if (draftTouched.current)
+        void queueDraft(draftSnapshot.current, draftOwner.current).catch(
+          () => undefined,
+        );
+    },
+    [],
+  );
   async function submitRemote() {
     if (saving.current) return;
     const validation = validateReport({ ...data, photos: photos.length });
@@ -214,17 +307,27 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         /* Y el borrador se limpia: el reporte ya está entero en la bandeja, y
            dejarlo también aquí haría que al volver el formulario apareciera
            lleno como si no se hubiera guardado nada. */
+        draftVersion.current++;
+        draftSnapshot.current = null;
+        draftTouched.current = false;
+        await draftWrites.current.catch(() => undefined);
         await writeDraft(null).catch(() => undefined);
+        setDone(true);
         toast("Guardamos tu reporte. Entra a tu cuenta y lo enviamos por ti.");
         router.push("/acceso/?volver=reporte");
         return;
       }
-      const entry = await enqueue(uid, {
+      const payload = {
         ...data,
         photo: photos[0],
         sensitive,
         ...(point ?? {}),
-      });
+      };
+      const entry = await enqueue(uid, payload);
+      /* WorkManager necesita una copia privada del envío para poder despertar
+         sin esta ventana. Conserva exactamente el mismo requestId. */
+      const nativeReady = await stageNativeOutgoing(entry, payload);
+      setNativeQueuedReady(nativeReady || !esNativo());
       // Si el envío no sale ahora, el navegador lo reintentará al volver la señal.
       void requestBackgroundSync();
       await syncOutbox(
@@ -268,6 +371,9 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         photo: photos[0],
       }).catch(() => undefined);
       setDone(true);
+      draftVersion.current++;
+      draftSnapshot.current = null;
+      draftTouched.current = false;
       /**
        * El único momento en que pedir el permiso de avisos tiene sentido.
        *
@@ -282,6 +388,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
        * arranque con red: de eso se encarga `refrescar()`.
        */
       void registrar();
+      await draftWrites.current.catch(() => undefined);
       await writeDraft(null, uid).catch(() => undefined);
     } catch (error) {
       /* La respuesta a «¿se envió?» tiene que ser la primera palabra. El
@@ -353,7 +460,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
   }
   async function draft() {
     try {
-      await writeDraft(
+      await queueDraft(
         { ...data, photos, sensitive, ...(point ?? {}) },
         draftOwner.current,
       );
@@ -437,6 +544,14 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         </div>
       </div>
     );
+  // No se puede editar hasta recuperar la cuenta y su borrador: una respuesta
+  // tardía de Auth/IndexedDB podría borrar una categoría elegida al abrir.
+  if (!draftReady)
+    return (
+      <section className="panel report-form" aria-busy="true" role="status">
+        <p>Preparando tu reporte y recuperando el avance guardado…</p>
+      </section>
+    );
   if (done)
     return (
       <div className="success panel report-success">
@@ -456,7 +571,11 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
           {receipt
             ? `El servidor recibió tu reporte el ${new Date(receipt.receivedAt).toLocaleString("es-CO")}. Está pendiente de revisión.`
             : queued
-              ? "El reporte está guardado para enviar. Consulta Mis envíos: se reintentará con conexión y tu sesión activa. Todavía no hay confirmación del Consejo."
+              ? nativeQueuedReady
+                ? esNativo()
+                  ? "El reporte está guardado para enviar. Android reintentará al volver la conexión aunque la app esté cerrada. Consulta Mis envíos para ver el recibo."
+                  : "El reporte está guardado para enviar. En el navegador se reintentará al volver la conexión mientras la página esté abierta, o cuando regreses."
+                : "El reporte está guardado. El envío con la app cerrada no se activó en este dispositivo; se reintentará cuando abras la app con conexión y tu sesión."
               : "Se guardó en este dispositivo. Todavía no se ha enviado al Consejo."}
         </p>
         <Link className="btn primary" href="/mis-reportes/">
@@ -471,6 +590,15 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
           <span className="eyebrow">CUIDEMOS LO NUESTRO</span>
           <h1>Cuéntanos qué está pasando.</h1>
           <p>Un reporte claro es el primer paso para darle seguimiento.</p>
+          {autoSave !== "idle" && (
+            <small className="report-autosave" role="status" aria-live="polite">
+              {autoSave === "saving"
+                ? "Guardando avance…"
+                : autoSave === "saved"
+                  ? "Avance guardado en este dispositivo · puedes continuar después"
+                  : "No se pudo guardar el avance. Usa Guardar borrador antes de salir."}
+            </small>
+          )}
         </div>
         <button className="btn" onClick={draft}>
           <Save size={16} /> Guardar borrador

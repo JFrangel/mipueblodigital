@@ -8,6 +8,7 @@ territorio; el Consejo lo recibe, lo gestiona y responde.
 
 - **Reportar** con fotografía, vereda y punto en el mapa, con sesión real de
   Firebase. Sin señal, el reporte queda en cola y sale solo cuando vuelve la red.
+- **Borrador automático** por cuenta al escribir y volver a editar después. En Android 2.2, la cola nativa reintenta con red aunque la actividad esté cerrada, con avisos del sistema; el navegador requiere una página viva.
 - **Seguir el propio reporte** desde cualquier teléfono: el historial es de la
   cuenta, no del aparato.
 - **Bandeja del Consejo** con estado, prioridad, responsable, control de versión
@@ -88,6 +89,8 @@ correo@ejemplo.com` o desde el Panel del Consejo. Véase
 | [21 historias y criterios originales](docs/specs/criterios-originales.md) | Sustentación                                     |
 | [Límites de operación y defensa](docs/specs/limites-operacion-defensa.md) | Sustentación                                     |
 | [Conexiones y credenciales](docs/conexiones-2026-09-08.md)                | Quien opera el servidor                          |
+| [Banco de consulta: finalidad y mantenimiento](docs/banco-consulta-consejo.md) | Consejo y mantenimiento técnico |
+| [Auditoría y entrega Android 2.2](docs/auditoria-entrega-2026-10-02.md) | Quien valida, actualiza y opera la app |
 | [Memoria documentada del Consejo](docs/investigacion-consejo-rio-satinga.md) | Consejo, comunidad e investigadores             |
 | [Pruebas y rendimiento](docs/pruebas-y-rendimiento.md)                    | Quien valida y opera la app                      |
 | [Catálogo de pruebas](docs/catalogo-pruebas.md)                           | Quien revisa cada caso automatizado              |

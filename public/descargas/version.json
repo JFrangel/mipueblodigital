@@ -1,8 +1,9 @@
 {
-  "versionCode": 13,
-  "versionName": "2.1",
-  "bytes": 7484071,
-  "fecha": "2026-09-20",
-  "notas": "Al abrir, el palafito se dibuja solo en la pantalla de Android y se ve entero. Las dos portadas que vienen después lo continúan sin borrarlo, y el rótulo es exactamente el mismo en las dos: misma letra, mismo cuerpo y en el mismo sitio, medido al centésimo.",
+  "versionCode": 14,
+  "versionName": "2.2",
+  "bytes": 8081089,
+  "sha256": "918e6ca2654ae3b6ab907186b6f5bad0092eef0a045e58ab1cf0b2d4feadc91b",
+  "fecha": "2026-10-02",
+  "notas": "Tu reporte se guarda mientras escribes. La APK reintenta los envíos al recuperar señal aunque esté cerrada, con avisos de envío y entrega. Incluye la consulta documentada del Consejo.",
   "url": "/descargas/mi-pueblo-digital.apk"
 }

@@ -1,6 +1,6 @@
 # Guía de pruebas por archivo
 
-Fecha de revisión: 30 de septiembre de 2026 (UTC). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 430 títulos Vitest y 72 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
+Fecha de revisión: 2 de octubre de 2026 (UTC). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 435 títulos Vitest y 73 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
 
 ## Unidad, dominio y API simulada
 
@@ -62,7 +62,7 @@ Fecha de revisión: 30 de septiembre de 2026 (UTC). Esta guía explica **para qu
 
 | Archivo en `tests/e2e/` | Casos | Recorrido observable |
 | --- | ---: | --- |
-| `app.spec.ts` | 5 | Rutas esenciales, navegación y acciones principales renderizan sin romper la app. |
+| `app.spec.ts` | 6 | Rutas esenciales, navegación y acciones principales renderizan sin romper la app. |
 | `community-nav.spec.ts` | 1 | Las cuatro secciones de Comunidad conservan su navegación y estado seleccionado. |
 | `comunicado.spec.ts` | 5 | Feed y detalle de comunicado, lectura y controles editoriales visibles. |
 | `council-memory.spec.ts` | 2 | Línea de tiempo, filtros, búsqueda, fuentes, ancho móvil y reapertura offline de la ruta cacheada. |
@@ -80,4 +80,14 @@ Fecha de revisión: 30 de septiembre de 2026 (UTC). Esta guía explica **para qu
 
 ## Cómo interpretar un resultado verde
 
-Vitest ejecuta código en aislamiento con datos y servicios simulados cuando el archivo así lo define. Playwright conduce Chromium contra una compilación local; varias rutas usan fixtures para no escribir datos ciudadanos. El emulador de reglas sí interpreta `firebase/firestore.rules`, pero no es el proyecto desplegado. Ninguna suite prueba que el proveedor de IA, Firebase Authentication, Supabase, push o el teléfono de una persona en el río respondan correctamente hoy. Para aceptar la operación se requiere un entorno aislado, cuentas de prueba, evidencias sin PII y [el piloto y ensayos de rendimiento pendientes](pruebas-y-rendimiento.md#3-pruebas-operativas-que-siguen-pendientes).
+Vitest ejecuta código en aislamiento con datos y servicios simulados cuando el archivo así lo define. Playwright conduce Chromium contra una compilación local; varias rutas usan fixtures para no escribir datos ciudadanos. El emulador de reglas sí interpreta `firebase/firestore.rules`, pero no es el proyecto desplegado. Ninguna suite prueba que el proveedor de IA, Firebase Authentication, Supabase, push o el teléfono de una persona en el río respondan correctamente hoy. Para aceptar la operación se requiere un entorno aislado, cuentas de prueba, evidencias sin PII y [el piloto y ensayos de rendimiento pendientes](auditoria-entrega-2026-10-02.md#límites-y-aceptación-pendiente).
+
+## Nuevas comprobaciones de borrador y Android — 2 de octubre de 2026
+
+- `tests/e2e/app.spec.ts`: el sexto caso escribe un reporte, sale sin guardar manualmente, recupera el borrador, lo edita y recarga. Comprueba el autoguardado observable, no solo una llamada a una función.
+- `tests/unit/outbox.test.ts`: el caso nuevo confirma un recibo nativo y luego simula el fallo tardío de la subida web; la confirmación y su recibo deben conservarse y el payload debe limpiarse.
+- `tests/unit/delivery-alert.test.ts`: tres casos, permiso Android concedido, denegado y fallo del complemento. No requieren la API Notification de WebView ni prometen avisos cuando no se concedieron.
+- `android/app/src/androidTest/java/co/riosatinga/mipueblodigital/EnviosStorageTest.java`: tres casos con Android Keystore real en API 35. Cifra/recupera la foto y relato; compara IV de dos escrituras y altera un byte para comprobar rechazo; ejecuta el trabajador con identidad ajena/atención y verifica que no transmita ni elimine el archivo.
+- `ExampleInstrumentedTest.java`: identifica el paquete instalado correcto. Es una comprobación de instalación, no de envío.
+
+Las cuatro pruebas instrumentadas pasaron. No simulan cobertura móvil ni entrega remota con actividad cerrada; esa aceptación queda explícita en la [auditoría de entrega](auditoria-entrega-2026-10-02.md).

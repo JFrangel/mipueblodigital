@@ -2,8 +2,8 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **430 casos en 51 archivos**; estado del reporte usado: 430 pasan, 0 fallan, 0 pendientes.
-- Navegador: **72 casos en 15 archivos** registrados por Playwright.
+- Unitarias: **435 casos en 52 archivos**; estado del reporte usado: 435 pasan, 0 fallan, 0 pendientes.
+- Navegador: **73 casos en 15 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
 
@@ -79,6 +79,12 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - la fila usa punto y coma, que es lo que Excel en español espera
 - un punto y coma dentro del texto no parte la fila en dos
 - una celda vacía se conserva como celda, no desaparece
+
+### [tests/unit/delivery-alert.test.ts](../tests/unit/delivery-alert.test.ts) — 3 casos
+
+- avisos locales de entrega en Android pide el permiso nativo aunque WebView no tenga Notification
+- avisos locales de entrega en Android refleja la denegación sin prometer avisos
+- avisos locales de entrega en Android un fallo del complemento no impide usar la bandeja
 
 ### [tests/unit/delivery.test.ts](../tests/unit/delivery.test.ts) — 3 casos
 
@@ -219,7 +225,7 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - no se lleva por delante lo que ya tenía
 - un reporte repetido no se duplica al traspasar
 
-### [tests/unit/outbox.test.ts](../tests/unit/outbox.test.ts) — 9 casos
+### [tests/unit/outbox.test.ts](../tests/unit/outbox.test.ts) — 11 casos
 
 - bandeja persistente conserva identificador al repetir un envío y aísla cuentas
 - bandeja persistente reserva un solo envío entre dos pestañas y rechaza otro dueño
@@ -230,6 +236,8 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - bandeja persistente anuncia lo que salió sin nadie delante y calla lo que se vio salir
 - bandeja persistente no anuncia entregas anteriores a la marca
 - bandeja persistente espera progresiva acotada
+- bandeja persistente un fallo web tardío no reactiva un rechazo nativo definitivo
+- bandeja persistente acepta el recibo nativo al reabrir sin entregar el caso a otra cuenta
 
 ### [tests/unit/publication.test.ts](../tests/unit/publication.test.ts) — 4 casos
 
@@ -592,13 +600,14 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 
 ## Playwright: recorridos de interfaz
 
-### [tests/e2e/app.spec.ts](../tests/e2e/app.spec.ts) — 5 casos
+### [tests/e2e/app.spec.ts](../tests/e2e/app.spec.ts) — 6 casos
 
 - una foto de más de 24 megapíxeles se ajusta en vez de rechazarse ([línea 7](../tests/e2e/app.spec.ts#L7))
 - el borrador conserva foto, punto y texto para enviarlo después ([línea 46](../tests/e2e/app.spec.ts#L46))
-- inicio móvil no desborda y muestra navegación ([línea 126](../tests/e2e/app.spec.ts#L126))
-- inicio navega al reporte y exige los campos ([línea 142](../tests/e2e/app.spec.ts#L142))
-- documentación y análisis explican límites ([línea 156](../tests/e2e/app.spec.ts#L156))
+- autoguarda un reporte incompleto al salir y permite seguir editándolo ([línea 126](../tests/e2e/app.spec.ts#L126))
+- inicio móvil no desborda y muestra navegación ([línea 141](../tests/e2e/app.spec.ts#L141))
+- inicio navega al reporte y exige los campos ([línea 157](../tests/e2e/app.spec.ts#L157))
+- documentación y análisis explican límites ([línea 171](../tests/e2e/app.spec.ts#L171))
 
 ### [tests/e2e/community-nav.spec.ts](../tests/e2e/community-nav.spec.ts) — 1 casos
 

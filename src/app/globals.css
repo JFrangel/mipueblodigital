@@ -5175,6 +5175,12 @@ div.account-permiso {
   background: var(--bg);
 }
 /* Confirmación de borrador guardado: dice qué pasó y deja salir. */
+.report-autosave {
+  display: block;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 12px;
+}
 .draft-saved {
   display: flex;
   align-items: flex-start;

@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
            después, la ventana ya está montada y no los ve. */
         registerPlugin(AjustesPlugin.class);
         registerPlugin(ActualizacionPlugin.class);
+        registerPlugin(EnviosPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

@@ -123,6 +123,21 @@ test("el borrador conserva foto, punto y texto para enviarlo después", async ({
   );
 });
 
+test("autoguarda un reporte incompleto al salir y permite seguir editándolo", async ({ page }) => {
+  await openDetails(page);
+  const description = page.getByPlaceholder("Describe qué ocurrió, cuándo y cómo afecta a tu comunidad.");
+  await description.fill("El sendero se inundó cerca del muelle");
+  await expect(page.getByText("Avance guardado en este dispositivo · puedes continuar después")).toBeVisible();
+  await page.goto("/mis-reportes/");
+  await expect(page.getByText("BORRADOR SIN ENVIAR")).toBeVisible();
+  await page.getByRole("link", { name: "Continuar" }).click();
+  await expect(description).toHaveValue("El sendero se inundó cerca del muelle");
+  await description.fill("El sendero se inundó y requiere revisión");
+  await expect(page.getByText("Avance guardado en este dispositivo · puedes continuar después")).toBeVisible();
+  await page.reload();
+  await expect(description).toHaveValue("El sendero se inundó y requiere revisión");
+});
+
 test("inicio móvil no desborda y muestra navegación", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/inicio/");

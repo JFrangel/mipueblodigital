@@ -63,7 +63,7 @@ export function DraftCard() {
         </strong>
         {summary && <p>{summary.slice(0, 120)}</p>}
         <small>
-          Un borrador no sale solo: se queda aquí hasta que lo envíes.
+          Tu avance se guarda mientras escribes. Un borrador no sale solo: se queda aquí hasta que lo envíes.
           {draft.photos.length > 0 && " Conserva la fotografía y el punto del mapa."}
         </small>
       </div>

@@ -239,3 +239,12 @@ señal, con los datos que ya estén en tu dispositivo.
   ahora. Si el mensaje dice «Requiere tu atención», léelo: explica qué resolver.
 - **Cualquier otro problema:** anota la hora, lo que estabas haciendo y el
   mensaje exacto, y repórtalo a la persona responsable del Consejo.
+# Novedades de la versión Android 2.2
+
+El formulario guarda automáticamente el avance en este dispositivo. Al volver a Reportar recupera texto, ubicación y fotografía y abre el primer paso incompleto. El aviso «Avance guardado» confirma la escritura. **Guardar un borrador no lo envía al Consejo**; hace falta revisar y enviar. Borrar los datos de la aplicación o desinstalar puede eliminar borradores y pendientes.
+
+Después de enviar sin señal, consulta Mis envíos: muestra cola, envío, atención o recibo confirmado. La bandeja admite 10 reportes y 50 MiB. Con la APK 2.2 y sesión nativa activa, Android reintenta al recuperar red aunque hayas retirado la app de recientes; puede aplazarlo por batería. «Forzar detención» en Ajustes impide hacerlo hasta reabrir. En navegador la página debe estar viva o abrirse de nuevo.
+
+Permite notificaciones si quieres ver «Enviando reporte» y «Reporte entregado» en la barra de Android. Denegarlas no impide transmitir. Si la app indica que el envío con la app cerrada no está listo, conserva la cola y vuelve a entrar con conexión; puede ocurrir al actualizar desde una sesión que solo estaba en la web. Un rechazo requiere revisar el reporte; un problema de conexión se reintenta sin crear otro expediente.
+
+En Comunidad → El Consejo puedes consultar su historia, filtrar la línea de tiempo y abrir las fuentes públicas. Es un banco de consulta con referencias, no un certificado ni un archivo de actas privadas.

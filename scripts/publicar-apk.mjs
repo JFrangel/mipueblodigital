@@ -23,6 +23,7 @@ import {
   existsSync,
   statSync,
 } from "node:fs";
+import { createHash } from "node:crypto";
 
 const APK_COMPILADO = "android/app/build/outputs/apk/debug/app-debug.apk";
 const APK_PUBLICO = "public/descargas/mi-pueblo-digital.apk";
@@ -56,6 +57,28 @@ if (existsSync(VERSION_PUBLICA)) {
     );
 }
 
+const metadata = JSON.parse(
+  readFileSync(
+    "android/app/build/outputs/apk/debug/output-metadata.json",
+    "utf8",
+  ),
+);
+const artifact = metadata.elements.find(
+  (item) => item.outputFile === "app-debug.apk",
+);
+if (
+  metadata.applicationId !== "co.riosatinga.mipueblodigital" ||
+  artifact?.versionCode !== versionCode ||
+  artifact?.versionName !== versionName
+)
+  throw new Error(
+    "El APK compilado no coincide con la versión declarada. Recompila antes de publicar.",
+  );
+if (!process.env.MPD_NOTAS_VERSION?.trim())
+  throw new Error(
+    "Define MPD_NOTAS_VERSION antes de publicar: debe explicar qué cambia para la comunidad.",
+  );
+
 copyFileSync(APK_COMPILADO, APK_PUBLICO);
 
 /**
@@ -69,6 +92,7 @@ const publicada = {
   versionCode,
   versionName,
   bytes: statSync(APK_PUBLICO).size,
+  sha256: createHash("sha256").update(readFileSync(APK_PUBLICO)).digest("hex"),
   fecha: new Date().toISOString().slice(0, 10),
   notas: process.env.MPD_NOTAS_VERSION ?? "",
   /**
@@ -89,9 +113,3 @@ writeFileSync(VERSION_PUBLICA, JSON.stringify(publicada, null, 2) + "\n");
 const megas = (publicada.bytes / 1024 / 1024).toFixed(1);
 console.log(`  ${APK_PUBLICO}  (${megas} MB)`);
 console.log(`  ${VERSION_PUBLICA}  → versión ${versionName} (${versionCode})`);
-if (!publicada.notas)
-  console.log(
-    "\n  Sin notas. Ponlas y vuelve a ejecutarlo si esta versión arregla algo\n" +
-      "  que la gente esté esperando:\n" +
-      '    MPD_NOTAS_VERSION="El dictado ya no se apaga solo." node scripts/publicar-apk.mjs',
-  );

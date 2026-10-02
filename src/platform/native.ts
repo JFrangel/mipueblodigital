@@ -32,6 +32,23 @@ export const esNativo = () => Capacitor.isNativePlatform();
  */
 const modulo = () => import("@capacitor-firebase/authentication");
 
+/** La sesión nativa permite a WorkManager renovar el token con la app cerrada.
+ * La contraseña se entrega al complemento para iniciar sesión y no se guarda
+ * en la cola, en archivos ni en preferencias de la aplicación. */
+export async function entrarCorreoNativo(email: string, password: string) {
+  if (!esNativo()) return true;
+  try {
+    const { FirebaseAuthentication } = await modulo();
+    const { user } = await FirebaseAuthentication.signInWithEmailAndPassword({
+      email,
+      password,
+    });
+    return user?.uid === firebaseClient().auth.currentUser?.uid;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Entrar con Google desde la aplicación instalada.
  *
@@ -114,6 +131,8 @@ export async function entrarConGoogleNativo() {
 export async function cerrarSesion() {
   /* Nunca lanza —ver push.ts—, así que no puede impedir cerrar la sesión. */
   await (await import("./push")).darDeBaja();
+  const owner = firebaseClient().auth.currentUser?.uid;
+  if (owner) await (await import("./native-outbox")).clearNativeOwner(owner);
   await signOut(firebaseClient().auth);
   if (!esNativo()) return;
   await modulo()

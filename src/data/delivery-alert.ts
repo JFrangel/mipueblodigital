@@ -1,5 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Aviso del sistema cuando un reporte sale de la bandeja.
@@ -19,6 +20,26 @@ import { useSyncExternalStore } from "react";
  * todo, el envío espera y el aviso también.
  */
 export type AlertState = "unsupported" | NotificationPermission;
+let nativePermission: AlertState = "unsupported";
+
+async function refreshNativePermission(request = false): Promise<AlertState> {
+  try {
+    const { FirebaseMessaging } = await import("@capacitor-firebase/messaging");
+    const result = request
+      ? await FirebaseMessaging.requestPermissions()
+      : await FirebaseMessaging.checkPermissions();
+    nativePermission =
+      result.receive === "granted"
+        ? "granted"
+        : result.receive === "denied"
+          ? "denied"
+          : "default";
+  } catch {
+    nativePermission = "unsupported";
+  }
+  changed();
+  return nativePermission;
+}
 
 const listeners = new Set<() => void>();
 const changed = () => {
@@ -26,7 +47,11 @@ const changed = () => {
 };
 
 export const getAlerts = (): AlertState =>
-  typeof Notification === "undefined" ? "unsupported" : Notification.permission;
+  Capacitor.isNativePlatform()
+    ? nativePermission
+    : typeof Notification === "undefined"
+      ? "unsupported"
+      : Notification.permission;
 
 /* En el servidor no hay permisos que consultar: se asume sin soporte para no
    dibujar una oferta que quizá no corresponda. */
@@ -34,6 +59,12 @@ export const getServerAlerts = (): AlertState => "unsupported";
 
 export function subscribeAlerts(callback: () => void) {
   listeners.add(callback);
+  const native = Capacitor.isNativePlatform();
+  const refresh = () => {
+    if (native) void refreshNativePermission();
+  };
+  refresh();
+  window.addEventListener("focus", refresh);
   /* El permiso también se cambia desde los ajustes del navegador, fuera de la
      aplicación. Donde exista la API de permisos se escucha ese cambio. */
   let release = () => {};
@@ -50,6 +81,7 @@ export function subscribeAlerts(callback: () => void) {
   }
   return () => {
     listeners.delete(callback);
+    window.removeEventListener("focus", refresh);
     release();
   };
 }
@@ -59,6 +91,7 @@ export function useDeliveryAlerts() {
 }
 
 export async function askDeliveryAlerts(): Promise<AlertState> {
+  if (Capacitor.isNativePlatform()) return refreshNativePermission(true);
   if (typeof Notification === "undefined") return "unsupported";
   try {
     const result = await Notification.requestPermission();
@@ -73,6 +106,8 @@ export async function askDeliveryAlerts(): Promise<AlertState> {
 const HEADLINE = "Tu reporte llegó al Consejo";
 
 export async function announceDelivery(titles: string[]) {
+  // Android emite el aviso desde WorkManager, sin duplicarlo desde la WebView.
+  if (Capacitor.isNativePlatform()) return;
   if (!titles.length) return;
   if (typeof Notification === "undefined") return;
   if (Notification.permission !== "granted") return;
