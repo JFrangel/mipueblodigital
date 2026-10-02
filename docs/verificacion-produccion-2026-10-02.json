@@ -1,0 +1,48 @@
+{
+  "checkedAt": "2026-10-02T20:41:47.033Z",
+  "origin": "https://mipueblodigital.vercel.app",
+  "routes": [
+    {
+      "path": "/bienvenida/",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "path": "/reportar/",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "path": "/comunidad/",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "path": "/memoria/",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "path": "/cuenta/",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "path": "/api/incidents/",
+      "status": 401,
+      "expected": 401
+    },
+    {
+      "path": "/api/admin/incidents/",
+      "status": 401,
+      "expected": 401
+    }
+  ],
+  "apk": {
+    "versionCode": 14,
+    "versionName": "2.2",
+    "bytes": 8081089,
+    "sha256": "918e6ca2654ae3b6ab907186b6f5bad0092eef0a045e58ab1cf0b2d4feadc91b",
+    "status": 200
+  }
+}

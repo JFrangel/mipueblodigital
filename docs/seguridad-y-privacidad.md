@@ -53,3 +53,7 @@ La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borra
 5. Probar el flujo con habitantes y Consejo. Los tests automáticos no acreditan consentimiento, comprensión de privacidad, soporte ni continuidad operativa.
 
 Véanse [pruebas y rendimiento](pruebas-y-rendimiento.md) y [catálogo individual](catalogo-pruebas.md) para cobertura y límites de lo ejecutado.
+
+## Incidente y exclusiones de despliegue — 2 de octubre de 2026
+
+La [auditoría de entrega](auditoria-entrega-2026-10-02.md#incidente-del-empaquetado-comprimido-y-corrección) registra un intento comprimido cancelado que pudo incluir la carpeta de credenciales. Se corrigieron las exclusiones y se publicó por el método ordinario con verificación de archivos; no se acredita exposición pública. La renovación de la clave Firebase requiere al propietario: IAM respondió 403 y no se realizó la rotación. El incidente y la acción pendiente no deben ocultarse tras el resultado verde de las pruebas.

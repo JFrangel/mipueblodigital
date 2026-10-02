@@ -65,7 +65,10 @@ npm run apk:publicar
 - SHA-256 APK: `918e6ca2654ae3b6ab907186b6f5bad0092eef0a045e58ab1cf0b2d4feadc91b`.
 - Certificado SHA-256 compartido con 2.1: `cf50e534d79a1639b3154d13550a88fa7d6768e0896233229f772c7e79481989`.
 - Dominio configurado: `https://mipueblodigital.vercel.app`.
-- Publicación y comprobación remota: se registran debajo al finalizar el despliegue.
+- Código desplegado: commit `1bed8f9`, rama `develop`, publicado en GitHub.
+- Vercel: `dpl_G54wPYwJTdypyiqhUue1K4EKwoDG`, destino production, estado READY; URL `https://mipueblodigital-463n7j46w-jfrangels-projects.vercel.app`, alias `https://mipueblodigital.vercel.app`.
+- Comprobación remota: 2 de octubre de 2026, 20:41:47 UTC. Cinco rutas de interfaz respondieron 200; API ciudadana y administrativa sin sesión respondieron 401. El manifiesto publicó 14/2.2 y la descarga con User-Agent AndroidDownloadManager respondió 200 con tamaño y SHA-256 coincidentes.
+- Evidencia sanitizada: [verificacion-produccion-2026-10-02.json](verificacion-produccion-2026-10-02.json). Repetir con `node scripts/verificar-publicacion.mjs`. Esta lectura no acredita envío autenticado, push ni funcionamiento en campo.
 
 ## Límites y aceptación pendiente
 
@@ -74,3 +77,13 @@ WorkManager reanuda automáticamente cuando Android permite ejecutar un trabajo 
 Las pruebas nativas de esta entrega no transmiten expedientes al backend comunitario. Queda probar en dispositivo físico, con cuenta de pruebas y permiso de avisos, modo avión → enviar → retirar de recientes → recuperar datos móviles, sin abrir: comprobar aviso, recibo y un único expediente. Repetir tras más de una hora, con Google/correo, permiso denegado, varias fotos, señal intermitente, reinicio y cambio de titular. Los pasos están en [empaquetado Android](empaquetado-android.md). No llamar a esta comprobación «aprobada» por tener tests verdes.
 
 El banco de consulta del Consejo, su finalidad y mantenimiento están en [su documentación](banco-consulta-consejo.md). No se publica la monografía ni claves del proyecto en Git/Vercel.
+
+## Incidente del empaquetado comprimido y corrección
+
+Durante la publicación, los primeros intentos ordinarios fallaron con `fetch failed`. Se probó `--archive=tgz` y se detuvo al observar 165,5 MB frente a unos 9,5 MB previstos. No se creó un despliegue con ese archivo. La versión finalmente publicada se subió por el método ordinario y se verificó arriba.
+
+La inspección de Vercel CLI 59.19.0 mostró que las exclusiones con barra final podían dejar entradas de directorio vacías en `fileList`; `createTgzFiles` las pasa a `tar-fs.pack` sin filtro de recorrido. Por ello el archivo comprimido pudo incorporar contenido excluido de `credentials/` y otras carpetas locales. No se debe asumir que cancelar la creación del despliegue borra los fragmentos ya enviados al almacenamiento privado del proveedor. No hay evidencia aquí de exposición pública ni de uso indebido; tampoco se debe presentar la rotación como realizada.
+
+Se corrigió `.vercelignore` para excluir los directorios mismos, sin barra final, y se excluyó `reports`. Se comprobó de nuevo con `vercel deploy --dry --json` y con la lista que construye el cliente: **cero directorios residuales y cero archivos de credenciales**. El despliegue publicado no contiene la monografía ni la carpeta de credenciales. Git tampoco las incluye.
+
+Se comunicó al propietario la posible inclusión de la clave Firebase y se comprobó IAM: 403 `PERMISSION_DENIED` para consultar permisos de creación/borrado de claves. La credencial disponible no permite realizar su renovación. **Acción requerida al propietario:** crear una clave nueva de esa cuenta de servicio, actualizar `FIREBASE_SERVICE_ACCOUNT_KEY` en Vercel y la copia local, desplegar y comprobar el backend; después revocar la anterior y revisar registros de uso. No enviar la clave por el chat ni al repositorio. Véase [creación y eliminación de claves, documentación de Google Cloud](https://docs.cloud.google.com/iam/docs/keys-create-delete). La corrección de exclusiones previene repetir el problema, pero no sustituye esa renovación.
