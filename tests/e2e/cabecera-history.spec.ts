@@ -24,7 +24,7 @@ test("la cabecera se encuentra buscando el municipio y conserva el nombre del ex
     .fill("Olaya Herrera");
   const select = page.getByRole("combobox", { name: "Vereda", exact: true });
   await expect(select.locator("option[value='Bocas de Satinga']")).toHaveText(
-    /cabecera municipal/,
+    /Cabecera municipal/,
   );
   await select.selectOption("Bocas de Satinga");
   await expect(select).toHaveValue("Bocas de Satinga");

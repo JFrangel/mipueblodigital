@@ -55,10 +55,9 @@ export const veredaCatalogue: Vereda[] = [
 export const veredaNames = veredaCatalogue.map((v) => v.name);
 
 export const localityLabel = (name: string) =>
-  name === municipalSeat.name
-    ? `${name} · cabecera municipal de Olaya Herrera`
-    : name;
-export const localitySearchText = (name: string) => localityLabel(name);
+  name === municipalSeat.name ? `${name} · Cabecera municipal` : name;
+export const localitySearchText = (name: string) =>
+  name === municipalSeat.name ? `${localityLabel(name)} Olaya Herrera` : name;
 
 /** Un punto de referencia solo se usa si la fuente lo documenta. */
 export function veredaReference(name: string) {
