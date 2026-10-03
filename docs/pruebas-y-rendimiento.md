@@ -1,6 +1,12 @@
 # Pruebas, resultados y rendimiento
 
-Fecha de corte: 2 de octubre de 2026 (UTC). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
+Actualización del 3 de octubre: cabecera municipal y editor histórico, **457/457
+unitarias y 76/76 pruebas de navegador**. Reglas, tipos, lint y build pasan.
+Detalle de entradas, aserciones, dobles y alcance en
+[la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
+Los resultados de fechas anteriores se conservan como bitácora histórica.
+
+Fecha de corte: 3 de octubre de 2026 (America/Bogota). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
 
 ## 1. Matriz de verificación
 
@@ -8,9 +14,9 @@ Fecha de corte: 2 de octubre de 2026 (UTC). El [catálogo individual](catalogo-p
 | --- | --- | --- | --- |
 | Formato/lint | `npm run lint` | Reglas estáticas ESLint de todo el proyecto | Comportamiento, accesibilidad o seguridad de servicios externos |
 | Tipos | `npm run typecheck` | Contratos TypeScript | Permisos efectivos, errores de red, experiencia en teléfono |
-| Unitarias y rutas aisladas | `npm test` | 435 casos en 52 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
+| Unitarias y rutas aisladas | `npm test` | 457 casos en 54 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
 | Build | `npm run build` | Compilación de producción Next, rutas y empaquetado web | Que el backend esté configurado ni que las cuentas reales funcionen |
-| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 73 casos en 15 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
+| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 76 casos en 16 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
 | Reglas de base | `npm run test:rules` | Reglas de Firestore en emulador con los casos de [`rules.mjs`](../tests/integration/rules.mjs) | API Admin, consola real, configuración de producción |
 | Integraciones manuales | [`auth.mjs`](../tests/integration/auth.mjs) y [`remote-incidents.mjs`](../tests/integration/remote-incidents.mjs) | Flujos reales si se facilitan credenciales y entorno aislado | No deben ejecutarse sobre datos comunitarios sin preparar el entorno |
 | Rendimiento local | `npm run test:perf` con servidor de producción local | Cinco cargas nuevas por ruta, DOMContentLoaded, load y tiempo de respuesta | Carga concurrente, experiencia de campo o Web Vitals reales |
@@ -23,7 +29,7 @@ Fecha de corte: 2 de octubre de 2026 (UTC). El [catálogo individual](catalogo-p
 - **Móvil y sin conexión** (`service-worker`, `activation`, `native-auth`, `sin-cuenta`, `outbox-traspaso`, `voice-transcript`, `voz`): arranque, traspaso de envíos anónimos, caché, dictado y capacidades nativas simuladas. Un emulador JS no sustituye un APK instalado.
 - **IA** (`openrouter`): formato del material y control de la respuesta; el modelo externo y sus términos pueden cambiar y requieren prueba operativa de proveedor.
 
-Cada archivo y cada nombre exacto aparecen en [el catálogo](catalogo-pruebas.md); la [guía por archivo](guia-pruebas-por-archivo.md) explica el propósito de las 51 suites unitarias y las 15 de navegador. La cantidad se obtiene de la salida de la herramienta en cada ejecución y debe actualizarse cuando cambie el código.
+Cada archivo y cada nombre exacto aparecen en [el catálogo](catalogo-pruebas.md); la [guía por archivo](guia-pruebas-por-archivo.md) explica el propósito de las 54 suites unitarias y las 16 de navegador. La cantidad se obtiene de la salida de la herramienta en cada ejecución y debe actualizarse cuando cambie el código.
 
 ### Navegador: qué se recorre
 

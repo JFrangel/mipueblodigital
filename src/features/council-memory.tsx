@@ -1,12 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArrowUpRight, BookOpen, Search } from "lucide-react";
-import {
-  councilMilestones,
-  councilSources,
-  type CouncilPeriod,
-  type CouncilSourceId,
-} from "@/content/council-history";
+import { councilSources, type CouncilPeriod } from "@/content/council-history";
+import { historyDate, type HistorySource } from "@/domain/council-history";
+import { useCouncilHistory } from "@/data/council-history";
 import styles from "./council-memory.module.css";
 
 const periods: { id: CouncilPeriod | "all"; label: string }[] = [
@@ -22,30 +19,31 @@ const periodNames: Record<CouncilPeriod, string> = {
 };
 
 export function CouncilMemory() {
+  const { items, notice } = useCouncilHistory();
   const [period, setPeriod] = useState<CouncilPeriod | "all">("all");
   const [query, setQuery] = useState("");
   const visible = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("es");
-    return councilMilestones.filter(
+    return items.filter(
       (item) =>
         (period === "all" || item.period === period) &&
         (!needle ||
-          `${item.date} ${item.title} ${item.account}`
+          `${item.occurredOn} ${item.title} ${item.account}`
             .toLocaleLowerCase("es")
             .includes(needle)),
     );
-  }, [period, query]);
-  const sourceLink = (id: CouncilSourceId) => {
-    const source = councilSources[id];
+  }, [period, query, items]);
+  const sourceLink = (source: HistorySource, index: number) => {
     return (
       <a
-        key={id}
+        key={`${source.url}-${index}`}
         href={source.url}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`Abrir ${source.label} de ${source.issuer} en otra pestaña`}
       >
-        {source.issuer} <ArrowUpRight size={13} aria-hidden="true" />
+        {source.issuer || source.label}{" "}
+        <ArrowUpRight size={13} aria-hidden="true" />
       </a>
     );
   };
@@ -59,15 +57,34 @@ export function CouncilMemory() {
           territorio, la organización comunitaria y algunas de sus actuaciones.
           Cada fecha lleva a su fuente.
         </p>
-        <div className={styles.introFacts} aria-label="Contenido de la consulta">
-          <span><strong>{councilMilestones.length}</strong> hitos documentados</span>
-          <span><strong>{Object.keys(councilSources).length}</strong> fuentes enlazadas</span>
+        <div
+          className={styles.introFacts}
+          aria-label="Contenido de la consulta"
+        >
+          <span>
+            <strong>{items.length}</strong> hitos documentados
+          </span>
+          <span>
+            <strong>
+              {
+                new Set(
+                  items.flatMap((item) =>
+                    item.sources.map((source) => source.url),
+                  ),
+                ).size
+              }
+            </strong>{" "}
+            fuentes enlazadas
+          </span>
         </div>
         <div className={styles.introFoot}>
           <span>Gran Consejo Comunitario del Río Satinga · Olaya Herrera</span>
           <span>Fuentes públicas · validación comunitaria pendiente</span>
         </div>
       </header>
+      <p className="muted" role="status">
+        {notice}
+      </p>
 
       <section className={styles.context} aria-labelledby="why-council">
         <div>
@@ -142,10 +159,12 @@ export function CouncilMemory() {
         </div>
         <ol className={styles.timeline}>
           {visible.map((item) => (
-            <li key={`${item.date}-${item.title}`} className={styles.milestone}>
+            <li key={item.id} className={styles.milestone}>
               <div className={styles.timeMark}>
-                <span className={styles.date}>{item.date}</span>
-                <span className={styles.periodBadge}>{periodNames[item.period]}</span>
+                <span className={styles.date}>{historyDate(item)}</span>
+                <span className={styles.periodBadge}>
+                  {periodNames[item.period]}
+                </span>
               </div>
               <div className={styles.story}>
                 <h3>{item.title}</h3>

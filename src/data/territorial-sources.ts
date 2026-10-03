@@ -141,6 +141,16 @@ export const localityReferences: LocalityReference[] = [
   },
 ];
 
+/** DANE, DIVIPOLA 52490000, clase CM. No es una vereda del título colectivo. */
+export const municipalSeat: LocalityReference = {
+  name: "Bocas de Satinga",
+  lat: 2.347457,
+  lng: -78.325814,
+  kind: "oficial",
+  source:
+    "https://geoportal.dane.gov.co/descargas/divipola/DIVIPOLA_CentrosPoblados.xlsx",
+};
+
 /**
  * Título colectivo del Consejo Comunitario del Río Satinga.
  *

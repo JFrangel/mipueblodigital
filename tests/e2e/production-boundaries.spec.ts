@@ -71,7 +71,10 @@ test("el mapa nombra las veredas documentadas y las encuadra todas", async ({
   await expect(rotulos.first()).toBeVisible();
 
   // Solo las que tienen punto: no se inventa una posición para las demás.
-  await expect(rotulos).toHaveCount(12);
+  await expect(rotulos).toHaveCount(13);
+  await expect(rotulos.filter({ hasText: "Bocas de Satinga" })).toContainText(
+    "cabecera municipal",
+  );
   await expect(page.getByText("Codemaco", { exact: true })).toBeVisible();
   await expect(page.getByText("Cañas", { exact: true })).toHaveCount(0);
 

@@ -41,6 +41,15 @@ try {
   await assertFails(getDoc(doc(bob, "incidents/one")));
   await assertFails(getDoc(doc(anon, "incidents/one")));
   await assertFails(getDoc(doc(admin, "incidents/one")));
+  for (const db of [alice, admin, anon]) {
+    await assertFails(getDoc(doc(db, "councilHistory/base-one")));
+    await assertFails(
+      setDoc(doc(db, "councilHistory/base-one"), { status: "published" }),
+    );
+    await assertFails(
+      getDoc(doc(db, "councilHistory/base-one/audit/version-one")),
+    );
+  }
   await assertFails(
     getDoc(
       doc(

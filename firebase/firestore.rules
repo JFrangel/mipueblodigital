@@ -67,6 +67,8 @@ service cloud.firestore {
     match /exportTickets/{ticket} {
       allow read, write: if false;
     }
+    // Historia y auditoría se leen/publican exclusivamente mediante el servidor.
+    match /councilHistory/{document=**} { allow read, write: if false; }
     match /{document=**} { allow read, write: if false; }
   }
 }

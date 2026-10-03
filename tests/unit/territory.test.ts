@@ -14,7 +14,13 @@ import { historicalVeredas } from "../../src/data/territorial-sources";
 
 describe("catálogo territorial", () => {
   it("ofrece todas las veredas documentadas, sin repetir y ordenadas", () => {
-    expect(veredaNames).toHaveLength(historicalVeredas.length);
+    expect(veredaNames).toHaveLength(historicalVeredas.length + 1);
+    expect(historicalVeredas).toHaveLength(18);
+    expect(veredaReference("Bocas de Satinga")).toMatchObject({
+      lat: 2.347457,
+      lng: -78.325814,
+      kind: "oficial",
+    });
     expect(new Set(veredaNames).size).toBe(veredaNames.length);
     expect([...veredaNames].sort((a, b) => a.localeCompare(b, "es"))).toEqual(
       veredaNames,

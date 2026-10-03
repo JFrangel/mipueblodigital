@@ -5,7 +5,11 @@ import { MapPin, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { type Case, statuses, categories, shortDate } from "@/data/catalog";
 import { clusterPoints, pageItems } from "@/domain/logic";
 import { veredaLoad } from "@/domain/vereda-load";
-import { territoryCentre, veredaCatalogue } from "@/domain/territory";
+import {
+  territoryCentre,
+  veredaCatalogue,
+  localityLabel,
+} from "@/domain/territory";
 import { CaseList } from "@/components/case-list";
 import "leaflet/dist/leaflet.css";
 export function Territory({
@@ -168,7 +172,7 @@ export function Territory({
           interactive: false,
           pane: "veredas",
         })
-          .bindTooltip(vereda.name, {
+          .bindTooltip(localityLabel(vereda.name), {
             permanent: true,
             /* A la derecha del punto y fuera del alcance del marcador de
                grupo, que mide 44 píxeles centrados en la misma coordenada.

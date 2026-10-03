@@ -26,6 +26,8 @@ import {
   catalogueNotice,
   veredaNames,
   veredaReference,
+  localityLabel,
+  localitySearchText,
 } from "@/domain/territory";
 import { VeredaPreview, type Point } from "./vereda-preview";
 import { comoLaDelCatalogo } from "@/domain/veredas";
@@ -80,7 +82,9 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
   const veredasShown = veredaNames.filter(
     /* La ya elegida nunca se filtra fuera: si desapareciera de la lista, el
        desplegable se quedaría en blanco y la selección se perdería sola. */
-    (name) => name === data.vereda || plain(name).includes(plain(veredaQuery)),
+    (name) =>
+      name === data.vereda ||
+      plain(localitySearchText(name)).includes(plain(veredaQuery)),
   );
   const [receipt, setReceipt] = useState<{
     id: string;
@@ -687,7 +691,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 </label>
               ) : (
                 <label className="field-label">
-                  Vereda
+                  Vereda o cabecera municipal
                   {/* Escribir acorta la lista. Dieciocho veredas en un
                       desplegable obligan a recorrerlo entero, y en una ventana
                       baja el desplegable se abre con media lista fuera de la
@@ -711,16 +715,18 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                       setData({ ...data, vereda: e.target.value });
                     }}
                   >
-                    <option value="">Seleccionar vereda</option>
+                    <option value="">Seleccionar vereda o cabecera</option>
                     {veredasShown.map((v) => (
-                      <option key={v}>{v}</option>
+                      <option key={v} value={v}>
+                        {localityLabel(v)}
+                      </option>
                     ))}
                   </select>
                   {veredaQuery.trim() && (
                     <small className="muted">
                       {veredasShown.length === 0
                         ? "Ninguna vereda se llama así. Borra la búsqueda para ver todas."
-                        : `${veredasShown.length} de ${veredaNames.length} veredas.`}
+                        : `${veredasShown.length} de ${veredaNames.length} lugares.`}
                     </small>
                   )}
                 </label>

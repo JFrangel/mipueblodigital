@@ -7,6 +7,7 @@ import {
   Sparkles,
   ShieldCheck,
   MapPinned,
+  BookOpen,
 } from "lucide-react";
 import type { Case } from "@/data/catalog";
 import { CouncilInbox } from "./council-inbox";
@@ -15,11 +16,13 @@ import { NewsEditor } from "./news-editor";
 import { Notifications, useCouncilUnread } from "./notifications";
 import { CouncilRoles } from "./council-roles";
 import { CouncilTerritory } from "./council-territory";
+import { CouncilHistoryEditor } from "./council-history-editor";
 
 const tabs = [
   { id: "expedientes", label: "Expedientes", Icon: Inbox },
   { id: "novedades", label: "Novedades", Icon: Bell },
   { id: "comunicados", label: "Comunicados", Icon: Newspaper },
+  { id: "historia", label: "Historia", Icon: BookOpen },
   { id: "analisis", label: "Análisis", Icon: Sparkles },
   { id: "territorio", label: "Territorio", Icon: MapPinned },
   { id: "roles", label: "Quién administra", Icon: ShieldCheck },
@@ -148,6 +151,15 @@ export function CouncilPanel({ pending }: { pending: Case[] }) {
         hidden={active !== "comunicados"}
       >
         <NewsEditor />
+      </div>
+      <div
+        className="council-tabpanel"
+        id="council-panel-historia"
+        role="tabpanel"
+        aria-labelledby="council-tab-historia"
+        hidden={active !== "historia"}
+      >
+        <CouncilHistoryEditor />
       </div>
       <div
         className="council-tabpanel"

@@ -2,8 +2,8 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **435 casos en 52 archivos**; estado del reporte usado: 435 pasan, 0 fallan, 0 pendientes.
-- Navegador: **73 casos en 15 archivos** registrados por Playwright.
+- Unitarias: **457 casos en 54 archivos**; estado del reporte usado: 457 pasan, 0 fallan, 0 pendientes.
+- Navegador: **76 casos en 16 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
 
@@ -72,6 +72,34 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - no habla de proporciones con un conjunto diminuto
 - cuando no hay nada que señalar, lo dice
 - una categoría que se cierra bien se señala para copiarla
+
+### [tests/unit/council-history-api.test.ts](../tests/unit/council-history-api.test.ts) — 4 casos
+
+- guarda y audita con versión confirmada y autor del servidor
+- rechaza versiones antiguas sin sobrescribir
+- rechaza al no administrador antes de escribir
+- valida contenido e identificador antes de escribir
+
+### [tests/unit/council-history.test.ts](../tests/unit/council-history.test.ts) — 18 casos
+
+- archivo histórico del Consejo inserta hechos antiguos por fecha y no por orden de carga
+- archivo histórico del Consejo archivar una semilla no hace reaparecer su copia original
+- archivo histórico del Consejo los borradores no salen en la lectura pública
+- archivo histórico del Consejo editar una semilla reemplaza su contenido sin duplicarla
+- archivo histórico del Consejo ordena precisión parcial y hora local sin convertir husos horarios
+- archivo histórico del Consejo rechaza la fecha inválida 1994-02-29
+- archivo histórico del Consejo rechaza la fecha inválida 2024-04-31
+- archivo histórico del Consejo rechaza la fecha inválida 1994-00
+- archivo histórico del Consejo rechaza la fecha inválida 1994-13
+- archivo histórico del Consejo rechaza la fecha inválida 94
+- archivo histórico del Consejo rechaza la fecha inválida 1994-1-01
+- archivo histórico del Consejo acepta año, mes y día bisiesto
+- archivo histórico del Consejo no admite hora con una fecha incompleta
+- archivo histórico del Consejo rechaza enlaces inseguros javascript:alert(1)
+- archivo histórico del Consejo rechaza enlaces inseguros http://example.com
+- archivo histórico del Consejo rechaza enlaces inseguros https://user:password@example.com
+- archivo histórico del Consejo exige fuente y elimina campos ajenos al esquema
+- archivo histórico del Consejo cada hito base tiene identidad única y datos válidos
 
 ### [tests/unit/csv.test.ts](../tests/unit/csv.test.ts) — 4 casos
 
@@ -609,6 +637,12 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - inicio navega al reporte y exige los campos ([línea 157](../tests/e2e/app.spec.ts#L157))
 - documentación y análisis explican límites ([línea 171](../tests/e2e/app.spec.ts#L171))
 
+### [tests/e2e/cabecera-history.spec.ts](../tests/e2e/cabecera-history.spec.ts) — 3 casos
+
+- la API editorial de historia exige sesión administrativa ([línea 5](../tests/e2e/cabecera-history.spec.ts#L5))
+- la cabecera se encuentra buscando el municipio y conserva el nombre del expediente ([línea 18](../tests/e2e/cabecera-history.spec.ts#L18))
+- la línea de tiempo ordena una publicación antigua y recupera su copia sin red ([línea 36](../tests/e2e/cabecera-history.spec.ts#L36))
+
 ### [tests/e2e/community-nav.spec.ts](../tests/e2e/community-nav.spec.ts) — 1 casos
 
 - comunidad conserva sus cuatro secciones al navegar y recargar ([línea 3](../tests/e2e/community-nav.spec.ts#L3))
@@ -665,13 +699,13 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - el territorio dice dónde hay casos abiertos, no solo dónde ocurren ([línea 18](../tests/e2e/production-boundaries.spec.ts#L18))
 - una instalación sin reportes no inventa ninguno ([línea 44](../tests/e2e/production-boundaries.spec.ts#L44))
 - el mapa nombra las veredas documentadas y las encuadra todas ([línea 66](../tests/e2e/production-boundaries.spec.ts#L66))
-- la página del territorio no expone los mandos de prueba ([línea 91](../tests/e2e/production-boundaries.spec.ts#L91))
-- la API del Consejo rechaza acceso anónimo ([línea 101](../tests/e2e/production-boundaries.spec.ts#L101))
-- oscuro conserva contraste y banner a color, detalle navega como página ([línea 106](../tests/e2e/production-boundaries.spec.ts#L106))
-- la aplicación llega con sus cabeceras de seguridad ([línea 144](../tests/e2e/production-boundaries.spec.ts#L144))
-- los buscadores no recorren expedientes ni el panel del Consejo ([línea 165](../tests/e2e/production-boundaries.spec.ts#L165))
-- una dirección que no existe se explica y ofrece salida ([línea 174](../tests/e2e/production-boundaries.spec.ts#L174))
-- un punto del mapa enseña lo que tiene y lleva al expediente ([línea 193](../tests/e2e/production-boundaries.spec.ts#L193))
+- la página del territorio no expone los mandos de prueba ([línea 94](../tests/e2e/production-boundaries.spec.ts#L94))
+- la API del Consejo rechaza acceso anónimo ([línea 104](../tests/e2e/production-boundaries.spec.ts#L104))
+- oscuro conserva contraste y banner a color, detalle navega como página ([línea 109](../tests/e2e/production-boundaries.spec.ts#L109))
+- la aplicación llega con sus cabeceras de seguridad ([línea 147](../tests/e2e/production-boundaries.spec.ts#L147))
+- los buscadores no recorren expedientes ni el panel del Consejo ([línea 168](../tests/e2e/production-boundaries.spec.ts#L168))
+- una dirección que no existe se explica y ofrece salida ([línea 177](../tests/e2e/production-boundaries.spec.ts#L177))
+- un punto del mapa enseña lo que tiene y lleva al expediente ([línea 196](../tests/e2e/production-boundaries.spec.ts#L196))
 
 ### [tests/e2e/push-ajuste.spec.ts](../tests/e2e/push-ajuste.spec.ts) — 1 casos
 

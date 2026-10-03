@@ -2,6 +2,7 @@ import {
   collectiveTitle,
   historicalVeredas,
   localityReferences,
+  municipalSeat,
   type LocalityKind,
 } from "@/data/territorial-sources";
 
@@ -32,8 +33,8 @@ export const catalogueNotice = catalogueValidated
   ? "Catálogo validado por el Consejo Comunitario."
   : "Catálogo documentado a partir del EOT de 2007 y de fuentes abiertas. Está pendiente de validación por el Consejo Comunitario: los nombres pueden cambiar y los puntos son aproximados.";
 
-export const veredaCatalogue: Vereda[] = historicalVeredas
-  .map((name) => {
+export const veredaCatalogue: Vereda[] = [
+  ...historicalVeredas.map((name) => {
     const reference = localityReferences.find(
       (locality) =>
         locality.name === name || locality.name.endsWith(` ${name}`),
@@ -47,10 +48,17 @@ export const veredaCatalogue: Vereda[] = historicalVeredas
           kind: reference.kind,
         }
       : { name };
-  })
-  .sort((a, b) => a.name.localeCompare(b.name, "es"));
+  }),
+  municipalSeat,
+].sort((a, b) => a.name.localeCompare(b.name, "es"));
 
 export const veredaNames = veredaCatalogue.map((v) => v.name);
+
+export const localityLabel = (name: string) =>
+  name === municipalSeat.name
+    ? `${name} · cabecera municipal de Olaya Herrera`
+    : name;
+export const localitySearchText = (name: string) => localityLabel(name);
 
 /** Un punto de referencia solo se usa si la fuente lo documenta. */
 export function veredaReference(name: string) {

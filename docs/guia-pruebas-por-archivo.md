@@ -1,6 +1,21 @@
 # Guía de pruebas por archivo
 
-Fecha de revisión: 2 de octubre de 2026 (UTC). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 435 títulos Vitest y 73 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
+## Incorporaciones del 3 de octubre de 2026
+
+- `tests/unit/council-history.test.ts`: cronología, precisión de fecha, fuentes,
+  reemplazo de semillas, borradores y archivo sin reaparición pública.
+- `tests/unit/council-history-api.test.ts`: validación del guardado, permiso,
+  autor de sesión, transacción/versionado y conflicto sin sobrescritura.
+- `tests/e2e/cabecera-history.spec.ts`: búsqueda de Olaya Herrera, selección
+  canónica urbana, API editorial sin sesión, orden de una publicación antigua y
+  recuperación de la copia pública con fallo de red.
+- `territory.test.ts`, `production-boundaries.spec.ts` y `rules.mjs` amplían
+  verificaciones de catálogo/mapa y rechazo de acceso cliente a historia/auditoría.
+
+Detalle del alcance y aserciones en
+[la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
+
+Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 457 títulos Vitest y 76 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
 
 ## Unidad, dominio y API simulada
 
