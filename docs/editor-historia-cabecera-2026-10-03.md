@@ -82,6 +82,33 @@ El editor autenticado debe también revisarse con el custodio designado, comprob
 un borrador y publicación autorizados y un conflicto entre dos administradores.
 No se declara hecha esa prueba humana/real con las pruebas automatizadas anteriores.
 
+### Comprobación visual y despliegue reales
+
+Después de publicar se abrió la pestaña Historia desde la sesión administrativa
+existente del usuario. La API devolvió los 13 hitos y se abrió la ficha de 1991.
+Se revisó el formulario en escritorio (1897 px de viewport) y emulación móvil
+390 × 844, incluida la zona de fuentes; se revisaron los temas oscuro y claro.
+El catálogo y formulario se apilan en móvil, con lista de altura limitada y
+desplazamiento propio. En escritorio se distribuyen en dos columnas. Se
+restauraron el tema oscuro y el tamaño original. No se modificó ni publicó
+ningún hito institucional durante esta revisión de lectura y diseño.
+
+Código publicado: commit `979a34b`, rama `develop`. Vercel confirmó Ready para
+`dpl_EFcVR1LnsP8gJBmuoYoaTXqTB8ok`, creado el 3 de octubre a las 08:30:20
+America/Bogota, y el dominio principal apunta a esa entrega.
+
+- https://mipueblodigital.vercel.app/memoria/ → 200.
+- https://mipueblodigital.vercel.app/mapa/ → 200.
+- https://mipueblodigital.vercel.app/admin/ → 200 (la interfaz comprueba sesión/rol).
+- `/api/history/` → 200, 13 hitos, sin campos administrativos privados.
+- `/api/admin/history/` sin sesión → 401.
+
+Antes de desplegar, `vercel deploy --dry --json` enumeró 220 archivos: cero
+archivos privados o directorios de credenciales/diseño/runtime. `.env.example`
+es la plantilla pública; los entornos reales y la monografía se excluyeron.
+El despliegue fue normal, sin archivo comprimido. Las comprobaciones de permisos
+y de diseño no equivalen a editar datos de producción ni al piloto del Consejo.
+
 ## Operación
 
 Guía editorial completa: `docs/banco-consulta-consejo.md`. Los datos nuevos van a
