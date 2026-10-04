@@ -27,9 +27,7 @@ export function Terminos() {
         <Logo />
         <h1>Términos y tratamiento de datos personales</h1>
       </div>
-      <p className={styles.meta}>
-        Última actualización: 24 de septiembre de 2026.
-      </p>
+      <p className={styles.meta}>Última actualización: 3 de octubre de 2026.</p>
       <p>
         Este documento explica qué información pide Mi Pueblo Digital, para qué
         la usa el Gran Consejo Comunitario Río Satinga, y qué puedes hacer si
@@ -67,9 +65,9 @@ export function Terminos() {
           constancia de lo que hizo y te avise de cada cambio. También para
           calcular estadísticas del territorio —cuántos reportes hay, en qué
           veredas, en qué se tarda en resolverlos— y, solo si el Consejo revisa
-          el caso y lo declara sin contenido sensible, o si pasa un plazo sin
-          que lo marques como delicado, para que una versión sin tu teléfono ni
-          tu fotografía conste ante la comunidad.
+          el caso, lo declara sin contenido sensible y redacta un resumen sin tu
+          teléfono ni tu fotografía, para que ese resumen conste ante la
+          comunidad pasadas 24 horas desde que lo aprueba.
         </p>
       </section>
 
@@ -77,11 +75,11 @@ export function Terminos() {
         <h2>Quién puede ver qué</h2>
         <p>
           Tu expediente completo lo ves tú y lo ve el Consejo. La comunidad, si
-          acaso, ve una versión reducida: categoría, vereda, estado, fecha, y un
-          relato —el tuyo, o uno que redactó el Consejo si ya revisó el caso—.
-          Tu teléfono, tu identidad de cuenta y tu fotografía no salen nunca de
-          esos dos primeros: ni en la versión que ve la comunidad ni en ninguna
-          estadística.
+          acaso, ve un resumen que redacta el Consejo —su título, la categoría,
+          la vereda, el estado y la fecha— y solo después de que lo apruebe y
+          pasen 24 horas. Tu relato tal como lo escribiste, tu teléfono, tu
+          identidad de cuenta y tu fotografía no salen nunca de ti y del
+          Consejo: ni en ese resumen ni en ninguna estadística.
         </p>
       </section>
 

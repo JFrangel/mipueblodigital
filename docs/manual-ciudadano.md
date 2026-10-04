@@ -174,34 +174,35 @@ próxima vez. Avisa al Consejo si el mensaje persiste.
 
 ## 8. Qué ve la comunidad y qué no
 
-Léelo antes de escribir tu primer reporte, porque **parte de lo que escribas
-puede constar ante la comunidad sin que nadie más lo lea antes**.
+Léelo antes de escribir tu primer reporte. **Tu reporte nace privado**: nada de
+lo que escribes se publica por sí solo. La comunidad solo ve un resumen que
+redacta y aprueba el Consejo.
 
-| Dato                              | Quién lo ve                                                                        |
-| --------------------------------- | ---------------------------------------------------------------------------------- |
-| Tu nombre, tu correo, tu teléfono | Solo tú y el Consejo. Nunca salen                                                  |
-| La fotografía                     | Solo tú y el Consejo. **Nunca** consta ante la comunidad                           |
-| Notas internas del Consejo        | Solo el Consejo                                                                    |
-| Tu título y tu relato             | Constan ante la comunidad **pasadas 24 horas**, salvo que lo marques como delicado |
-| El resumen que redacta el Consejo | Toda la comunidad, en cuanto lo publique                                           |
+| Dato                              | Quién lo ve                                                          |
+| --------------------------------- | -------------------------------------------------------------------- |
+| Tu nombre, tu correo, tu teléfono | Solo tú y el Consejo. Nunca salen                                    |
+| La fotografía                     | Solo tú y el Consejo. **Nunca** consta ante la comunidad             |
+| Tu título y tu relato             | Solo tú y el Consejo. **Nunca** se publican tal como los escribiste  |
+| Notas internas del Consejo        | Solo el Consejo                                                      |
+| El resumen que redacta el Consejo | Toda la comunidad, **24 horas después de que el Consejo lo apruebe** |
 
-### Los dos caminos por los que un reporte consta
+### Cómo llega un resumen a la comunidad
 
-**Por plazo.** Pasadas **24 horas** desde que lo envías, un reporte que nadie
-marcó como delicado consta ante la comunidad **con tu título y tu relato, tal
-como los escribiste**. Nadie los revisa antes. Ese plazo es tuyo: es el margen
-que tienes para pensártelo o marcarlo como delicado.
+1. El Consejo revisa tu reporte y lo declara sin contenido sensible.
+2. Redacta un título, un resumen y una vereda públicos, sin datos personales, y
+   los aprueba.
+3. Pasadas **24 horas** desde esa aprobación, el resumen consta ante la
+   comunidad. El plazo lo fija el servidor del Consejo; hoy son 24 horas.
 
-**Por revisión.** Si el Consejo lo estudia, lo declara sin contenido sensible y
-escribe un resumen propio, esa versión reemplaza a la tuya y aparece **en
-seguida**, sin esperar el plazo. El texto es del Consejo, no tuyo.
+El texto es del Consejo, no tuyo. Mientras no lo apruebe, tu reporte sigue
+siendo solo tuyo y del Consejo.
 
 ### Qué hacer si no quieres que conste
 
-Marca el reporte como **delicado** al enviarlo. Un reporte delicado no consta de
-ninguna de las dos maneras: ni por plazo, ni revisado. El Consejo lo recibe y lo
-gestiona igual. También puede marcarlo el Consejo en cualquier momento, incluso
-después de haberlo publicado, y eso lo retira.
+Marca el reporte como **delicado** al enviarlo. Un reporte delicado no se publica
+de ninguna manera, ni siquiera revisado. El Consejo lo recibe y lo gestiona
+igual. También puede marcarlo el Consejo en cualquier momento, incluso después
+de haber aprobado un resumen, y eso lo retira.
 
 Si dudas, márcalo. Siempre se puede publicar después; lo que constó, constó.
 

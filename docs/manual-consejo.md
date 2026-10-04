@@ -104,15 +104,18 @@ pasos, en este orden:
 1. **Revisión de sensibilidad.** Marca «Revisado · sin contenido sensible» solo
    después de mirar la fotografía y el relato. Si hay lesiones, menores o
    personas identificables, marca «Sensible · privado» y ahí termina.
-2. **Plazo.** Debe haber transcurrido el plazo de publicación configurado
-   (24 horas de forma predeterminada) desde que el caso se recibió.
-3. **Reescritura.** Con «Compartir resumen tras 24 horas» debes redactar un
-   **título público**, un **resumen de hasta 30 palabras** y una **vereda
-   pública**, sin nombres, teléfonos ni datos que identifiquen a nadie.
+2. **Reescritura y aprobación.** Con «Compartir el resumen revisado» debes
+   redactar un **título público**, un **resumen de hasta 30 palabras** y una
+   **vereda pública**, sin nombres, teléfonos ni datos que identifiquen a nadie.
+3. **Plazo.** La comunidad ve el resumen cuando ha transcurrido el plazo de
+   publicación configurado (24 horas de forma predeterminada) **desde su
+   aprobación**, no desde que se recibió el caso. Mientras tanto la bandeja
+   dice «Resumen aprobado: visible 24 horas después de su aprobación».
 
-El sistema rechaza publicar si falta cualquiera de los tres. **La fotografía
-original nunca se publica**, esté el caso revisado o no. Volver a «Privado»
-retira el resumen de la comunidad.
+El sistema rechaza aprobar el resumen si falta alguno de los dos primeros pasos.
+**La fotografía original nunca se publica y el relato del ciudadano no se
+publica por sí solo**, esté el caso revisado o no. Volver a «Privado» retira el
+resumen de la comunidad.
 
 Escribe el resumen tú: no copies el relato del ciudadano.
 
