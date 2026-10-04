@@ -1,8 +1,8 @@
 # Pruebas, resultados y rendimiento
 
 Actualización del 3 de octubre (noche): tras corregir los textos de privacidad y
-las fuentes de la memoria del Consejo, **459/459 unitarias y 76/76 pruebas de
-navegador**. Reglas, tipos, lint (sin avisos) y build pasan; la última sección
+las fuentes de la memoria del Consejo y ampliar su guía, **465/465 unitarias y
+77/77 pruebas de navegador**. Reglas, tipos, lint (sin avisos) y build pasan; la última sección
 detalla la verificación independiente de ese día. Detalle de entradas,
 aserciones, dobles y alcance del editor histórico en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
@@ -16,9 +16,9 @@ Fecha de corte: 3 de octubre de 2026 (America/Bogota). El [catálogo individual]
 | --- | --- | --- | --- |
 | Formato/lint | `npm run lint` | Reglas estáticas ESLint de todo el proyecto | Comportamiento, accesibilidad o seguridad de servicios externos |
 | Tipos | `npm run typecheck` | Contratos TypeScript | Permisos efectivos, errores de red, experiencia en teléfono |
-| Unitarias y rutas aisladas | `npm test` | 459 casos en 54 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
+| Unitarias y rutas aisladas | `npm test` | 465 casos en 55 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
 | Build | `npm run build` | Compilación de producción Next, rutas y empaquetado web | Que el backend esté configurado ni que las cuentas reales funcionen |
-| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 76 casos en 16 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
+| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 77 casos en 16 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
 | Reglas de base | `npm run test:rules` | Reglas de Firestore en emulador con los casos de [`rules.mjs`](../tests/integration/rules.mjs) | API Admin, consola real, configuración de producción |
 | Integraciones manuales | [`auth.mjs`](../tests/integration/auth.mjs) y [`remote-incidents.mjs`](../tests/integration/remote-incidents.mjs) | Flujos reales si se facilitan credenciales y entorno aislado | No deben ejecutarse sobre datos comunitarios sin preparar el entorno |
 | Rendimiento local | `npm run test:perf` con servidor de producción local | Cinco cargas nuevas por ruta, DOMContentLoaded, load y tiempo de respuesta | Carga concurrente, experiencia de campo o Web Vitals reales |
@@ -97,18 +97,18 @@ La primera carga de bienvenida fue la más lenta de su serie (160 ms) y el cálc
 
 ## Verificación independiente — 3 de octubre de 2026
 
-Repetida desde cero por el asistente Claude (Anthropic), a petición de Jose Padilla, sobre el commit `3c7586a` y, en lo marcado con \*, sobre el árbol corregido de ese mismo día. Ninguna cifra se copió del informe anterior.
+Repetida desde cero por el asistente Claude (Anthropic), a petición de Jose Padilla, sobre el commit `3c7586a` y, en lo marcado con \*, sobre el árbol corregido y ampliado de ese mismo día (la guía del Consejo con derechos, organización, territorio y glosario). Ninguna cifra se copió del informe anterior.
 
 | Verificación | Resultado | Notas |
 | --- | --- | --- |
-| `npm test` \* | **459/459**, 54 archivos | Los dos casos nuevos protegen la ficha pública de la historia (sin versión, estado ni autor) y la biblioteca de fuentes (solo HTTPS, sin repetir). |
-| `npx playwright test --workers=4` \* | **76/76**, 16 archivos, 36,9 s | Tras compilar el árbol corregido. |
+| `npm test` \* | **465/465**, 55 archivos | Ocho casos nuevos: dos protegen la ficha pública de la historia (sin versión, estado ni autor) y la biblioteca de fuentes (solo HTTPS, sin repetir); seis cubren la guía del Consejo (fuentes, títulos y extensiones). |
+| `npx playwright test --workers=4` \* | **77/77**, 16 archivos, 30,7 s | Tras compilar el árbol ampliado. El caso nuevo recorre la ley, los derechos y los tres consejos del municipio en móvil. |
 | `npm run typecheck` \* | Salida 0 | |
 | `npm run lint` \* | Salida 0, **0 avisos** | Antes había 2 avisos de variable sin usar en `src/server/council-history.ts`. |
 | `npm run build` \* | Salida 0 | |
 | `npm run test:rules` | Salida 0 en emulador | Sobre `3c7586a`; las correcciones no tocan `firebase/firestore.rules`. |
-| Catálogo de pruebas | Idéntico al regenerado | Sobre `3c7586a`, `node scripts/generar-catalogo-pruebas.mjs` no cambió una línea. Tras añadir los dos casos solo cambian el total y los dos títulos nuevos. |
-| Guía por archivo | Coincide archivo por archivo | La suma de sus tablas da 459 y 76. |
+| Catálogo de pruebas | Idéntico al regenerado | Sobre `3c7586a`, `node scripts/generar-catalogo-pruebas.mjs` no cambió una línea. Tras añadir los casos nuevos solo cambian los totales, el recuento de los archivos tocados y los títulos nuevos. |
+| Guía por archivo | Coincide archivo por archivo | La suma de sus tablas da 465 y 77. |
 | APK 2.2 | Coincide | El SHA-256 y el tamaño de `public/descargas/mi-pueblo-digital.apk` son los de `version.json`. |
 | Pruebas instrumentadas de Android | **No se repitieron** | Necesitan un emulador o un teléfono. |
 

@@ -2,6 +2,10 @@
 
 ## Incorporaciones del 3 de octubre de 2026
 
+- `tests/unit/council-guide.test.ts` y el tercer caso de
+  `tests/e2e/council-memory.spec.ts`: la guía del Consejo (organización,
+  derechos, territorio, glosario y pendientes) y su recorrido en móvil.
+
 - `tests/unit/council-history.test.ts`: cronología, precisión de fecha, fuentes,
   reemplazo de semillas, borradores y archivo sin reaparición pública.
 - `tests/unit/council-history-api.test.ts`: validación del guardado, permiso,
@@ -15,7 +19,7 @@
 Detalle del alcance y aserciones en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
 
-Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 459 títulos Vitest y 76 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Las tablas de abajo cubren los 54 archivos unitarios y los 16 de navegador; la suma de sus casos da 459 y 76. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
+Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 465 títulos Vitest y 77 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Las tablas de abajo cubren los 54 archivos unitarios y los 16 de navegador; la suma de sus casos da 465 y 77. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
 
 ## Unidad, dominio y API simulada
 
@@ -29,6 +33,7 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `calendar.test.ts` | 8 | El día local de Bogotá, año bisiesto, distribución semanal y frase hablada de una fecha respetan casos límite. |
 | `community-projection.test.ts` | 9 | La vista para otros miembros contiene solo datos permitidos y respeta clasificación y demora posterior a revisión. |
 | `council-alerts.test.ts` | 5 | Los eventos administrativos generan avisos dirigidos y evitan duplicaciones o destinatarios indebidos. |
+| `council-guide.test.ts` | 6 | La guía del Consejo no deja tarjetas ni términos sin fuente, no repite títulos, trae resolución, fecha y extensión de los tres títulos y da la misma extensión al título del Río Satinga en la línea de tiempo y en las tarjetas. |
 | `council-history-api.test.ts` | 4 | Guardar un hito exige administrador, valida el cuerpo, toma el autor de la sesión (no del cliente), usa transacción con versión y responde 409 sin sobrescribir si otra persona lo cambió. |
 | `council-history.test.ts` | 20 | La cronología respeta la precisión de la fecha (año, mes, día, hora), las fuentes y el reemplazo de hitos base; borradores y archivados no reaparecen en la consulta pública; la ficha pública sale campo a campo (sin versión, estado ni autor) y la biblioteca de fuentes solo enlaza por HTTPS. |
 | `csv.test.ts` | 4 | La exportación tabular conserva columnas y escapa contenido que podría interpretarse como fórmula. |
@@ -84,7 +89,7 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `cabecera-history.spec.ts` | 3 | Búsqueda de Olaya Herrera, selección canónica de la cabecera urbana, API editorial rechazada sin sesión, orden de una publicación antigua y recuperación de la copia pública con fallo de red. |
 | `community-nav.spec.ts` | 1 | Las cuatro secciones de Comunidad conservan su navegación y estado seleccionado. |
 | `comunicado.spec.ts` | 5 | Feed y detalle de comunicado, lectura y controles editoriales visibles. |
-| `council-memory.spec.ts` | 2 | Línea de tiempo, filtros, búsqueda, fuentes, ancho móvil y reapertura offline de la ruta cacheada. |
+| `council-memory.spec.ts` | 3 | Línea de tiempo, filtros, búsqueda, fuentes, ancho móvil y reapertura offline de la ruta cacheada; la página explica la ley, los derechos y los tres consejos del municipio (índice, secciones y cifras de los títulos) sin desbordar en móvil. |
 | `first-run.spec.ts` | 4 | Primer acceso y presentación inicial muestran las rutas y decisiones apropiadas. |
 | `management.spec.ts` | 7 | Panel del Consejo, filtros, seguimiento y acciones administrativas en el entorno de prueba. |
 | `polish.spec.ts` | 13 | Microinteracciones, presentación visual y distintas anchuras de secciones clave. |

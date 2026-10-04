@@ -12,14 +12,15 @@ El objetivo es facilitar la consulta y la trazabilidad. La sección no certifica
 
 | Componente | Responsabilidad |
 | --- | --- |
-| `/memoria/`, accesible desde Comunidad | Presentación del archivo público |
+| `/memoria/`, accesible desde Comunidad | Presentación del archivo público: índice, por qué existe, línea de tiempo, organización, derechos, territorio, glosario, pendientes y biblioteca de fuentes |
 | `src/content/council-history.ts` | Catálogo tipado y versionado de fuentes y resúmenes; cada hito referencia fuentes por identificador |
-| `src/features/council-memory.tsx` | Línea de tiempo, filtros Origen/Territorio/Memoria, búsqueda y enlaces a fuentes |
+| `src/content/council-guide.ts` | Organización del Consejo, derechos, los tres títulos del municipio, glosario y pendientes: tarjetas con su fuente. No se editan desde Historia |
+| `src/features/council-memory.tsx` | Índice de la página, línea de tiempo con filtros Origen/Territorio/Memoria y búsqueda, secciones de la guía y enlaces a fuentes |
 | `src/features/council-memory.module.css` | Diseño adaptable a móvil y ordenador, integrado con los temas de la app |
 | `docs/investigacion-consejo-rio-satinga.md` | Investigación, jerarquía de fuentes, segunda revisión y datos por confirmar |
 | `tests/e2e/council-memory.spec.ts` | Recorrido de consulta, filtros, fuentes y contenido previamente cacheado en navegador |
 
-**El banco combina 13 hitos investigados del repositorio con la colección editorial `councilHistory` de Firestore.** La nueva pestaña Historia del panel del Consejo permite agregar, corregir, publicar y archivar resúmenes. No es un archivo de actas privadas. Las fuentes enlazadas permanecen en sus sitios custodios; no se copian documentos sensibles a Git ni a la colección de noticias. La PWA puede abrir la consulta previamente cacheada sin red; abrir una fuente externa sí requiere conexión.
+**El banco combina 18 hitos investigados del repositorio con la colección editorial `councilHistory` de Firestore.** La nueva pestaña Historia del panel del Consejo permite agregar, corregir, publicar y archivar resúmenes. No es un archivo de actas privadas. Las fuentes enlazadas permanecen en sus sitios custodios; no se copian documentos sensibles a Git ni a la colección de noticias. La PWA puede abrir la consulta previamente cacheada sin red; abrir una fuente externa sí requiere conexión.
 
 ## Entradas, proceso y salidas
 
@@ -35,7 +36,11 @@ Se propone que la Junta designe un custodio editorial, con autorización del Con
 
 Para cada nueva ficha registrar: título, autor/custodio, fecha del hecho y del documento, URL estable, páginas pertinentes, resumen, alcance, permiso de publicación y fecha de revisión. El formulario guarda título, fecha del hecho, hora opcional, descripción, período, aclaración y fuentes; los detalles documentales adicionales pueden consignarse en la descripción y aclaración. Las modificaciones editoriales conservan versiones y autor en `councilHistory/{id}/audit`; el código conserva su historia en Git. Revisar enlaces periódicamente y ante avisos de la comunidad. Un enlace caído no justifica reemplazar el hecho por una inferencia; buscar copia autorizada o indicar que la fuente no está disponible. La revisión del 3 de octubre de 2026 (tabla al final de [la investigación](investigacion-consejo-rio-satinga.md#revisión-de-fuentes--3-de-octubre-de-2026)) encontró tres enlaces sin respuesta; los hitos afectados lo dicen en su aclaración y una de las fuentes se retiró de la biblioteca.
 
+**Hitos y tarjetas no se mantienen igual.** Los hitos de la línea de tiempo se agregan, corrigen y archivan desde Historia. Las tarjetas de la guía (organización, derechos, territorio, glosario y pendientes) están en `src/content/council-guide.ts`: las cambia el mantenimiento técnico, con el mismo criterio —cada afirmación se contrasta con el texto de su fuente y lleva su enlace— y anotando la fecha de la comprobación. Los títulos del municipio salen del registro de la ANT, que se vuelve a consultar cuando se amplíe un título o llegue una resolución nueva. Las normas pueden cambiar: la página avisa que debe confirmarse la vigencia del Decreto 1745 antes de usarlo en una decisión.
+
 ## Qué falta para un archivo institucional completo
+
+La página lo muestra a quien la consulta, en la sección «Por completar».
 
 Solicitar el expediente auténtico de titulación, Acta 002/1998, planos, reglamento vigente y actas autorizadas. Validar con el Consejo la cronología y las denominaciones territoriales. No afirmar que una fuente antigua identifica a la representante actual.
 
@@ -49,6 +54,7 @@ Si se desea cargar documentos desde administración, hace falta una segunda fase
 - **¿Quién corrige un error después de entregar?** El custodio editorial valida; un administrador corrige el hito desde Historia, con versión y autor auditados.
 - **¿Por qué no se publican todas las actas?** Contienen datos que pueden requerir reserva. La consulta pública usa resúmenes y enlaces públicos.
 - **¿Funciona sin conexión?** La interfaz y contenido previamente cacheados pueden consultarse; los documentos externos necesitan red.
+- **¿Por qué incluye derechos y normas si es la memoria de un Consejo?** Porque quien consulta necesita saber en qué se apoya el Consejo, no solo qué le pasó. Cada tarjeta dice de qué norma o sentencia sale, enlaza el texto y no pretende ser asesoría jurídica.
 - **¿Se puede ampliar?** Sí, agregando fuentes/hitos revisados desde Historia; un archivo privado de documentos requiere la segunda fase descrita arriba.
 
 ## Edición, fechas y almacenamiento (3 de octubre de 2026)

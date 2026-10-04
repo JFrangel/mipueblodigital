@@ -2,8 +2,8 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **459 casos en 54 archivos**; estado del reporte usado: 459 pasan, 0 fallan, 0 pendientes.
-- Navegador: **76 casos en 16 archivos** registrados por Playwright.
+- Unitarias: **465 casos en 55 archivos**; estado del reporte usado: 465 pasan, 0 fallan, 0 pendientes.
+- Navegador: **77 casos en 16 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
 
@@ -72,6 +72,15 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - no habla de proporciones con un conjunto diminuto
 - cuando no hay nada que señalar, lo dice
 - una categoría que se cierra bien se señala para copiarla
+
+### [tests/unit/council-guide.test.ts](../tests/unit/council-guide.test.ts) — 6 casos
+
+- guía del Consejo: derechos, organización, territorio y glosario cada tarjeta y cada término enlazan al menos una fuente de la biblioteca
+- guía del Consejo: derechos, organización, territorio y glosario cada tarjeta dice de qué norma o sentencia sale
+- guía del Consejo: derechos, organización, territorio y glosario los términos del glosario no se repiten
+- guía del Consejo: derechos, organización, territorio y glosario los tres consejos titulados traen resolución, fecha y extensión, y solo uno es el actual
+- guía del Consejo: derechos, organización, territorio y glosario la línea de tiempo y las tarjetas dan la misma extensión al título del Río Satinga
+- guía del Consejo: derechos, organización, territorio y glosario lo pendiente lo nombra como tarea del Consejo y no inventa datos
 
 ### [tests/unit/council-history-api.test.ts](../tests/unit/council-history-api.test.ts) — 4 casos
 
@@ -657,10 +666,11 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - los pasos recorridos del reporte se pueden reabrir ([línea 87](../tests/e2e/comunicado.spec.ts#L87))
 - vaciar un paso anterior vuelve a cerrar los siguientes ([línea 113](../tests/e2e/comunicado.spec.ts#L113))
 
-### [tests/e2e/council-memory.spec.ts](../tests/e2e/council-memory.spec.ts) — 2 casos
+### [tests/e2e/council-memory.spec.ts](../tests/e2e/council-memory.spec.ts) — 3 casos
 
 - la memoria del Consejo permite consultar hitos y fuentes en móvil ([línea 3](../tests/e2e/council-memory.spec.ts#L3))
-- el banco de consulta abre sin internet después de instalar la PWA ([línea 44](../tests/e2e/council-memory.spec.ts#L44))
+- la memoria explica la ley, los derechos y los tres consejos del municipio ([línea 46](../tests/e2e/council-memory.spec.ts#L46))
+- el banco de consulta abre sin internet después de instalar la PWA ([línea 82](../tests/e2e/council-memory.spec.ts#L82))
 
 ### [tests/e2e/first-run.spec.ts](../tests/e2e/first-run.spec.ts) — 4 casos
 
