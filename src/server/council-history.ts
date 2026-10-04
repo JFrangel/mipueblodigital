@@ -21,8 +21,18 @@ export async function readHistory(db: Firestore, publishedOnly = false) {
   return mergeHistory(overrides, publishedOnly);
 }
 
+/** La ficha pública se arma campo a campo: ni versión, ni estado, ni autor. */
 export function publicHistory(items: HistoryEntry[]) {
-  return items.map(({ version: _version, status: _status, ...item }) => item);
+  return items.map((item) => ({
+    id: item.id,
+    occurredOn: item.occurredOn,
+    time: item.time,
+    title: item.title,
+    account: item.account,
+    period: item.period,
+    sources: item.sources,
+    qualification: item.qualification,
+  }));
 }
 
 export function historyFailure(error: unknown) {

@@ -104,10 +104,11 @@ export function CouncilMemory() {
       <aside className={styles.territoryNote} aria-label="Vida junto al río">
         <span className="eyebrow">VIDA JUNTO AL RÍO</span>
         <p>
-          Una publicación del Ministerio de Educación sitúa a Las Marías en la
-          parte media del río Satinga y describe su acceso fluvial. Es un
-          testimonio de la época de esa publicación: las condiciones de
-          transporte y servicios deben consultarse de nuevo con la comunidad.
+          Una guía del Ministerio de Educación publicada en 2020 sitúa a Las
+          Marías en la parte media del río Satinga y dice que su única vía de
+          comunicación es fluvial. Es un testimonio de esa fecha: las
+          condiciones de transporte y servicios deben consultarse de nuevo con
+          la comunidad.
         </p>
         <a
           href={councilSources.educationTerritory.url}
@@ -248,8 +249,10 @@ export function CouncilMemory() {
         <p className={styles.libraryNote}>
           Los enlaces son documentos públicos. La reproducción de la resolución
           y el anexo de la Asamblea deben cotejarse con el archivo del Consejo
-          antes de tratarlos como copia auténtica. Esta consulta no publica
-          actas privadas, censos ni datos personales.
+          antes de tratarlos como copia auténtica. Si un enlace no abre, el
+          documento pudo moverse o el sitio estar caído: avisa al Consejo para
+          reverificarlo. Esta consulta no publica actas privadas, censos ni
+          datos personales.
         </p>
       </section>
     </div>

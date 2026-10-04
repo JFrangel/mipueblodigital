@@ -20,10 +20,10 @@ export const councilSources = {
     issuer: "Diario Oficial, reproducido por vLex",
     url: "https://vlex.com.co/vid/resolucion-03292-43154281",
   },
-  congress: {
-    label: "Gaceta 449 de 2003",
-    issuer: "Congreso de la República",
-    url: "https://leyes.senado.gov.co/proyectos/images/documentos/textos%20radicados/ponencias/2003/gaceta_449.pdf",
+  titleRegistry: {
+    label: "Consejo Comunitario Titulado · registro de títulos colectivos",
+    issuer: "Agencia Nacional de Tierras · datos abiertos",
+    url: "https://data-agenciadetierras.opendata.arcgis.com/datasets/agenciadetierras::consejo-comunitario-titulado/about",
   },
   assembly: {
     label: "Acta de Asamblea del 2 de octubre de 2009",
@@ -56,9 +56,9 @@ export const councilSources = {
     url: "https://www.minambiente.gov.co/wp-content/uploads/2022/04/1.-Manejo-forestal-sostenible-a-traves-de-la-foresteria-comunitaria-una-propuesta-tecnica-institucional-y-financiera-para-promover-en-Colombia.pdf",
   },
   educationTerritory: {
-    label: "Las Marías en publicaciones educativas",
+    label: "Las Marías, comunidad del río Satinga · guía de 2020",
     issuer: "Ministerio de Educación Nacional",
-    url: "https://www.mineducacion.gov.co/portal/men/publicaciones/guias/",
+    url: "https://www.mineducacion.gov.co/portal/men/Publicaciones/Guias/360526:Las-Marias",
   },
   environment: {
     label: "Resolución 058 de 2024",
@@ -127,11 +127,11 @@ export const councilMilestones: readonly CouncilMilestone[] = [
     date: "2000",
     title: "Titulación colectiva del Río Satinga",
     account:
-      "El Incora expidió la Resolución 03292 el 18 de diciembre. Una Gaceta posterior registró 24.507,0400 hectáreas adjudicadas al Consejo Comunitario Satinga en Olaya Herrera.",
+      "El Incora expidió la Resolución 03292 el 18 de diciembre y adjudicó 24.507,04 hectáreas al Gran Consejo Comunitario del Río Satinga, en Olaya Herrera. La cifra coincide con la del registro de títulos colectivos de la Agencia Nacional de Tierras.",
     qualification:
-      "La extensión es la del acto histórico; no define por sí sola linderos digitales ni población actual.",
+      "La extensión es la del acto histórico; no define por sí sola linderos digitales ni población actual. La reproducción del acto que se pudo consultar está incompleta: para linderos y condiciones hace falta la copia auténtica.",
     period: "territorio",
-    sources: ["congress", "environment"],
+    sources: ["title", "titleRegistry"],
   },
   {
     date: "2007",
@@ -187,7 +187,7 @@ export const councilMilestones: readonly CouncilMilestone[] = [
     account:
       "El pacto de Olaya Herrera nombra a Río Satinga, Gualmar y Sanquianga entre los consejos del municipio y recoge propuestas de planeación territorial de aquel proceso.",
     qualification:
-      "El pacto no sustituye las prioridades que el Consejo defina hoy ni acredita por sí solo la ejecución de sus iniciativas.",
+      "El pacto no sustituye las prioridades que el Consejo defina hoy ni acredita por sí solo la ejecución de sus iniciativas. El enlace al documento no respondía al revisarlo el 3 de octubre de 2026; la referencia queda pendiente de reverificar.",
     period: "memoria",
     sources: ["pdet"],
   },
@@ -196,6 +196,8 @@ export const councilMilestones: readonly CouncilMilestone[] = [
     title: "Gestión de recursos naturales documentada",
     account:
       "CORPONARIÑO expidió la Resolución 058 sobre una fase de aprovechamiento forestal solicitada por el Consejo y volvió a identificar el título colectivo.",
+    qualification:
+      "El enlace al texto del acto no respondía al revisarlo el 3 de octubre de 2026; la referencia queda pendiente de reverificar con CORPONARIÑO.",
     period: "territorio",
     sources: ["environment"],
   },

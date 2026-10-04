@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   chronological,
   historySeeds,
@@ -6,6 +6,18 @@ import {
   validateHistory,
   historyDate,
 } from "../../src/domain/council-history";
+import { councilSources } from "../../src/content/council-history";
+import { publicHistory } from "../../src/server/council-history";
+vi.mock("../../src/server/admin-auth", () => ({
+  ApiError: class extends Error {
+    constructor(
+      public status: number,
+      message: string,
+    ) {
+      super(message);
+    }
+  },
+}));
 const entry = {
   ...historySeeds[0],
   id: "new-history",
@@ -93,5 +105,29 @@ describe("archivo histórico del Consejo", () => {
     );
     for (const item of historySeeds)
       expect(() => validateHistory(item)).not.toThrow();
+  });
+  it("la ficha pública sale campo a campo: sin versión, estado ni autor", () => {
+    const filtrada = {
+      ...entry,
+      version: 7,
+      actorUid: "admin",
+      updatedBy: "a",
+    };
+    const [visible] = publicHistory([filtrada]);
+    expect(Object.keys(visible).sort()).toEqual([
+      "account",
+      "id",
+      "occurredOn",
+      "period",
+      "qualification",
+      "sources",
+      "time",
+      "title",
+    ]);
+  });
+  it("la biblioteca de fuentes solo enlaza por HTTPS y sin repetir direcciones", () => {
+    const urls = Object.values(councilSources).map((source) => source.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const url of urls) expect(new URL(url).protocol).toBe("https:");
   });
 });
