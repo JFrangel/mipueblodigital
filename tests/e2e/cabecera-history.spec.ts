@@ -46,9 +46,11 @@ test("la línea de tiempo ordena una publicación antigua y recupera su copia si
     route.fulfill({ json: { items: [inserted, ...historySeeds] } }),
   );
   await page.goto("/memoria/");
-  await expect(page.locator("ol li")).toHaveCount(14);
+  await expect(page.locator("ol li")).toHaveCount(historySeeds.length + 1);
   const titles = await page.locator("ol li h3").allTextContents();
-  expect(titles.indexOf(inserted.title)).toBe(2);
+  const position = titles.indexOf(inserted.title);
+  expect(titles[position - 1]).toBe("La Ley 70 reconoce el derecho colectivo");
+  expect(titles[position + 1]).toBe("Reglas para Asamblea, Junta y titulación");
   await expect(page.getByText("junio de 1994", { exact: true })).toBeVisible();
   await page.route("**/api/history/", (route) => route.abort());
   await page.reload();

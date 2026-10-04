@@ -383,7 +383,9 @@
 }
 @media (max-width: 720px) {
   .intro {
-    background-position: center, 68% 50%;
+    background-position:
+      center,
+      68% 50%;
   }
   .filters {
     display: grid;
@@ -454,5 +456,218 @@
   }
   .story {
     padding: 17px;
+  }
+}
+.memory section,
+.memory aside {
+  scroll-margin-top: 90px;
+}
+.toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -10px;
+}
+.toc a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.toc a:hover,
+.toc a:focus-visible {
+  border-color: var(--green);
+  color: var(--green);
+}
+.contextText {
+  display: grid;
+  gap: 14px;
+}
+.contextText p {
+  margin: 0;
+}
+.rights,
+.territory,
+.glossary,
+.pending {
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+}
+.rights h2,
+.territory h2,
+.glossary h2,
+.pending h2 {
+  max-width: 24ch;
+  margin: 8px 0 14px;
+}
+.lead {
+  max-width: 72ch;
+  margin: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.guideCard {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 22px;
+  border-radius: 15px;
+  background: var(--soft);
+}
+.guideCard h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.guideCard p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.guideCard .sourceRow {
+  margin-top: auto;
+}
+.kicker {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
+}
+.titleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0 0 18px;
+}
+.titleCard {
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--soft);
+}
+.titleCard.current {
+  border-color: var(--green);
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--green);
+}
+.titleCard h3 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  line-height: 1.3;
+}
+.badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--surface);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.alias {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.titleCard dl {
+  display: grid;
+  gap: 11px;
+  margin: 14px 0 0;
+}
+.titleCard dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.titleCard dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+}
+.territory .sourceRow {
+  margin-top: 18px;
+}
+.glossaryList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+  margin: 20px 0 0;
+}
+.glossaryList div {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.glossaryList dt {
+  margin-bottom: 5px;
+  color: var(--green);
+  font-weight: 700;
+}
+.glossaryList dd {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.inlineSources {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+}
+.inlineSources a {
+  margin-right: 8px;
+  color: var(--green);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+.pendingList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pendingList li {
+  position: relative;
+  padding: 13px 16px 13px 44px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.pendingList li::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 17px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--green);
+  border-radius: 4px;
+}
+@media (max-width: 720px) {
+  .cardGrid,
+  .titleGrid,
+  .glossaryList {
+    grid-template-columns: 1fr;
+  }
+  .toc {
+    margin-top: -14px;
   }
 }
