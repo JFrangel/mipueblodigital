@@ -1,6 +1,6 @@
 # Seguridad y privacidad: estado verificable
 
-Revisión del código local: 2 de octubre de 2026. Este documento describe mecanismos implementados y límites; no certifica una auditoría externa ni la configuración vigente de las consolas de Firebase, Supabase o del alojamiento. Para controles legales y manejo de datos personales, el Consejo debe aprobar una política de tratamiento y designar responsables.
+Revisión del código local: 2 de octubre de 2026; ampliada el 3 de octubre con la correspondencia con la Ley 1581 de 2012 (sección 7), el caso de las copias automáticas de Android (sección 6) y una tabla que indica dónde comprobar cada mecanismo en el código (sección 8). Este documento describe mecanismos implementados y límites; no certifica una auditoría externa ni la configuración vigente de las consolas de Firebase, Supabase o del alojamiento. Para controles legales y manejo de datos personales, el Consejo debe aprobar una política de tratamiento y designar responsables.
 
 ## 1. Qué datos existen y por dónde pasan
 
@@ -42,7 +42,7 @@ La recodificación suele descartar metadatos EXIF, pero no se ha auditado cada v
 
 El caso nace privado. La API pública exige tres condiciones simultáneas: un resumen `publicIncidents/{id}` aprobado, clasificación `safe` en el expediente vivo y **24 horas transcurridas desde `publishedAt`** (configurable entre 1 y 720 horas; 24 por defecto). El relato sin revisar nunca se publica de forma automática. Marcarlo sensible después retira el acceso a cualquier resumen. Las reglas deniegan lectura directa del documento público para impedir saltar el plazo. Los resúmenes antiguos sin `publishedAt` permanecen privados hasta reaprobarse: decisión segura frente a una fecha desconocida.
 
-La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borrar datos del sitio o del dispositivo puede perder pendientes. El service worker no conserva el token. En Android, WorkManager usa una segunda sesión Firebase nativa para renovar un token en el momento del envío; la cola privada **no almacena contraseñas ni tokens**. La copia nativa se cifra con **AES-256-GCM**, IV aleatorio por escritura y clave no exportable del **Android Keystore**; queda en `noBackupFilesDir`, fuera de las copias automáticas del sistema. La copia de IndexedDB depende del aislamiento y cifrado del dispositivo, no de esta clave. Al cerrar sesión se cancelan los trabajos y se borra la copia nativa del titular. Las notificaciones de envío no incluyen relato, vereda, fotografía ni nombre. Si se niega el permiso de avisos, el envío sigue y el estado queda en la app. El cierre de cuenta anonimiza expedientes y desactiva acceso; conserva categoría, vereda, estado y fecha para trazabilidad. Antes de abrir al público faltan un calendario de retención aprobado, prueba de restauración de copias y un procedimiento documentado para solicitudes de titulares y actas sensibles.
+La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borrar datos del sitio o del dispositivo puede perder pendientes. El service worker no conserva el token. En Android, WorkManager usa una segunda sesión Firebase nativa para renovar un token en el momento del envío; la cola privada **no almacena contraseñas ni tokens**. La copia nativa se cifra con **AES-256-GCM**, IV aleatorio por escritura y clave no exportable del **Android Keystore**; queda en `noBackupFilesDir`, fuera de las copias automáticas del sistema. La copia de IndexedDB depende del aislamiento y cifrado del dispositivo, no de esta clave, y con `android:allowBackup="true"` puede entrar en las copias automáticas de Android (sección 6, punto 6). Al cerrar sesión se cancelan los trabajos y se borra la copia nativa del titular. Las notificaciones de envío no incluyen relato, vereda, fotografía ni nombre. Si se niega el permiso de avisos, el envío sigue y el estado queda en la app. El cierre de cuenta anonimiza expedientes y desactiva acceso; conserva categoría, vereda, estado y fecha para trazabilidad. Antes de abrir al público faltan un calendario de retención aprobado, prueba de restauración de copias y un procedimiento documentado para solicitudes de titulares y actas sensibles.
 
 ## 6. Riesgos y verificaciones antes de producción
 
@@ -51,6 +51,46 @@ La bandeja local admite 10 envíos o 50 MiB; no es una copia de seguridad. Borra
 3. Revisar en las consolas MFA y mínimo privilegio para operadores, logs/auditoría, backups/restauración y variables de entorno. Verificar TLS/SSL y cifrado administrado en el proyecto **real**.
 4. Hacer una evaluación de impacto con el Consejo sobre contacto, ubicación, evidencia sensible, avisos en pantalla bloqueada y texto enviado a IA. El borrador IA requiere revisión humana y su proveedor puede procesar los datos remitidos conforme a sus términos.
 5. Probar el flujo con habitantes y Consejo. Los tests automáticos no acreditan consentimiento, comprensión de privacidad, soporte ni continuidad operativa.
+6. **Copias automáticas de Android.** El manifiesto declara [`android:allowBackup="true"`](../android/app/src/main/AndroidManifest.xml) y no define reglas de exclusión (`fullBackupContent` ni `dataExtractionRules`). Por eso el almacenamiento del WebView —borradores, cola web y datos de sesión— puede entrar en las copias automáticas de la cuenta de Google y en la transferencia entre aparatos, según la versión de Android y los ajustes de la persona. La cola nativa cifrada no entra: vive en `noBackupFilesDir`. Recomendación para la próxima APK: `allowBackup="false"` o reglas que excluyan el WebView. **No se ha cambiado**, porque exige compilar y publicar una APK nueva.
+7. **Lectura pública sin caché.** `GET /api/history/` es público y responde con `Cache-Control: no-store`: cada visita lee la colección `councilHistory` en Firestore. Con un plan gratuito, un uso abusivo podría gastar la cuota de lecturas de toda la aplicación. Mitigaciones posibles, sin aplicar: una caché corta en el borde (`s-maxage`) y un límite de peticiones por origen.
+
+## 7. Ley 1581 de 2012: correspondencia y pendientes
+
+La Ley 1581 de 2012 (17 de octubre de 2012) regula el tratamiento de datos personales en Colombia; la autoridad de control es la Superintendencia de Industria y Comercio (SIC). Su decreto reglamentario es el 1377 de 2013, hoy compilado en el Decreto 1074 de 2015. Esta tabla compara lo que hace la aplicación con los artículos que más pesan aquí. Es una guía técnica, no un concepto jurídico: los artículos se leyeron en el [texto de la ley en Función Pública](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=49981) y el Consejo debe validar la lectura con asesoría legal.
+
+| Artículo | Qué dice (resumen) | Qué hace hoy la aplicación | Pendiente |
+| --- | --- | --- | --- |
+| 5 | Es dato sensible el que afecta la intimidad o puede generar discriminación; entre otros, el origen racial o étnico, la salud y los datos biométricos. | La aplicación no pregunta el origen étnico. Pero la pertenencia de una cuenta a un Consejo de comunidades negras puede revelarlo de forma indirecta, y una fotografía puede mostrar rostros o lesiones. Por eso la fotografía y el contacto nunca se publican, el relato no se publica por sí solo y «delicado» bloquea cualquier resumen. | Que el Consejo, con asesoría, decida la base legal con la que trata estos datos. |
+| 6 | El tratamiento de datos sensibles está prohibido salvo excepciones, como la autorización explícita. | El reporte nace privado: solo lo ven quien reporta y el Consejo. | Definir cómo se recoge y se prueba la autorización explícita. |
+| 7 | No se tratan datos de niños y adolescentes, salvo los de naturaleza pública. | La aplicación no pide la edad ni puede saber si una fotografía incluye menores. El manual del Consejo manda marcar «Sensible · privado» si los hay. | Un procedimiento escrito para cuando aparezcan menores en un reporte. |
+| 8 | Derechos del titular: conocer, actualizar, rectificar, pedir prueba de la autorización, presentar quejas y revocar. | La persona ve su expediente, puede eliminar su cuenta desde Mi cuenta (sus expedientes se anonimizan) y el Consejo puede restablecerla. | El canal y los plazos del Consejo para consultas y reclamos. |
+| 9 | El tratamiento requiere autorización previa e informada, por un medio verificable. | La [página de términos](../src/features/terminos.tsx) informa qué se recoge, para qué y con qué derechos, y se enlaza desde la bienvenida. El registro no tiene casilla de aceptación: se decidió publicarla y enlazarla. | Decidir si se exige aceptación al registrarse y guardar la evidencia. |
+| 17 | El responsable debe conservar la autorización, informar las finalidades, garantizar la seguridad y mantener un manual interno de políticas y procedimientos. | La seguridad técnica está en las secciones 2 a 5. El responsable es el Consejo, como dicen los términos. | Aprobar el manual interno y nombrar a quien atienda consultas. |
+| 18 | El encargado debe proteger los datos, atender consultas y reclamos y mantener su propio manual. | Firebase/Google, Supabase, Vercel y OpenRouter procesan datos por encargo o como terceros. | Revisar sus términos de procesamiento y la región de cada servicio (no se verificó aquí). |
+
+Fuera de la tabla: la ley y su reglamento regulan también la transferencia y la transmisión internacional de datos, y el Registro Nacional de Bases de Datos de la SIC puede ser obligatorio según el tamaño de la entidad. Ambos puntos exigen asesoría jurídica antes de abrir la aplicación al público.
+
+## 8. Dónde comprobar cada mecanismo en el código
+
+Revisado contra el código el 3 de octubre de 2026. Las líneas se mueven: buscar por el nombre de la función.
+
+| Mecanismo | Dónde |
+| --- | --- |
+| Token de Firebase verificado en el servidor, con revocación | [`requireIdentity`](../src/server/admin-auth.ts) (`verifyIdToken(token, true)`) |
+| Cuenta activa; rol de administrador | `requireMember` y `requireAdmin`, en el mismo archivo |
+| Reautenticación reciente para eliminar la cuenta (300 s) | [`account/deletion/route.ts`](../src/app/api/account/deletion/route.ts) |
+| Límite de 10 envíos nuevos por día UTC | [`incidents/route.ts`](../src/app/api/incidents/route.ts), documento `incidentLimits/{uid}` |
+| Plazo de publicación (24 h; configurable de 1 a 720 h) | [`publication.ts`](../src/domain/publication.ts) y [`community-view.ts`](../src/server/community-view.ts) |
+| Reglas de Firestore: lecturas y escrituras directas denegadas | [`firestore.rules`](../firebase/firestore.rules) |
+| Validación y archivo de fotografías | [`evidence.ts`](../src/server/evidence.ts): `validateOriginal`, `archivePhoto`, `buildBackup` |
+| Evidencia: dueño o rol, `private, no-store`, `nosniff` | [`incidents/[id]/evidence/route.ts`](<../src/app/api/incidents/[id]/evidence/route.ts>) |
+| Cabeceras de seguridad y CSP | [`next.config.ts`](../next.config.ts) |
+| El service worker no ve tokens ni guarda la API privada | [`public/sw.js`](../public/sw.js) |
+| Cola nativa cifrada: AES-256-GCM, clave del Keystore, IV de 12 bytes por escritura | [`EnviosPlugin.java`](../android/app/src/main/java/co/riosatinga/mipueblodigital/EnviosPlugin.java): `secret` y `encrypt` |
+| Cola nativa fuera de las copias y con destino fijado por la configuración | El mismo archivo: `folder` (`getNoBackupFilesDir`) y `stage` (`getServerUrl`) |
+| El trabajador pide un token nuevo al despertar y no lo guarda | [`EnvioWorker.java`](../android/app/src/main/java/co/riosatinga/mipueblodigital/EnvioWorker.java) |
+| Anonimización al eliminar la cuenta | [`anonymize.ts`](../src/server/anonymize.ts) |
+| Historia del Consejo: solo administradores escriben, con versión y auditoría | [`admin/history/[id]/route.ts`](<../src/app/api/admin/history/[id]/route.ts>) y [`council-history.ts`](../src/domain/council-history.ts) |
 
 Véanse [pruebas y rendimiento](pruebas-y-rendimiento.md) y [catálogo individual](catalogo-pruebas.md) para cobertura y límites de lo ejecutado.
 

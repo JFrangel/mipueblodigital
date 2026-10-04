@@ -15,7 +15,7 @@
 Detalle del alcance y aserciones en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
 
-Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 457 títulos Vitest y 76 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
+Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 459 títulos Vitest y 76 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Las tablas de abajo cubren los 54 archivos unitarios y los 16 de navegador; la suma de sus casos da 459 y 76. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
 
 ## Unidad, dominio y API simulada
 
@@ -29,7 +29,10 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `calendar.test.ts` | 8 | El día local de Bogotá, año bisiesto, distribución semanal y frase hablada de una fecha respetan casos límite. |
 | `community-projection.test.ts` | 9 | La vista para otros miembros contiene solo datos permitidos y respeta clasificación y demora posterior a revisión. |
 | `council-alerts.test.ts` | 5 | Los eventos administrativos generan avisos dirigidos y evitan duplicaciones o destinatarios indebidos. |
+| `council-history-api.test.ts` | 4 | Guardar un hito exige administrador, valida el cuerpo, toma el autor de la sesión (no del cliente), usa transacción con versión y responde 409 sin sobrescribir si otra persona lo cambió. |
+| `council-history.test.ts` | 20 | La cronología respeta la precisión de la fecha (año, mes, día, hora), las fuentes y el reemplazo de hitos base; borradores y archivados no reaparecen en la consulta pública; la ficha pública sale campo a campo (sin versión, estado ni autor) y la biblioteca de fuentes solo enlaza por HTTPS. |
 | `csv.test.ts` | 4 | La exportación tabular conserva columnas y escapa contenido que podría interpretarse como fórmula. |
+| `delivery-alert.test.ts` | 3 | El aviso de entrega en Android cubre permiso concedido, denegado y fallo del complemento; no promete avisos cuando no se concedieron. |
 | `delivery.test.ts` | 3 | Las etiquetas diferencian enviado, en cola y sin enviar, incluso para registros locales antiguos. |
 | `domain.test.ts` | 8 | Categorías, estado y contenido de incidencias cumplen invariantes del dominio. |
 | `evidence.test.ts` | 10 | Validación de tipo, tamaño e integridad de imágenes; archivo privado y copia de respaldo se manejan sin presentar Base64 como protección. |
@@ -44,7 +47,7 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `openrouter.test.ts` | 2 | Se limita la entrada y se valida la forma de la salida de IA con respuestas simuladas; no se prueba el proveedor real. |
 | `outbox-migration.test.ts` | 1 | Los registros antiguos de cola se pueden leer después de un cambio de esquema. |
 | `outbox-traspaso.test.ts` | 5 | Un borrador o envío sin cuenta pasa al titular autenticado sin duplicar ni perder datos. |
-| `outbox.test.ts` | 9 | Límite local, estados, reintentos e idempotencia de la bandeja fuera de línea. |
+| `outbox.test.ts` | 11 | Límite local, estados, reintentos e idempotencia de la bandeja fuera de línea; un recibo nativo ya confirmado se conserva aunque la subida web falle después. |
 | `publication.test.ts` | 4 | Un resumen revisado solo aparece 24 horas después de `publishedAt`; sensibilidad y fecha inválida bloquean acceso. |
 | `push-api.test.ts` | 12 | Las rutas de alta y baja de suscripciones requieren identidad y validan parámetros. |
 | `push-cliente.test.ts` | 26 | El cliente maneja permiso, suscripción, reconexión, revocación y estados de navegador sin asumir soporte universal. |
@@ -78,6 +81,7 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | Archivo en `tests/e2e/` | Casos | Recorrido observable |
 | --- | ---: | --- |
 | `app.spec.ts` | 6 | Rutas esenciales, navegación y acciones principales renderizan sin romper la app. |
+| `cabecera-history.spec.ts` | 3 | Búsqueda de Olaya Herrera, selección canónica de la cabecera urbana, API editorial rechazada sin sesión, orden de una publicación antigua y recuperación de la copia pública con fallo de red. |
 | `community-nav.spec.ts` | 1 | Las cuatro secciones de Comunidad conservan su navegación y estado seleccionado. |
 | `comunicado.spec.ts` | 5 | Feed y detalle de comunicado, lectura y controles editoriales visibles. |
 | `council-memory.spec.ts` | 2 | Línea de tiempo, filtros, búsqueda, fuentes, ancho móvil y reapertura offline de la ruta cacheada. |

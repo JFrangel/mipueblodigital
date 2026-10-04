@@ -1,8 +1,10 @@
 # Pruebas, resultados y rendimiento
 
-Actualización del 3 de octubre: cabecera municipal y editor histórico, **457/457
-unitarias y 76/76 pruebas de navegador**. Reglas, tipos, lint y build pasan.
-Detalle de entradas, aserciones, dobles y alcance en
+Actualización del 3 de octubre (noche): tras corregir los textos de privacidad y
+las fuentes de la memoria del Consejo, **459/459 unitarias y 76/76 pruebas de
+navegador**. Reglas, tipos, lint (sin avisos) y build pasan; la última sección
+detalla la verificación independiente de ese día. Detalle de entradas,
+aserciones, dobles y alcance del editor histórico en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
 Los resultados de fechas anteriores se conservan como bitácora histórica.
 
@@ -14,7 +16,7 @@ Fecha de corte: 3 de octubre de 2026 (America/Bogota). El [catálogo individual]
 | --- | --- | --- | --- |
 | Formato/lint | `npm run lint` | Reglas estáticas ESLint de todo el proyecto | Comportamiento, accesibilidad o seguridad de servicios externos |
 | Tipos | `npm run typecheck` | Contratos TypeScript | Permisos efectivos, errores de red, experiencia en teléfono |
-| Unitarias y rutas aisladas | `npm test` | 457 casos en 54 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
+| Unitarias y rutas aisladas | `npm test` | 459 casos en 54 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
 | Build | `npm run build` | Compilación de producción Next, rutas y empaquetado web | Que el backend esté configurado ni que las cuentas reales funcionen |
 | Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 76 casos en 16 archivos ejecutados; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
 | Reglas de base | `npm run test:rules` | Reglas de Firestore en emulador con los casos de [`rules.mjs`](../tests/integration/rules.mjs) | API Admin, consola real, configuración de producción |
@@ -64,9 +66,9 @@ npm run test:perf
 Propuesta de aceptación para un piloto, **no resultado medido**: en teléfonos de gama media y red acordada con el Consejo, p75 LCP < 2,5 s, p75 INP < 200 ms, p75 CLS < 0,1; sin conexión, respuesta de guardado en cola < 2 s para foto típica; con 300 marcadores en una zona, interacción fluida y sin duplicar expedientes. Son objetivos a validar con medición real, no certificación Lighthouse ni garantía en el territorio. Instrumentar además tasa de envío confirmado, tiempo cola→recibo, errores por tipo y consumo de datos, siempre sin registrar relatos o fotos en telemetría.
 
 
-## 3. Registro de esta revisión
+## 3. Registro de la ejecución del 29-30 de septiembre (histórico)
 
-La ejecución final después de la segunda ampliación de contenido del Consejo obtuvo:
+La ejecución final después de la segunda ampliación de contenido del Consejo obtuvo las cifras de abajo. Son de ese corte: las vigentes están en la última sección, «Verificación independiente — 3 de octubre de 2026».
 
 | Verificación | Resultado observado | Interpretación |
 | --- | --- | --- |
@@ -92,3 +94,32 @@ La primera carga de bienvenida fue la más lenta de su serie (160 ms) y el cálc
 ## Verificación de la entrega 2.2 — 2 de octubre de 2026
 
 435 unitarias, 73 recorridos de navegador y cuatro pruebas Android instrumentadas pasaron. Las reglas Firestore pasaron en el emulador; tipos, lint sin errores y build de producción también. Se repitió la medición local de cinco cargas por ruta: p95 load de bienvenida 186 ms, comunidad 144 ms, memoria 194 ms. La evidencia, alcance, comandos y limitaciones están en [la auditoría de entrega](auditoria-entrega-2026-10-02.md). Las ejecuciones históricas de este documento conservan sus fechas; la copia JSON de rendimiento corresponde a esta última medición.
+
+## Verificación independiente — 3 de octubre de 2026
+
+Repetida desde cero por el asistente Claude (Anthropic), a petición de Jose Padilla, sobre el commit `3c7586a` y, en lo marcado con \*, sobre el árbol corregido de ese mismo día. Ninguna cifra se copió del informe anterior.
+
+| Verificación | Resultado | Notas |
+| --- | --- | --- |
+| `npm test` \* | **459/459**, 54 archivos | Los dos casos nuevos protegen la ficha pública de la historia (sin versión, estado ni autor) y la biblioteca de fuentes (solo HTTPS, sin repetir). |
+| `npx playwright test --workers=4` \* | **76/76**, 16 archivos, 36,9 s | Tras compilar el árbol corregido. |
+| `npm run typecheck` \* | Salida 0 | |
+| `npm run lint` \* | Salida 0, **0 avisos** | Antes había 2 avisos de variable sin usar en `src/server/council-history.ts`. |
+| `npm run build` \* | Salida 0 | |
+| `npm run test:rules` | Salida 0 en emulador | Sobre `3c7586a`; las correcciones no tocan `firebase/firestore.rules`. |
+| Catálogo de pruebas | Idéntico al regenerado | Sobre `3c7586a`, `node scripts/generar-catalogo-pruebas.mjs` no cambió una línea. Tras añadir los dos casos solo cambian el total y los dos títulos nuevos. |
+| Guía por archivo | Coincide archivo por archivo | La suma de sus tablas da 459 y 76. |
+| APK 2.2 | Coincide | El SHA-256 y el tamaño de `public/descargas/mi-pueblo-digital.apk` son los de `version.json`. |
+| Pruebas instrumentadas de Android | **No se repitieron** | Necesitan un emulador o un teléfono. |
+
+Rendimiento local reproducido sobre `3c7586a` con el mismo Node 24.18.0 y Chromium 153.0.8010.12, cinco cargas nuevas por ruta, todas con HTTP 200:
+
+| Ruta | p50 `load` | p95 `load` | JSON versionado (p50 / p95) |
+| --- | ---: | ---: | ---: |
+| `/bienvenida/` | 140 ms | 156 ms | 139 / 186 ms |
+| `/comunidad/` | 139 ms | 144 ms | 136 / 144 ms |
+| `/memoria/` | 144 ms | 200 ms | 140 / 194 ms |
+
+Con cinco muestras el p95 es casi el máximo y cambia de una corrida a otra; lo que se repite es el orden de magnitud (unos 140 ms de carga en localhost). Sigue sin medirse red móvil, concurrencia ni servicios remotos, como dice la sección 2.
+
+Los hechos y los enlaces de la memoria del Consejo se contrastaron aparte: la [tabla de la investigación](investigacion-consejo-rio-satinga.md#revisión-de-fuentes--3-de-octubre-de-2026) dice qué se comprobó contra cada texto y qué no se pudo confirmar.

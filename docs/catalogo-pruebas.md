@@ -2,7 +2,7 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **457 casos en 54 archivos**; estado del reporte usado: 457 pasan, 0 fallan, 0 pendientes.
+- Unitarias: **459 casos en 54 archivos**; estado del reporte usado: 459 pasan, 0 fallan, 0 pendientes.
 - Navegador: **76 casos en 16 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
@@ -80,7 +80,7 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - rechaza al no administrador antes de escribir
 - valida contenido e identificador antes de escribir
 
-### [tests/unit/council-history.test.ts](../tests/unit/council-history.test.ts) — 18 casos
+### [tests/unit/council-history.test.ts](../tests/unit/council-history.test.ts) — 20 casos
 
 - archivo histórico del Consejo inserta hechos antiguos por fecha y no por orden de carga
 - archivo histórico del Consejo archivar una semilla no hace reaparecer su copia original
@@ -100,6 +100,8 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - archivo histórico del Consejo rechaza enlaces inseguros https://user:password@example.com
 - archivo histórico del Consejo exige fuente y elimina campos ajenos al esquema
 - archivo histórico del Consejo cada hito base tiene identidad única y datos válidos
+- archivo histórico del Consejo la ficha pública sale campo a campo: sin versión, estado ni autor
+- archivo histórico del Consejo la biblioteca de fuentes solo enlaza por HTTPS y sin repetir direcciones
 
 ### [tests/unit/csv.test.ts](../tests/unit/csv.test.ts) — 4 casos
 
