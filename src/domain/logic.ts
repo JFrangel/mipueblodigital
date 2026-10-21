@@ -92,6 +92,7 @@ export function validateReport(input: {
   if (!input.description.trim()) errors.push("Describe lo que ocurrió.");
   if (input.description.trim().split(/\s+/).length > 500)
     errors.push("La descripción no puede superar 500 palabras.");
+  if (input.photos > 5) errors.push("Puedes adjuntar hasta cinco fotografías.");
   if (input.photos < 1) errors.push("Añade al menos una fotografía.");
   if (input.phone && !/^\d{1,10}$/.test(input.phone))
     errors.push("El celular debe contener hasta 10 dígitos.");

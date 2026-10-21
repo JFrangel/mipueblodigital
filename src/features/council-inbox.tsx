@@ -1,9 +1,12 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { memberHeaders } from "@/data/remote-reports";
 import { useSession } from "@/data/session";
 import { statuses, categories, shortDate } from "@/data/catalog";
-import { veredaNames } from "@/domain/territory";
+import { abrirEnNavegadorDelSistema } from "@/platform/export";
+import { esNativo } from "@/platform/native";
+import { useCatalogue } from "@/data/vereda-catalogue";
+import { prepareEvidence } from "@/platform/evidence";
 import { priorities, DEFAULT_PRIORITY } from "@/domain/priority";
 import { relativeTime } from "@/domain/relative-time";
 import { toast } from "@/data/toasts";
@@ -46,6 +49,8 @@ type Incident = {
   /* Llegan del servidor —la bandeja del Consejo recibe el documento entero—
      pero hasta ahora no se declaraban, y por tanto no se enseñaban. */
   phone?: string;
+  /** El nombre con el que se registró quien reportó; solo lo ve el Consejo. */
+  reporter?: string;
   lat?: number | null;
   lng?: number | null;
 };
@@ -89,6 +94,10 @@ function blocked(sensitivity: string) {
     : "Para compartir el resumen, la revisión de sensibilidad de arriba tiene que quedar en «Revisado · sin contenido sensible».";
 }
 const blankNotes = {
+  type: "update",
+  visitDate: "",
+  visitResponsible: "",
+  image: "",
   publicNote: "",
   internalNote: "",
   publicTitle: "",
@@ -254,6 +263,12 @@ export function CouncilInbox({
   activo?: boolean;
 }) {
   const session = useSession();
+  const catalogue = useCatalogue();
+  const veredaNames = catalogue.items
+    .filter((v) => v.active)
+    .map((v) => v.name);
+  const [preparingImage, setPreparingImage] = useState(false);
+  const mutation = useRef<{ id: string; body: string } | null>(null);
   const [items, setItems] = useState<Incident[]>([]),
     [selected, setSelected] = useState<Incident | null>(null),
     [cursor, setCursor] = useState<string | null>(null),
@@ -297,10 +312,13 @@ export function CouncilInbox({
   /** El catálogo de veredas del filtro sale de los expedientes reales. */
   const veredas = useMemo(
     () =>
-      [...new Set(items.map((i) => i.vereda).filter(Boolean))].sort((a, b) =>
-        a.localeCompare(b, "es"),
-      ),
-    [items],
+      [
+        ...new Set([
+          ...catalogue.items.filter((v) => v.active).map((v) => v.name),
+          ...items.map((i) => i.vereda).filter(Boolean),
+        ]),
+      ].sort((a, b) => a.localeCompare(b, "es")),
+    [items, catalogue],
   );
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -321,21 +339,72 @@ export function CouncilInbox({
   const account = session.uid;
   /* La petición sola, sin tocar estado: lo que devuelve lo coloca quien la
      pidió. Así la puede lanzar tanto un botón como el montaje de la pantalla. */
-  const requestPage = useCallback(async (after?: string) => {
-    const { headers, uid } = await memberHeaders();
-    const response = await fetch(
-      `/api/admin/incidents/${after ? `?after=${after}` : ""}`,
-      { headers, signal: AbortSignal.timeout(20000), cache: "no-store" },
-    );
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error);
-    return {
-      uid,
-      next: data.next as string | null,
-      items: data.items as Incident[],
-      delay: Number(data.delayHours) || 24,
-    };
-  }, []);
+  const filterParams = useMemo(
+    () =>
+      new URLSearchParams({
+        category,
+        vereda,
+        priority,
+        status,
+        q: query,
+      }).toString(),
+    [category, vereda, priority, status, query],
+  );
+  async function downloadInbox() {
+    setBusy(true);
+    setProblem("");
+    try {
+      const { headers } = await memberHeaders();
+      const r = await fetch(
+        `/api/admin/incidents/export/?${filterParams}${esNativo() ? "&ticket=1" : ""}`,
+        { headers, cache: "no-store", signal: AbortSignal.timeout(120000) },
+      );
+      if (!r.ok) {
+        const error = await r.json();
+        throw new Error(error.error);
+      }
+      if (esNativo()) {
+        const data = await r.json();
+        await abrirEnNavegadorDelSistema(
+          new URL(`/api/statistics/export/${data.ticket}/`, location.origin)
+            .href,
+        );
+      } else {
+        const body = await r.text();
+        const url = URL.createObjectURL(
+          new Blob([body], { type: "text/csv;charset=utf-8" }),
+        );
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "bandeja-consejo.csv";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      setMessage("Bandeja completa preparada con los filtros seleccionados.");
+    } catch (e) {
+      setProblem((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  const requestPage = useCallback(
+    async (after?: string) => {
+      const { headers, uid } = await memberHeaders();
+      const response = await fetch(
+        `/api/admin/incidents/?${filterParams}${after ? `&after=${encodeURIComponent(after)}` : ""}`,
+        { headers, signal: AbortSignal.timeout(20000), cache: "no-store" },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      return {
+        uid,
+        next: data.next as string | null,
+        items: data.items as Incident[],
+        delay: Number(data.delayHours) || 24,
+      };
+    },
+    [filterParams],
+  );
   /* Colocar una página. Se ignora si la sesión cambió entre la petición y la
      respuesta: lo cargado dejaría de ser de quien mira. */
   const receive = useCallback(
@@ -449,19 +518,22 @@ export function CouncilInbox({
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    if (!selected || busy) return;
+    if (!selected || busy || preparingImage) return;
     setBusy(true);
     setMessage("");
     setProblem("");
     try {
       const { headers, uid } = await memberHeaders();
+      const body = JSON.stringify({ ...selected, ...notes });
+      if (mutation.current?.body !== body)
+        mutation.current = { id: crypto.randomUUID(), body };
       const response = await fetch(`/api/admin/incidents/${selected.id}/`, {
         method: "PATCH",
         headers,
         body: JSON.stringify({
           ...selected,
           ...notes,
-          mutationId: crypto.randomUUID(),
+          mutationId: mutation.current.id,
         }),
         signal: AbortSignal.timeout(20000),
       });
@@ -472,6 +544,7 @@ export function CouncilInbox({
       setSelected(updated);
       setItems((old) => old.map((i) => (i.id === selected.id ? updated : i)));
       setNotes(blankNotes);
+      mutation.current = null;
       setMessage(
         "Guardado en el servidor. El cambio queda en el historial del expediente con quién lo hizo y cuándo, y el resto del Consejo recibe el aviso.",
       );
@@ -496,9 +569,18 @@ export function CouncilInbox({
         responsable y su estado.
       </p>
       {!selected && (
-        <button className="btn" disabled={busy} onClick={() => load()}>
-          {busy ? "Consultando…" : "Actualizar bandeja"}
-        </button>
+        <div className="territorio-acciones">
+          <button
+            className="btn"
+            disabled={busy}
+            onClick={() => void downloadInbox()}
+          >
+            Descargar bandeja completa
+          </button>
+          <button className="btn" disabled={busy} onClick={() => load()}>
+            {busy ? "Consultando…" : "Actualizar bandeja"}
+          </button>
+        </div>
       )}
       {/* Con un expediente abierto el aviso baja con él: el botón de guardar
           está al final de la ficha, y un «guardado» dibujado aquí arriba se
@@ -513,7 +595,7 @@ export function CouncilInbox({
           {message}
         </p>
       )}
-      {items.length > 0 && !selected && (
+      {!selected && (
         <>
           <div className="filters council-filters">
             <label className="field-label council-search">
@@ -604,9 +686,8 @@ export function CouncilInbox({
       )}
       {items.length > 0 && !filtered.length && !selected && (
         <p className="notice">
-          Ningún expediente coincide con lo buscado. Borra la búsqueda o los
-          filtros, o pulsa Siguiente para traer más del servidor: la bandeja se
-          consulta por tandas y puede que este todavía no haya llegado.
+          Ningún expediente coincide con lo buscado. Cambia la búsqueda o los
+          filtros.
         </p>
       )}
       {/* HU-15.4: categoría/vereda, prioridad, responsable y estado, leídos como
@@ -745,6 +826,15 @@ export function CouncilInbox({
                     </li>
                   )}
                   <li>
+                    <UserRound size={15} />
+                    <span>
+                      Reportó
+                      <strong>
+                        {selected.reporter || "Cuenta sin nombre"}
+                      </strong>
+                    </span>
+                  </li>
+                  <li>
                     <Phone size={15} />
                     <span>
                       Contacto
@@ -797,7 +887,7 @@ export function CouncilInbox({
                 <section>
                   <h3>Seguimiento</h3>
                   <RemoteHistory
-                    key={`history-${selected.id}`}
+                    key={`history-${selected.id}-${selected.version}`}
                     id={selected.id}
                   />
                 </section>
@@ -845,6 +935,97 @@ export function CouncilInbox({
                       }
                     />
                   </label>
+                  <label className="field-label">
+                    Tipo de actuación
+                    <select
+                      value={notes.type}
+                      onChange={(e) =>
+                        setNotes({ ...notes, type: e.target.value })
+                      }
+                    >
+                      <option value="update">Nota de seguimiento</option>
+                      <option value="visit">Visita técnica</option>
+                    </select>
+                  </label>
+                  {notes.type === "visit" && (
+                    <div className="filters">
+                      <label className="field-label">
+                        Fecha de la visita
+                        <input
+                          type="date"
+                          required
+                          value={notes.visitDate}
+                          onChange={(e) =>
+                            setNotes({ ...notes, visitDate: e.target.value })
+                          }
+                        />
+                      </label>
+                      <label className="field-label">
+                        Quién realizó la visita
+                        <input
+                          required
+                          maxLength={100}
+                          value={notes.visitResponsible}
+                          onChange={(e) =>
+                            setNotes({
+                              ...notes,
+                              visitResponsible: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  )}
+                  <label className="field-label">
+                    Imagen de la actuación (opcional)
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={busy || preparingImage}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setPreparingImage(true);
+                        setProblem("");
+                        try {
+                          const prepared = await prepareEvidence(file, 550_000);
+                          setNotes((old) => ({
+                            ...old,
+                            image: prepared.dataUrl,
+                          }));
+                        } catch (error) {
+                          setProblem((error as Error).message);
+                        } finally {
+                          setPreparingImage(false);
+                        }
+                      }}
+                    />
+                  </label>
+                  <p className="subtle-note">
+                    La imagen solo la ve el Consejo, aunque la nota para el
+                    ciudadano sea pública.
+                  </p>
+                  {preparingImage && <p role="status">Preparando imagen…</p>}
+                  {notes.image && (
+                    <div className="evidence-gallery">
+                      <figure>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={notes.image}
+                          alt="Imagen adjunta a la actuación"
+                          width={300}
+                          height={180}
+                        />
+                        <button
+                          type="button"
+                          className="text-button"
+                          onClick={() => setNotes({ ...notes, image: "" })}
+                        >
+                          Quitar imagen
+                        </button>
+                      </figure>
+                    </div>
+                  )}
                   <label className="field-label">
                     Nota para el ciudadano · hasta 30 palabras
                     <textarea

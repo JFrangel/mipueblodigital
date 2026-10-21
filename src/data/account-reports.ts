@@ -3,22 +3,18 @@ import { useEffect, useState } from "react";
 import { memberHeaders } from "./remote-reports";
 import type { AccountReport } from "@/domain/account-reports";
 
-/* Tope de páginas. El historial propio de una persona no llega a doscientos
-   reportes; poner un límite evita que una respuesta rara deje la aplicación
-   pidiendo páginas sin fin. */
-const PAGES = 8;
-
 /* Fuera del componente a propósito: así el efecto solo encadena promesas y no
    toca estado antes del primer `await`. */
-async function fetchAll(
+export async function fetchAccountReports(
   signal: AbortSignal,
 ): Promise<{ items: AccountReport[]; complete: boolean }> {
   const { headers } = await memberHeaders();
   const all: AccountReport[] = [];
   let after: string | null = null;
-  for (let page = 0; page < PAGES; page++) {
+  const seen = new Set<string>();
+  while (true) {
     const response = await fetch(
-      `/api/incidents/${after ? `?after=${after}` : ""}`,
+      `/api/incidents/${after ? `?after=${encodeURIComponent(after)}` : ""}`,
       { headers, cache: "no-store", signal },
     );
     const data = await response.json();
@@ -27,11 +23,13 @@ async function fetchAll(
     /* Se acabaron las páginas: la lista está entera. Importa porque con la
        lista entera se puede afirmar que lo que no está en ella **ya no existe
        en el servidor**, y eso es lo que autoriza a limpiar la copia de este
-       aparato. Si se agotó el tope de páginas, no. */
+       aparato. Una consulta fallida nunca declara la lista completa. */
     if (!data.next) return { items: all, complete: true };
+    if (seen.has(data.next))
+      throw new Error("El servidor repitió una página. Reintenta la consulta.");
+    seen.add(data.next);
     after = data.next as string;
   }
-  return { items: all, complete: false };
 }
 
 /**
@@ -62,7 +60,7 @@ export function useAccountReports(
     if (!active || !uid || !online) return;
     const controller = new AbortController();
     let alive = true;
-    fetchAll(controller.signal)
+    fetchAccountReports(controller.signal)
       .then(({ items, complete }) => {
         if (alive) setState({ uid, items, error: "", complete });
       })

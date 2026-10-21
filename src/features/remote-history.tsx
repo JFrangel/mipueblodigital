@@ -1,4 +1,5 @@
 "use client";
+import { ActionImage } from "./action-image";
 import { statuses } from "@/data/catalog";
 import {
   useRemoteHistory,
@@ -33,15 +34,23 @@ export function HistoryList({ state }: { state: RemoteHistoryState }) {
         {items.map((event) => (
           <li key={event.id}>
             <strong>
-              {event.type === "received"
-                ? "Recibido por el Consejo"
-                : (statuses[event.status as keyof typeof statuses] ??
-                  event.status)}
+              {event.type === "visit"
+                ? "Visita técnica"
+                : event.type === "received"
+                  ? "Recibido por el Consejo"
+                  : (statuses[event.status as keyof typeof statuses] ??
+                    event.status)}
             </strong>
             <time dateTime={event.at}>
               {new Date(event.at).toLocaleString("es-CO")}
               {event.actor && ` · ${event.actor}`}
             </time>
+            {event.visitDate && (
+              <p className="subtle-note">
+                Visita del {event.visitDate} · {event.visitResponsible}
+              </p>
+            )}
+            {event.imageUrl && <ActionImage url={event.imageUrl} />}
             {event.note && <p>{event.note}</p>}
             {event.internalNote && (
               <p className="notice">

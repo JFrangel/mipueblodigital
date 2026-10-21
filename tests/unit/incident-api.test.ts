@@ -1,12 +1,24 @@
 import { beforeEach,expect,it,vi } from "vitest";
 const state=vi.hoisted(()=>({store:new Map<string,Record<string,unknown>>(),uid:"alice",verified:true,photoFailure:false,evidence:new Map<string,Record<string,unknown>>(),avisos:[] as {destino:unknown;aviso:{title:string;body:string;url:string}}[]}));
-vi.mock("../../src/server/admin-auth",()=>({ApiError:class extends Error{constructor(public status:number,message:string){super(message);}},requireMember:async()=>({uid:state.uid,identity:{email_verified:state.verified},db:{doc:(path:string)=>({path,set:async(data:Record<string,unknown>)=>{state.store.set(path,data);},collection:(name:string)=>({doc:(id:string)=>({path:`${path}/${name}/${id}`})})}),runTransaction:async(fn:(t:unknown)=>unknown)=>{const writes:Array<()=>void>=[];const result=await fn({get:async(ref:{path:string})=>({data:()=>state.store.get(ref.path)}),create:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,data)),set:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,data)),update:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,{...state.store.get(ref.path),...data}))});writes.forEach(w=>w());return result;}}})}));
+vi.mock("../../src/server/admin-auth",()=>({ApiError:class extends Error{constructor(public status:number,message:string){super(message);}},requireMember:async()=>({uid:state.uid,identity:{email_verified:state.verified},db:{collection:()=>({get:async()=>({docs:[]})}),doc:(path:string)=>({path,set:async(data:Record<string,unknown>)=>{state.store.set(path,data);},collection:(name:string)=>({doc:(id:string)=>({path:`${path}/${name}/${id}`})})}),runTransaction:async(fn:(t:unknown)=>unknown)=>{const writes:Array<()=>void>=[];const result=await fn({get:async(ref:{path:string})=>({data:()=>state.store.get(ref.path)}),create:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,data)),set:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,data)),update:(ref:{path:string},data:Record<string,unknown>)=>writes.push(()=>state.store.set(ref.path,{...state.store.get(ref.path),...data}))});writes.forEach(w=>w());return result;}}})}));
 vi.mock("../../src/server/evidence",()=>({buildBackup:async()=>({content_base64:"cmVkdWNpZGE=",mime_type:"image/webp"}),validateOriginal:async()=>({sha256:"b".repeat(64),content_base64:"YWJj",mime_type:"image/png",byte_size:3}),archivePhoto:async()=>({sha256:"a".repeat(64),content_base64:"YWJj",mime_type:"image/webp",byte_size:3}),evidenceRequest:async(query:string,init?:RequestInit)=>{if(state.photoFailure)throw new Error("storage unavailable");if(init?.method==="POST"){const d=JSON.parse(String(init.body));state.evidence.set(d.id,d);return new Response(null,{status:201});}const id=query.match(/id=eq\.([^&]+)/)?.[1];return Response.json([state.evidence.get(id??"")]);}}));
 vi.mock("../../src/server/push",()=>({avisar:async(_db:unknown,destino:unknown,aviso:{title:string;body:string;url:string})=>{state.avisos.push({destino,aviso});}}));
 import { POST } from "../../src/app/api/incidents/route";
 const payload={requestId:"12345678-1234-4234-8234-123456789abc",category:"infraestructura",vereda:"Bellavista",description:"El muelle tiene daños",phone:"",photo:"test",sensitive:true};
 const req=(extra={})=>new Request("http://localhost/api/incidents/",{method:"POST",body:JSON.stringify({...payload,...extra})});
 beforeEach(()=>{state.store.clear();state.store.set("accounts/alice",{active:true});state.evidence.clear();state.uid="alice";state.verified=true;state.photoFailure=false;state.avisos=[];});
+it("archiva todas las fotos y conserva los identificadores al reintentar", async () => {
+  const a = await POST(req({ photos: ["uno", "dos", "tres"] }));
+  expect(a.status).toBe(200);
+  const { id } = await a.json();
+  expect(state.store.get(`incidents/${id}`)?.evidenceIds).toHaveLength(3);
+  await POST(req({ photos: ["uno", "dos", "tres"] }));
+  expect(state.evidence.size).toBe(3);
+});
+it("rechaza más de cinco fotos y una lista vacía", async () => {
+  expect((await POST(req({ photos: Array(6).fill("foto") }))).status).toBe(400);
+  expect((await POST(req({ photos: [] }))).status).toBe(400);
+});
 it("recibo repetido no crea otro expediente ni notificación",async()=>{const a=await POST(req()),b=await POST(req());expect(a.status).toBe(200);expect(await a.json()).toEqual(await b.json());expect([...state.store.keys()].filter(k=>/^incidents\/[^/]+$/.test(k))).toHaveLength(1);expect([...state.store.keys()].filter(k=>k.startsWith("councilNotifications/"))).toHaveLength(1);});
 /* El archivo externo puede pausarse por falta de uso. Junto al expediente
    queda una copia reducida para que el caso siga pudiéndose mirar. */

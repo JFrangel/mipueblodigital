@@ -1,3 +1,5 @@
+import { FieldPath } from "firebase-admin/firestore";
+import { reportCursor, parseReportCursor } from "@/domain/report-cursor";
 import { ApiError, requireMember } from "@/server/admin-auth";
 import { publicationDelayHours } from "@/domain/publication";
 import { sharedView, type Shared } from "@/server/community-view";
@@ -19,13 +21,21 @@ export async function GET(request: Request) {
   try {
     const { db } = await requireMember(request);
     const cursor = new URL(request.url).searchParams.get("after");
-    if (cursor && !/^\d{4}-\d{2}-\d{2}T[\d:.]+Z$/.test(cursor))
+    let position: [string, string] | null = null;
+    try {
+      position = cursor ? parseReportCursor(cursor) : null;
+    } catch {
       throw new ApiError(400, "Página inválida.");
+    }
     const delay = publicationDelayHours(process.env.PUBLIC_REPORT_DELAY_HOURS);
     const now = Date.now();
     // El plazo se aplica en sharedView a la fecha de aprobación del resumen.
-    let query = db.collection("incidents").orderBy("date", "desc").limit(26);
-    if (cursor) query = query.startAfter(cursor);
+    let query = db
+      .collection("incidents")
+      .orderBy("date", "desc")
+      .orderBy(FieldPath.documentId(), "desc")
+      .limit(26);
+    if (position) query = query.startAfter(...position);
     const docs = (await query.get()).docs;
     const page = docs.slice(0, 25);
     /* Lo sensible no consta de ninguna manera, ni revisado ni por plazo: el
@@ -60,7 +70,10 @@ export async function GET(request: Request) {
         items,
         /* El cursor sale del último documento leído, no del último mostrado:
            si no, los marcados como sensibles harían saltar páginas enteras. */
-        next: docs.length > 25 ? String(page.at(-1)?.data().date) : null,
+        next:
+          docs.length > 25
+            ? reportCursor(String(docs[24].data().date), docs[24].id)
+            : null,
         delayHours: delay,
       },
       { headers: { "Cache-Control": "no-store" } },

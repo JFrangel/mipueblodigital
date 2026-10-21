@@ -1,4 +1,6 @@
 "use client";
+import { resolveVereda } from "@/domain/vereda-catalogue";
+import { useCatalogue } from "@/data/vereda-catalogue";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -39,7 +41,7 @@ import {
   LogOut,
   TrendingUp,
 } from "lucide-react";
-import { type Case, statuses, categories, veredas } from "@/data/catalog";
+import { type Case, statuses, categories } from "@/data/catalog";
 import {
   readLocalCases,
   removeLocalCase,
@@ -1251,7 +1253,7 @@ function ReportMissing({
   );
 }
 function CaseBrowser({
-  items,
+  items: rawItems,
   onSelect,
   mine,
   notice,
@@ -1265,6 +1267,21 @@ function CaseBrowser({
   /** Volver a pedir la lista, donde la lista viene del servidor. */
   onRefresh?: () => void;
 }) {
+  const catalogue = useCatalogue();
+  const items = useMemo(
+    () =>
+      rawItems.map((item) => ({
+        ...item,
+        vereda: resolveVereda(catalogue, item.vereda)?.name ?? item.vereda,
+      })),
+    [rawItems, catalogue],
+  );
+  const veredas = [
+    ...new Set([
+      ...catalogue.items.filter((v) => v.active).map((v) => v.name),
+      ...items.map((v) => v.vereda),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, "es"));
   const [query, setQuery] = useState(""),
     [status, setStatus] = useState("all"),
     [category, setCategory] = useState("all"),

@@ -27,7 +27,7 @@ test("enviar sin sesión deja el reporte esperando y lleva al acceso", async ({
   await page
     .getByLabel("Evidencia fotográfica", { exact: true })
     .setInputFiles("public/brand/territorio.webp");
-  await expect(page.getByText("Fotografía adjunta · cambiar")).toBeVisible();
+  await expect(page.getByText("1 de 5 fotografías · añadir")).toBeVisible();
 
   /* De «Detalles» a «Revisar», que es donde vive el botón de enviar. Se
      reintenta el avance como hace report-flow.ts: el HTML estático se pinta

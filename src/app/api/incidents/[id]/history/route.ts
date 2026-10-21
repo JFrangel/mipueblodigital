@@ -42,6 +42,17 @@ export async function GET(
         ...(council
           ? {
               internalNote: d.internalNote ?? "",
+              ...(d.type === "visit"
+                ? {
+                    visitDate: d.visitDate,
+                    visitResponsible: d.visitResponsible,
+                  }
+                : {}),
+              ...(d.imageId && !incident.anonymizedAt
+                ? {
+                    imageUrl: `/api/admin/incidents/${id}/events/${doc.id}/image/`,
+                  }
+                : {}),
               actor: nameOf(names, actor),
             }
           : {}),

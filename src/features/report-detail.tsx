@@ -139,7 +139,17 @@ export function ReportDetail({
           evidencia y sus datos, a la derecha el relato y su historia. */}
       <div className={styles.columns}>
         <div className={styles.evidence}>
-          {item.photo ? (
+          {(item.photos?.length ?? 0) > 1 ? (
+            <div className="evidence-gallery">
+              {item.photos!.map((src, index) => (
+                <PhotoView
+                  key={index}
+                  src={src}
+                  alt={`Fotografía ${index + 1} del reporte`}
+                />
+              ))}
+            </div>
+          ) : item.photo ? (
             /* Entera y a pantalla completa al pulsarla, como la del panel del
                Consejo. Antes se recortaba a una altura fija y el botón solo la
                estiraba dentro de su columna: una foto vertical seguía sin

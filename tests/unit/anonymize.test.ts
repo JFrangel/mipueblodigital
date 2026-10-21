@@ -94,6 +94,15 @@ beforeEach(() => {
 });
 
 describe("anonimización de cuenta", () => {
+  it("no declara terminada la limpieza si quedan copias de las fotografías", async () => {
+    for (let i = 0; i < 1005; i++) store.set(`incidentEvidence/copia-${i}`, { owner: "ana", content_base64: "foto" });
+    const first = await anonymizeAccount(db, "ana", "anon-1");
+    expect(first.complete).toBe(false);
+    expect([...store.keys()].filter(k => k.startsWith("incidentEvidence/"))).toHaveLength(5);
+    const second = await anonymizeAccount(db, "ana", "anon-1");
+    expect(second.complete).toBe(true);
+    expect([...store.keys()].filter(k => k.startsWith("incidentEvidence/"))).toHaveLength(0);
+  });
   it("retira los datos personales y conserva la trazabilidad comunitaria", async () => {
     const result = await anonymizeAccount(db, "ana", "anon-1");
     expect(result).toMatchObject({

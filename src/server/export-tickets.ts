@@ -83,12 +83,71 @@ export async function consumeExportTicket(
   const ref = db.doc(`exportTickets/${ticket}`);
   return db.runTransaction(async (tx) => {
     const data = (await tx.get(ref)).data();
-    if (!data || Date.now() - Number(data.createdAt) > VIGENCIA_MS) return null;
+    if (!data) return null;
+    const parts = data.partCount
+      ? await tx.get(ref.collection("parts").orderBy("index"))
+      : null;
+    if (parts && parts.size !== data.partCount) return null;
+    if (Date.now() - Number(data.createdAt) > VIGENCIA_MS) {
+      if (parts) for (const part of parts.docs) tx.delete(part.ref);
+      tx.delete(ref);
+      return null;
+    }
     tx.delete(ref);
+    if (parts) for (const part of parts.docs) tx.delete(part.ref);
     return {
       contentType: String(data.contentType),
       filename: String(data.filename),
-      body: String(data.body),
+      body: parts
+        ? parts.docs.map((part) => String(part.data().body)).join("")
+        : String(data.body),
     };
   });
+}
+
+/** Exportación completa calculada por el servidor, dividida bajo el límite de cada documento. */
+export async function mintLargeExportTicket(
+  db: Firestore,
+  uid: string,
+  body: string,
+): Promise<string> {
+  if (Buffer.byteLength(body, "utf8") <= CUERPO_MAXIMO)
+    return mintExportTicket(db, {
+      uid,
+      body,
+      filename: "bandeja-consejo.csv",
+      contentType: "text/csv;charset=utf-8",
+    });
+  if (Buffer.byteLength(body, "utf8") > 30_000_000)
+    throw new ApiError(
+      413,
+      "Esta exportación supera 30 MB. Selecciona filtros para descargarla por grupos.",
+    );
+  const ticket = randomUUID(),
+    ref = db.doc(`exportTickets/${ticket}`),
+    batch = db.batch();
+  // 200.000 unidades UTF-16 no superan 800 KB, incluso con caracteres de cuatro bytes.
+  const chunks: string[] = [];
+  for (let i = 0; i < body.length;) {
+    let end = Math.min(body.length, i + 200_000);
+    const last = body.charCodeAt(end - 1);
+    if (end < body.length && last >= 0xd800 && last <= 0xdbff) end--;
+    chunks.push(body.slice(i, end));
+    i = end;
+  }
+  batch.create(ref, {
+    uid,
+    contentType: "text/csv;charset=utf-8",
+    filename: "bandeja-consejo.csv",
+    createdAt: Date.now(),
+    partCount: chunks.length,
+  });
+  chunks.forEach((chunk, index) =>
+    batch.create(ref.collection("parts").doc(String(index).padStart(4, "0")), {
+      index,
+      body: chunk,
+    }),
+  );
+  await batch.commit();
+  return ticket;
 }

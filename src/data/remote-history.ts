@@ -9,6 +9,9 @@ export type CouncilEvent = {
   type: string;
   status: string;
   note: string;
+  visitDate?: string;
+  visitResponsible?: string;
+  imageUrl?: string;
   /** Solo para el Consejo. */
   internalNote?: string;
   actor?: string;

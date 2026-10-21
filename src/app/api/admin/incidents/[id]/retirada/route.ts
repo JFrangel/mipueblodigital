@@ -178,6 +178,9 @@ export async function POST(
       await barrer(
         db.collection("councilNotifications").where("incidentId", "==", id),
       );
+      await barrer(
+        db.collection("incidentEvidence").where("incident_id", "==", id),
+      );
     } catch {
       complete = false;
     }

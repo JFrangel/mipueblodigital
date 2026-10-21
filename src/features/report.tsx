@@ -1,4 +1,6 @@
 "use client";
+import { referencia as veredaReference } from "@/data/territorio-vivo";
+import { useCatalogue } from "@/data/vereda-catalogue";
 import { useState, useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import Link from "next/link";
@@ -22,13 +24,7 @@ import {
   Save,
 } from "lucide-react";
 import { categories, type Case } from "@/data/catalog";
-import {
-  catalogueNotice,
-  veredaNames,
-  veredaReference,
-  localityLabel,
-  localitySearchText,
-} from "@/domain/territory";
+import { localityLabel, localitySearchText } from "@/domain/territory";
 import { VeredaPreview, type Point } from "./vereda-preview";
 import { comoLaDelCatalogo } from "@/domain/veredas";
 import { validateReport } from "@/domain/logic";
@@ -42,6 +38,14 @@ const blank = { category: "", vereda: "", description: "", phone: "" };
 const plain = (text: string) =>
   text.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
+  const catalogue = useCatalogue();
+  const veredaNames = catalogue.items
+    .filter((v) => v.active)
+    .map((v) => v.name);
+  const catalogueNotice =
+    catalogue.validated?.version === catalogue.version
+      ? "Catálogo validado por el Consejo Comunitario."
+      : "Catálogo pendiente de validación por el Consejo Comunitario. Los puntos son referencias aproximadas.";
   const [data, setData] = useState(blank),
     [step, setStep] = useState(0),
     /* Paso más lejano al que se llegó: volver atrás no debe cerrar la puerta
@@ -54,14 +58,6 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
     [done, setDone] = useState(false),
     /* Borrador recién guardado: la pantalla lo dice y deja salir. */
     [saved, setSaved] = useState(false),
-    /* Qué se hizo con la fotografía elegida. La afirmación «se envía el
-       archivo original» solo es cierta cuando cabía entera; si hubo que
-       reducirla, decirlo igualmente sería mentir sobre lo que viaja. Nulo
-       cuando la foto viene de un borrador y no nos consta. */
-    [evidence, setEvidence] = useState<{
-      reduced: boolean;
-      megapixels: number;
-    } | null>(null),
     [busy, setBusy] = useState(false);
   const [dictating, setDictating] = useState(false);
   /* Lo escrito para acortar la lista de veredas. No es parte del reporte: se
@@ -138,7 +134,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       setNativeQueuedReady(true);
       setSensitive(false);
       setPoint(null);
-      setEvidence(null);
+
       /* Si esta persona acaba de entrar tras haber preparado reportes sin
          cuenta, esos reportes pasan ahora a su nombre y salen solos con la
          siguiente sincronización. Ver sin-cuenta.ts para por qué el traspaso va
@@ -304,6 +300,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         await enqueue(SIN_CUENTA, {
           ...data,
           photo: photos[0],
+          ...(photos.length > 1 ? { photos } : {}),
           sensitive,
           ...(point ?? {}),
         });
@@ -324,6 +321,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       const payload = {
         ...data,
         photo: photos[0],
+        ...(photos.length > 1 ? { photos } : {}),
         sensitive,
         ...(point ?? {}),
       };
@@ -373,6 +371,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
             : "En la bandeja de salida. Se enviará al volver la señal.",
         ],
         photo: photos[0],
+        photos,
       }).catch(() => undefined);
       setDone(true);
       draftVersion.current++;
@@ -491,24 +490,30 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
       errorBox.current?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [errors]);
   async function upload(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
+    const chosen = Array.from(files ?? []);
+    if (!chosen.length || preparing) return;
+    if (photos.length + chosen.length > 5) {
+      setErrors([
+        "Puedes adjuntar hasta cinco fotografías. Quita alguna antes de añadir más.",
+      ]);
+      return;
+    }
     const version = ++uploadVersion.current;
     setPreparing(true);
     setErrors([]);
     try {
-      const prepared = await prepareEvidence(file);
+      const added: string[] = [];
+      let reduced = false;
+      for (const file of chosen) {
+        const prepared = await prepareEvidence(file, 550_000);
+        added.push(prepared.dataUrl);
+        reduced ||= prepared.reduced;
+      }
       if (version === uploadVersion.current) {
-        setPhotos([prepared.dataUrl]);
-        setEvidence({
-          reduced: prepared.reduced,
-          megapixels: prepared.megapixels,
-        });
-        /* Si hubo que reducirla, hay que decirlo: quien reporta tiene derecho a
-           saber que lo que viaja no es exactamente el archivo que eligió. */
+        setPhotos((old) => [...old, ...added]);
         setMessage(
-          prepared.reduced
-            ? `La fotografía era demasiado grande y se ajustó a ${prepared.megapixels} megapíxeles para poder enviarla.`
+          reduced
+            ? "Se ajustó el tamaño de las fotografías para facilitar el envío."
             : "",
         );
       }
@@ -845,11 +850,15 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                   <Camera />
                   <strong>
                     {photos.length
-                      ? "Fotografía adjunta · cambiar"
-                      : "Añadir una fotografía"}
+                      ? `${photos.length} de 5 fotografías · añadir`
+                      : "Añadir fotografías"}
                   </strong>
-                  <small>Hasta 10 MB</small>
+                  <small>
+                    Hasta 5 fotografías · ajustamos su tamaño para el envío
+                  </small>
                   <input
+                    multiple
+                    disabled={preparing || photos.length >= 5}
                     aria-label="Evidencia fotográfica"
                     type="file"
                     accept="image/*"
@@ -893,6 +902,8 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                     <Files size={15} /> Buscar en mis archivos
                   </span>
                   <input
+                    multiple
+                    disabled={preparing || photos.length >= 5}
                     aria-label="Buscar la fotografía en los archivos"
                     type="file"
                     onChange={(e) => void upload(e.target.files)}
@@ -900,35 +911,34 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                 </label>
               </div>
               {preparing && <p role="status">Preparando fotografía…</p>}
-              {photos[0] && (
-                <div className="evidence-preview">
-                  {/* Preserve the original data URL without optimizer diagnostics. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photos[0]}
-                    width={600}
-                    height={360}
-                    alt="Vista previa de la fotografía del reporte"
-                    className="evidence-image"
-                  />
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      uploadVersion.current++;
-                      setPreparing(false);
-                      setPhotos([]);
-                      setEvidence(null);
-                    }}
-                  >
-                    Quitar fotografía
-                  </button>
-                  {evidence && (
-                    <small>
-                      {evidence.reduced
-                        ? `Reducida a ${evidence.megapixels} megapíxeles para caber en el envío. Por lo demás, la misma fotografía.`
-                        : "Archivo original conservado sin compresión ni cambio de resolución."}
-                    </small>
-                  )}
+              {photos.length > 0 && (
+                <div className="evidence-gallery">
+                  {photos.map((src, index) => (
+                    <figure key={`${index}-${src.length}`}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={src}
+                        alt={`Fotografía ${index + 1} del reporte`}
+                        width={300}
+                        height={180}
+                      />
+                      <figcaption>
+                        Foto {index + 1}
+                        <button
+                          type="button"
+                          className="text-button"
+                          disabled={preparing}
+                          onClick={() =>
+                            setPhotos((old) =>
+                              old.filter((_, i) => i !== index),
+                            )
+                          }
+                        >
+                          Quitar
+                        </button>
+                      </figcaption>
+                    </figure>
+                  ))}
                 </div>
               )}
               <label className="field-label">
@@ -981,23 +991,23 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                     no se puede comprobar leyendo, y es lo que va a salir del
                     teléfono. Verla aquí es la última ocasión de notar que se
                     coló la equivocada. */}
-                  {photos[0] ? (
-                    <figure className="review-photo">
-                      {/* Se conserva el archivo original tal cual. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={photos[0]}
-                        alt="Vista previa de la fotografía que se enviará"
-                        className="evidence-image"
-                      />
-                      {evidence && (
-                        <figcaption>
-                          {evidence.reduced
-                            ? `Ajustada a ${evidence.megapixels} megapíxeles para poder enviarla.`
-                            : "Se envía el archivo original, sin recomprimir."}
-                        </figcaption>
-                      )}
-                    </figure>
+                  {photos.length ? (
+                    <div className="evidence-gallery">
+                      {photos.map((src, index) => (
+                        <figure key={index}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={src}
+                            alt={`Fotografía ${index + 1} que se enviará`}
+                            width={300}
+                            height={180}
+                          />
+                          <figcaption>
+                            Foto {index + 1} de {photos.length}
+                          </figcaption>
+                        </figure>
+                      ))}
+                    </div>
                   ) : (
                     <strong>Sin fotografía</strong>
                   )}
@@ -1011,9 +1021,9 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
                   paso de la ubicación. */}
               <div className="notice">
                 <p>
-                  Sale de aquí tu descripción, la vereda, la fotografía original
-                  y el contacto si lo dejaste. Nada más. El servidor responde
-                  con un recibo y su fecha.
+                  Sale de aquí tu descripción, la vereda, las fotografías
+                  adjuntas y el contacto si lo dejaste. Nada más. El servidor
+                  responde con un recibo y su fecha.
                 </p>
                 <p>
                   ¿Sin señal? El reporte espera en tu bandeja de salida y{" "}

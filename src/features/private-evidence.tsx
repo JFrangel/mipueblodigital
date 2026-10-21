@@ -23,10 +23,10 @@ type State = "cargando" | "lista" | "sin-foto" | "error";
  * El servidor dice en una cabecera cuál de las dos sirvió, y aquí se repite:
  * quien vaya a usarla como prueba tiene derecho a saber cuál está mirando.
  */
-async function fetchPhoto(id: string, full: boolean) {
+async function fetchPhoto(id: string, full: boolean, index: number) {
   const { headers, uid } = await memberHeaders();
   const response = await fetch(
-    `/api/incidents/${id}/evidence/${full ? "" : "?vista=copia"}`,
+    `/api/incidents/${id}/evidence/?foto=${index}${full ? "" : "&vista=copia"}`,
     { headers, cache: "no-store", signal: AbortSignal.timeout(30000) },
   );
   /* Un reporte sin fotografía no es un fallo: se dice y ya está. */
@@ -35,6 +35,7 @@ async function fetchPhoto(id: string, full: boolean) {
   const blob = await response.blob();
   return {
     uid,
+    count: Number(response.headers.get("X-Fotos")) || 1,
     photo: {
       url: URL.createObjectURL(blob),
       reduced: response.headers.get("X-Evidencia") === "copia-reducida",
@@ -44,6 +45,8 @@ async function fetchPhoto(id: string, full: boolean) {
 
 export function PrivateEvidence({ id }: { id: string }) {
   const online = useOnline();
+  const [index, setIndex] = useState(0),
+    [count, setCount] = useState(1);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [state, setState] = useState<State>("cargando");
   /* Sube al pedir el original o al reintentar: es lo que vuelve a disparar la
@@ -54,8 +57,9 @@ export function PrivateEvidence({ id }: { id: string }) {
   useEffect(() => {
     let alive = true;
     let created = "";
-    fetchPhoto(id, full)
-      .then(({ uid, photo: found }) => {
+    fetchPhoto(id, full, index)
+      .then(({ uid, photo: found, count: total }) => {
+        setCount(total ?? 1);
         /* Si la sesión cambió entre la petición y la respuesta, lo traído ya
            no es de quien mira: se descarta sin dibujarlo. */
         const mine = firebaseClient().auth.currentUser?.uid === uid;
@@ -76,7 +80,7 @@ export function PrivateEvidence({ id }: { id: string }) {
          uno que se abre deja su fotografía retenida en memoria. */
       if (created) URL.revokeObjectURL(created);
     };
-  }, [id, full, attempt]);
+  }, [id, full, attempt, index]);
 
   const ask = () => {
     setPhoto(null);
@@ -91,6 +95,39 @@ export function PrivateEvidence({ id }: { id: string }) {
 
   return (
     <div className="evidence-view">
+      {count > 1 && (
+        <div className="pagination">
+          <button
+            type="button"
+            className="btn"
+            disabled={index === 0}
+            onClick={() => {
+              setPhoto(null);
+              setState("cargando");
+              setFull(false);
+              setIndex((i) => i - 1);
+            }}
+          >
+            Anterior foto
+          </button>
+          <span>
+            Foto {index + 1} de {count}
+          </span>
+          <button
+            type="button"
+            className="btn"
+            disabled={index + 1 >= count}
+            onClick={() => {
+              setPhoto(null);
+              setState("cargando");
+              setFull(false);
+              setIndex((i) => i + 1);
+            }}
+          >
+            Siguiente foto
+          </button>
+        </div>
+      )}
       {state === "cargando" && <p role="status">Cargando evidencia…</p>}
       {state === "sin-foto" && (
         <p className="subtle-note">Este reporte se envió sin fotografía.</p>

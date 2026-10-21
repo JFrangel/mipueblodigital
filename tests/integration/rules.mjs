@@ -87,6 +87,13 @@ try {
   await assertFails(
     setDoc(doc(alice, "pushTokens/alice/devices/tok-1"), { platform: "web" }),
   );
+  // El catálogo, su auditoría y los billetes multipartes solo los sirve la API.
+  for (const path of ["territoryCatalogue/current", "veredaCatalogueEvents/one", "exportTickets/one/parts/0000"]) {
+    for (const client of [alice, admin]) {
+      await assertFails(getDoc(doc(client, path)));
+      await assertFails(setDoc(doc(client, path), { value: "no autorizado" }));
+    }
+  }
   console.log(
     "PASS: aislamiento por autor, administrador activo, cuenta desactivada, resumen público solo vía API, aparatos de avisos y rechazo a escrituras directas.",
   );

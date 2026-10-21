@@ -78,7 +78,7 @@ export async function abrirExportacion(
  * archivo: no sabe descargar ni imprimir (ver arriba). Lo comparten el informe
  * de estadísticas y los PDF de los manuales.
  */
-async function abrirEnNavegadorDelSistema(url: string): Promise<void> {
+export async function abrirEnNavegadorDelSistema(url: string): Promise<void> {
   const Ajustes = registerPlugin<{
     abrirEnlace(opciones: { url: string }): Promise<void>;
   }>("Ajustes");

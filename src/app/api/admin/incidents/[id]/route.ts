@@ -1,3 +1,5 @@
+import { councilAction } from "@/domain/council-action";
+import { archiveEventImage } from "@/server/event-image";
 import { createHash } from "node:crypto";
 import { ApiError, requireAdmin } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
@@ -14,7 +16,7 @@ export async function PATCH(
       { id } = await params;
     if (!/^[0-9a-f]{64}$/.test(id))
       throw new ApiError(404, "Caso no encontrado.");
-    const input = (await readJson(request, 16000)) as Record<string, unknown>;
+    const input = (await readJson(request, 1000000)) as Record<string, unknown>;
     if (
       !input ||
       typeof input.mutationId !== "string" ||
@@ -88,10 +90,43 @@ export async function PATCH(
       throw new ApiError(400, "Clasificación inválida.");
     if (input.priority !== undefined && !isPriority(input.priority))
       throw new ApiError(400, "Prioridad inválida.");
+    let action: ReturnType<typeof councilAction>;
+    try {
+      action = councilAction(input);
+    } catch (e) {
+      throw new ApiError(400, (e as Error).message);
+    }
+    let attachment: { imageId?: string; imageHash?: string } = {};
+    if (input.image) {
+      const incident = (await db.doc(`incidents/${id}`).get()).data();
+      if (!incident || incident.anonymizedAt)
+        throw new ApiError(
+          404,
+          "No se pueden añadir imágenes a este expediente.",
+        );
+      if (incident.version !== input.version) {
+        const previous = await db
+          .doc(`incidents/${id}/events/${input.mutationId}`)
+          .get();
+        if (!previous.exists)
+          throw new ApiError(
+            409,
+            "Otra persona actualizó el caso. Recarga antes de guardar.",
+          );
+      }
+      attachment = await archiveEventImage(
+        id,
+        String(input.mutationId),
+        String(incident.owner),
+        input.image,
+      );
+    }
     /* Lo que se pidió, no lo que se aplicó: es lo que firma el `hash` que hace
        idempotente el reintento, así que tiene que ser exactamente lo que mandó
        quien llamó. Lo omitido se queda fuera y no entra en la firma. */
     const command = {
+      ...action,
+      ...attachment,
       ...text,
       status: input.status,
       ...(input.priority !== undefined ? { priority: input.priority } : {}),

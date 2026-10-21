@@ -1,5 +1,7 @@
 "use client";
 import { collection, getDocs } from "firebase/firestore";
+import { getCatalogue, refreshCatalogue } from "./vereda-catalogue";
+import { resolveVereda } from "@/domain/vereda-catalogue";
 import { firebaseClient } from "./firebase/client";
 import { clave } from "@/domain/veredas";
 import { veredaReference } from "@/domain/territory";
@@ -60,6 +62,12 @@ if (typeof window !== "undefined") situadas = desdeAlmacen();
  * lo que dijo la gente que vive allí, ese punto sabe más que el del EOT de 2007.
  */
 export function referencia(nombre: string): Referencia | null {
+  const catalogue = getCatalogue();
+  const item = resolveVereda(catalogue, nombre);
+  if (catalogue.version > 0 && item)
+    return item.lat !== undefined && item.lng !== undefined
+      ? { lat: item.lat, lng: item.lng, fuente: "consejo" }
+      : null;
   const situada = situadas.get(clave(nombre));
   if (situada) return situada;
   const compilada = veredaReference(nombre);
@@ -85,6 +93,7 @@ export const situadaPorLaComunidad = (nombre: string) =>
  * una funcionalidad que pueda faltar, es una mejora sobre algo que ya funciona.
  */
 export async function refrescarSituadas(): Promise<void> {
+  await refreshCatalogue().catch(() => undefined);
   try {
     const { db } = firebaseClient();
     const page = await getDocs(collection(db, "veredaPoints"));
@@ -109,10 +118,7 @@ export async function refrescarSituadas(): Promise<void> {
     if (!nuevas.size) return;
     situadas = nuevas;
     try {
-      localStorage.setItem(
-        ALMACEN,
-        JSON.stringify(Object.fromEntries(nuevas)),
-      );
+      localStorage.setItem(ALMACEN, JSON.stringify(Object.fromEntries(nuevas)));
     } catch {
       /* Sin almacén, vale para esta sesión y se vuelve a traer en la siguiente. */
     }

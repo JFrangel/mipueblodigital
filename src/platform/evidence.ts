@@ -78,7 +78,10 @@ async function formatoReal(file: File): Promise<string> {
   return "";
 }
 
-export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
+export async function prepareEvidence(
+  file: File,
+  maxBytes = MAX_BYTES,
+): Promise<PreparedEvidence> {
   if (file.size === 0)
     throw new Error(
       "Ese archivo llegó vacío. Suele pasar con fotos que están solo en la nube: ábrela primero en la galería para que se descargue, y vuelve a intentarlo.",
@@ -124,7 +127,7 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
      * sabe, y mandarlo sería hacerle esperar a alguien por un rechazo seguro.
      */
     const esImagen = formato === null || ACEPTADOS.includes(formato);
-    if (esImagen && file.size <= MAX_BYTES) return null;
+    if (esImagen && file.size <= maxBytes) return null;
     if (formato === "")
       throw new Error(
         "Ese archivo no es una fotografía. Elige una imagen, o tómala con la cámara desde aquí.",
@@ -148,7 +151,7 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
     if (
       ACEPTADOS.includes(formato ?? file.type) &&
       pixels <= MAX_PIXELS &&
-      file.size <= MAX_BYTES
+      file.size <= maxBytes
     )
       return {
         dataUrl: await readAsDataUrl(file),
@@ -159,7 +162,7 @@ export async function prepareEvidence(file: File): Promise<PreparedEvidence> {
        del iPhone, o el vacío que entregan algunas galerías— la conversión no
        es un apaño: es lo que hace que el servidor pueda comprobar que lo que
        recibe es de verdad la imagen que dice ser. */
-    const reducida = await shrink(bitmap, pixels);
+    const reducida = await shrink(bitmap, pixels, maxBytes);
     return { ...reducida, reduced: true };
   } finally {
     if ("close" in bitmap) bitmap.close();
@@ -258,8 +261,15 @@ function readAsDataUrl(file: Blob): Promise<string> {
 async function shrink(
   bitmap: Decodificada,
   pixels: number,
+  maxBytes = MAX_BYTES,
 ): Promise<{ dataUrl: string; megapixels: number }> {
-  const factor = pixels > MAX_PIXELS ? Math.sqrt(MAX_PIXELS / pixels) : 1;
+  const factor =
+    pixels > (maxBytes < MAX_BYTES ? 3_000_000 : MAX_PIXELS)
+      ? Math.sqrt(
+          Math.min(MAX_PIXELS, maxBytes < MAX_BYTES ? 3_000_000 : MAX_PIXELS) /
+            pixels,
+        )
+      : 1;
   const real = medidas(bitmap);
   const width = Math.max(1, Math.floor(real.width * factor));
   const height = Math.max(1, Math.floor(real.height * factor));
@@ -275,12 +285,12 @@ async function shrink(
   context.imageSmoothingQuality = "high";
   context.drawImage(bitmap, 0, 0, width, height);
 
-  for (const quality of [0.92, 0.85, 0.78, 0.7]) {
+  for (const quality of [0.92, 0.85, 0.78, 0.7, 0.6, 0.48, 0.35, 0.25]) {
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, "image/webp", quality),
     );
     if (!blob) break;
-    if (blob.size <= MAX_BYTES)
+    if (blob.size <= maxBytes)
       return {
         dataUrl: await readAsDataUrl(blob),
         megapixels: round(width * height),

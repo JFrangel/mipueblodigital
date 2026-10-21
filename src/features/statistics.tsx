@@ -1,4 +1,6 @@
 "use client";
+import { resolveVereda } from "@/domain/vereda-catalogue";
+import { useCatalogue } from "@/data/vereda-catalogue";
 import { useMemo, useState } from "react";
 import { shortId } from "@/domain/short-id";
 import { AccesoNecesario } from "@/components/acceso-necesario";
@@ -16,7 +18,7 @@ import {
   Info,
 } from "lucide-react";
 import { Badge } from "@/components/ui";
-import { type Case, categories, statuses, veredas } from "@/data/catalog";
+import { type Case, categories, statuses } from "@/data/catalog";
 import { summarize } from "@/domain/logic";
 import { readStatistics } from "@/domain/reading";
 import { ReadingAssistant } from "./reading-assistant";
@@ -33,7 +35,7 @@ import { abrirExportacion } from "@/platform/export";
 import { toast } from "@/data/toasts";
 const colors = ["#174d3d", "#709c75", "#cfad63", "#9bc5c7", "#c8d1cb"];
 export function Statistics({
-  items,
+  items: rawItems,
   partial = false,
   signed = true,
 }: {
@@ -43,6 +45,21 @@ export function Statistics({
   /** Sin sesión no hay territorio que contar: no es que valga cero. */
   signed?: boolean;
 }) {
+  const catalogue = useCatalogue();
+  const items = useMemo(
+    () =>
+      rawItems.map((item) => ({
+        ...item,
+        vereda: resolveVereda(catalogue, item.vereda)?.name ?? item.vereda,
+      })),
+    [rawItems, catalogue],
+  );
+  const veredas = [
+    ...new Set([
+      ...catalogue.items.filter((v) => v.active).map((v) => v.name),
+      ...items.map((v) => v.vereda),
+    ]),
+  ].sort((a, b) => a.localeCompare(b, "es"));
   const [category, setCategory] = useState("all"),
     [from, setFrom] = useState(""),
     [until, setUntil] = useState(""),

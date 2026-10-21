@@ -33,16 +33,13 @@ type Shared = {
  * Las veredas sin punto documentado se quedan fuera del dibujo pero dentro de
  * la lista y de las cifras, como el resto.
  */
-/* Tope de páginas. Veinticinco por página: ocho vueltas son doscientos
-   reportes públicos, más de los que este territorio acumula en un año. El tope
-   existe para que una respuesta rara no deje la aplicación pidiendo sin fin. */
-const PAGES = 8;
 
-async function fetchAll(): Promise<Case[]> {
+export async function fetchCommunityReports(): Promise<Case[]> {
   const { headers } = await memberHeaders();
   const all: Case[] = [];
   let after: string | null = null;
-  for (let page = 0; page < PAGES; page++) {
+  const seen = new Set<string>();
+  while (true) {
     const response = await fetch(
       `/api/community/reports/${after ? `?after=${encodeURIComponent(after)}` : ""}`,
       { headers, cache: "no-store", signal: AbortSignal.timeout(20000) },
@@ -51,10 +48,10 @@ async function fetchAll(): Promise<Case[]> {
     if (!response.ok) throw new Error(data.error);
     all.push(...(data.items as Shared[]).map(asMapCase));
     const next = data.next as string | null;
-    /* El cursor es una fecha. Si el servidor devuelve la misma que ya se pidió
-       —dos reportes con la fecha exacta al final de la página— seguir sería dar
-       vueltas sobre el mismo sitio. */
-    if (!next || next === after) break;
+    /* El cursor contiene fecha e identidad. No continuar si el servidor repite una página. */
+    if (!next) break;
+    if (seen.has(next)) throw new Error("El servidor repitió una página.");
+    seen.add(next);
     after = next;
   }
   return all;
@@ -70,7 +67,7 @@ export function useCommunityReports(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
     let alive = true;
-    fetchAll()
+    fetchCommunityReports()
       .then((list) => {
         if (alive) setItems(list);
       })

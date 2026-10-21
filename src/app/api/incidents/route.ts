@@ -1,3 +1,6 @@
+import { reportCursor, parseReportCursor } from "@/domain/report-cursor";
+import { readCatalogue } from "@/server/vereda-catalogue";
+import { resolveVereda } from "@/domain/vereda-catalogue";
 import { createHash, randomUUID } from "node:crypto";
 import { FieldPath } from "firebase-admin/firestore";
 import { ApiError, requireMember } from "@/server/admin-auth";
@@ -15,7 +18,6 @@ import { anotarAporte } from "@/server/veredas";
 import { comoLaDelCatalogo } from "@/domain/veredas";
 import { avisar } from "@/server/push";
 import {
-  isCatalogued,
   isInsideTerritory,
   veredaNames,
   veredaReference,
@@ -145,9 +147,20 @@ export async function POST(request: Request) {
      * se puede ni situar ni contrastar, y sería la puerta por la que el catálogo
      * territorial de un consejo comunitario se llena de ruido.
      */
-    const delCatalogo = comoLaDelCatalogo(data.vereda, veredaNames);
+    const catalogue = await readCatalogue(db);
+    const known = resolveVereda(catalogue, data.vereda);
+    if (known && !known.active)
+      throw new ApiError(
+        400,
+        "Esa vereda fue retirada del catálogo. Conserva el reporte y elige una vereda activa.",
+      );
+    const delCatalogo =
+      known?.name ??
+      (catalogue.version === 0
+        ? comoLaDelCatalogo(data.vereda, veredaNames)
+        : null);
     if (delCatalogo) data.vereda = delCatalogo;
-    const veredaProposed = !isCatalogued(data.vereda);
+    const veredaProposed = !delCatalogo;
     if (veredaProposed && pointSource !== "aparato")
       throw new ApiError(
         400,
@@ -161,10 +174,30 @@ export async function POST(request: Request) {
      * (500 MB) no aguanta cientos de fotografías de teléfono sin recomprimir.
      * Ver `archivePhoto` en `evidence.ts` para el porqué exacto.
      */
-    const subida = await validateOriginal(input.photo);
-    const photo = await archivePhoto(
-      Buffer.from(subida.content_base64, "base64"),
-    );
+    const images = input.photos === undefined ? [input.photo] : input.photos;
+    if (
+      !Array.isArray(images) ||
+      images.length < 1 ||
+      images.length > 5 ||
+      images.some((p) => typeof p !== "string")
+    )
+      throw new ApiError(400, "Adjunta entre una y cinco fotografías.");
+    if (
+      input.photos !== undefined &&
+      images.reduce((n, p) => n + p.length, 0) > 4_000_000
+    )
+      throw new ApiError(
+        413,
+        "Las fotografías juntas superan el tamaño del envío. Reduce su tamaño y reintenta.",
+      );
+    const photos = [];
+    for (const image of images) {
+      const subida = await validateOriginal(image);
+      photos.push(
+        await archivePhoto(Buffer.from(subida.content_base64, "base64")),
+      );
+    }
+    const photo = photos[0];
     const id = createHash("sha256")
       .update(`${uid}:${input.requestId}`)
       .digest("hex");
@@ -173,7 +206,13 @@ export async function POST(request: Request) {
     const sensitivity = input.sensitive === true ? "sensitive" : "unreviewed";
     const hash = createHash("sha256")
       .update(
-        JSON.stringify({ ...data, sensitivity, point, photo: photo.sha256 }),
+        JSON.stringify({
+          ...data,
+          sensitivity,
+          point,
+          photo:
+            photos.length === 1 ? photo.sha256 : photos.map((p) => p.sha256),
+        }),
       )
       .digest("hex");
     const ref = db.doc(`incidents/${id}`),
@@ -208,31 +247,39 @@ export async function POST(request: Request) {
       tx.set(limit, { day, count: count + 1 });
       return evidenceId;
     });
-    // Ignore duplicates, then verify the stored original before committing a receipt.
-    await evidenceRequest("?on_conflict=id", {
-      method: "POST",
-      headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
-      body: JSON.stringify({
-        id: evidenceId,
-        incident_id: id,
-        owner_uid: uid,
-        ...photo,
-      }),
+    const evidenceIds = photos.map((_, index) => {
+      if (index === 0) return evidenceId;
+      const h = createHash("sha256")
+        .update(`${evidenceId}:${index}`)
+        .digest("hex");
+      return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
     });
-    const stored = await (
-      await evidenceRequest(
-        `?id=eq.${evidenceId}&select=sha256,owner_uid,incident_id`,
+    for (const [index, image] of photos.entries()) {
+      await evidenceRequest("?on_conflict=id", {
+        method: "POST",
+        headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+        body: JSON.stringify({
+          id: evidenceIds[index],
+          incident_id: id,
+          owner_uid: uid,
+          ...image,
+        }),
+      });
+      const stored = await (
+        await evidenceRequest(
+          `?id=eq.${evidenceIds[index]}&select=sha256,owner_uid,incident_id`,
+        )
+      ).json();
+      if (
+        stored[0]?.sha256 !== image.sha256 ||
+        stored[0]?.owner_uid !== uid ||
+        stored[0]?.incident_id !== id
       )
-    ).json();
-    if (
-      stored[0]?.sha256 !== photo.sha256 ||
-      stored[0]?.owner_uid !== uid ||
-      stored[0]?.incident_id !== id
-    )
-      throw new ApiError(
-        503,
-        "No se pudo verificar la integridad de la fotografía.",
-      );
+        throw new ApiError(
+          503,
+          "No se pudo verificar la integridad de la fotografía.",
+        );
+    }
     const receipt = await db.runTransaction(async (tx) => {
       const account = (await tx.get(db.doc(`accounts/${uid}`))).data();
       if (account?.active !== true)
@@ -267,6 +314,7 @@ export async function POST(request: Request) {
         /* Lo marcó quien reporta, no el Consejo: sigue sin verificar. */
         locationVerified: false,
         evidenceId,
+        evidenceIds,
         version: 1,
         sensitivity,
         publication: "private",
@@ -312,18 +360,20 @@ export async function POST(request: Request) {
        Va en documento aparte porque `incidents/{id}` se lista de veinticinco en
        veinticinco en la bandeja del Consejo, y nadie quiere arrastrar ahí
        cientos de kilobytes de imagen por cada fila. */
-    void buildBackup(photo.content_base64)
-      .then((copia) =>
-        copia
-          ? db.doc(`incidentEvidence/${id}`).set({
+    void Promise.all(
+      photos.map(async (image, index) => {
+        const copia = await buildBackup(image.content_base64);
+        if (copia)
+          await db
+            .doc(`incidentEvidence/${index === 0 ? id : `${id}_${index}`}`)
+            .set({
               ...copia,
               incident_id: id,
               owner: uid,
               at: new Date().toISOString(),
-            })
-          : undefined,
-      )
-      .catch(() => undefined);
+            });
+      }),
+    ).catch(() => undefined);
     /* Que el Consejo se entere sin abrir la aplicación. Fuera de la
        transacción y con `void` por lo mismo que el respaldo de la fotografía:
        un recibo confirmado es un recibo confirmado aunque el aviso no salga. Y
@@ -369,14 +419,19 @@ export async function GET(request: Request) {
   try {
     const { uid, db } = await requireMember(request);
     const cursor = new URL(request.url).searchParams.get("after");
-    if (cursor && !/^[0-9a-f]{64}$/.test(cursor))
+    let position: [string, string] | null = null;
+    try {
+      position = cursor ? parseReportCursor(cursor) : null;
+    } catch {
       throw new ApiError(400, "Página inválida.");
+    }
     let query = db
       .collection("incidents")
       .where("owner", "==", uid)
-      .orderBy(FieldPath.documentId())
+      .orderBy("date", "desc")
+      .orderBy(FieldPath.documentId(), "desc")
       .limit(26);
-    if (cursor) query = query.startAfter(cursor);
+    if (position) query = query.startAfter(...position);
     const docs = (await query.get()).docs;
     const items = docs.slice(0, 25).map((doc) => {
       const d = doc.data();
@@ -398,7 +453,13 @@ export async function GET(request: Request) {
       };
     });
     return Response.json(
-      { items, next: docs.length > 25 ? items.at(-1)?.id : null },
+      {
+        items,
+        next:
+          docs.length > 25
+            ? reportCursor(String(docs[24].data().date), docs[24].id)
+            : null,
+      },
       { headers },
     );
   } catch (error) {

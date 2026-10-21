@@ -45,6 +45,7 @@ export type Case = {
   account?: string;
   notes: string[];
   photo?: string;
+  photos?: string[];
   /* En qué punto del camino va: enviado y con recibo, esperando señal en la
      bandeja de salida, o guardado sin haber salido nunca. Ver domain/delivery,
      que también sabe leer los registros anteriores a esta marca. */

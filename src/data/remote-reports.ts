@@ -5,6 +5,7 @@ export type ReportPayload = {
   description: string;
   phone: string;
   photo: string;
+  photos?: string[];
   sensitive: boolean;
   /** Punto ajustado a mano sobre el mapa; ausente si se dejó el de la vereda. */
   lat?: number;

@@ -42,6 +42,10 @@ async function deleteAll(
     removed += page.size;
     if (page.size < BATCH) return removed;
   }
+  if (!(await query.limit(1).get()).empty)
+    throw new Error(
+      "La limpieza tiene más documentos pendientes. Reintenta para continuar.",
+    );
   return removed;
 }
 
@@ -65,6 +69,15 @@ export async function anonymizeAccount(
     complete = false;
   }
 
+  try {
+    await deleteAll(
+      db,
+      db.collection("incidentEvidence").where("owner", "==", uid),
+    );
+  } catch {
+    complete = false;
+  }
+
   for (let round = 0; round < MAX_BATCHES; round++) {
     const page = await db
       .collection("incidents")
@@ -81,6 +94,7 @@ export async function anonymizeAccount(
         description: REDACTED,
         title: REDACTED,
         evidenceId: null,
+        evidenceIds: [],
         anonymizedAt: at,
       });
       // El acuse de recepción nombraba a la persona como actor del evento.
@@ -117,7 +131,12 @@ export async function anonymizeAccount(
   await db
     .doc(`accounts/${uid}`)
     .set(
-      { active: false, deleted: true, avatar: null, anonymizedAt: new Date().toISOString() },
+      {
+        active: false,
+        deleted: true,
+        avatar: null,
+        anonymizedAt: new Date().toISOString(),
+      },
       { merge: true },
     );
 

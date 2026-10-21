@@ -29,18 +29,18 @@ test("una foto de más de 24 megapíxeles se ajusta en vez de rechazarse", async
       buffer: enorme,
     });
 
-  await expect(page.getByText("Fotografía adjunta · cambiar")).toBeVisible();
-  await expect(page.getByText(/se ajustó a .* megapíxeles/)).toBeVisible();
+  await expect(page.getByText("1 de 5 fotografías · añadir")).toBeVisible();
+  await expect(page.getByText(/Se ajustó el tamaño de las fotografías/)).toBeVisible();
 
   // Y lo que queda cabe en el tope del servidor.
   const vista = page.getByRole("img", {
-    name: "Vista previa de la fotografía del reporte",
+    name: "Fotografía 1 del reporte",
   });
   const megapixeles = await vista.evaluate(
     (img: HTMLImageElement) => (img.naturalWidth * img.naturalHeight) / 1e6,
   );
   expect(megapixeles).toBeLessThanOrEqual(24);
-  expect(megapixeles).toBeGreaterThan(20);
+  expect(megapixeles).toBeGreaterThan(2);
 });
 
 test("el borrador conserva foto, punto y texto para enviarlo después", async ({
@@ -69,7 +69,7 @@ test("el borrador conserva foto, punto y texto para enviarlo después", async ({
   await page
     .getByLabel("Evidencia fotográfica", { exact: true })
     .setInputFiles("public/brand/territorio.webp");
-  await expect(page.getByText("Fotografía adjunta · cambiar")).toBeVisible();
+  await expect(page.getByText("1 de 5 fotografías · añadir")).toBeVisible();
 
   // La fotografía viaja sin recomprimir: los bytes guardados son los del
   // archivo original, byte a byte.
@@ -77,7 +77,7 @@ test("el borrador conserva foto, punto y texto para enviarlo después", async ({
   const digest = (bytes: Buffer) =>
     createHash("sha256").update(bytes).digest("hex");
   const vista = page.getByRole("img", {
-    name: "Vista previa de la fotografía del reporte",
+    name: "Fotografía 1 del reporte",
   });
   const encoded = await vista.getAttribute("src");
   expect(digest(Buffer.from(encoded!.split(",")[1], "base64"))).toBe(

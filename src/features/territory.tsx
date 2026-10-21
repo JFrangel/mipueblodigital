@@ -1,19 +1,17 @@
 "use client";
+import { resolveVereda } from "@/domain/vereda-catalogue";
+import { useCatalogue } from "@/data/vereda-catalogue";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import type { Map as LeafletMap } from "leaflet";
 import { MapPin, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { type Case, statuses, categories, shortDate } from "@/data/catalog";
 import { clusterPoints, pageItems } from "@/domain/logic";
 import { veredaLoad } from "@/domain/vereda-load";
-import {
-  territoryCentre,
-  veredaCatalogue,
-  localityLabel,
-} from "@/domain/territory";
+import { territoryCentre, localityLabel } from "@/domain/territory";
 import { CaseList } from "@/components/case-list";
 import "leaflet/dist/leaflet.css";
 export function Territory({
-  items,
+  items: rawItems,
   onSelect,
 }: {
   /**
@@ -27,6 +25,19 @@ export function Territory({
   items: Case[];
   onSelect: (c: Case) => void;
 }) {
+  const catalogue = useCatalogue();
+  const items = useMemo(
+    () =>
+      rawItems.map((item) => ({
+        ...item,
+        vereda: resolveVereda(catalogue, item.vereda)?.name ?? item.vereda,
+      })),
+    [rawItems, catalogue],
+  );
+  const veredaCatalogue = useMemo(
+    () => catalogue.items.filter((v) => v.active),
+    [catalogue],
+  );
   const everything = items;
   const container = useRef<HTMLDivElement>(null),
     mapRef = useRef<LeafletMap | null>(null);
@@ -150,7 +161,7 @@ export function Territory({
       disposed = true;
       cleanup();
     };
-  }, []);
+  }, [veredaCatalogue]);
   /* Las veredas documentadas, rotuladas sobre el mapa. Sin ellas el territorio
      es una mancha verde: quien mira no sabe dónde queda nada, y menos aún si
      todavía no hay reportes. Van por debajo de los grupos y sin interacción,
@@ -192,7 +203,7 @@ export function Territory({
       disposed = true;
       clean();
     };
-  }, [mapReady]);
+  }, [mapReady, veredaCatalogue]);
   /**
    * Lo que hay en un punto, al tocarlo.
    *

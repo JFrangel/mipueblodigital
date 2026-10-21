@@ -1,7 +1,13 @@
+import { readCatalogue } from "@/server/vereda-catalogue";
+import {
+  changeCatalogue,
+  resolveVereda,
+  type Catalogue,
+} from "@/domain/vereda-catalogue";
 import { ApiError, requireAdmin } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
 import { clave } from "@/domain/veredas";
-import { isInsideTerritory, veredaNames } from "@/domain/territory";
+import { isInsideTerritory } from "@/domain/territory";
 import { pendientes, type Acumulado } from "@/server/veredas";
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
@@ -100,7 +106,10 @@ export async function POST(request: Request) {
          de un año alguien va a preguntar por qué. */
       if (motivo.length < 3 || motivo.length > 300)
         throw new ApiError(400, "Escribe por qué se descarta.");
-      await ref.set({ estado: "descartada", motivo, actor, at }, { merge: true });
+      await ref.set(
+        { estado: "descartada", motivo, actor, at },
+        { merge: true },
+      );
       await registrar(db, { accion, llave, actor, at, motivo });
       return Response.json({ ok: true }, { headers });
     }
@@ -114,7 +123,11 @@ export async function POST(request: Request) {
        * exactamente el problema que se venía a evitar.
        */
       const destino = String(input?.nombre ?? "").trim();
-      if (!veredaNames.includes(destino))
+      if (
+        !(await readCatalogue(db)).items.some(
+          (v) => v.active && v.name === destino,
+        )
+      )
         throw new ApiError(400, "Elige una vereda del catálogo.");
       const movidos = await reescribir(db, acumulado.nombre, destino);
       await ref.set(
@@ -144,6 +157,39 @@ export async function POST(request: Request) {
       aportes: acumulado.propuesta.aportes,
       aceptadoPor: actor,
       aceptadoEn: at,
+    });
+    const initial = await readCatalogue(db);
+    await db.runTransaction(async (tx) => {
+      const catalogueRef = db.doc("territoryCatalogue/current");
+      const old =
+        ((await tx.get(catalogueRef)).data() as Catalogue | undefined) ??
+        initial;
+      const item = resolveVereda(old, acumulado.nombre);
+      if (item && !item.active)
+        throw new ApiError(
+          409,
+          "Esta vereda fue retirada. Revísala en el catálogo antes de aceptar el punto.",
+        );
+      const next = changeCatalogue(
+        old,
+        {
+          action: "save",
+          id: item?.id ?? llave.replace(/\s+/g, "-"),
+          name: item?.name ?? acumulado.nombre,
+          lat,
+          lng,
+        },
+        actor,
+        at,
+      );
+      tx.set(catalogueRef, next);
+      tx.create(db.collection("veredaCatalogueEvents").doc(), {
+        action: "proposal",
+        actor,
+        at,
+        resultingVersion: next.version,
+        name: acumulado.nombre,
+      });
     });
     await ref.set({ estado: "aceptada", actor, at }, { merge: true });
     await registrar(db, { accion, llave, actor, at, lat, lng, aMano });

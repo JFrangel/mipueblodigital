@@ -17,15 +17,22 @@ export async function GET(
     const incident = (await db.doc(`incidents/${id}`).get()).data();
     if (
       !incident ||
+      incident.anonymizedAt ||
       (incident.owner !== uid &&
         identity.admin !== true &&
         account?.role !== "admin")
     )
       throw new ApiError(404, "Reporte no encontrado.");
-    if (
-      typeof incident.evidenceId !== "string" ||
-      !/^[0-9a-f-]{36}$/.test(incident.evidenceId)
-    )
+    const url = new URL(request.url);
+    const index = Number(url.searchParams.get("foto") ?? 0);
+    const ids = Array.isArray(incident.evidenceIds)
+      ? incident.evidenceIds
+      : [incident.evidenceId];
+    if (!Number.isInteger(index) || index < 0 || index >= ids.length)
+      throw new ApiError(404, "Fotografía no disponible.");
+    const evidenceId = ids[index];
+    const backupId = index === 0 ? id : `${id}_${index}`;
+    if (typeof evidenceId !== "string" || !/^[0-9a-f-]{36}$/.test(evidenceId))
       throw new ApiError(404, "Fotografía no disponible.");
     /**
      * Cuál de las dos se sirve.
@@ -42,7 +49,7 @@ export async function GET(
      */
     const liviana = new URL(request.url).searchParams.get("vista") === "copia";
     const reducida = liviana
-      ? (await db.doc(`incidentEvidence/${id}`).get()).data()
+      ? (await db.doc(`incidentEvidence/${backupId}`).get()).data()
       : undefined;
     if (reducida && reducida.owner === incident.owner)
       return new Response(
@@ -52,6 +59,7 @@ export async function GET(
             ...headers,
             "Content-Type": String(reducida.mime_type),
             "Content-Disposition": "inline",
+            "X-Fotos": String(ids.length),
             "X-Evidencia": "copia-reducida",
           },
         },
@@ -61,7 +69,7 @@ export async function GET(
        expediente, y se dice en una cabecera que es una copia, no el original:
        quien vaya a usarla como prueba tiene derecho a saberlo. */
     const original = await evidenceRequest(
-      `?id=eq.${incident.evidenceId}&select=content_base64,mime_type,owner_uid,incident_id`,
+      `?id=eq.${evidenceId}&select=content_base64,mime_type,owner_uid,incident_id`,
     )
       .then((response) => response.json())
       .catch(() => null);
@@ -74,11 +82,12 @@ export async function GET(
             ...headers,
             "Content-Type": photo.mime_type,
             "Content-Disposition": "inline",
+            "X-Fotos": String(ids.length),
             "X-Evidencia": "original",
           },
         },
       );
-    const copia = (await db.doc(`incidentEvidence/${id}`).get()).data();
+    const copia = (await db.doc(`incidentEvidence/${backupId}`).get()).data();
     if (!copia || copia.owner !== incident.owner)
       throw new ApiError(404, "Fotografía no disponible.");
     return new Response(
@@ -88,6 +97,7 @@ export async function GET(
           ...headers,
           "Content-Type": String(copia.mime_type),
           "Content-Disposition": "inline",
+          "X-Fotos": String(ids.length),
           "X-Evidencia": "copia-reducida",
         },
       },
