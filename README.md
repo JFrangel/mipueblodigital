@@ -84,6 +84,7 @@ correo@ejemplo.com` o desde el Panel del Consejo. Véase
 | [Auditoría del modo sin conexión](docs/auditoria-offline-2026-09-16.md)   | Quien dude de qué funciona sin señal             |
 | [Manual del ciudadano](docs/manual-ciudadano.md)                          | Quien reporta                                    |
 | [Manual operativo del Consejo](docs/manual-consejo.md)                    | Quien gestiona                                   |
+| [Manuales de uso: texto único, vista y PDF](docs/manuales.md)             | Quien mantenga los manuales                      |
 | [Plan de salida a producción](docs/plan-produccion-2026-09-14.md)         | Quien coordina el piloto                         |
 | [Especificación de producto](docs/specs/producto.md)                      | Sustentación                                     |
 | [21 historias y criterios originales](docs/specs/criterios-originales.md) | Sustentación                                     |

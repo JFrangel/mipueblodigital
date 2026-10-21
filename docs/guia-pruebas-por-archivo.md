@@ -1,5 +1,20 @@
 # Guía de pruebas por archivo
 
+## Incorporaciones del 21 de octubre de 2026
+
+- `tests/e2e/informe-impresion.spec.ts`: imprime Estadísticas **a PDF de verdad**
+  y lo lee hoja por hoja. Existe porque la primera hoja salía en blanco con la
+  cuenta del Consejo y las pruebas anteriores solo miraban si los elementos eran
+  visibles, no cómo se reparten en el papel.
+- `tests/unit/informe-html.test.ts` y `tests/unit/statistics-export-route.test.ts`:
+  el informe que abre el navegador del teléfono no deja pasar HTML ajeno, y la
+  respuesta que lo entrega va aislada (sin origen propio, sin red).
+- `tests/unit/manuales.test.ts`, `tests/unit/export-archivo.test.ts` y
+  `tests/e2e/manuales.spec.ts`: la sección de manuales (ver
+  [Manuales de uso](manuales.md)). La prueba clave es que **cada rótulo entre
+  «guillemets» sigue escrito en la aplicación** y que los PDF y el Markdown son
+  los de este mismo texto.
+
 ## Incorporaciones del 3 de octubre de 2026
 
 - `tests/unit/council-guide.test.ts` y el tercer caso de
@@ -19,7 +34,7 @@
 Detalle del alcance y aserciones en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
 
-Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 465 títulos Vitest y 77 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Las tablas de abajo cubren los 54 archivos unitarios y los 16 de navegador; la suma de sus casos da 465 y 77. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
+Fecha de revisión: 21 de octubre de 2026 (America/Bogota). Esta guía explica **para qué sirve cada suite**. El [catálogo individual](catalogo-pruebas.md) contiene los 492 títulos Vitest y 88 títulos Playwright, con enlace al código que muestra entrada, dobles y aserciones exactas. La [bitácora de ejecución](pruebas-y-rendimiento.md) separa casos registrados, pruebas ejecutadas y pendientes de campo. Las tablas de abajo cubren los 58 archivos unitarios y los 18 de navegador; la suma de sus casos da 492 y 88. Un archivo puede cubrir varios resultados; esta descripción no sustituye leer sus aserciones cuando se audita un control.
 
 ## Unidad, dominio y API simulada
 
@@ -71,6 +86,10 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `signature.test.ts` | 5 | La frase editorial del Consejo es estable por comunicado, diversa entre ellos, editable y limitada en longitud; no es una firma criptográfica. |
 | `sin-cuenta.test.ts` | 5 | El reporte sin iniciar sesión conserva el borrador y comunica qué exige autenticación. |
 | `statistics-export.test.ts` | 6 | La exportación de estadísticas aplica filtros, genera un ticket y protege datos de detalle. |
+| `statistics-export-route.test.ts` | 3 | El informe se entrega aislado (`sandbox` sin origen propio, `default-src 'none'`, sin formularios): un guion dentro del HTML que escribió otra cuenta no corre con la sesión de quien abre el enlace; el CSV baja como archivo; un billete usado contesta 410. |
+| `informe-html.test.ts` | 6 | El informe del APK escapa el texto libre, no lleva guiones ni recursos externos salvo el botón de guardar como PDF, se imprime en A4 sin la barra y no produce `NaN` sin reportes. |
+| `export-archivo.test.ts` | 4 | Un PDF publicado se entrega al navegador del teléfono con su dirección completa; sin el complemento o sin señal, el error dice qué hacer y no es el crudo del navegador. |
+| `manuales.test.ts` | 14 | Los dos manuales tienen capítulos completos; **cada «rótulo» existe en `src/`**; no llevan datos personales ni identificadores internos; el Markdown de `docs/` y los PDF de `public/manuales/` son los de este contenido, con portada, índice con todos los capítulos y sin hojas en blanco. |
 | `storage.test.ts` | 2 | El almacén local evita que dos escritores con la misma versión se pisen y no duplica un caso confirmado. |
 | `territory.test.ts` | 11 | Catálogo territorial y referencias del mapa evitan coordenadas inventadas o selección ambigua. |
 | `ubicacion.test.ts` | 19 | Selección, precisión, permisos y fallos de geolocalización se resuelven de modo explícito. |
@@ -92,6 +111,8 @@ Fecha de revisión: 3 de octubre de 2026 (America/Bogota). Esta guía explica **
 | `council-memory.spec.ts` | 3 | Línea de tiempo, filtros, búsqueda, fuentes, ancho móvil y reapertura offline de la ruta cacheada; la página explica la ley, los derechos y los tres consejos del municipio (índice, secciones y cifras de los títulos) sin desbordar en móvil. |
 | `first-run.spec.ts` | 4 | Primer acceso y presentación inicial muestran las rutas y decisiones apropiadas. |
 | `management.spec.ts` | 7 | Panel del Consejo, filtros, seguimiento y acciones administrativas en el entorno de prueba. |
+| `informe-impresion.spec.ts` | 2 | Imprimir Estadísticas a PDF abre con la portada en la primera hoja, también con un panel del Consejo más alto que una hoja, sin hojas en blanco y con el orden portada → lectura → cifras del territorio. |
+| `manuales.spec.ts` | 9 | La página de manuales, el índice de cada capítulo, el teléfono sin desbordes, la puerta del manual del Consejo, la ruta de impresión cerrada, `robots.txt`, los PDF servidos como `application/pdf`, imprimir la página en cuadernillo y el enlace de la columna. |
 | `polish.spec.ts` | 13 | Microinteracciones, presentación visual y distintas anchuras de secciones clave. |
 | `production-boundaries.spec.ts` | 11 | La interfaz no promete datos reales cuando falta backend, y deja claros los límites de funciones. |
 | `push-ajuste.spec.ts` | 1 | La configuración de avisos responde al permiso del navegador. |

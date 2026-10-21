@@ -2,8 +2,8 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **465 casos en 55 archivos**; estado del reporte usado: 465 pasan, 0 fallan, 0 pendientes.
-- Navegador: **77 casos en 16 archivos** registrados por Playwright.
+- Unitarias: **492 casos en 59 archivos**; estado del reporte usado: 492 pasan, 0 fallan, 0 pendientes.
+- Navegador: **88 casos en 18 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
 
@@ -155,6 +155,13 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - el sha256 devuelto es el de los bytes que de verdad se archivan
 - una fotografía pequeña no se amplía ni repite marca con otra distinta
 
+### [tests/unit/export-archivo.test.ts](../tests/unit/export-archivo.test.ts) — 4 casos
+
+- un PDF publicado se abre con su dirección completa
+- si el APK no trae el complemento, el mensaje deja la dirección a mano
+- sin señal, exportar lo dice en español y antes de esperar
+- si el servidor no contesta, el error no es el crudo del navegador
+
 ### [tests/unit/incident-api.test.ts](../tests/unit/incident-api.test.ts) — 18 casos
 
 - recibo repetido no crea otro expediente ni notificación
@@ -188,6 +195,15 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - publicar sin revisar la sensibilidad sigue rechazándose
 - una clasificación inventada se rechaza, no se ignora
 
+### [tests/unit/informe-html.test.ts](../tests/unit/informe-html.test.ts) — 6 casos
+
+- el texto libre no se cuela como HTML
+- trae el botón de guardar como PDF y es lo único que ejecuta código
+- se imprime en A4 sin la barra del botón
+- declara el filtro con el que salió y reparte las barras sobre el total
+- sin reportes no hay barras vacías con NaN, y la espera lo dice
+- el día se dice en singular cuando es uno
+
 ### [tests/unit/management-metrics.test.ts](../tests/unit/management-metrics.test.ts) — 9 casos
 
 - no inventa tiempos de solución sin eventos y excluye cerrados de carga abierta
@@ -199,6 +215,23 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - cuánto lleva esperando lo que sigue abierto la mediana de espera resume la cola sin depender de un caso extremo
 - cuánto lleva esperando lo que sigue abierto una fecha futura no produce una espera negativa
 - cruza vereda, categoría y plazo, y calla la media cuando no hay con qué
+
+### [tests/unit/manuales.test.ts](../tests/unit/manuales.test.ts) — 14 casos
+
+- manual ciudadano tiene capítulos con anclas únicas, resumen y contenido
+- manual ciudadano sus tablas, tarjetas, flujos y listas están completos
+- manual ciudadano cada rótulo de la interfaz que cita existe en la aplicación
+- manual ciudadano no lleva datos personales ni identificadores internos
+- manual ciudadano el Markdown de docs/ es el que sale de este contenido
+- manual consejo tiene capítulos con anclas únicas, resumen y contenido
+- manual consejo sus tablas, tarjetas, flujos y listas están completos
+- manual consejo cada rótulo de la interfaz que cita existe en la aplicación
+- manual consejo no lleva datos personales ni identificadores internos
+- manual consejo el Markdown de docs/ es el que sale de este contenido
+- el del ciudadano es corto y para el teléfono, el del Consejo es de trabajo
+- los PDF de public/manuales existen y salen de lo que hoy está escrito y dibujado
+- los PDF de public/manuales el de ciudadano es el archivo que dice el manifiesto, con portada, índice y sin hojas en blanco
+- los PDF de public/manuales el de consejo es el archivo que dice el manifiesto, con portada, índice y sin hojas en blanco
 
 ### [tests/unit/membership.test.ts](../tests/unit/membership.test.ts) — 6 casos
 
@@ -503,6 +536,12 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - si el traspaso falla se dice con un cero, no con un error
 - sin sessionStorage no revienta
 
+### [tests/unit/statistics-export-route.test.ts](../tests/unit/statistics-export-route.test.ts) — 3 casos
+
+- el informe se muestra aislado: sin origen propio, sin red y sin guiones ajenos
+- el CSV se descarga como archivo, con la misma política
+- un billete que ya se usó o venció contesta 410, sin contenido
+
 ### [tests/unit/statistics-export.test.ts](../tests/unit/statistics-export.test.ts) — 6 casos
 
 - lo que se acuña se puede recoger una vez, y ya no una segunda
@@ -679,6 +718,11 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - la ayuda de redacción acompaña al recuento de palabras ([línea 60](../tests/e2e/first-run.spec.ts#L60))
 - el mapa permite corregir la ubicación y volver al punto de la vereda ([línea 84](../tests/e2e/first-run.spec.ts#L84))
 
+### [tests/e2e/informe-impresion.spec.ts](../tests/e2e/informe-impresion.spec.ts) — 2 casos
+
+- imprimir las estadísticas abre con la portada en la primera hoja ([línea 82](../tests/e2e/informe-impresion.spec.ts#L82))
+- con las cifras del Consejo la primera hoja tampoco sale en blanco ([línea 103](../tests/e2e/informe-impresion.spec.ts#L103))
+
 ### [tests/e2e/management.spec.ts](../tests/e2e/management.spec.ts) — 7 casos
 
 - un reporte guardado se puede quitar de este dispositivo y no vuelve ([línea 11](../tests/e2e/management.spec.ts#L11))
@@ -688,6 +732,18 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - calendario navega a mes vacío y filtra periodo ([línea 128](../tests/e2e/management.spec.ts#L128))
 - un reporte de otra cuenta no aparece en Mis reportes ([línea 154](../tests/e2e/management.spec.ts#L154))
 - lo guardado con el nombre anterior se conserva al abrir ([línea 213](../tests/e2e/management.spec.ts#L213))
+
+### [tests/e2e/manuales.spec.ts](../tests/e2e/manuales.spec.ts) — 9 casos
+
+- la página de manuales ofrece el del ciudadano y reserva el del Consejo ([línea 15](../tests/e2e/manuales.spec.ts#L15))
+- el manual del ciudadano se lee con su índice y cada capítulo ([línea 39](../tests/e2e/manuales.spec.ts#L39))
+- el manual del ciudadano no se sale de la pantalla del teléfono ([línea 72](../tests/e2e/manuales.spec.ts#L72))
+- el manual del Consejo no llega a quien no es del Consejo ([línea 86](../tests/e2e/manuales.spec.ts#L86))
+- la ruta que imprime los PDF no existe fuera de quien los genera ([línea 103](../tests/e2e/manuales.spec.ts#L103))
+- los buscadores no ven el manual del Consejo ni la ruta de impresión ([línea 112](../tests/e2e/manuales.spec.ts#L112))
+- los PDF se sirven y son los manuales ([línea 121](../tests/e2e/manuales.spec.ts#L121))
+- imprimir la página del manual da un cuadernillo, no una pantalla ([línea 140](../tests/e2e/manuales.spec.ts#L140))
+- «Manuales» está en la columna de herramientas ([línea 168](../tests/e2e/manuales.spec.ts#L168))
 
 ### [tests/e2e/polish.spec.ts](../tests/e2e/polish.spec.ts) — 13 casos
 

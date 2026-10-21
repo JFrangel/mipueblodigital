@@ -90,6 +90,8 @@ Revisado contra el código el 3 de octubre de 2026. Las líneas se mueven: busca
 | Cola nativa fuera de las copias y con destino fijado por la configuración | El mismo archivo: `folder` (`getNoBackupFilesDir`) y `stage` (`getServerUrl`) |
 | El trabajador pide un token nuevo al despertar y no lo guarda | [`EnvioWorker.java`](../android/app/src/main/java/co/riosatinga/mipueblodigital/EnvioWorker.java) |
 | Anonimización al eliminar la cuenta | [`anonymize.ts`](../src/server/anonymize.ts) |
+| Informe y CSV de estadísticas dentro del APK: billete de un solo uso de 15 minutos, y **respuesta aislada** (`sandbox` sin origen propio, `default-src 'none'`, sin formularios) | [`export-tickets.ts`](../src/server/export-tickets.ts) y [`export/[ticket]/route.ts`](<../src/app/api/statistics/export/[ticket]/route.ts>) |
+| Los manuales: PDF públicos, manual del Consejo sin datos internos, ruta de impresión cerrada en producción | [Manuales de uso](manuales.md) y `tests/unit/manuales.test.ts` |
 | Historia del Consejo: solo administradores escriben, con versión y auditoría | [`admin/history/[id]/route.ts`](<../src/app/api/admin/history/[id]/route.ts>) y [`council-history.ts`](../src/domain/council-history.ts) |
 
 Véanse [pruebas y rendimiento](pruebas-y-rendimiento.md) y [catálogo individual](catalogo-pruebas.md) para cobertura y límites de lo ejecutado.
@@ -97,3 +99,9 @@ Véanse [pruebas y rendimiento](pruebas-y-rendimiento.md) y [catálogo individua
 ## Incidente y exclusiones de despliegue — 2 de octubre de 2026
 
 La [auditoría de entrega](auditoria-entrega-2026-10-02.md#incidente-del-empaquetado-comprimido-y-corrección) registra un intento comprimido cancelado que pudo incluir la carpeta de credenciales. Se corrigieron las exclusiones y se publicó por el método ordinario con verificación de archivos; no se acredita exposición pública. La renovación de la clave Firebase requiere al propietario: IAM respondió 403 y no se realizó la rotación. El incidente y la acción pendiente no deben ocultarse tras el resultado verde de las pruebas.
+
+## Informe de estadísticas en el APK: HTML de otra cuenta — 21 de octubre de 2026
+
+Dentro del APK, «Descargar informe» manda al servidor el HTML que armó el teléfono para que lo recoja el navegador del sistema. Cualquier cuenta activa podía enviar HTML propio a ese camino, y el servidor lo entregaba **desde el dominio de la aplicación con la política general, que permite guiones en línea**: un `<script>` metido ahí habría corrido con la sesión de quien abriera el enlace. Bastaba pasarle un enlace de un solo uso a alguien del Consejo.
+
+Se cerró dándole a esa respuesta su propia política: `sandbox` sin `allow-same-origin` (el documento queda en un origen opaco, sin acceso al almacenamiento ni a la sesión), `default-src 'none'` (sin red, ni a la propia API ni a un servidor ajeno) y `form-action 'none'`. Los guiones se permiten solo dentro de ese aislamiento, para el botón «Guardar como PDF». `tests/unit/statistics-export-route.test.ts` fija la política. **No se probó en un teléfono real**, y no se cambió el límite de acuñar billetes ni se limpian los vencidos (siguen guardados hasta 900 KB cada uno): queda como trabajo pendiente.
