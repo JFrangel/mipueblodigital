@@ -2,7 +2,7 @@
 
 # Manual del ciudadano — Mi Pueblo Digital
 
-> Para quien reporta · Actualizado el 20 de octubre de 2026
+> Para quien reporta · Actualizado el 21 de octubre de 2026
 > Versión ilustrada, para leer en la aplicación: `/manuales/ciudadano/`. PDF: `public/manuales/manual-ciudadano.pdf`.
 
 Reportar, seguir y cuidar el territorio con Mi Pueblo Digital
@@ -28,7 +28,7 @@ Reportar, seguir y cuidar el territorio con Mi Pueblo Digital
 
 Mi Pueblo Digital sirve para **avisar al Consejo Comunitario** de lo que afecta al territorio y para **seguir qué pasa con tu aviso**. Es la herramienta del Gran Consejo Comunitario Río Satinga.
 
-- **Reportas.** Cuentas qué pasa y dónde, y subes una foto.
+- **Reportas.** Cuentas qué pasa y dónde, y subes fotos.
 - **Sigues.** Ves el estado y las notas del Consejo.
 - **Te enteras.** Recibes novedades y comunicados.
 - **Miras.** Mapa, cifras y noticias del territorio.
@@ -66,8 +66,8 @@ Toca «Nuevo reporte» o, en el teléfono, «Reportar» en la barra de abajo. So
 1. «Tipo»: elige la categoría.
    Infraestructura, Ambiente, Territorio, Comunidad u Otro.
 2. «Ubicación»: elige la vereda más cercana.
-3. «Detalles»: cuenta qué pasó y sube una foto.
-   La descripción y la foto son obligatorias.
+3. «Detalles»: cuenta qué pasó y sube de una a cinco fotos.
+   La descripción y al menos una foto son obligatorias.
 4. «Revisar»: comprueba y toca «Enviar al Consejo».
    El servidor responde con un recibo y su fecha.
 
@@ -84,22 +84,29 @@ Toca «Nuevo reporte» o, en el teléfono, «Reportar» en la barra de abajo. So
 En «Detalles» cuentas qué pasó, cuándo y a quién afecta, con tus palabras. Un reporte claro ayuda al Consejo a decidir.
 
 - **Dicta.** «Activar micrófono» pasa tu voz a texto. Puedes corregirlo o usar «Deshacer último dictado».
-- **Fotografía.** Es obligatoria. Elige una foto útil y segura.
+- **Fotografías.** Hasta cinco; con una basta. Elige fotos útiles y seguras.
 - **Sensible.** Marca «Contiene imágenes o información sensible» si hay lesiones, menores o personas identificables.
 
 | Dato | Límite |
 | --- | --- |
 | Descripción | Hasta 500 palabras |
-| Fotografía | JPG, PNG o WebP, hasta 10 MB |
+| Fotografías | De 1 a 5, JPG, PNG o WebP |
 | Celular | Opcional, hasta 10 dígitos |
 | Dictado | Hasta 1 minuto, con internet |
 | «Mejorar redacción con IA» | Desde 12 palabras |
 
-> **Lo que no hace.** **Tu foto no llega idéntica.** Si pesa más de 10 MB o pasa de 24 megapíxeles, el teléfono la reduce y te avisa. El servidor guarda una copia WebP de hasta 2200 píxeles por lado, no el archivo exacto.
+> **Lo que no hace.** **Tus fotos no llegan idénticas.** Si una pesa más de medio megabyte, el teléfono la reduce al adjuntarla y te avisa. El servidor guarda una copia WebP de hasta 2200 píxeles por lado, no el archivo exacto.
+
+**Añadir y quitar fotos**
+
+1. Toca «Añadir fotografías» y elige una o varias a la vez.
+   También sirven «Tomar una foto ahora» y «Buscar en mis archivos».
+2. Cada una sale en miniatura: toca «Quitar» en la que no sirva.
+3. Con cinco ya no caben más: quita una antes de añadir otra.
 
 > **Privacidad.** **La ayuda con IA.** «Mejorar redacción con IA» envía solo tu descripción a un servicio externo, nunca tus datos. Evita nombres propios y revisa el resultado. Pide el correo verificado; hay tope de 10 usos al día.
 
-> **Consejo.** **Si la foto no se adjunta.** Prueba «Tomar una foto ahora» o «Buscar en mis archivos».
+> **Consejo.** **Si una foto no se adjunta.** Prueba «Tomar una foto ahora» o «Buscar en mis archivos».
 
 ## 5. Dónde ocurrió
 
@@ -119,7 +126,7 @@ En «Ubicación» eliges la vereda o el centro poblado más cercano; el Consejo 
 
 > **Ojo con esto.** **¿Tu vereda no está en la lista?** Toca «Mi vereda no está en la lista» y escríbela. Para proponerla hace falta tu ubicación desde el sitio; si no estás allí, elige la más cercana.
 
-> **Lo que no hace.** **El catálogo no es definitivo.** Viene del EOT de 2007 y de fuentes abiertas; el Consejo aún no lo valida. Sin punto documentado, el reporte sale solo con el nombre de la vereda.
+> **Lo que no hace.** **La lista puede cambiar.** La mantiene el Consejo Comunitario: puede añadir, renombrar o retirar veredas. La aplicación guarda la última lista en tu teléfono, así que sirve sin señal. Bajo la lista dice si esta versión está validada o pendiente de validación; los puntos son referencias aproximadas, y sin punto el reporte sale solo con el nombre de la vereda.
 
 ## 6. Cuando no hay señal
 
@@ -150,7 +157,7 @@ Puedes enviar un reporte sin señal. No se pierde: espera en tu teléfono y sale
 
 *Dónde ver en qué va cada reporte y qué significa cada estado.*
 
-En «Mis reportes» ves lo que el Consejo tiene a tu nombre, desde cualquier teléfono, y lo que aún no salió del tuyo. En el teléfono, abre «Cuenta» y toca «Mis reportes», o usa «Ver mis reportes» en «Inicio».
+En «Mis reportes» ves todo lo que el Consejo tiene a tu nombre, sin tope, desde cualquier teléfono, y lo que aún no salió del tuyo. En el teléfono, abre «Cuenta» y toca «Mis reportes», o usa «Ver mis reportes» en «Inicio».
 
 *Ilustración: Reportes de ejemplo, inventados: ninguno es de nadie.*
 
@@ -190,14 +197,14 @@ La campana de la barra superior muestra un punto cuando tienes algo sin leer. Á
 
 Léelo antes de tu primer reporte. **Nada de lo que escribes se publica por sí solo.** La comunidad ve, a lo sumo, un resumen que escribe y aprueba el Consejo.
 
-1. **Relato privado.** Tu texto, tu foto y tu celular quedan entre tú y el Consejo.
+1. **Relato privado.** Tu texto, tus fotos y tu celular quedan entre tú y el Consejo.
 2. **Revisión del Consejo.** Mira si hay algo sensible. Si lo hay, ahí termina.
 3. **Resumen público.** Un resumen sin datos personales, visible 24 horas después de aprobarlo.
 
 | Dato | Quién lo ve |
 | --- | --- |
 | Tu relato, tal como lo escribiste | Tú y el Consejo |
-| La fotografía y tu celular | Tú y el Consejo |
+| Las fotografías y tu celular | Tú y el Consejo |
 | El punto exacto que marcaste | Tú y el Consejo |
 | Tu nombre y tu correo | No se publican nunca |
 | Las notas internas | Solo el Consejo |
@@ -278,4 +285,4 @@ Anota la hora, qué hacías y el mensaje exacto, y cuéntaselo al Consejo Comuni
 
 ---
 
-**Gracias por cuidar lo que nos une.** Un reporte claro es el primer paso. La aplicación guarda, envía y muestra; las decisiones las toma el Consejo. Este manual se comprobó el 20 de octubre de 2026: si algo ya no coincide con tu pantalla, avisa al Consejo Comunitario.
+**Gracias por cuidar lo que nos une.** Un reporte claro es el primer paso. La aplicación guarda, envía y muestra; las decisiones las toma el Consejo. Este manual se comprobó el 21 de octubre de 2026: si algo ya no coincide con tu pantalla, avisa al Consejo Comunitario.

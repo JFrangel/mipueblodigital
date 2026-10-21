@@ -4,7 +4,7 @@ Los dos manuales de Mi Pueblo Digital —el del ciudadano y el del Consejo— se
 leen dentro de la aplicación, se descargan en PDF y se pueden leer en Markdown
 en este repositorio. Los tres salen **del mismo texto**.
 
-Fecha de esta documentación: 20 de octubre de 2026.
+Fecha de esta documentación: 21 de octubre de 2026.
 
 | Para quién | Dónde se lee | PDF | Hoja |
 | --- | --- | --- | --- |

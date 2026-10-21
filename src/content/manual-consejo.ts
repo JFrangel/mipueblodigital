@@ -21,7 +21,7 @@ export const manualConsejo: Manual = {
   subtitulo:
     "Cómo gestionar reportes, comunicados y cifras en Mi Pueblo Digital",
   publico: "Para quien gestiona",
-  fecha: "2026-10-20",
+  fecha: "2026-10-21",
   formato: "A4",
   capitulos: [
     /* Verificado contra: src/server/admin-auth.ts:105-181 (cuenta activa y rol,
@@ -164,7 +164,7 @@ export const manualConsejo: Manual = {
             ],
             [
               "«Territorio»",
-              "Decidir dónde queda una vereda sin punto en el mapa.",
+              "Mantener el catálogo de veredas y decidir dónde queda una sin punto en el mapa.",
             ],
             [
               "«Quién administra»",
@@ -181,11 +181,19 @@ export const manualConsejo: Manual = {
       ],
     },
 
-    /* Verificado contra: src/features/council-inbox.tsx:54 (diez por página),
-       324-338 y 385-391 (tandas y «Siguiente»), 413-434 (se pide sola),
-       450-489 (guardar), 498-667 (botón, filtros, filas, paginación),
-       696-1025 (ficha y gestión); src/app/api/admin/incidents/route.ts:10-28
-       (tandas de 25, orden por identificador);
+    /* Verificado contra: src/features/council-inbox.tsx (diez por página;
+       «Siguiente» trae otra tanda del servidor al llegar al final; la bandeja
+       se pide sola; filtros enviados al servidor; «Descargar bandeja
+       completa»; «Tipo de actuación», «Imagen de la actuación (opcional)»);
+       src/app/api/admin/incidents/route.ts (de 25 en 25, de la más reciente a
+       la más antigua, con los filtros aplicados);
+       src/app/api/admin/incidents/export/route.ts (CSV de todos los que
+       cumplen los filtros; enlace de un solo uso en Android);
+       src/domain/council-action.ts (visita: fecha y responsable);
+       src/app/api/incidents/[id]/history/route.ts (fecha, responsable e imagen
+       solo para el Consejo); src/features/action-image.tsx;
+       src/server/event-image.ts (imagen de la nota);
+       src/features/private-evidence.tsx («Anterior foto», «Siguiente foto»);
        src/app/api/admin/incidents/[id]/route.ts:44-62 (motivo obligatorio y
        límites), 129-133 (versión); src/domain/aggregate.ts (plazos de 1, 3, 7
        y 30 días; qué es abierto); src/features/private-evidence.tsx;
@@ -201,7 +209,7 @@ export const manualConsejo: Manual = {
         {
           tipo: "texto",
           texto:
-            "Un expediente es un reporte tal como llegó, con su fotografía, su relato y su seguimiento. Aquí se decide su estado y quién lo atiende.",
+            "Un expediente es un reporte tal como llegó, con sus fotografías, su relato y su seguimiento. Aquí se decide su estado y quién lo atiende.",
         },
         {
           tipo: "pasos",
@@ -210,17 +218,17 @@ export const manualConsejo: Manual = {
             {
               texto: "Abre «Expedientes»: la bandeja se pide sola.",
               detalle:
-                "Llega en tandas de 25 y se ve de 10 en 10. «Actualizar bandeja» la repite; «Siguiente» trae otra tanda al final de lo cargado.",
+                "Va de la más reciente a la más antigua. Llegan 25 y se ven de 10 en 10; al final de lo cargado, «Siguiente» trae otros 25 hasta agotarla. «Actualizar bandeja» la repite.",
             },
             {
               texto:
                 "Acota con «Buscar» (título, descripción, responsable o código), «Categoría», «Vereda», «Prioridad» y «Estado».",
               detalle:
-                "Actúan sobre lo cargado: un caso ausente puede estar en una tanda sin traer.",
+                "Se aplican a toda la bandeja, no solo a lo cargado, y la lista se vuelve a pedir con ellos.",
             },
             {
               texto:
-                "Toca una fila, mira la fotografía y la descripción, y en «Gestión del Consejo» cambia estado, prioridad y «Responsable».",
+                "Toca una fila, mira las fotografías y la descripción, y en «Gestión del Consejo» cambia estado, prioridad y «Responsable».",
               detalle: "Sin nota pública ni interna, el servidor no guarda.",
             },
             {
@@ -245,7 +253,41 @@ export const manualConsejo: Manual = {
               "Notas",
               "«Nota para el ciudadano · hasta 30 palabras» la lee quien reportó, en su expediente y en un aviso: sin datos de nadie. «Nota interna · solo administradores» solo la ve el Consejo.",
             ],
+            [
+              "«Tipo de actuación»",
+              "«Nota de seguimiento» o «Visita técnica». La visita pide «Fecha de la visita» y «Quién realizó la visita» (hasta 100 caracteres), y queda en el historial. Quien reportó ve la entrada y su nota pública, sin fecha ni responsable.",
+            ],
+            [
+              "«Imagen de la actuación (opcional)»",
+              "Una imagen por nota o visita; «Quitar imagen» la retira antes de guardar. Se abre en el historial con «Ver imagen · solo Consejo».",
+            ],
           ],
+        },
+        {
+          tipo: "aviso",
+          nivel: "privacidad",
+          titulo: "La imagen de una nota es solo del Consejo",
+          texto:
+            "Aunque la nota para el ciudadano sea pública, quien reportó no ve la imagen: solo la ve el Consejo, y se borra con el expediente.",
+        },
+        {
+          tipo: "pasos",
+          titulo: "Bajar la bandeja",
+          pasos: [
+            {
+              texto:
+                "Filtra lo que necesites y pulsa «Descargar bandeja completa».",
+              detalle:
+                "Baja un CSV con todos los expedientes que cumplen los filtros, no solo los cargados: código, fecha, vereda, categoría, estado, prioridad, responsable y descripción. En Android se abre en el navegador, con un enlace de un solo uso.",
+            },
+          ],
+        },
+        {
+          tipo: "aviso",
+          nivel: "ojo",
+          titulo: "El archivo trae el relato",
+          texto:
+            "La descripción de cada reporte es privada: guarda el archivo donde solo lo lea el Consejo y no lo compartas.",
         },
         {
           tipo: "aviso",
@@ -259,13 +301,13 @@ export const manualConsejo: Manual = {
           nivel: "limite",
           titulo: "La fotografía no es el archivo del teléfono",
           texto:
-            "Llega como copia de hasta 1.600 píxeles; «Ver la fotografía original» pide la de archivo (hasta 2.200 píxeles, en WebP). Ninguna es el archivo exacto: sirven para mirar un detalle, no para peritar.",
+            "Un reporte trae de una a cinco; con varias, pasa de una a otra con «Anterior foto» y «Siguiente foto». Cada una llega como copia de hasta 1.600 píxeles; «Ver la fotografía original» pide la de archivo (hasta 2.200 píxeles, en WebP). Ninguna es el archivo exacto: sirven para mirar un detalle, no para peritar.",
         },
         {
           tipo: "aviso",
           nivel: "consejo",
           texto:
-            "La bandeja no se ordena por fecha ni por prioridad: filtra «Estado» por Pendiente o entra desde «Novedades».",
+            "La bandeja se ordena por fecha, no por prioridad: filtra «Prioridad» o «Estado» por Pendiente, o entra desde «Novedades».",
         },
       ],
     },
@@ -393,7 +435,7 @@ export const manualConsejo: Manual = {
           nivel: "ojo",
           titulo: "Es irreversible",
           texto:
-            "Retirar borra de verdad: el expediente, su seguimiento y la fotografía del archivo salen de la bandeja, del mapa, de las cifras y de lo que ve la comunidad.",
+            "Retirar borra de verdad: el expediente, su seguimiento y las fotografías del archivo salen de la bandeja, del mapa, de las cifras y de lo que ve la comunidad.",
         },
         {
           tipo: "pasos",
@@ -425,7 +467,7 @@ export const manualConsejo: Manual = {
           nivel: "limite",
           titulo: "Lo que retirar no hace",
           texto:
-            "No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La fotografía, su copia reducida y el historial del expediente se borran con él.",
+            "No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. Las fotografías, sus copias reducidas, las imágenes de las notas y el historial del expediente se borran con él.",
         },
       ],
     },
@@ -520,15 +562,21 @@ export const manualConsejo: Manual = {
        una a ocho fuentes, HTTPS, límites de largo);
        src/app/api/admin/history/[id]/route.ts:28-47 (versión y auditoría);
        src/features/council-memory.tsx (línea de tiempo);
-       src/features/council-territory.tsx:94-345 (propuestas y botones);
-       src/app/api/admin/territorio/route.ts:71-154 (aceptar, fundir,
-       descartar); src/domain/veredas.ts (tres reportes de dos cuentas, 100 m);
-       src/domain/territory.ts:30-55 (catálogo sin validar);
+       src/features/council-territory.tsx (propuestas y botones);
+       src/features/council-catalogue.tsx (catálogo editable: buscar, añadir,
+       editar, quitar, ubicación en el mapa, validar);
+       src/domain/vereda-catalogue.ts (cada cambio sube la versión; el nombre
+       anterior queda como alias; de 2 a 120 caracteres; hasta 500);
+       src/app/api/admin/territorio/catalogo/route.ts (versión y constancia);
+       src/app/api/admin/territorio/route.ts (aceptar escribe el punto en el
+       catálogo; fundir solo a veredas activas; descartar);
+       src/domain/veredas.ts (tres reportes de dos cuentas, 100 m);
+       src/data/vereda-catalogue.ts (el teléfono guarda la lista);
        docs/arquitectura.md §15. */
     {
       id: "historia-y-veredas",
       titulo: "Historia del Consejo y veredas en el mapa",
-      resumen: "Hitos de la línea de tiempo y puntos de las veredas.",
+      resumen: "Hitos de la línea de tiempo y catálogo de veredas.",
       icono: "historia",
       motivo: "ola",
       bloques: [
@@ -570,7 +618,54 @@ export const manualConsejo: Manual = {
         {
           tipo: "texto",
           texto:
-            "En «Territorio» aparecen propuestas de punto para las veredas que el catálogo no sitúa (hoy seis) o no tiene. Salen cuando al menos tres reportes de dos personas las sitúan desde el sitio. Nada cambia hasta que el Consejo decide.",
+            "En «Territorio» el Consejo mantiene el «Catálogo de veredas», la lista que ofrece la aplicación al reportar y al filtrar. Lo que cambies lo ve toda la comunidad.",
+        },
+        {
+          tipo: "pasos",
+          titulo: "Cuidar el catálogo",
+          pasos: [
+            {
+              texto:
+                "Busca una vereda con «Buscar vereda» o pulsa «Añadir vereda».",
+              detalle:
+                "El nombre lleva de 2 a 120 caracteres y no puede repetir uno existente.",
+            },
+            {
+              texto:
+                "Para cambiar un nombre pulsa «Editar», corrígelo y pulsa «Guardar vereda».",
+              detalle:
+                "El nombre anterior se sigue reconociendo: los reportes viejos no se pierden.",
+            },
+            {
+              texto:
+                "Si conoces el sitio, pulsa «Señalar ubicación» y toca el mapa; «Quitar ubicación» la deshace.",
+              detalle:
+                "Es opcional: puedes guardar sin punto y ponerlo después. Debe quedar dentro del territorio.",
+            },
+            {
+              texto:
+                "Para retirar una vereda pulsa «Quitar» y «Confirmar retirada».",
+              detalle:
+                "Deja de ofrecerse en los reportes nuevos; los expedientes anteriores se conservan y «Reactivar» la devuelve. No se borra ningún reporte.",
+            },
+            {
+              texto:
+                "Cuando los nombres estén revisados, pulsa «Validar catálogo revisado» y «Confirmar validación».",
+              detalle: "Queda con tu cuenta y la fecha.",
+            },
+          ],
+        },
+        {
+          tipo: "aviso",
+          nivel: "ojo",
+          titulo: "Validar no es para siempre",
+          texto:
+            "El catálogo solo consta como validado cuando el Consejo lo confirma, y la validación cubre los nombres de esa versión, no la ubicación de cada vereda. Cualquier cambio posterior, incluso aceptar un punto propuesto, crea una versión nueva y vuelve a mostrar «Esta versión está pendiente de validación por el Consejo.»: hay que validarla otra vez. Mientras tanto, quien reporta ve el catálogo como pendiente.",
+        },
+        {
+          tipo: "texto",
+          texto:
+            "Debajo del catálogo aparecen propuestas de punto para las veredas que no tienen uno o que el catálogo no tiene. Salen cuando al menos tres reportes de dos personas las sitúan desde el sitio. Nada cambia hasta que el Consejo decide.",
         },
         {
           tipo: "tabla",
@@ -578,11 +673,11 @@ export const manualConsejo: Manual = {
           filas: [
             [
               "«Aceptar el punto»",
-              "Es el punto que ve toda la comunidad. La pantalla no deja ajustarlo a mano.",
+              "Es el punto que ve toda la comunidad y se guarda en el catálogo, donde la añade si no estaba. La pantalla no deja ajustarlo a mano.",
             ],
             [
               "«Es otra vereda con otro nombre»",
-              "Eliges la del catálogo y pulsas «Fundir»: los reportes pasan a ella.",
+              "Eliges una vereda activa del catálogo y pulsas «Fundir»: los reportes pasan a ella.",
             ],
             [
               "«Descartar»",
@@ -631,7 +726,7 @@ export const manualConsejo: Manual = {
           nivel: "limite",
           titulo: "El informe y el CSV no son la bandeja",
           texto:
-            "Cuentan los reportes de tu cuenta más los que la comunidad ya ve: sin privados, delicados ni los que esperan el plazo, y el responsable de los ajenos sale como «Sin asignar». En «Dónde está el trabajo.» sí está todo el territorio.",
+            "Cuentan los reportes de tu cuenta más los que la comunidad ya ve: sin privados, delicados ni los que esperan el plazo, y el responsable de los ajenos sale como «Sin asignar». En «Dónde está el trabajo.» sí está todo el territorio, y «Descargar bandeja completa», en «Expedientes», baja todos los expedientes.",
         },
         {
           tipo: "tabla",
@@ -879,11 +974,11 @@ export const manualConsejo: Manual = {
       ],
     },
 
-    /* Verificado contra: src/domain/territory.ts:30-34 (catálogo sin validar);
-       src/features/report.tsx:296-330 (una sola fotografía por reporte);
-       src/features/council-inbox.tsx:324-338 (tandas, sin orden por fecha);
-       src/data/account-reports.ts:9 y src/data/community-map.ts:39 (ocho
-       páginas de 25); src/features/council-territory.tsx (sin ajuste a mano);
+    /* Verificado contra: src/domain/vereda-catalogue.ts (un punto por vereda,
+       no fronteras); src/features/report.tsx (solo fotografías, hasta cinco);
+       src/features/council-inbox.tsx (solo imágenes en las notas; la bandeja
+       pide todo al servidor); src/features/council-territory.tsx (sin ajuste
+       a mano);
        src/app/api/admin/incidents/[id]/retirada/route.ts:126-130;
        src/features/aviso-actualizacion.tsx; src/server/export-tickets.ts:35;
        docs/arquitectura.md §14. */
@@ -896,17 +991,16 @@ export const manualConsejo: Manual = {
       bloques: [
         {
           tipo: "texto",
-          texto: "Decirlo es parte del trabajo del Consejo ante la comunidad.",
+          texto:
+            "Decirlo es parte del trabajo del Consejo ante la comunidad. Para gestionar hace falta conexión, porque el panel consulta todo en el servidor.",
         },
         {
           tipo: "lista",
           items: [
-            "**El catálogo de veredas no está validado.** Viene del EOT de 2007 y de fuentes abiertas; hasta que el Consejo firme el oficial, la aplicación no afirma límites territoriales.",
+            "**La aplicación no traza límites de veredas:** guarda un punto de referencia por vereda, no sus fronteras.",
             "**No hay aplicación en tiendas:** en Android se instala con un archivo.",
-            "**Un reporte lleva una sola fotografía** y ningún otro adjunto; no hay registro de visitas técnicas más allá de las notas.",
-            "**La bandeja no se ordena por fecha ni se descarga entera;** la retirada no se deshace ni tiene listado.",
-            "**Las listas de reportes cargan hasta 200.**",
-            "**Sin señal no se gestiona:** el panel pide todo al servidor.",
+            "**Solo se adjuntan fotografías:** hasta cinco por reporte y una imagen por nota; no hay video, audio ni documentos.",
+            "**La retirada no se deshace ni tiene listado.**",
           ],
         },
         {
@@ -920,7 +1014,7 @@ export const manualConsejo: Manual = {
             {
               pregunta: "Un caso no aparece en la bandeja.",
               respuesta:
-                "Puede estar en una tanda sin cargar: busca por título o código, o pulsa «Siguiente».",
+                "La bandeja va de la más reciente a la más antigua y carga de 25 en 25. Busca por título o código, revisa que los filtros estén en «Todas» o «Todos», o pulsa «Siguiente» hasta el final: trae más mientras haya. Si lo retiraron, ya no existe.",
             },
             {
               pregunta: "El enlace del informe dice que ya se usó o venció.",
@@ -935,6 +1029,6 @@ export const manualConsejo: Manual = {
   cierre: {
     titulo: "Cada nota es una respuesta",
     texto:
-      "Este manual describe lo que la aplicación hace al 20 de octubre de 2026 y dice lo que aún no hace. Gestiona cada reporte pensando en quien lo va a leer: detrás hay alguien del territorio esperando una respuesta.",
+      "Este manual describe lo que la aplicación hace al 21 de octubre de 2026 y dice lo que aún no hace. Gestiona cada reporte pensando en quien lo va a leer: detrás hay alguien del territorio esperando una respuesta.",
   },
 };

@@ -1204,7 +1204,7 @@
     border-radius: 4.5mm;
   }
   .telefono {
-    width: 68mm;
+    width: 52mm;
     padding: 2mm;
     box-shadow: none;
   }
@@ -1212,7 +1212,29 @@
     padding: 3mm 2.5mm 2.5mm;
   }
   .barraMovil small {
-    font-size: 6.4pt;
+    font-size: 5.6pt;
+  }
+  .escena {
+    gap: 2mm;
+    font-size: 7.5pt;
+  }
+  .escenaTitulo {
+    font-size: 9pt;
+  }
+  .escenaHueco {
+    height: 10mm;
+  }
+  .escenaLista li {
+    padding: 1.6mm 2mm;
+  }
+  .pantalla figcaption {
+    font-size: 7.5pt;
+  }
+  /* El hilo del capítulo: la apertura, el párrafo que dice para qué sirve y lo
+     primero que sigue van juntos. Si no caben al pie de una hoja, pasan los
+     tres a la siguiente en vez de dejar el título suelto y su contenido lejos. */
+  .cuerpo > :first-child {
+    break-after: avoid;
   }
   .glosario {
     grid-template-columns: repeat(2, 1fr);
