@@ -40,12 +40,22 @@ export default async function Page({
   searchParams,
 }: {
   params: Promise<{ manual: string }>;
-  searchParams: Promise<{ paginas?: string }>;
+  searchParams: Promise<{ paginas?: string; rellenos?: string }>;
 }) {
   if (process.env.MPD_IMPRIMIR_MANUALES !== "1") notFound();
   const { manual } = await params;
   if (manual !== "ciudadano" && manual !== "consejo") notFound();
-  const { paginas } = await searchParams;
+  const { paginas, rellenos } = await searchParams;
+  const huecos = Object.fromEntries(
+    (rellenos ?? "")
+      .split(",")
+      .map((par) => par.split(":"))
+      .filter(
+        ([id, mm]) =>
+          /^[a-z0-9-]+$/.test(id) && Number(mm) > 0 && Number(mm) < 120,
+      )
+      .map(([id, mm]) => [id, Number(mm)]),
+  );
   const numeros = paginas
     ?.split(",")
     .map(Number)
@@ -53,6 +63,7 @@ export default async function Page({
   return (
     <ManualDocumento
       manual={manuales[manual]}
+      rellenos={huecos}
       paginas={
         numeros?.length === manuales[manual].capitulos.length
           ? numeros

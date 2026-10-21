@@ -22,7 +22,7 @@ export const manualCiudadano: Manual = {
   titulo: "Manual del ciudadano",
   subtitulo: "Reportar, seguir y cuidar el territorio con Mi Pueblo Digital",
   publico: "Para quien reporta",
-  fecha: "2026-10-20",
+  fecha: "2026-10-21",
   formato: "A5",
   capitulos: [
     /* Verificado contra: src/features/terminos.tsx:41-46 (el Consejo es el
@@ -48,7 +48,7 @@ export const manualCiudadano: Manual = {
             {
               icono: "camara",
               titulo: "Reportas",
-              texto: "Cuentas qué pasa y dónde, y subes una foto.",
+              texto: "Cuentas qué pasa y dónde, y subes fotos.",
             },
             {
               icono: "reloj",
@@ -112,12 +112,8 @@ export const manualCiudadano: Manual = {
             },
             {
               texto: "Toca «Crear cuenta».",
-              detalle: "Te llega un correo para verificarla.",
-            },
-            {
-              texto:
-                "Abre el enlace del correo y vuelve a abrir la aplicación.",
-              detalle: "Así tu perfil ciudadano se activa solo.",
+              detalle:
+                "Tu perfil ciudadano se activa solo y ya puedes reportar. Te llega un correo para verificarla.",
             },
           ],
         },
@@ -126,14 +122,14 @@ export const manualCiudadano: Manual = {
           nivel: "consejo",
           titulo: "Con Google es más corto",
           texto:
-            "Toca «Continuar con Google»: el correo ya viene verificado y el perfil se activa solo.",
+            "Toca «Continuar con Google»: el correo ya viene verificado, lo que te permite recuperar la cuenta.",
         },
         {
           tipo: "aviso",
           nivel: "ojo",
-          titulo: "¿No puedes verificar el correo?",
+          titulo: "¿No verificaste el correo?",
           texto:
-            "Para reportar no hace falta. Entra a «Mi cuenta» y, si aparece, toca «Activar mi perfil». La ayuda con IA sí pide el correo verificado.",
+            "Para reportar no hace falta. Verificarlo te sirve para recuperar la cuenta si pierdes el acceso, y la ayuda con IA sí lo pide. Si tu perfil no aparece activo, entra a «Mi cuenta» y toca «Activar mi perfil».",
         },
       ],
     },
@@ -178,8 +174,8 @@ export const manualCiudadano: Manual = {
             },
             { texto: "«Ubicación»: elige la vereda más cercana." },
             {
-              texto: "«Detalles»: cuenta qué pasó y sube una foto.",
-              detalle: "La descripción y la foto son obligatorias.",
+              texto: "«Detalles»: cuenta qué pasó y sube de una a cinco fotos.",
+              detalle: "La descripción y al menos una foto son obligatorias.",
             },
             {
               texto: "«Revisar»: comprueba y toca «Enviar al Consejo».",
@@ -211,16 +207,17 @@ export const manualCiudadano: Manual = {
       ],
     },
 
-    /* Verificado contra: src/features/report.tsx:825 (contador de 500
-       palabras), 851 (hasta 10 MB), 881 y 893 («Tomar una foto ahora»,
-       «Buscar en mis archivos»), 949 (casilla sensible); src/domain/logic.ts:
-       94-96 (500 palabras, foto obligatoria, celular de 1 a 10 dígitos);
+    /* Verificado contra: src/features/report.tsx (contador de 500 palabras;
+       «Añadir fotografías», hasta cinco, «Quitar»; «Tomar una foto ahora»,
+       «Buscar en mis archivos»; casilla sensible); src/domain/logic.ts
+       (500 palabras, de una a cinco fotografías, celular de 1 a 10 dígitos);
+       src/app/api/incidents/route.ts (entre una y cinco fotografías);
        src/features/voice-input.tsx:23,98 y src/platform/voz.ts:38 (dictado de
        hasta 1 minuto, con internet); src/features/writing-assistant.tsx:10,107
        (desde 12 palabras); src/app/api/ai/improve/route.ts:6,49 (correo
        verificado; 10 al día UTC; un minuto entre usos); src/platform/
-       evidence.ts:2-3,143-163 (el teléfono reduce lo que pasa de 24
-       megapíxeles o 10 MB); src/server/evidence.ts:109-149 (el servidor guarda
+       evidence.ts y report.tsx (al adjuntar, el teléfono reduce a WebP lo que
+       pasa de unos 550 KB o 3 megapíxeles); src/server/evidence.ts:109-149 (el servidor guarda
        WebP de hasta 2200 píxeles, no los bytes originales);
        docs/seguridad-y-privacidad.md §4. */
     {
@@ -246,8 +243,9 @@ export const manualCiudadano: Manual = {
             },
             {
               icono: "camara",
-              titulo: "Fotografía",
-              texto: "Es obligatoria. Elige una foto útil y segura.",
+              titulo: "Fotografías",
+              texto:
+                "Hasta cinco; con una basta. Elige fotos útiles y seguras.",
             },
             {
               icono: "ojo-cerrado",
@@ -262,7 +260,7 @@ export const manualCiudadano: Manual = {
           columnas: ["Dato", "Límite"],
           filas: [
             ["Descripción", "Hasta 500 palabras"],
-            ["Fotografía", "JPG, PNG o WebP, hasta 10 MB"],
+            ["Fotografías", "De 1 a 5, JPG, PNG o WebP"],
             ["Celular", "Opcional, hasta 10 dígitos"],
             ["Dictado", "Hasta 1 minuto, con internet"],
             ["«Mejorar redacción con IA»", "Desde 12 palabras"],
@@ -271,9 +269,28 @@ export const manualCiudadano: Manual = {
         {
           tipo: "aviso",
           nivel: "limite",
-          titulo: "Tu foto no llega idéntica",
+          titulo: "Tus fotos no llegan idénticas",
           texto:
-            "Si pesa más de 10 MB o pasa de 24 megapíxeles, el teléfono la reduce y te avisa. El servidor guarda una copia WebP de hasta 2200 píxeles por lado, no el archivo exacto.",
+            "Si una pesa más de medio megabyte, el teléfono la reduce al adjuntarla y te avisa. El servidor guarda una copia WebP de hasta 2200 píxeles por lado, no el archivo exacto.",
+        },
+        {
+          tipo: "pasos",
+          titulo: "Añadir y quitar fotos",
+          pasos: [
+            {
+              texto: "Toca «Añadir fotografías» y elige una o varias a la vez.",
+              detalle:
+                "También sirven «Tomar una foto ahora» y «Buscar en mis archivos».",
+            },
+            {
+              texto:
+                "Cada una sale en miniatura: toca «Quitar» en la que no sirva.",
+            },
+            {
+              texto:
+                "Con cinco ya no caben más: quita una antes de añadir otra.",
+            },
+          ],
         },
         {
           tipo: "aviso",
@@ -285,7 +302,7 @@ export const manualCiudadano: Manual = {
         {
           tipo: "aviso",
           nivel: "consejo",
-          titulo: "Si la foto no se adjunta",
+          titulo: "Si una foto no se adjunta",
           texto: "Prueba «Tomar una foto ahora» o «Buscar en mis archivos».",
         },
       ],
@@ -293,8 +310,9 @@ export const manualCiudadano: Manual = {
 
     /* Verificado contra: src/features/report.tsx:429-433 y 672-794 (paso
        «Ubicación»: buscador, lista, «Mi vereda no está en la lista»);
-       src/domain/territory.ts:34 (catálogo del EOT de 2007, pendiente de
-       validación); src/features/vereda-preview.tsx:211-234,262,377,434-438
+       src/features/report.tsx (el aviso depende de si el Consejo validó la
+       versión); src/data/vereda-catalogue.ts (el teléfono guarda la lista y
+       la actualiza con señal); src/features/vereda-preview.tsx:211-234,262,377,434-438
        («Usar mi ubicación», «Volver al punto de la vereda», sin inventar
        coordenadas, «sin verificar»); src/platform/ubicacion.ts:42,50,124 (solo
        al pulsar, una vez; hasta 500 m de margen; 30 s; dentro del territorio);
@@ -356,9 +374,9 @@ export const manualCiudadano: Manual = {
         {
           tipo: "aviso",
           nivel: "limite",
-          titulo: "El catálogo no es definitivo",
+          titulo: "La lista puede cambiar",
           texto:
-            "Viene del EOT de 2007 y de fuentes abiertas; el Consejo aún no lo valida. Sin punto documentado, el reporte sale solo con el nombre de la vereda.",
+            "La mantiene el Consejo Comunitario: puede añadir, renombrar o retirar veredas. La aplicación guarda la última lista en tu teléfono, así que sirve sin señal. Bajo la lista dice si esta versión está validada o pendiente de validación; los puntos son referencias aproximadas, y sin punto el reporte sale solo con el nombre de la vereda.",
         },
       ],
     },
@@ -480,7 +498,7 @@ export const manualCiudadano: Manual = {
         {
           tipo: "texto",
           texto:
-            "En «Mis reportes» ves lo que el Consejo tiene a tu nombre, desde cualquier teléfono, y lo que aún no salió del tuyo. En el teléfono, abre «Cuenta» y toca «Mis reportes», o usa «Ver mis reportes» en «Inicio».",
+            "En «Mis reportes» ves todo lo que el Consejo tiene a tu nombre, sin tope, desde cualquier teléfono, y lo que aún no salió del tuyo. En el teléfono, abre «Cuenta» y toca «Mis reportes», o usa «Ver mis reportes» en «Inicio».",
         },
         {
           tipo: "pantalla",
@@ -602,7 +620,7 @@ export const manualCiudadano: Manual = {
               icono: "candado",
               titulo: "Relato privado",
               texto:
-                "Tu texto, tu foto y tu celular quedan entre tú y el Consejo.",
+                "Tu texto, tus fotos y tu celular quedan entre tú y el Consejo.",
             },
             {
               icono: "ojo",
@@ -622,7 +640,7 @@ export const manualCiudadano: Manual = {
           columnas: ["Dato", "Quién lo ve"],
           filas: [
             ["Tu relato, tal como lo escribiste", "Tú y el Consejo"],
-            ["La fotografía y tu celular", "Tú y el Consejo"],
+            ["Las fotografías y tu celular", "Tú y el Consejo"],
             ["El punto exacto que marcaste", "Tú y el Consejo"],
             ["Tu nombre y tu correo", "No se publican nunca"],
             ["Las notas internas", "Solo el Consejo"],
@@ -775,14 +793,7 @@ export const manualCiudadano: Manual = {
           nivel: "ojo",
           titulo: "No se puede deshacer",
           texto:
-            "Pierdes el acceso, se borra la fotografía principal que guardó el servidor y tus reportes quedan sin datos que te identifiquen. El Consejo conserva categoría, vereda, estado y fechas para las cifras.",
-        },
-        {
-          tipo: "aviso",
-          nivel: "limite",
-          titulo: "Lo que no se borra",
-          texto:
-            "Hoy no se borran la segunda copia reducida de cada foto, que el servidor guarda de respaldo y la aplicación no puede abrir, ni los puntos de «Usar mi ubicación» sumados para situar veredas.",
+            "Pierdes el acceso, se borran tus fotografías —también la copia reducida que guarda el servidor—, el punto que marcaste y las notas del seguimiento, y tus reportes quedan sin datos que te identifiquen. Tampoco quedan tus aportes de ubicación para situar veredas. El Consejo conserva categoría, vereda, estado y fechas para las cifras.",
         },
       ],
     },
@@ -864,6 +875,6 @@ export const manualCiudadano: Manual = {
   cierre: {
     titulo: "Gracias por cuidar lo que nos une",
     texto:
-      "Un reporte claro es el primer paso. La aplicación guarda, envía y muestra; las decisiones las toma el Consejo. Este manual se comprobó el 20 de octubre de 2026: si algo ya no coincide con tu pantalla, avisa al Consejo Comunitario.",
+      "Un reporte claro es el primer paso. La aplicación guarda, envía y muestra; las decisiones las toma el Consejo. Este manual se comprobó el 21 de octubre de 2026: si algo ya no coincide con tu pantalla, avisa al Consejo Comunitario.",
   },
 };

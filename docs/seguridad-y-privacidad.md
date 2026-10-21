@@ -105,3 +105,13 @@ La [auditoría de entrega](auditoria-entrega-2026-10-02.md#incidente-del-empaque
 Dentro del APK, «Descargar informe» manda al servidor el HTML que armó el teléfono para que lo recoja el navegador del sistema. Cualquier cuenta activa podía enviar HTML propio a ese camino, y el servidor lo entregaba **desde el dominio de la aplicación con la política general, que permite guiones en línea**: un `<script>` metido ahí habría corrido con la sesión de quien abriera el enlace. Bastaba pasarle un enlace de un solo uso a alguien del Consejo.
 
 Se cerró dándole a esa respuesta su propia política: `sandbox` sin `allow-same-origin` (el documento queda en un origen opaco, sin acceso al almacenamiento ni a la sesión), `default-src 'none'` (sin red, ni a la propia API ni a un servidor ajeno) y `form-action 'none'`. Los guiones se permiten solo dentro de ese aislamiento, para el botón «Guardar como PDF». `tests/unit/statistics-export-route.test.ts` fija la política. **No se probó en un teléfono real**, y no se cambió el límite de acuñar billetes ni se limpian los vencidos (siguen guardados hasta 900 KB cada uno): queda como trabajo pendiente.
+
+## Tres cierres de privacidad y roles — 21 de octubre de 2026
+
+Salieron al contrastar los manuales con el código (ver [Manuales de uso](manuales.md)). Los tres tienen prueba unitaria; ninguno se probó contra el servidor real.
+
+- **Retirar el rol de administración ya surte efecto al instante.** Antes la sesión abierta de quien lo perdía seguía diciendo «admin» hasta una hora y `requireAdmin` le reescribía el rol en la cuenta: se retiraba y se deshacía solo. Ahora se revocan sus sesiones (`revokeRefreshTokens`) antes de escribir el campo de la cuenta.
+- **El resumen público no puede ser el relato.** Un caso ya publicado se reabre con su resumen aprobado (nuevo `GET` de `/api/admin/incidents/{id}/`), el servidor rechaza un título o resumen que sea el principio del relato tal cual, y guardar con el mismo texto aprobado ya no reinicia las 24 horas.
+- **Eliminar una cuenta borra lo que los términos prometen.** Además del relato, el teléfono y la fotografía: el punto marcado (`lat`/`lng`), el texto de las notas del historial (se conservan estado, actor y fecha), la copia reducida de la fotografía y los aportes de ubicación que la persona hizo para situar veredas (`veredaProposals`). Retirar un expediente también borra la copia reducida.
+- No cubierto: las propuestas de vereda ya aceptadas conservan lo que el Consejo decidió.
+

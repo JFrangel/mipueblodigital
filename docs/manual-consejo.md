@@ -2,7 +2,7 @@
 
 # Manual del Consejo — Mi Pueblo Digital
 
-> Para quien gestiona · Actualizado el 20 de octubre de 2026
+> Para quien gestiona · Actualizado el 21 de octubre de 2026
 > Versión ilustrada, para leer en la aplicación: `/manuales/consejo/`. PDF: `public/manuales/manual-consejo.pdf`.
 
 Cómo gestionar reportes, comunicados y cifras en Mi Pueblo Digital
@@ -28,7 +28,7 @@ Cómo gestionar reportes, comunicados y cifras en Mi Pueblo Digital
 
 Para entrar al panel hacen falta una cuenta activa y el rol de administración. Aquí se explica quién lo da y qué evita que el Consejo se quede fuera.
 
-- **Cuenta activa.** Se activa sola al entrar con el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».
+- **Cuenta activa.** Se activa sola al entrar, sin pedir el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».
 - **Rol del Consejo.** Lo da otra persona que ya lo tenga, desde «Quién administra».
 - **Correo verificado.** No hace falta para gestionar; solo lo exige «Redactar con IA para la asamblea».
 
@@ -47,7 +47,7 @@ Para entrar al panel hacen falta una cuenta activa y el rol de administración. 
 | Nunca se quita al último | «Retirar» se apaga si es la única cuenta con el rol. |
 | Constancia | Cada cambio queda con quién, sobre quién y cuándo. |
 
-> **Ojo con esto.** **Retirar no corta la sesión.** Quien deja de administrar puede seguir viendo el panel hasta que su sesión se renueve, hasta una hora. Después comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.
+> **Ojo con esto.** **Retirar cierra sus sesiones.** Al retirar el rol se cierran las sesiones abiertas de esa persona: en cuanto vuelva a entrar ya no tiene el panel. Comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.
 
 > **Consejo.** Procura que administren al menos dos cuentas. Quien mantiene el servicio también puede dar el rol desde fuera de la aplicación.
 
@@ -64,7 +64,7 @@ El «Panel del Consejo» reúne el trabajo en siete pestañas. Puedes pasar de u
 | «Comunicados» | Redactar y publicar noticias, alertas y encuentros. |
 | «Historia» | Añadir y corregir hitos de la línea de tiempo. |
 | «Análisis» | Pedir a un servicio externo de IA un borrador de lectura. |
-| «Territorio» | Decidir dónde queda una vereda sin punto en el mapa. |
+| «Territorio» | Mantener el catálogo de veredas y decidir dónde queda una sin punto en el mapa. |
 | «Quién administra» | Dar y quitar el rol; reabrir cuentas cerradas. |
 
 > **Consejo.** Empieza por «Novedades»: cada reporte nuevo deja un aviso con su categoría y su vereda, y «Ver el expediente» lo abre en «Expedientes».
@@ -73,15 +73,15 @@ El «Panel del Consejo» reúne el trabajo en siete pestañas. Puedes pasar de u
 
 *Cómo se recorre la bandeja y qué se cambia.*
 
-Un expediente es un reporte tal como llegó, con su fotografía, su relato y su seguimiento. Aquí se decide su estado y quién lo atiende.
+Un expediente es un reporte tal como llegó, con sus fotografías, su relato y su seguimiento. Aquí se decide su estado y quién lo atiende.
 
 **De la bandeja al guardado**
 
 1. Abre «Expedientes»: la bandeja se pide sola.
-   Llega en tandas de 25 y se ve de 10 en 10. «Actualizar bandeja» la repite; «Siguiente» trae otra tanda al final de lo cargado.
+   Va de la más reciente a la más antigua. Llegan 25 y se ven de 10 en 10; al final de lo cargado, «Siguiente» trae otros 25 hasta agotarla. «Actualizar bandeja» la repite.
 2. Acota con «Buscar» (título, descripción, responsable o código), «Categoría», «Vereda», «Prioridad» y «Estado».
-   Actúan sobre lo cargado: un caso ausente puede estar en una tanda sin traer.
-3. Toca una fila, mira la fotografía y la descripción, y en «Gestión del Consejo» cambia estado, prioridad y «Responsable».
+   Se aplican a toda la bandeja, no solo a lo cargado, y la lista se vuelve a pedir con ellos.
+3. Toca una fila, mira las fotografías y la descripción, y en «Gestión del Consejo» cambia estado, prioridad y «Responsable».
    Sin nota pública ni interna, el servidor no guarda.
 4. Pulsa «Guardar cambio en servidor».
    Queda en el historial con tu nombre y la fecha.
@@ -91,12 +91,23 @@ Un expediente es un reporte tal como llegó, con su fotografía, su relato y su 
 | «Estado» | «Pendiente», «En proceso», «Solucionado», «No solucionado», «Descartado», «Bloqueado por conflicto» o «Escalado a otra entidad». Solucionado, No solucionado y Descartado cierran el caso; los demás lo mantienen abierto. |
 | «Prioridad» | «Baja», «Media», «Alta» o «Crítica»; todo entra como Media. Plazos de referencia: Crítica 1 día, Alta 3, Media 7, Baja 30. |
 | Notas | «Nota para el ciudadano · hasta 30 palabras» la lee quien reportó, en su expediente y en un aviso: sin datos de nadie. «Nota interna · solo administradores» solo la ve el Consejo. |
+| «Tipo de actuación» | «Nota de seguimiento» o «Visita técnica». La visita pide «Fecha de la visita» y «Quién realizó la visita» (hasta 100 caracteres), y queda en el historial. Quien reportó ve la entrada y su nota pública, sin fecha ni responsable. |
+| «Imagen de la actuación (opcional)» | Una imagen por nota o visita; «Quitar imagen» la retira antes de guardar. Se abre en el historial con «Ver imagen · solo Consejo». |
+
+> **Privacidad.** **La imagen de una nota es solo del Consejo.** Aunque la nota para el ciudadano sea pública, quien reportó no ve la imagen: solo la ve el Consejo, y se borra con el expediente.
+
+**Bajar la bandeja**
+
+1. Filtra lo que necesites y pulsa «Descargar bandeja completa».
+   Baja un CSV con todos los expedientes que cumplen los filtros, no solo los cargados: código, fecha, vereda, categoría, estado, prioridad, responsable y descripción. En Android se abre en el navegador, con un enlace de un solo uso.
+
+> **Ojo con esto.** **El archivo trae el relato.** La descripción de cada reporte es privada: guarda el archivo donde solo lo lea el Consejo y no lo compartas.
 
 > **Ojo con esto.** **Dos personas a la vez.** Si otra persona guardó antes, verás «Otra persona actualizó el caso. Recarga antes de guardar.» y tu cambio no se aplica. Pulsa «Volver a la bandeja», reabre el expediente y revisa; las notas escritas se pierden.
 
-> **Lo que no hace.** **La fotografía no es el archivo del teléfono.** Llega como copia de hasta 1.600 píxeles; «Ver la fotografía original» pide la de archivo (hasta 2.200 píxeles, en WebP). Ninguna es el archivo exacto: sirven para mirar un detalle, no para peritar.
+> **Lo que no hace.** **La fotografía no es el archivo del teléfono.** Un reporte trae de una a cinco; con varias, pasa de una a otra con «Anterior foto» y «Siguiente foto». Cada una llega como copia de hasta 1.600 píxeles; «Ver la fotografía original» pide la de archivo (hasta 2.200 píxeles, en WebP). Ninguna es el archivo exacto: sirven para mirar un detalle, no para peritar.
 
-> **Consejo.** La bandeja no se ordena por fecha ni por prioridad: filtra «Estado» por Pendiente o entra desde «Novedades».
+> **Consejo.** La bandeja se ordena por fecha, no por prioridad: filtra «Prioridad» o «Estado» por Pendiente, o entra desde «Novedades».
 
 ## 4. Del expediente privado al resumen público
 
@@ -131,7 +142,7 @@ Un reporte nace privado: lo ven quien lo envió y el Consejo. La comunidad nunca
 
 Retirar es para lo que no se arregla con un estado: un duplicado, un error, un reporte ajeno al territorio. Cerrarlo como «Descartado» lo deja contando en el mapa y en las cifras.
 
-> **Ojo con esto.** **Es irreversible.** Retirar borra de verdad: el expediente, su seguimiento y la fotografía del archivo salen de la bandeja, del mapa, de las cifras y de lo que ve la comunidad.
+> **Ojo con esto.** **Es irreversible.** Retirar borra de verdad: el expediente, su seguimiento y las fotografías del archivo salen de la bandeja, del mapa, de las cifras y de lo que ve la comunidad.
 
 1. Abre el expediente, baja al final y pulsa «Retirar este reporte».
 2. Escribe el «Motivo de la retirada»: mínimo 10 caracteres, máximo 600 u 80 palabras.
@@ -140,7 +151,7 @@ Retirar es para lo que no se arregla con un estado: un duplicado, un error, un r
 
 > **Privacidad.** **Quién se entera.** A quien reportó le llega «El Consejo retiró tu reporte» con tu motivo, en sus novedades y en el teléfono; si abre su enlace, ve «El Consejo retiró este reporte» con fecha y motivo. A nadie más se le cuenta.
 
-> **Lo que no hace.** **Lo que retirar no hace.** No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La copia reducida de la fotografía deja de abrirse, pero no se elimina de la base de datos.
+> **Lo que no hace.** **Lo que retirar no hace.** No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. Las fotografías, sus copias reducidas, las imágenes de las notas y el historial del expediente se borran con él.
 
 ## 6. Comunicados, alertas y encuentros
 
@@ -173,7 +184,7 @@ La barra de formato tiene «Negrita», «Cursiva», «Título de apartado», «L
 
 ## 7. Historia del Consejo y veredas en el mapa
 
-*Hitos de la línea de tiempo y puntos de las veredas.*
+*Hitos de la línea de tiempo y catálogo de veredas.*
 
 Dos pestañas que cuidan la memoria y el mapa; lo que decides en ellas lo ve toda la comunidad.
 
@@ -188,12 +199,29 @@ Dos pestañas que cuidan la memoria y el mapa; lo que decides en ellas lo ve tod
 
 > **Consejo.** Los hitos no se borran: se archivan. Cada guardado deja versión y autor.
 
-En «Territorio» aparecen propuestas de punto para las veredas que el catálogo no sitúa (hoy seis) o no tiene. Salen cuando al menos tres reportes de dos personas las sitúan desde el sitio. Nada cambia hasta que el Consejo decide.
+En «Territorio» el Consejo mantiene el «Catálogo de veredas», la lista que ofrece la aplicación al reportar y al filtrar. Lo que cambies lo ve toda la comunidad.
+
+**Cuidar el catálogo**
+
+1. Busca una vereda con «Buscar vereda» o pulsa «Añadir vereda».
+   El nombre lleva de 2 a 120 caracteres y no puede repetir uno existente.
+2. Para cambiar un nombre pulsa «Editar», corrígelo y pulsa «Guardar vereda».
+   El nombre anterior se sigue reconociendo: los reportes viejos no se pierden.
+3. Si conoces el sitio, pulsa «Señalar ubicación» y toca el mapa; «Quitar ubicación» la deshace.
+   Es opcional: puedes guardar sin punto y ponerlo después. Debe quedar dentro del territorio.
+4. Para retirar una vereda pulsa «Quitar» y «Confirmar retirada».
+   Deja de ofrecerse en los reportes nuevos; los expedientes anteriores se conservan y «Reactivar» la devuelve. No se borra ningún reporte.
+5. Cuando los nombres estén revisados, pulsa «Validar catálogo revisado» y «Confirmar validación».
+   Queda con tu cuenta y la fecha.
+
+> **Ojo con esto.** **Validar no es para siempre.** El catálogo solo consta como validado cuando el Consejo lo confirma, y la validación cubre los nombres de esa versión, no la ubicación de cada vereda. Cualquier cambio posterior, incluso aceptar un punto propuesto, crea una versión nueva y vuelve a mostrar «Esta versión está pendiente de validación por el Consejo.»: hay que validarla otra vez. Mientras tanto, quien reporta ve el catálogo como pendiente.
+
+Debajo del catálogo aparecen propuestas de punto para las veredas que no tienen uno o que el catálogo no tiene. Salen cuando al menos tres reportes de dos personas las sitúan desde el sitio. Nada cambia hasta que el Consejo decide.
 
 | Botón | Qué hace |
 | --- | --- |
-| «Aceptar el punto» | Es el punto que ve toda la comunidad. La pantalla no deja ajustarlo a mano. |
-| «Es otra vereda con otro nombre» | Eliges la del catálogo y pulsas «Fundir»: los reportes pasan a ella. |
+| «Aceptar el punto» | Es el punto que ve toda la comunidad y se guarda en el catálogo, donde la añade si no estaba. La pantalla no deja ajustarlo a mano. |
+| «Es otra vereda con otro nombre» | Eliges una vereda activa del catálogo y pulsas «Fundir»: los reportes pasan a ella. |
 | «Descartar» | Pide «Por qué se descarta» y apaga esa vereda para siempre. |
 
 ## 8. Estadísticas, informe y análisis
@@ -205,7 +233,7 @@ El observatorio está en «Estadísticas». Cualquiera con sesión ve las cifras
 - La tarjeta «Dónde está el trabajo.» da cifras de todo el territorio (hasta 1.000 expedientes): abiertos sin responsable, lo que más espera, tiempo de cierre y plazos. Solo números.
 - La tarjeta «De los números a las preguntas.» da la lectura del filtro, en frases para la asamblea, sin modelo; «Ver fuentes y método» detalla cada cálculo.
 
-> **Lo que no hace.** **El informe y el CSV no son la bandeja.** Cuentan los reportes de tu cuenta más los que la comunidad ya ve: sin privados, delicados ni los que esperan el plazo, y el responsable de los ajenos sale como «Sin asignar». En «Dónde está el trabajo.» sí está todo el territorio.
+> **Lo que no hace.** **El informe y el CSV no son la bandeja.** Cuentan los reportes de tu cuenta más los que la comunidad ya ve: sin privados, delicados ni los que esperan el plazo, y el responsable de los ajenos sale como «Sin asignar». En «Dónde está el trabajo.» sí está todo el territorio, y «Descargar bandeja completa», en «Expedientes», baja todos los expedientes.
 
 | Botón | En el computador | En Android |
 | --- | --- | --- |
@@ -231,7 +259,7 @@ Cualquiera puede eliminar su cuenta desde «Mi cuenta». El Consejo no aprueba n
 - Sus expedientes se anonimizan: se descarta el seudónimo y se retiran relato, título y teléfono.
 - Se conservan categoría, vereda, estado y fechas.
 
-> **Lo que no hace.** **Quedan restos.** La anonimización no toca el punto marcado en el mapa, las notas del seguimiento ni la copia reducida de la fotografía: no prometas que no queda ningún rastro. El panel tampoco muestra si una eliminación quedó a medias.
+> **Lo que no hace.** **Lo que sí se conserva.** Al eliminar una cuenta se borran las fotografías, el punto marcado y el texto de las notas del seguimiento; quedan categoría, vereda, estado y fechas. El panel no muestra si una eliminación quedó a medias: si dudas, avisa a quien mantiene el servicio.
 
 **Volver a abrir una cuenta cerrada**
 
@@ -297,14 +325,12 @@ Deben designarse por escrito antes de abrir la aplicación.
 
 *Lo que el Consejo debe saber para no prometer de más.*
 
-Decirlo es parte del trabajo del Consejo ante la comunidad.
+Decirlo es parte del trabajo del Consejo ante la comunidad. Para gestionar hace falta conexión, porque el panel consulta todo en el servidor.
 
-- **El catálogo de veredas no está validado.** Viene del EOT de 2007 y de fuentes abiertas; hasta que el Consejo firme el oficial, la aplicación no afirma límites territoriales.
+- **La aplicación no traza límites de veredas:** guarda un punto de referencia por vereda, no sus fronteras.
 - **No hay aplicación en tiendas:** en Android se instala con un archivo.
-- **Un reporte lleva una sola fotografía** y ningún otro adjunto; no hay registro de visitas técnicas más allá de las notas.
-- **La bandeja no se ordena por fecha ni se descarga entera;** la retirada no se deshace ni tiene listado.
-- **Las listas de reportes cargan hasta 200.**
-- **Sin señal no se gestiona:** el panel pide todo al servidor.
+- **Solo se adjuntan fotografías:** hasta cinco por reporte y una imagen por nota; no hay video, audio ni documentos.
+- **La retirada no se deshace ni tiene listado.**
 
 **No veo «Panel del Consejo» en el menú.**
 
@@ -312,7 +338,7 @@ Tu cuenta no tiene el rol o acaba de recibirlo: cierra sesión y vuelve a entrar
 
 **Un caso no aparece en la bandeja.**
 
-Puede estar en una tanda sin cargar: busca por título o código, o pulsa «Siguiente».
+La bandeja va de la más reciente a la más antigua y carga de 25 en 25. Busca por título o código, revisa que los filtros estén en «Todas» o «Todos», o pulsa «Siguiente» hasta el final: trae más mientras haya. Si lo retiraron, ya no existe.
 
 **El enlace del informe dice que ya se usó o venció.**
 
@@ -320,4 +346,4 @@ Pulsa el botón de nuevo: el enlace es de un solo uso y dura 15 minutos.
 
 ---
 
-**Cada nota es una respuesta.** Este manual describe lo que la aplicación hace al 20 de octubre de 2026 y dice lo que aún no hace. Gestiona cada reporte pensando en quien lo va a leer: detrás hay alguien del territorio esperando una respuesta.
+**Cada nota es una respuesta.** Este manual describe lo que la aplicación hace al 21 de octubre de 2026 y dice lo que aún no hace. Gestiona cada reporte pensando en quien lo va a leer: detrás hay alguien del territorio esperando una respuesta.

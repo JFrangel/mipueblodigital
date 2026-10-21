@@ -45,6 +45,8 @@ const state = vi.hoisted(() => ({
     metadata: { lastSignInTime: string };
   }>,
   claims: vi.fn(),
+  revocar: vi.fn(),
+  orden: [] as string[],
   registrado: vi.fn(),
   sincronizado: vi.fn(),
   falloAlSincronizar: false,
@@ -71,7 +73,14 @@ vi.mock("../../src/server/admin-auth", () => ({
         if (!found) throw new Error("not-found");
         return found;
       },
-      setCustomUserClaims: state.claims,
+      setCustomUserClaims: (...a: unknown[]) => {
+        state.orden.push("claims");
+        return state.claims(...a);
+      },
+      revokeRefreshTokens: (...a: unknown[]) => {
+        state.orden.push("revocar");
+        return state.revocar(...a);
+      },
     },
     db: fakeDb(),
   }),
@@ -83,6 +92,7 @@ function fakeDb() {
       get: async () => ({ data: () => ({ active: state.active }) }),
       set: async (campos: Record<string, unknown>, opciones: unknown) => {
         if (state.falloAlSincronizar) throw new Error("Firestore no responde");
+        state.orden.push(`campo:${String(campos.role)}`);
         return state.sincronizado(campos, opciones);
       },
     }),
@@ -104,13 +114,17 @@ beforeEach(() => {
   state.admin = true;
   state.active = true;
   state.claims.mockClear();
+  state.revocar.mockClear();
+  state.orden = [];
   state.registrado.mockClear();
   state.sincronizado.mockClear();
   state.falloAlSincronizar = false;
 });
 
 it("concede el rol y lo deja registrado", async () => {
-  const response = await POST(peticion({ email: "vecino@rio.test", admin: true }));
+  const response = await POST(
+    peticion({ email: "vecino@rio.test", admin: true }),
+  );
   expect(response.status).toBe(200);
   expect(state.claims).toHaveBeenCalledWith("vecino", { admin: true });
   expect(state.registrado.mock.calls[0][0].actor).toBe("presidenta");
@@ -137,13 +151,17 @@ it("si el campo de la cuenta no se puede escribir, el rol no se concede a medias
 
 it("no concede a una cuenta que todavía no ha entrado", async () => {
   state.active = false;
-  const response = await POST(peticion({ email: "vecino@rio.test", admin: true }));
+  const response = await POST(
+    peticion({ email: "vecino@rio.test", admin: true }),
+  );
   expect(response.status).toBe(409);
   expect(state.claims).not.toHaveBeenCalled();
 });
 
 it("no se lo concede a un correo que no existe", async () => {
-  const response = await POST(peticion({ email: "nadie@rio.test", admin: true }));
+  const response = await POST(
+    peticion({ email: "nadie@rio.test", admin: true }),
+  );
   expect(response.status).toBe(404);
   expect(state.claims).not.toHaveBeenCalled();
 });
@@ -178,11 +196,37 @@ it("la consulta devuelve todas las cuentas con su rol, no solo las que administr
   const { people } = await (await GET(peticion({}))).json();
   expect(people).toHaveLength(3);
   /* Quien administra encabeza: es la pregunta de esa pantalla. */
-  expect(people[0]).toMatchObject({ email: "presidenta@rio.test", admin: true });
+  expect(people[0]).toMatchObject({
+    email: "presidenta@rio.test",
+    admin: true,
+  });
   expect(people.filter((p: { admin: boolean }) => p.admin)).toHaveLength(1);
   /* Y se dice quién no ha entrado, para no ofrecer un botón que va a fallar. */
   expect(
     people.find((p: { email: string }) => p.email === "nueva@rio.test")
       .lastSignIn,
   ).toBeNull();
+});
+
+/* Retirar el rol se deshacía solo: la sesión abierta de quien lo perdía seguía
+   diciendo «admin» hasta una hora, y `requireAdmin` la aceptaba y le volvía a
+   escribir el rol en la cuenta. Ahora se revocan sus sesiones, y antes de tocar
+   el campo de la cuenta. */
+it("retirar el rol revoca las sesiones abiertas antes de escribir el campo", async () => {
+  state.actor = "vecino";
+  state.usuarios[1].customClaims = { admin: true };
+  const response = await POST(
+    peticion({ email: "presidenta@rio.test", admin: false }),
+  );
+  state.usuarios[1].customClaims = {};
+  expect(response.status).toBe(200);
+  expect(state.claims).toHaveBeenCalledWith("presidenta", {});
+  expect(state.revocar).toHaveBeenCalledWith("presidenta");
+  expect(state.orden).toEqual(["claims", "revocar", "campo:citizen"]);
+});
+
+it("conceder el rol no revoca ninguna sesión", async () => {
+  await POST(peticion({ email: "vecino@rio.test", admin: true }));
+  expect(state.revocar).not.toHaveBeenCalled();
+  expect(state.orden).toEqual(["campo:admin", "claims"]);
 });

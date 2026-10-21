@@ -1171,6 +1171,19 @@
   .cuerpo > * + * {
     margin-top: 4.2mm;
   }
+  /* Una tabla, una lista de pasos o un grupo de tarjetas se leen enteros: si
+     caben en una hoja no se parten entre dos, y si no caben empiezan arriba de
+     la siguiente. Los avisos y las preguntas ya van así. */
+  .tablaCaja,
+  .pasos,
+  .flujo,
+  .tarjetas,
+  .glosario {
+    break-inside: avoid;
+  }
+  .tablaCaja + .nota {
+    break-before: avoid;
+  }
   .texto {
     max-width: none;
     orphans: 3;
@@ -1191,7 +1204,7 @@
     border-radius: 4.5mm;
   }
   .telefono {
-    width: 68mm;
+    width: 52mm;
     padding: 2mm;
     box-shadow: none;
   }
@@ -1199,10 +1212,53 @@
     padding: 3mm 2.5mm 2.5mm;
   }
   .barraMovil small {
-    font-size: 6.4pt;
+    font-size: 5.6pt;
+  }
+  .escena {
+    gap: 2mm;
+    font-size: 7.5pt;
+  }
+  .escenaTitulo {
+    font-size: 9pt;
+  }
+  .escenaHueco {
+    height: 10mm;
+  }
+  .escenaLista li {
+    padding: 1.6mm 2mm;
+  }
+  .pantalla figcaption {
+    font-size: 7.5pt;
+  }
+  /* El hilo del capítulo: la apertura, el párrafo que dice para qué sirve y lo
+     primero que sigue van juntos. Si no caben al pie de una hoja, pasan los
+     tres a la siguiente en vez de dejar el título suelto y su contenido lejos. */
+  .cuerpo > :first-child {
+    break-after: avoid;
   }
   .glosario {
     grid-template-columns: repeat(2, 1fr);
     gap: 3mm 6mm;
   }
+}
+
+/* ───────────────────────── Figura de relleno ──────────────────────────── */
+.remate {
+  display: flex;
+  justify-content: center;
+  margin-top: 6mm;
+  break-before: avoid;
+  break-inside: avoid;
+}
+.remateDibujo {
+  display: block;
+  width: var(--alto, 40mm);
+  height: var(--alto, 40mm);
+  color: var(--tinte, #3f9a61);
+  opacity: 0.3;
+}
+.remateDibujo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }

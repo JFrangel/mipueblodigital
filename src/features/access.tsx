@@ -284,11 +284,12 @@ export function Access() {
             <p>
               Conectado como <strong>{user.email}</strong>.
             </p>
-            <p className={styles.notice}>
-              {vieneDelReporte
-                ? "Tu reporte quedó guardado como borrador y te espera tal como lo dejaste."
-                : "Ya puedes reportar. Verificar el correo es opcional."}
-            </p>
+            {vieneDelReporte && (
+              <p className={styles.notice}>
+                Tu reporte quedó guardado como borrador y te espera tal como lo
+                dejaste.
+              </p>
+            )}
             {/* Volver a donde estaba, no a la portada. Quien llegó aquí porque
                 intentó enviar un reporte sin sesión venía haciendo algo, y
                 dejarlo en Inicio le obliga a buscar otra vez el camino. */}

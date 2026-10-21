@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { ApiError, requireAdmin } from "@/server/admin-auth";
 import { readJson } from "@/server/request-body";
 import { statuses } from "@/data/catalog";
-import { publicationReady } from "@/domain/publication";
+import { copiaDelRelato, publicationReady } from "@/domain/publication";
 import { avisar } from "@/server/push";
 import { DEFAULT_PRIORITY, isPriority } from "@/domain/priority";
 export async function PATCH(
@@ -200,7 +200,28 @@ export async function PATCH(
           );
         const traeFicha =
           text.publicTitle && text.publicSummary && text.publicVereda;
-        if (traeFicha)
+        const aprobada = publicado.data();
+        /* Lo que ya estaba aprobado, sin tocar: guardar el caso con el mismo
+           texto no es aprobarlo otra vez, y reescribir la ficha reiniciaba las
+           24 horas y desplazaba su fecha de publicación. */
+        const sinCambios =
+          publicado.exists &&
+          aprobada?.title === text.publicTitle &&
+          aprobada?.summary === text.publicSummary &&
+          aprobada?.vereda === text.publicVereda;
+        if (
+          traeFicha &&
+          !sinCambios &&
+          (copiaDelRelato(String(old.description ?? ""), text.publicSummary) ||
+            copiaDelRelato(String(old.description ?? ""), text.publicTitle))
+        )
+          throw new ApiError(
+            409,
+            "El título o el resumen es el relato tal cual. La comunidad no ve el relato: escríbelo con tus palabras, sin nombres ni datos que identifiquen a nadie.",
+          );
+        if (traeFicha && sinCambios)
+          tx.update(publicRef, { status: input.status });
+        else if (traeFicha)
           tx.set(publicRef, {
             published: true,
             title: text.publicTitle,
@@ -345,6 +366,46 @@ export async function PATCH(
       {
         error:
           e instanceof ApiError ? e.message : "No se pudo guardar el cambio.",
+      },
+      {
+        status: e instanceof ApiError ? e.status : 503,
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
+  }
+}
+
+/**
+ * Lo que la comunidad ve de un expediente, para que el editor parta de ello.
+ *
+ * El editor del Consejo partía siempre del relato, también al reabrir un caso
+ * ya publicado: quien guardaba sin fijarse sustituía el resumen aprobado por el
+ * principio del relato. Con esto, un caso publicado se reabre con **su resumen
+ * aprobado**, no con el relato.
+ */
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { db } = await requireAdmin(request),
+      { id } = await params;
+    if (!/^[0-9a-f]{64}$/.test(id))
+      throw new ApiError(404, "Caso no encontrado.");
+    const publico = (await db.doc(`publicIncidents/${id}`).get()).data();
+    return Response.json(
+      {
+        publicTitle: publico ? String(publico.title ?? "") : "",
+        publicSummary: publico ? String(publico.summary ?? "") : "",
+        publicVereda: publico ? String(publico.vereda ?? "") : "",
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (e) {
+    return Response.json(
+      {
+        error:
+          e instanceof ApiError ? e.message : "No se pudo consultar el caso.",
       },
       {
         status: e instanceof ApiError ? e.status : 503,

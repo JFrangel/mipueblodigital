@@ -36,27 +36,29 @@ const PAGE = 1000;
 async function everyone() {
   const { auth } = adminServices();
   const list = await auth.listUsers(PAGE);
-  return list.users
-    .map((user) => ({
-      uid: user.uid,
-      email: user.email ?? "",
-      name: user.displayName ?? "",
-      admin: user.customClaims?.admin === true,
-      lastSignIn: user.metadata.lastSignInTime || null,
-      /* Si su puerta está cerrada. Se lee del propio registro de identidad
+  return (
+    list.users
+      .map((user) => ({
+        uid: user.uid,
+        email: user.email ?? "",
+        name: user.displayName ?? "",
+        admin: user.customClaims?.admin === true,
+        lastSignIn: user.metadata.lastSignInTime || null,
+        /* Si su puerta está cerrada. Se lee del propio registro de identidad
          —que es quien la cierra— y no del documento de la cuenta, para que lo
          que enseña el panel sea el estado real de la puerta y no su reflejo.
          Sin esto, una persona que pide volver no se distingue en la lista de
          una que nunca se fue. */
-      cerrada: user.disabled === true,
-    }))
-    /* Quien administra primero, y el resto por nombre: la pregunta de esta
+        cerrada: user.disabled === true,
+      }))
+      /* Quien administra primero, y el resto por nombre: la pregunta de esta
        pantalla es quién tiene el rol, no quién se registró antes. */
-    .sort(
-      (a, b) =>
-        Number(b.admin) - Number(a.admin) ||
-        (a.name || a.email).localeCompare(b.name || b.email, "es"),
-    );
+      .sort(
+        (a, b) =>
+          Number(b.admin) - Number(a.admin) ||
+          (a.name || a.email).localeCompare(b.name || b.email, "es"),
+      )
+  );
 }
 
 const currentAdmins = async () =>
@@ -124,10 +126,29 @@ export async function POST(request: Request) {
        ni un aviso —o quien lo pierde los seguiría recibiendo— y nada lo
        delataría. Es `set(merge)` y no `update()`, que reventaba si el
        documento de la cuenta todavía no existía. */
-    await db
-      .doc(`accounts/${target.uid}`)
-      .set({ role: grant ? "admin" : "citizen" }, { merge: true });
-    await auth.setCustomUserClaims(target.uid, grant ? { admin: true } : {});
+    if (grant) {
+      await db
+        .doc(`accounts/${target.uid}`)
+        .set({ role: "admin" }, { merge: true });
+      await auth.setCustomUserClaims(target.uid, { admin: true });
+    } else {
+      /* Retirar el rol tiene que surtir efecto **ya**, no cuando caduque el
+         token. Quien lo pierde puede seguir con una sesión abierta cuya
+         reivindicación dice `admin` durante hasta una hora, y `requireAdmin`
+         la aceptaba y además volvía a escribir `role: "admin"` en su cuenta:
+         el rol se retiraba… y se deshacía solo.
+
+         Por eso se revocan sus sesiones: `verifyIdToken(token, true)` rechaza
+         desde ese instante los testigos anteriores, y para volver a entrar hará
+         falta uno nuevo, que ya no lleva la reivindicación. Va **antes** de
+         escribir el campo de la cuenta: así ninguna petición en vuelo puede
+         devolverle el rol después de que se haya retirado. */
+      await auth.setCustomUserClaims(target.uid, {});
+      await auth.revokeRefreshTokens(target.uid);
+      await db
+        .doc(`accounts/${target.uid}`)
+        .set({ role: "citizen" }, { merge: true });
+    }
     await db.collection("councilRoleEvents").add({
       actor,
       target: target.uid,
