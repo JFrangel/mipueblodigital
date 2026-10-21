@@ -1169,7 +1169,21 @@
     margin-top: 5mm;
   }
   .cuerpo > * + * {
-    margin-top: 4.2mm;
+    margin-top: 3.4mm;
+  }
+  .manual[data-formato="A5"] {
+    font-size: 9.5pt;
+    line-height: 1.5;
+  }
+  .manual[data-formato="A5"] .tarjeta,
+  .manual[data-formato="A5"] .etapa {
+    padding: 3mm;
+  }
+  .manual[data-formato="A5"] .aviso {
+    padding: 2.6mm 3.4mm;
+  }
+  .manual[data-formato="A5"] .capitulo {
+    margin-top: 7mm;
   }
   /* Una tabla, una lista de pasos o un grupo de tarjetas se leen enteros: si
      caben en una hoja no se parten entre dos, y si no caben empiezan arriba de

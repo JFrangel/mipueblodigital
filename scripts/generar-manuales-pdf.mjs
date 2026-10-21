@@ -170,8 +170,16 @@ try {
       ).capitulos.map((c) => c.id);
       const rellenos = [];
       for (let h = 2; h < textoPrimera.length - 2; h++) {
-        const siguiente = textoPrimera[h + 1];
-        if (!RE_CAPITULO.test(siguiente.slice(0, 400))) continue;
+        /* ¿Empieza un capítulo arriba de la hoja siguiente? El orden del texto
+           extraído no lo dice (el rótulo puede venir después del pie), así que
+           se mira dónde está: en la franja de arriba. */
+        const sigPagina = await documentoPrimera.getPage(h + 2);
+        const alto = sigPagina.view[3];
+        const sig = await sigPagina.getTextContent();
+        const arriba = sig.items.some(
+          (t) => RE_CAPITULO.test(t.str) && t.transform[5] > alto - 150,
+        );
+        if (!arriba) continue;
         const pagina = await documentoPrimera.getPage(h + 1);
         const { items } = await pagina.getTextContent();
         const piePt = Math.min(...items.map((t) => t.transform[5]));
