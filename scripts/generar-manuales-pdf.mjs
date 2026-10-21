@@ -28,10 +28,18 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 import { extractText, getDocumentProxy } from "unpdf";
+import { manualCiudadano } from "../src/content/manual-ciudadano.ts";
+import { manualConsejo } from "../src/content/manual-consejo.ts";
 import { huellaDeFuentes } from "./manuales-huella.mjs";
 
 const MANUALES = ["ciudadano", "consejo"];
 const DESTINO = "public/manuales";
+/** Cuánto hueco al pie de una hoja justifica una figura, en milímetros. */
+const HUECO_MINIMO_MM = 45;
+const RE_CAPITULO = new RegExp(
+  String.raw`C\s*A\s*P\s*[IÍ]\s*T\s*U\s*L\s*O`,
+  "i",
+);
 const PUERTO = Number(process.env.MPD_MANUALES_PUERTO) || 3101;
 
 async function esperar(base) {
@@ -149,7 +157,39 @@ try {
         }
         inicios.push(hoja + 1);
       }
-      const bytes = await imprimir(`?paginas=${inicios.join(",")}`, archivo);
+      /**
+       * Los huecos grandes. Si un capítulo termina y deja al pie de la hoja más
+       * de ${HUECO_MINIMO_MM} mm vacíos —porque el siguiente empieza arriba de la hoja
+       * que viene—, se le pide una figura del tamaño del hueco. Donde el hueco
+       * es pequeño no se pone nada.
+       */
+      const documentoPrimera = await getDocumentProxy(new Uint8Array(primera));
+      const margenInferior = id === "consejo" ? 20 : 18;
+      const ids = (
+        id === "consejo" ? manualConsejo : manualCiudadano
+      ).capitulos.map((c) => c.id);
+      const rellenos = [];
+      for (let h = 2; h < textoPrimera.length - 2; h++) {
+        const siguiente = textoPrimera[h + 1];
+        if (!RE_CAPITULO.test(siguiente.slice(0, 400))) continue;
+        const pagina = await documentoPrimera.getPage(h + 1);
+        const { items } = await pagina.getTextContent();
+        const piePt = Math.min(...items.map((t) => t.transform[5]));
+        const cuerpoPt = items
+          .map((t) => t.transform[5])
+          .filter((y) => y > piePt + 8);
+        const bajoPt = Math.min(...cuerpoPt);
+        const huecoMm = (bajoPt - margenInferior * 2.8346) / 2.8346 - 6;
+        const capitulo = inicios.filter((p) => p <= h + 1).length - 1;
+        if (huecoMm >= HUECO_MINIMO_MM && capitulo >= 0)
+          rellenos.push(
+            `${ids[capitulo]}:${Math.min(huecoMm - 6, 60).toFixed(0)}`,
+          );
+      }
+      const bytes = await imprimir(
+        `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}`,
+        archivo,
+      );
       const documento = await getDocumentProxy(new Uint8Array(bytes));
       if (documento.numPages !== textoPrimera.length)
         throw new Error(

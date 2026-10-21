@@ -1242,50 +1242,23 @@
   }
 }
 
-/* ───────────────────────── Remate de capítulo ─────────────────────────── */
+/* ───────────────────────── Figura de relleno ──────────────────────────── */
 .remate {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 26px;
+  justify-content: center;
+  margin-top: 6mm;
   break-before: avoid;
   break-inside: avoid;
 }
-.remateOla {
-  flex: 1;
-  height: 9px;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='9' viewBox='0 0 32 9' fill='none' stroke='%23709c75' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M0 4.5c2-2.7 6-2.7 8 0s6 2.7 8 0 6-2.7 8 0 6 2.7 8 0'/%3E%3C/svg%3E")
-    repeat-x center;
-  opacity: 0.7;
-}
 .remateDibujo {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: var(--alto, 40mm);
+  height: var(--alto, 40mm);
   color: var(--tinte, #3f9a61);
-  opacity: 0.55;
+  opacity: 0.3;
 }
 .remateDibujo svg {
   display: block;
   width: 100%;
   height: 100%;
-}
-@media print {
-  .remate {
-    margin-top: 5mm;
-    gap: 4mm;
-  }
-  .remateDibujo {
-    width: 13mm;
-    height: 13mm;
-  }
-  /* El último bloque viaja con el remate: así el dibujo nunca queda solo arriba
-     de una hoja. Y un párrafo corto no se parte: la introducción de un
-     capítulo se lee entera junto a lo que presenta. */
-  .cuerpo > :last-child {
-    break-after: avoid;
-  }
-  .texto {
-    break-inside: avoid;
-  }
 }

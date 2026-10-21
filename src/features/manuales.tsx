@@ -401,9 +401,12 @@ function FlujoEtapa({
 function CapituloVista({
   capitulo,
   numero,
+  relleno,
 }: {
   capitulo: Capitulo;
   numero: number;
+  /** Alto en mm de la figura que llena el hueco al final del capítulo. */
+  relleno?: number;
 }) {
   const motivo = capitulo.motivo ?? MOTIVOS[(numero - 1) % MOTIVOS.length];
   return (
@@ -424,18 +427,24 @@ function CapituloVista({
           <BloqueVista key={i} bloque={bloque} />
         ))}
       </div>
-      {/* El remate del capítulo: su dibujo del territorio entre dos olas. Cierra
-          el capítulo y, de paso, llena el hueco que deja al pie de la hoja. */}
-      <div className={styles.remate} aria-hidden="true">
-        <span className={styles.remateOla} />
-        <span
-          className={styles.remateDibujo}
-          style={{ "--tinte": TINTES[motivo] } as CSSProperties}
-        >
-          <Filigrana motivo={motivo} />
-        </span>
-        <span className={styles.remateOla} />
-      </div>
+      {/* Solo donde el capítulo deja un hueco grande al pie de la hoja: una de
+          las figuras del territorio, del tamaño del hueco. El generador de PDF
+          mide los huecos y pide estas figuras; en pantalla no hay ninguna. */}
+      {relleno ? (
+        <div className={styles.remate} aria-hidden="true">
+          <span
+            className={styles.remateDibujo}
+            style={
+              {
+                "--tinte": TINTES[motivo],
+                "--alto": `${relleno}mm`,
+              } as CSSProperties
+            }
+          >
+            <Filigrana motivo={motivo} />
+          </span>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -462,6 +471,7 @@ export function ManualDocumento({
   manual,
   acciones,
   paginas,
+  rellenos,
 }: {
   manual: Manual;
   /** El botón de descargar, que solo existe en pantalla. */
@@ -475,6 +485,8 @@ export function ManualDocumento({
    * ellos, así que no mueve nada.
    */
   paginas?: number[];
+  /** Alto en mm de la figura de relleno de cada capítulo, por su `id`. */
+  rellenos?: Record<string, number>;
 }) {
   return (
     <article
@@ -547,7 +559,12 @@ export function ManualDocumento({
 
       <div className={styles.contenido}>
         {manual.capitulos.map((c, i) => (
-          <CapituloVista key={c.id} capitulo={c} numero={i + 1} />
+          <CapituloVista
+            key={c.id}
+            capitulo={c}
+            numero={i + 1}
+            relleno={rellenos?.[c.id]}
+          />
         ))}
       </div>
 
