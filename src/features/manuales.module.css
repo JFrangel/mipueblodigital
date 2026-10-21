@@ -1140,6 +1140,17 @@
   .capitulo:first-child {
     margin-top: 0;
   }
+  /* Un capítulo al que le sobra una cola pequeña se aprieta un poco para que
+     quepa en la hoja: lo pide el generador de PDF, no el texto. */
+  .capitulo[data-compacto="1"] {
+    font-size: 0.93em;
+  }
+  .capitulo[data-compacto="2"] {
+    font-size: 0.87em;
+  }
+  .capitulo[data-compacto] .cuerpo > * + * {
+    margin-top: 2.6mm;
+  }
   .apertura {
     padding: 5mm 6mm;
     gap: 5mm;

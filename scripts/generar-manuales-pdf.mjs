@@ -131,73 +131,117 @@ try {
         return bytes;
       };
       const archivo = `${DESTINO}/manual-${id}.pdf`;
-      const primera = await imprimir("", archivo);
-      const textoPrimera = (
-        await extractText(await getDocumentProxy(new Uint8Array(primera)), {
-          mergePages: false,
-        })
-      ).text;
-      // Los capítulos empiezan después de la portada y del índice.
-      const inicios = [];
-      for (let n = 1; ; n++) {
-        // El rótulo va con las letras espaciadas (CSS) y el PDF las extrae con
-        // huecos irregulares —«C A P Í T U LO 1»—: se admiten entre cada una.
-        const cifras = String(n)
-          .split("")
-          .join(String.raw`\s*`);
-        const rotulo = new RegExp(
-          String.raw`C\s*A\s*P\s*[IÍ]\s*T\s*U\s*L\s*O\s*${cifras}(?!\s*\d)`,
-          "i",
-        );
-        const hoja = textoPrimera.findIndex((t, i) => i >= 2 && rotulo.test(t));
-        if (hoja < 0) {
-          if (n === 1)
-            throw new Error(`No encuentro el capítulo 1 de ${id} en el PDF.`);
-          break;
-        }
-        inicios.push(hoja + 1);
-      }
-      /**
-       * Los huecos grandes. Si un capítulo termina y deja al pie de la hoja más
-       * de ${HUECO_MINIMO_MM} mm vacíos —porque el siguiente empieza arriba de la hoja
-       * que viene—, se le pide una figura del tamaño del hueco. Donde el hueco
-       * es pequeño no se pone nada.
-       */
-      const documentoPrimera = await getDocumentProxy(new Uint8Array(primera));
-      const margenInferior = id === "consejo" ? 20 : 18;
       const ids = (
         id === "consejo" ? manualConsejo : manualCiudadano
       ).capitulos.map((c) => c.id);
-      const rellenos = [];
-      for (let h = 2; h < textoPrimera.length - 2; h++) {
-        /* ¿Empieza un capítulo arriba de la hoja siguiente? El orden del texto
-           extraído no lo dice (el rótulo puede venir después del pie), así que
-           se mira dónde está: en la franja de arriba. */
-        const sigPagina = await documentoPrimera.getPage(h + 2);
-        const alto = sigPagina.view[3];
-        const sig = await sigPagina.getTextContent();
-        const arriba = sig.items.some(
-          (t) => RE_CAPITULO.test(t.str) && t.transform[5] > alto - 150,
+      const margenInferior = id === "consejo" ? 20 : 18;
+      const cuerpoMm = id === "consejo" ? 297 - 36 : 210 - 31;
+
+      /**
+       * Lo que hay en cada hoja: en qué hojas empieza cada capítulo, qué hojas
+       * tienen un rótulo de capítulo arriba y cuánto espacio queda libre al pie.
+       */
+      const medir = async (bytes) => {
+        const documento = await getDocumentProxy(new Uint8Array(bytes));
+        const texto = (await extractText(documento, { mergePages: false }))
+          .text;
+        const hojas = [];
+        for (let h = 1; h <= documento.numPages; h++) {
+          const pagina = await documento.getPage(h);
+          const alto = pagina.view[3];
+          const { items } = await pagina.getTextContent();
+          const ys = items.map((t) => t.transform[5]);
+          const pie = Math.min(...ys);
+          const cuerpo = ys.filter((y) => y > pie + 8);
+          const bajo = cuerpo.length ? Math.min(...cuerpo) : alto;
+          hojas.push({
+            arriba: items.some(
+              (t) => RE_CAPITULO.test(t.str) && t.transform[5] > alto - 150,
+            ),
+            huecoMm: (bajo - margenInferior * 2.8346) / 2.8346 - 6,
+          });
+        }
+        // Los capítulos empiezan después de la portada y del índice.
+        const inicios = [];
+        for (let n = 1; ; n++) {
+          // El rótulo va con las letras espaciadas (CSS) y el PDF las extrae con
+          // huecos irregulares —«C A P Í T U LO 1»—: se admiten entre cada una.
+          const cifras = String(n)
+            .split("")
+            .join(String.raw`\s*`);
+          const rotulo = new RegExp(
+            String.raw`C\s*A\s*P\s*[IÍ]\s*T\s*U\s*L\s*O\s*${cifras}(?!\s*\d)`,
+            "i",
+          );
+          const hoja = texto.findIndex((t, i) => i >= 2 && rotulo.test(t));
+          if (hoja < 0) {
+            if (n === 1)
+              throw new Error(`No encuentro el capítulo 1 de ${id} en el PDF.`);
+            break;
+          }
+          inicios.push(hoja + 1);
+        }
+        return { numPages: documento.numPages, texto, hojas, inicios };
+      };
+      const capituloDe = (inicios, hoja) =>
+        inicios.filter((p) => p <= hoja).length - 1;
+
+      /**
+       * Hojas sueltas. Si de un capítulo solo se pasa a la hoja siguiente una
+       * cola pequeña —un aviso, una tabla— y luego empieza otro capítulo, se
+       * compacta ese capítulo (letra y espacios algo menores) para que quepa en
+       * la hoja anterior. Hasta dos niveles; donde no basta, se deja como está.
+       */
+      const compactos = {};
+      let medida;
+      for (let vuelta = 0; vuelta < 5; vuelta++) {
+        const consulta = Object.entries(compactos)
+          .map(([c, n]) => `${c}:${n}`)
+          .join(",");
+        medida = await medir(
+          await imprimir(consulta ? `?compactos=${consulta}` : "", archivo),
         );
-        if (!arriba) continue;
-        const pagina = await documentoPrimera.getPage(h + 1);
-        const { items } = await pagina.getTextContent();
-        const piePt = Math.min(...items.map((t) => t.transform[5]));
-        const cuerpoPt = items
-          .map((t) => t.transform[5])
-          .filter((y) => y > piePt + 8);
-        const bajoPt = Math.min(...cuerpoPt);
-        const huecoMm = (bajoPt - margenInferior * 2.8346) / 2.8346 - 6;
-        const capitulo = inicios.filter((p) => p <= h + 1).length - 1;
+        let cambio = false;
+        for (let h = 2; h < medida.numPages - 2; h++) {
+          const cola =
+            !medida.hojas[h].arriba &&
+            medida.hojas[h + 1].arriba &&
+            medida.hojas[h].huecoMm >= cuerpoMm * 0.5;
+          const capitulo = capituloDe(medida.inicios, h + 1);
+          if (!cola || capitulo < 0) continue;
+          const actual = compactos[ids[capitulo]] ?? 0;
+          if (actual >= 2) continue;
+          compactos[ids[capitulo]] = actual + 1;
+          cambio = true;
+        }
+        if (!cambio) break;
+      }
+      const consultaCompactos = Object.entries(compactos)
+        .map(([c, n]) => `${c}:${n}`)
+        .join(",");
+
+      /**
+       * Los huecos grandes. Si un capítulo termina y deja al pie de la hoja más
+       * de HUECO_MINIMO_MM mm vacíos —porque el siguiente empieza arriba de la
+       * hoja que viene—, se le pide una figura del tamaño del hueco. Donde el
+       * hueco es pequeño no se pone nada.
+       */
+      const rellenos = [];
+      for (let h = 2; h < medida.numPages - 2; h++) {
+        if (!medida.hojas[h + 1].arriba) continue;
+        const capitulo = capituloDe(medida.inicios, h + 1);
+        const huecoMm = medida.hojas[h].huecoMm;
         if (huecoMm >= HUECO_MINIMO_MM && capitulo >= 0)
           rellenos.push(
             `${ids[capitulo]}:${Math.min(huecoMm - 6, 60).toFixed(0)}`,
           );
       }
+      const inicios = medida.inicios;
       const bytes = await imprimir(
-        `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}`,
+        `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}&compactos=${consultaCompactos}`,
         archivo,
       );
+      const textoPrimera = medida.texto;
       const documento = await getDocumentProxy(new Uint8Array(bytes));
       if (documento.numPages !== textoPrimera.length)
         throw new Error(
