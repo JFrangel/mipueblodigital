@@ -47,13 +47,11 @@ Para enviar un reporte necesitas una cuenta. Con «Entrar sin iniciar sesión» 
 2. Escribe tu nombre, tu correo y una contraseña.
    12 caracteres o más, escrita dos veces.
 3. Toca «Crear cuenta».
-   Te llega un correo para verificarla.
-4. Abre el enlace del correo y vuelve a abrir la aplicación.
-   Así tu perfil ciudadano se activa solo.
+   Tu perfil ciudadano se activa solo y ya puedes reportar. Te llega un correo para verificarla.
 
-> **Consejo.** **Con Google es más corto.** Toca «Continuar con Google»: el correo ya viene verificado y el perfil se activa solo.
+> **Consejo.** **Con Google es más corto.** Toca «Continuar con Google»: el correo ya viene verificado, lo que te permite recuperar la cuenta.
 
-> **Ojo con esto.** **¿No puedes verificar el correo?** Para reportar no hace falta. Entra a «Mi cuenta» y, si aparece, toca «Activar mi perfil». La ayuda con IA sí pide el correo verificado.
+> **Ojo con esto.** **¿No verificaste el correo?** Para reportar no hace falta. Verificarlo te sirve para recuperar la cuenta si pierdes el acceso, y la ayuda con IA sí lo pide. Si tu perfil no aparece activo, entra a «Mi cuenta» y toca «Activar mi perfil».
 
 ## 3. Crear un reporte
 
@@ -243,9 +241,7 @@ En el teléfono, toca «Cuenta»; en pantalla grande, tu nombre al final del men
 2. Abre «Eliminar mi cuenta» y escribe tu contraseña, o confirma con Google.
 3. Escribe **ELIMINAR MI CUENTA**, marca la casilla y toca «Eliminar mi cuenta definitivamente».
 
-> **Ojo con esto.** **No se puede deshacer.** Pierdes el acceso, se borra la fotografía principal que guardó el servidor y tus reportes quedan sin datos que te identifiquen. El Consejo conserva categoría, vereda, estado y fechas para las cifras.
-
-> **Lo que no hace.** **Lo que no se borra.** Hoy no se borran la segunda copia reducida de cada foto, que el servidor guarda de respaldo y la aplicación no puede abrir, ni los puntos de «Usar mi ubicación» sumados para situar veredas.
+> **Ojo con esto.** **No se puede deshacer.** Pierdes el acceso, se borran tus fotografías —también la copia reducida que guarda el servidor—, el punto que marcaste y las notas del seguimiento, y tus reportes quedan sin datos que te identifiquen. Tampoco quedan tus aportes de ubicación para situar veredas. El Consejo conserva categoría, vereda, estado y fechas para las cifras.
 
 ## 12. Si algo falla
 

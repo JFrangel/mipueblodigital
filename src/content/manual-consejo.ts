@@ -51,7 +51,7 @@ export const manualConsejo: Manual = {
               icono: "usuario",
               titulo: "Cuenta activa",
               texto:
-                "Se activa sola al entrar con el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».",
+                "Se activa sola al entrar, sin pedir el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».",
             },
             {
               icono: "llave",
@@ -109,9 +109,9 @@ export const manualConsejo: Manual = {
         {
           tipo: "aviso",
           nivel: "ojo",
-          titulo: "Retirar no corta la sesión",
+          titulo: "Retirar cierra sus sesiones",
           texto:
-            "Quien deja de administrar puede seguir viendo el panel hasta que su sesión se renueve, hasta una hora. Después comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.",
+            "Al retirar el rol se cierran las sesiones abiertas de esa persona: en cuanto vuelva a entrar ya no tiene el panel. Comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.",
         },
         {
           tipo: "aviso",
@@ -425,7 +425,7 @@ export const manualConsejo: Manual = {
           nivel: "limite",
           titulo: "Lo que retirar no hace",
           texto:
-            "No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La copia reducida de la fotografía deja de abrirse, pero no se elimina de la base de datos.",
+            "No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La fotografía, su copia reducida y el historial del expediente se borran con él.",
         },
       ],
     },
@@ -711,9 +711,9 @@ export const manualConsejo: Manual = {
         {
           tipo: "aviso",
           nivel: "limite",
-          titulo: "Quedan restos",
+          titulo: "Lo que sí se conserva",
           texto:
-            "La anonimización no toca el punto marcado en el mapa, las notas del seguimiento ni la copia reducida de la fotografía: no prometas que no queda ningún rastro. El panel tampoco muestra si una eliminación quedó a medias.",
+            "Al eliminar una cuenta se borran las fotografías, el punto marcado y el texto de las notas del seguimiento; quedan categoría, vereda, estado y fechas. El panel no muestra si una eliminación quedó a medias: si dudas, avisa a quien mantiene el servicio.",
         },
         {
           tipo: "pasos",

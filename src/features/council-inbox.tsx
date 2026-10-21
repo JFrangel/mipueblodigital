@@ -438,12 +438,37 @@ export function CouncilInbox({
        corrige, recorta o cambia lo que haga falta, pero no vuelve a teclear la
        vereda ni el título que tiene delante: escribirlos otra vez a mano era,
        además, la manera más fácil de equivocarse de vereda. */
+    /* Un caso **ya publicado** se reabre con el resumen que se aprobó, no con
+       el relato: el relato es privado, y guardar sin tocarlo habría publicado
+       su principio en lugar de lo aprobado. Mientras llega, los campos quedan
+       en blanco; si no llegan, el servidor conserva lo aprobado. */
+    const publicado = item.publication === "public";
     setNotes({
       ...blankNotes,
-      publicTitle: item.title.slice(0, 120),
-      publicSummary: firstWords(item.description, 30),
+      publicTitle: publicado ? "" : item.title.slice(0, 120),
+      publicSummary: publicado ? "" : firstWords(item.description, 30),
       publicVereda: item.vereda,
     });
+    if (publicado)
+      void memberHeaders()
+        .then(({ headers }) =>
+          fetch(`/api/admin/incidents/${item.id}/`, {
+            headers,
+            cache: "no-store",
+            signal: AbortSignal.timeout(15000),
+          }),
+        )
+        .then((response) => (response.ok ? response.json() : null))
+        .then((aprobado) => {
+          if (!aprobado) return;
+          setNotes((actual) => ({
+            ...actual,
+            publicTitle: aprobado.publicTitle || actual.publicTitle,
+            publicSummary: aprobado.publicSummary || actual.publicSummary,
+            publicVereda: aprobado.publicVereda || actual.publicVereda,
+          }));
+        })
+        .catch(() => undefined);
     setMessage("");
     setProblem("");
   }

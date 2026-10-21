@@ -28,7 +28,7 @@ Cómo gestionar reportes, comunicados y cifras en Mi Pueblo Digital
 
 Para entrar al panel hacen falta una cuenta activa y el rol de administración. Aquí se explica quién lo da y qué evita que el Consejo se quede fuera.
 
-- **Cuenta activa.** Se activa sola al entrar con el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».
+- **Cuenta activa.** Se activa sola al entrar, sin pedir el correo verificado; si no, con «Activar mi perfil» en «Mi cuenta».
 - **Rol del Consejo.** Lo da otra persona que ya lo tenga, desde «Quién administra».
 - **Correo verificado.** No hace falta para gestionar; solo lo exige «Redactar con IA para la asamblea».
 
@@ -47,7 +47,7 @@ Para entrar al panel hacen falta una cuenta activa y el rol de administración. 
 | Nunca se quita al último | «Retirar» se apaga si es la única cuenta con el rol. |
 | Constancia | Cada cambio queda con quién, sobre quién y cuándo. |
 
-> **Ojo con esto.** **Retirar no corta la sesión.** Quien deja de administrar puede seguir viendo el panel hasta que su sesión se renueve, hasta una hora. Después comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.
+> **Ojo con esto.** **Retirar cierra sus sesiones.** Al retirar el rol se cierran las sesiones abiertas de esa persona: en cuanto vuelva a entrar ya no tiene el panel. Comprueba que ya no aparece la etiqueta «Admin» junto a su nombre.
 
 > **Consejo.** Procura que administren al menos dos cuentas. Quien mantiene el servicio también puede dar el rol desde fuera de la aplicación.
 
@@ -140,7 +140,7 @@ Retirar es para lo que no se arregla con un estado: un duplicado, un error, un r
 
 > **Privacidad.** **Quién se entera.** A quien reportó le llega «El Consejo retiró tu reporte» con tu motivo, en sus novedades y en el teléfono; si abre su enlace, ve «El Consejo retiró este reporte» con fecha y motivo. A nadie más se le cuenta.
 
-> **Lo que no hace.** **Lo que retirar no hace.** No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La copia reducida de la fotografía deja de abrirse, pero no se elimina de la base de datos.
+> **Lo que no hace.** **Lo que retirar no hace.** No hay listado de retiradas: queda «Reporte retirado» en «Novedades». Si el aviso dice que quedó algo sin borrar, no se puede repetir desde el panel: avisa a quien mantiene el servicio. La fotografía, su copia reducida y el historial del expediente se borran con él.
 
 ## 6. Comunicados, alertas y encuentros
 
@@ -231,7 +231,7 @@ Cualquiera puede eliminar su cuenta desde «Mi cuenta». El Consejo no aprueba n
 - Sus expedientes se anonimizan: se descarta el seudónimo y se retiran relato, título y teléfono.
 - Se conservan categoría, vereda, estado y fechas.
 
-> **Lo que no hace.** **Quedan restos.** La anonimización no toca el punto marcado en el mapa, las notas del seguimiento ni la copia reducida de la fotografía: no prometas que no queda ningún rastro. El panel tampoco muestra si una eliminación quedó a medias.
+> **Lo que no hace.** **Lo que sí se conserva.** Al eliminar una cuenta se borran las fotografías, el punto marcado y el texto de las notas del seguimiento; quedan categoría, vereda, estado y fechas. El panel no muestra si una eliminación quedó a medias: si dudas, avisa a quien mantiene el servicio.
 
 **Volver a abrir una cuenta cerrada**
 

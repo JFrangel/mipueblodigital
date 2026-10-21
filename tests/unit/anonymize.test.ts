@@ -44,7 +44,10 @@ function doc(path: string) {
     collection: (name: string) => collection(`${path}/${name}`),
     delete: async () => void store.delete(path),
     set: async (data: Doc, options?: { merge?: boolean }) =>
-      void store.set(path, options?.merge ? { ...store.get(path), ...data } : data),
+      void store.set(
+        path,
+        options?.merge ? { ...store.get(path), ...data } : data,
+      ),
   };
 }
 
@@ -62,7 +65,8 @@ const db = {
         writes.push(() =>
           store.set(ref.path, { ...store.get(ref.path), ...data }),
         ),
-      delete: (ref: { path: string }) => writes.push(() => store.delete(ref.path)),
+      delete: (ref: { path: string }) =>
+        writes.push(() => store.delete(ref.path)),
       commit: async () => writes.forEach((write) => write()),
     };
   },
@@ -82,15 +86,52 @@ beforeEach(() => {
     vereda: "Bellavista",
     status: "en_proceso",
     evidenceId: "foto-1",
+    lat: 2.3471,
+    lng: -78.3252,
+    pointSource: "aparato",
+    pointAccuracy: 12,
   });
-  store.set("incidents/uno/events/received", { type: "received", actor: "ana" });
+  store.set("incidents/uno/events/cambio-1", {
+    status: "en_proceso",
+    actor: "consejo-1",
+    at: "2026-09-02",
+    publicNote: "Hablé con doña Ana, vive junto al muelle",
+    internalNote: "Su teléfono es el 300...",
+  });
+  store.set("veredaProposals/bellavista", {
+    nombre: "Bellavista",
+    estado: "propuesta",
+    aportes: [
+      { lat: 2.3, lng: -78.3, exactitud: 10, origen: "aparato", cuenta: "ana" },
+      {
+        lat: 2.31,
+        lng: -78.31,
+        exactitud: 10,
+        origen: "aparato",
+        cuenta: "beto",
+      },
+    ],
+  });
+  store.set("incidents/uno/events/received", {
+    type: "received",
+    actor: "ana",
+  });
   store.set("incidents/ajeno", { owner: "beto", phone: "3007654321" });
   store.set("notifications/ana/items/uno-received", { read: false });
   store.set("incidentIntake/uno", { owner: "ana", hash: "abc" });
   store.set("incidentLimits/ana", { day: "2026-09-14", count: 3 });
-  store.set("pushTokens/ana/devices/tok-1", { platform: "android", agent: "Pixel" });
-  store.set("pushTokens/ana/devices/tok-2", { platform: "web", agent: "Chrome" });
-  store.set("pushTokens/beto/devices/tok-3", { platform: "android", agent: "Moto" });
+  store.set("pushTokens/ana/devices/tok-1", {
+    platform: "android",
+    agent: "Pixel",
+  });
+  store.set("pushTokens/ana/devices/tok-2", {
+    platform: "web",
+    agent: "Chrome",
+  });
+  store.set("pushTokens/beto/devices/tok-3", {
+    platform: "android",
+    agent: "Moto",
+  });
 });
 
 describe("anonimización de cuenta", () => {
@@ -122,8 +163,37 @@ describe("anonimización de cuenta", () => {
        nuevo seguiría llegando a quien pidió que se le borrara. */
     expect(store.has("pushTokens/ana/devices/tok-1")).toBe(false);
     expect(store.has("pushTokens/ana/devices/tok-2")).toBe(false);
-    expect(store.get("accounts/ana")).toMatchObject({ active: false, deleted: true, avatar: null });
+    expect(store.get("accounts/ana")).toMatchObject({
+      active: false,
+      deleted: true,
+      avatar: null,
+    });
     expect(calls.evidence[0]).toContain("owner_uid=eq.ana");
+  });
+
+  it("quita el punto exacto, las notas del historial y los aportes de ubicación", async () => {
+    await anonymizeAccount(db, "ana", "anon-1");
+    // El punto puede ser la puerta de su casa: los términos prometen que solo
+    // quedan categoría, vereda, estado y fechas.
+    expect(store.get("incidents/uno")).toMatchObject({
+      lat: null,
+      lng: null,
+      pointSource: null,
+      pointAccuracy: null,
+    });
+    const cambio = store.get("incidents/uno/events/cambio-1")!;
+    expect(cambio).toMatchObject({
+      status: "en_proceso",
+      actor: "consejo-1",
+      at: "2026-09-02",
+      publicNote: "",
+      internalNote: "",
+    });
+    // La coordenada del aparato atada a su cuenta se va; la de otra persona no.
+    const aportes = store.get("veredaProposals/bellavista")!.aportes as Array<{
+      cuenta: string;
+    }>;
+    expect(aportes.map((a) => a.cuenta)).toEqual(["beto"]);
   });
 
   it("no toca los expedientes de otras personas", async () => {

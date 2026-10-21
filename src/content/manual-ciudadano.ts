@@ -112,12 +112,8 @@ export const manualCiudadano: Manual = {
             },
             {
               texto: "Toca «Crear cuenta».",
-              detalle: "Te llega un correo para verificarla.",
-            },
-            {
-              texto:
-                "Abre el enlace del correo y vuelve a abrir la aplicación.",
-              detalle: "Así tu perfil ciudadano se activa solo.",
+              detalle:
+                "Tu perfil ciudadano se activa solo y ya puedes reportar. Te llega un correo para verificarla.",
             },
           ],
         },
@@ -126,14 +122,14 @@ export const manualCiudadano: Manual = {
           nivel: "consejo",
           titulo: "Con Google es más corto",
           texto:
-            "Toca «Continuar con Google»: el correo ya viene verificado y el perfil se activa solo.",
+            "Toca «Continuar con Google»: el correo ya viene verificado, lo que te permite recuperar la cuenta.",
         },
         {
           tipo: "aviso",
           nivel: "ojo",
-          titulo: "¿No puedes verificar el correo?",
+          titulo: "¿No verificaste el correo?",
           texto:
-            "Para reportar no hace falta. Entra a «Mi cuenta» y, si aparece, toca «Activar mi perfil». La ayuda con IA sí pide el correo verificado.",
+            "Para reportar no hace falta. Verificarlo te sirve para recuperar la cuenta si pierdes el acceso, y la ayuda con IA sí lo pide. Si tu perfil no aparece activo, entra a «Mi cuenta» y toca «Activar mi perfil».",
         },
       ],
     },
@@ -775,14 +771,7 @@ export const manualCiudadano: Manual = {
           nivel: "ojo",
           titulo: "No se puede deshacer",
           texto:
-            "Pierdes el acceso, se borra la fotografía principal que guardó el servidor y tus reportes quedan sin datos que te identifiquen. El Consejo conserva categoría, vereda, estado y fechas para las cifras.",
-        },
-        {
-          tipo: "aviso",
-          nivel: "limite",
-          titulo: "Lo que no se borra",
-          texto:
-            "Hoy no se borran la segunda copia reducida de cada foto, que el servidor guarda de respaldo y la aplicación no puede abrir, ni los puntos de «Usar mi ubicación» sumados para situar veredas.",
+            "Pierdes el acceso, se borran tus fotografías —también la copia reducida que guarda el servidor—, el punto que marcaste y las notas del seguimiento, y tus reportes quedan sin datos que te identifiquen. Tampoco quedan tus aportes de ubicación para situar veredas. El Consejo conserva categoría, vereda, estado y fechas para las cifras.",
         },
       ],
     },

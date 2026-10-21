@@ -170,10 +170,11 @@ async function ensureMembership(user: User) {
   if (ensuring.has(user.uid) || alreadyMember(user.uid)) return;
   ensuring.add(user.uid);
   try {
-    /* El enlace de verificación no refresca una sesión ya abierta: sin volver
-       a leer el usuario, el testigo sigue diciendo que falta verificar. */
-    if (!user.emailVerified) await user.reload();
-    if (!user.emailVerified) return;
+    /* Activar el perfil no espera a que se verifique el correo: el servidor
+       tampoco lo exige (`/api/account/activate/`). Quien se registra con
+       correo y contraseña y no vuelve a mirar ese buzón puede reportar igual;
+       verificar se ofrece en «Mi cuenta» como recomendación, para poder
+       recuperar la cuenta. */
     const token = await user.getIdToken(true);
     const response = await fetch("/api/account/activate/", {
       method: "POST",
@@ -182,8 +183,6 @@ async function ensureMembership(user: User) {
     });
     if (!response.ok) return;
     rememberMember(user.uid);
-    if (current.uid === user.uid && !current.emailVerified)
-      updateSession({ emailVerified: true });
   } catch {
     /* Sin red no pasa nada: se reintenta en la próxima carga, y «Mi cuenta»
        conserva el botón para repararlo a mano. */

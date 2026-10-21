@@ -1171,6 +1171,19 @@
   .cuerpo > * + * {
     margin-top: 4.2mm;
   }
+  /* Una tabla, una lista de pasos o un grupo de tarjetas se leen enteros: si
+     caben en una hoja no se parten entre dos, y si no caben empiezan arriba de
+     la siguiente. Los avisos y las preguntas ya van así. */
+  .tablaCaja,
+  .pasos,
+  .flujo,
+  .tarjetas,
+  .glosario {
+    break-inside: avoid;
+  }
+  .tablaCaja + .nota {
+    break-before: avoid;
+  }
   .texto {
     max-width: none;
     orphans: 3;

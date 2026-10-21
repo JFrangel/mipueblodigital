@@ -1,11 +1,11 @@
 {
   "generadoEn": "2026-10-21",
-  "huella": "993f9483b0d94541a54316dd3f48999cd54c7c4f61c76f0a6e0a355a8d6f0719",
+  "huella": "fee737f5cd567dbd530d78b6570d04b1407059c4e3ad07e7a290f3bc7361d832",
   "manuales": {
     "ciudadano": {
       "archivo": "manual-ciudadano.pdf",
-      "bytes": 1275761,
-      "sha256": "d63237a784708123e12ae149fc75e874d36e814279c46b492762d50248ac5e12",
+      "bytes": 1258265,
+      "sha256": "d4f036dee1a9609b611f777359a0b29d50c899d76dda7282dc8125d6741cfc78",
       "hojas": 22,
       "capitulos": [
         3,
@@ -15,17 +15,17 @@
         9,
         10,
         12,
-        14,
+        15,
         16,
-        17,
+        18,
         19,
         20
       ]
     },
     "consejo": {
       "archivo": "manual-consejo.pdf",
-      "bytes": 1326643,
-      "sha256": "754257f3d8d265387e827c6e80b6a3c78168773ac10e8c75829cf8c60c5e0554",
+      "bytes": 1324596,
+      "sha256": "42df59249fc9542eae4fd8851e3fef493fb3b53e9a2805f57bb7ff177c5afcbb",
       "hojas": 14,
       "capitulos": [
         3,
