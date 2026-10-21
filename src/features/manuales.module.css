@@ -1,0 +1,1208 @@
+/**
+ * Los manuales de uso: la pantalla y el papel, con la misma identidad.
+ *
+ * **Una sola hoja de estilo para los dos sitios.** En pantalla es una página
+ * de lectura que se adapta al teléfono; con `@media print` —que es lo que
+ * usa Chrome para imprimir y para generar el PDF— se convierte en un cuadernillo
+ * con portada, índice, un capítulo por hoja y contraportada. Así el PDF es *esa
+ * misma vista*, no una segunda versión que mantener al día.
+ *
+ * **De dónde sale la identidad.** Del palafito y el agua de la marca; de las
+ * hojas de plátano de la pantalla de arranque; de los dibujos del territorio
+ * que ya llevan como filigrana las tarjetas de la aplicación (la hoja, la
+ * ola, el monte, la canoa…); de los verdes de siempre y del azul de noche del
+ * río (`--arranque`), que es el color con el que se abre la aplicación. La
+ * letra es la de la aplicación: DM Sans para leer, Caveat para lo que dice una
+ * persona, y el rótulo de la marca solo donde es la marca.
+ *
+ * Todo el tamaño va en `em` para que el papel lo escale de una vez: el A5 se
+ * lee en el teléfono con la letra grande, el A4 se imprime con tablas.
+ */
+
+.manual,
+.barra,
+.elegir {
+  --rio: #0d3340;
+  --rio-2: #174a5b;
+  --verde: #174f3b;
+  --hoja: #24634b;
+  --brote: #4a8751;
+  --lima: #c1d17e;
+  --agua: #2f6c97;
+  --arena: #a8791f;
+  --papel: #f6f8f5;
+  --tinta: #17231d;
+  --apagado: #55635b;
+  --linea: #d9e0da;
+  --suave: #eaf2ec;
+}
+.manual {
+  font-family:
+    "DM Sans Variable",
+    "DM Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.62;
+  color: var(--tinta);
+  background: var(--papel);
+  min-height: 100vh;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.manual *,
+.manual *::before,
+.manual *::after {
+  box-sizing: border-box;
+}
+/* La hoja de estilos de la aplicación pinta todo `p` de gris y fija el tamaño
+   de los títulos: aquí manda el manual. */
+.manual p,
+.manual h1,
+.manual h2,
+.manual h3,
+.manual h4,
+.manual ol,
+.manual ul,
+.manual dl,
+.manual dd,
+.manual figure {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+}
+.manual h1,
+.manual h2,
+.manual h3,
+.manual h4 {
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+/* ───────────────────────── La barra de arriba (solo pantalla) ──────────── */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--linea);
+}
+.volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--apagado);
+  text-decoration: none;
+}
+.barraTitulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 650;
+}
+.descargar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--verde);
+  color: #fff;
+  font: 700 13px/1 inherit;
+  padding: 12px 15px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.descargar:hover {
+  background: var(--hoja);
+}
+.descargar:focus-visible {
+  outline: 3px solid var(--lima);
+  outline-offset: 2px;
+}
+.descargar:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+.descargarClaro {
+  background: #fff;
+  color: var(--verde);
+}
+.descargarClaro:hover {
+  background: var(--suave);
+}
+.avisoDescarga {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #f0c9bd;
+}
+
+/* ───────────────────────── La portada ───────────────────────────────────── */
+.cubierta,
+.despedida {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  color: #f2f7ef;
+  background:
+    radial-gradient(120% 80% at 72% 0%, var(--rio-2) 0%, transparent 62%),
+    var(--rio);
+  page: cubierta;
+}
+.cubierta {
+  min-height: min(88vh, 720px);
+  padding: 60px 24px 90px;
+  gap: 4px;
+}
+.hojas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.hojas span {
+  position: absolute;
+  display: block;
+  width: clamp(92px, 21%, 200px);
+}
+.hojas svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Las dos de abajo nacen del borde, no por debajo de él: una hoja que se sale
+   por abajo hace que Chrome, al paginar, encoja la portada un par de
+   milímetros y deje una franja blanca al pie del PDF. */
+.hojaA {
+  left: -6%;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  transform: rotate(16deg);
+}
+.hojaB {
+  right: -7%;
+  bottom: 0;
+  transform-origin: 50% 100%;
+  transform: scaleX(-1) rotate(14deg);
+}
+.hojaC {
+  left: 7%;
+  top: -17%;
+  transform: rotate(158deg);
+  opacity: 0.5;
+}
+.hojaD {
+  right: 5%;
+  top: -19%;
+  transform: scaleX(-1) rotate(152deg);
+  opacity: 0.42;
+}
+.sello {
+  display: block;
+  margin-bottom: 8px;
+}
+.sello svg {
+  display: block;
+  width: clamp(120px, 36vw, 188px);
+  height: auto;
+}
+.marca {
+  margin-bottom: 26px;
+}
+/* El rótulo de la marca, sobre el azul de noche: sus colores están pensados
+   para fondo claro. */
+.marca :global(.brand) {
+  --rotulo: 30px;
+  color: #f2f7ef;
+  justify-content: center;
+}
+.marca :global(.brand-mi i) {
+  color: #b9d8a3;
+}
+.marca :global(.brand em) {
+  color: #9fc4c0;
+}
+.publico {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 5px 13px;
+  border: 1px solid rgb(193 209 126 / 55%);
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--lima);
+}
+.manual .cubierta h1 {
+  max-width: 14ch;
+  margin: 0 auto;
+  font-size: clamp(34px, 9vw, 56px);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: #fff;
+}
+.subtitulo {
+  margin-top: 14px;
+  max-width: 24ch;
+  font-family: "Caveat Variable", "Segoe Script", cursive;
+  font-size: clamp(24px, 6vw, 32px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: #cfe5b4;
+}
+.cubiertaPie {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  font-size: 0.72em;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: #a9c6c6;
+}
+.cubiertaPie strong {
+  display: block;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d9e9e6;
+}
+.acciones {
+  margin-top: 26px;
+}
+
+/* ───────────────────────── El índice ───────────────────────────────────── */
+.indice {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 26px 20px 0;
+}
+.indiceTitulo {
+  margin-bottom: 12px;
+  font-size: 0.72em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hoja);
+}
+.indiceLista {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.indiceEnlace {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 13px 6px 7px;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+.indiceEnlace:hover {
+  border-color: var(--brote);
+  background: var(--suave);
+}
+.indiceNumero {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px 11px 6px 11px;
+  background: var(--verde);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+/* La lista con resúmenes es del papel: en pantalla basta con las pastillas. */
+.indiceFilas {
+  display: none;
+}
+
+/* ───────────────────────── Un capítulo ─────────────────────────────────── */
+.contenido {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 20px 72px;
+}
+.capitulo {
+  margin-top: 52px;
+  scroll-margin-top: 72px;
+}
+.apertura {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 20px 24px;
+  border: 1px solid #d5e6da;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--suave) 0%, #f5f9f3 100%);
+}
+.numero {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 6px 30px 6px 30px;
+  background: var(--verde);
+  color: #fff;
+  font-size: 24px;
+  font-weight: 800;
+  transform: rotate(-4deg);
+}
+.aperturaTexto {
+  position: relative;
+  min-width: 0;
+}
+.kicker {
+  font-size: 0.72em;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hoja);
+}
+.manual .aperturaTexto h2 {
+  margin-top: 3px;
+  font-size: 1.7em;
+  font-weight: 800;
+  line-height: 1.14;
+}
+.resumen {
+  margin-top: 6px;
+  font-size: 0.95em;
+  color: var(--apagado);
+}
+.motivo {
+  position: absolute;
+  right: -16px;
+  bottom: -22px;
+  width: 136px;
+  height: 136px;
+  color: var(--tinte, #3f9a61);
+  opacity: 0.22;
+  transform: rotate(-10deg);
+  pointer-events: none;
+}
+.motivo svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.cuerpo {
+  margin-top: 22px;
+}
+.cuerpo > * + * {
+  margin-top: 18px;
+}
+
+/* ───────────────────────── Texto y etiquetas ───────────────────────────── */
+.texto {
+  max-width: 62ch;
+}
+.etiqueta {
+  display: inline;
+  padding: 0.03em 0.36em;
+  margin: 0;
+  border-radius: 0.45em;
+  background: var(--suave);
+  box-shadow: inset 0 0 0 1px #cfe2d4;
+  font-weight: 700;
+  font-size: 0.94em;
+  color: var(--verde);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.subtitulo2 {
+  font-size: 1.02em;
+  font-weight: 800;
+  color: var(--verde);
+}
+
+/* ───────────────────────── Pasos ──────────────────────────────────────── */
+.pasos {
+  display: grid;
+  gap: 12px;
+}
+.pasosLista {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+}
+.pasosLista li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  gap: 14px;
+  break-inside: avoid;
+}
+/* El hilo que une un paso con el siguiente: un camino, no una lista. */
+.pasosLista li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 40px;
+  bottom: -14px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--lima) 0 5px,
+    transparent 5px 9px
+  );
+}
+.paso {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--verde);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  box-shadow: 0 0 0 4px var(--suave);
+}
+.pasoTexto {
+  padding-top: 5px;
+}
+.pasoTexto small {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.86em;
+  line-height: 1.5;
+  color: var(--apagado);
+}
+
+/* ───────────────────────── Avisos ─────────────────────────────────────── */
+.aviso {
+  --fondo: #eef6ea;
+  --borde: #cfe3c6;
+  --acento: #2f7150;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  background: var(--fondo);
+  box-shadow: inset 4px 0 0 var(--acento);
+  break-inside: avoid;
+}
+.aviso[data-nivel="ojo"] {
+  --fondo: #fdf3dc;
+  --borde: #ecd9a4;
+  --acento: #a8791f;
+}
+.aviso[data-nivel="privacidad"] {
+  --fondo: #e8f1f8;
+  --borde: #c4dbea;
+  --acento: #2f6c97;
+}
+.aviso[data-nivel="limite"] {
+  --fondo: #f0f1ee;
+  --borde: #d9dcd6;
+  --acento: #5b6660;
+}
+.avisoIcono {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--acento);
+  box-shadow: inset 0 0 0 1px var(--borde);
+}
+.avisoRotulo {
+  font-size: 0.7em;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+.avisoTitulo {
+  margin-top: 1px;
+  font-weight: 800;
+}
+.avisoTexto {
+  margin-top: 3px;
+  font-size: 0.96em;
+}
+
+/* ───────────────────────── Tarjetas y flujo ───────────────────────────── */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.tarjeta {
+  position: relative;
+  overflow: hidden;
+  padding: 15px 16px 16px;
+  border: 1px solid var(--linea);
+  border-radius: 18px;
+  background: #fff;
+  break-inside: avoid;
+}
+.tarjetaIcono {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  background: var(--suave);
+  color: var(--verde);
+}
+.tarjeta h4,
+.etapa h4 {
+  position: relative;
+  font-size: 1em;
+  font-weight: 800;
+}
+.tarjeta p,
+.etapa p {
+  position: relative;
+  margin-top: 4px;
+  font-size: 0.9em;
+  line-height: 1.55;
+  color: var(--apagado);
+}
+.tarjetaMotivo {
+  position: absolute;
+  right: -10px;
+  bottom: -14px;
+  width: 84px;
+  height: 84px;
+  color: var(--tinte, #3f9a61);
+  opacity: 0.16;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.flujo {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+.etapa {
+  position: relative;
+  overflow: hidden;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 15px 14px 16px;
+  border: 1px solid var(--linea);
+  border-radius: 18px;
+  background: #fff;
+  break-inside: avoid;
+}
+.flecha {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  color: var(--brote);
+}
+@media (max-width: 560px) {
+  .flujo {
+    flex-direction: column;
+  }
+  .flecha {
+    width: auto;
+    height: 26px;
+    transform: rotate(90deg);
+  }
+}
+
+/* ───────────────────────── Tabla, listas, preguntas, glosario ─────────── */
+.tablaCaja {
+  overflow-x: auto;
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  background: #fff;
+}
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+.tabla th {
+  padding: 9px 12px;
+  background: var(--suave);
+  font-size: 0.8em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--verde);
+}
+.tabla td {
+  padding: 9px 12px;
+  border-top: 1px solid #edf1ed;
+  vertical-align: top;
+}
+.tabla tr {
+  break-inside: avoid;
+}
+.tabla tbody tr:nth-child(even) td {
+  background: #fafcf9;
+}
+.nota {
+  margin-top: -6px;
+  font-size: 0.84em;
+  color: var(--apagado);
+}
+.lista {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+.lista li {
+  position: relative;
+  padding-left: 26px;
+}
+.lista li::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0.55em;
+  width: 9px;
+  height: 9px;
+  border-radius: 1px 7px 1px 7px;
+  background: var(--brote);
+}
+.casillas li::before {
+  left: 0;
+  top: 0.28em;
+  width: 15px;
+  height: 15px;
+  border: 1.6px solid var(--verde);
+  border-radius: 5px;
+  background: #fff;
+}
+.preguntas {
+  display: grid;
+  gap: 10px;
+}
+.pregunta {
+  padding: 13px 16px;
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  background: #fff;
+  break-inside: avoid;
+}
+.pregunta dt {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-weight: 800;
+}
+.pregunta dt::before {
+  content: "?";
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--suave);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--verde);
+}
+.pregunta dd {
+  margin-top: 5px;
+  padding-left: 32px;
+  font-size: 0.96em;
+  color: var(--apagado);
+}
+.glosario {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px 22px;
+}
+.termino {
+  padding-left: 12px;
+  border-left: 3px solid var(--lima);
+  break-inside: avoid;
+}
+.termino dt {
+  font-weight: 800;
+  color: var(--verde);
+}
+.termino dd {
+  font-size: 0.93em;
+  color: var(--apagado);
+}
+
+/* ───────────────────────── Pantallas dibujadas ────────────────────────── */
+.pantalla {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  break-inside: avoid;
+}
+.telefono {
+  width: min(300px, 100%);
+  padding: 8px;
+  border: 1px solid #cdd7d0;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgb(23 35 29 / 12%);
+}
+.telefono::before {
+  content: "";
+  display: block;
+  width: 54px;
+  height: 5px;
+  margin: 3px auto 8px;
+  border-radius: 999px;
+  background: #dbe3dc;
+}
+.pantalla figcaption {
+  max-width: 44ch;
+  text-align: center;
+  font-size: 0.84em;
+  color: var(--apagado);
+}
+.escena {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  padding: 14px 14px 12px;
+  border-radius: 22px;
+  background: var(--papel);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.escenaTitulo {
+  font-size: 15px;
+  font-weight: 800;
+}
+.escenaLista {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+.escenaLista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--linea);
+  border-radius: 14px;
+  background: #fff;
+}
+.escenaLista strong,
+.escenaLista small {
+  display: block;
+}
+.escenaLista strong {
+  font-size: 12.5px;
+}
+.escenaLista small {
+  font-size: 10.5px;
+  color: var(--apagado);
+}
+.escenaHueco {
+  height: 74px;
+  border-radius: 14px;
+  background:
+    linear-gradient(#d3e1d6, #d3e1d6) 14px 16px / 58% 9px no-repeat,
+    linear-gradient(#e3ece5, #e3ece5) 14px 36px / 82% 7px no-repeat,
+    linear-gradient(#e3ece5, #e3ece5) 14px 52px / 66% 7px no-repeat,
+    #fff;
+  box-shadow: inset 0 0 0 1px var(--linea);
+}
+.barraMovil {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: end;
+  padding: 6px 4px 2px;
+  border-top: 1px solid var(--linea);
+}
+.barraMovil span {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: var(--apagado);
+}
+.barraMovil small {
+  font-size: 9.5px;
+  letter-spacing: -0.01em;
+}
+.barraAgregar {
+  color: var(--verde) !important;
+  font-weight: 800;
+}
+.barraAgregar svg {
+  box-sizing: content-box;
+  padding: 8px;
+  margin-top: -16px;
+  border-radius: 50%;
+  background: var(--verde);
+  color: #fff;
+  box-shadow: 0 0 0 4px #fff;
+}
+.escenaAviso {
+  margin: 0;
+}
+
+/* ───────────────────────── Despedida ──────────────────────────────────── */
+.despedida {
+  margin-top: 56px;
+  padding: 56px 24px 70px;
+  border-radius: 26px;
+  gap: 6px;
+}
+.despedidaSello svg {
+  display: block;
+  width: 84px;
+  height: auto;
+}
+.despedida h2 {
+  margin-top: 14px;
+  font-family: "Caveat Variable", "Segoe Script", cursive;
+  font-size: clamp(34px, 8vw, 48px);
+  font-weight: 700;
+  line-height: 1;
+  color: #cfe5b4;
+}
+.despedida p {
+  max-width: 36ch;
+  margin-top: 10px;
+  color: #dbe9e6;
+}
+.despedidaPie {
+  margin-top: 26px;
+  font-size: 0.72em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a9c6c6;
+}
+
+/* ───────────────────────── La página de los manuales (índice) ─────────── */
+.elegir {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 36px 20px 80px;
+}
+.elegir h1 {
+  font-size: clamp(28px, 6vw, 38px);
+  font-weight: 800;
+}
+.elegirIntro {
+  max-width: 54ch;
+  margin-top: 10px;
+  color: var(--apagado);
+}
+.elegirLista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+.portadilla {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  min-height: 330px;
+  padding: 22px;
+  border-radius: 24px;
+  color: #f2f7ef;
+  background:
+    radial-gradient(120% 80% at 72% 0%, var(--rio-2) 0%, transparent 62%),
+    var(--rio);
+}
+.portadilla .hojas span {
+  width: 30%;
+}
+.portadilla h2 {
+  font-size: 1.55em;
+  font-weight: 800;
+  color: #fff;
+}
+.portadilla .publico {
+  justify-self: start;
+  margin: 0;
+}
+.portadilla p {
+  color: #cfe0dc;
+  font-size: 0.93em;
+}
+.portadillaAcciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.reservado {
+  padding: 22px;
+  border: 1px dashed var(--linea);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--apagado);
+}
+.reservado a {
+  color: var(--verde);
+  font-weight: 700;
+  text-decoration: underline;
+}
+.reservado strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--tinta);
+}
+
+/* ───────────────────────── Pantallas pequeñas ─────────────────────────── */
+@media (max-width: 560px) {
+  .apertura {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px 18px 22px;
+  }
+  .motivo {
+    width: 104px;
+    height: 104px;
+  }
+  .barraTitulo {
+    display: none;
+  }
+  .barra {
+    justify-content: space-between;
+  }
+}
+
+/* ───────────────────────── El papel ───────────────────────────────────── */
+/* El tamaño de hoja y los márgenes los fija el propio manual (A4 o A5) desde
+   su componente, porque `@page` no puede leer variables. Lo demás va aquí. */
+@media print {
+  .manual {
+    font-size: 10pt;
+    line-height: 1.55;
+    background: #fff;
+    min-height: 0;
+  }
+  .barra,
+  .acciones,
+  .avisoDescarga,
+  .indiceLista {
+    display: none !important;
+  }
+  .cubierta,
+  .despedida {
+    width: 100%;
+    min-height: 0;
+    height: var(--alto-hoja, 297mm);
+    margin: 0;
+    padding: 0 12mm;
+    border-radius: 0;
+    break-after: page;
+    break-inside: avoid;
+    align-content: center;
+  }
+  .despedida {
+    break-after: auto;
+    break-before: page;
+  }
+  .manual .cubierta h1 {
+    font-size: 40pt;
+  }
+  .subtitulo {
+    font-size: 24pt;
+  }
+  .marca :global(.brand) {
+    --rotulo: 24pt;
+  }
+  .sello svg {
+    width: 44mm;
+  }
+  .cubiertaPie {
+    bottom: 12mm;
+    font-size: 7pt;
+  }
+  .despedida h2 {
+    font-size: 30pt;
+  }
+  .despedidaSello svg {
+    width: 22mm;
+  }
+
+  .indice {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    break-after: page;
+  }
+  .indiceTitulo {
+    font-size: 8pt;
+  }
+  .indiceTitulo::after {
+    content: "Contenido";
+    display: block;
+    margin-top: 2mm;
+    font-size: 24pt;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-transform: none;
+    color: var(--tinta);
+  }
+  .indiceFilas {
+    display: grid !important;
+    gap: 1.7mm;
+    margin-top: 4.5mm;
+    padding: 0;
+    list-style: none;
+  }
+  .indiceFila {
+    display: grid;
+    grid-template-columns: 8mm 1fr auto;
+    gap: 3.6mm;
+    align-items: center;
+    padding-bottom: 1.5mm;
+    border-bottom: 0.3mm dotted #b9c8bd;
+    color: inherit;
+    text-decoration: none;
+  }
+  .indicePagina {
+    align-self: center;
+    font-size: 11pt;
+    font-weight: 800;
+    color: var(--verde);
+  }
+  .indiceFila .indiceNumero {
+    width: 7.6mm;
+    height: 7.6mm;
+    border-radius: 1.8mm 4mm 1.8mm 4mm;
+    font-size: 10pt;
+  }
+  .indiceFila strong {
+    display: block;
+    font-size: 10.4pt;
+  }
+  .indiceFila small {
+    display: block;
+    font-size: 8pt;
+    line-height: 1.35;
+    color: var(--apagado);
+  }
+  .manual[data-formato="A4"] .indiceFilas {
+    gap: 3.6mm;
+  }
+  .manual[data-formato="A4"] .indiceFila strong {
+    font-size: 11.5pt;
+  }
+  .manual[data-formato="A4"] .indiceFila small {
+    font-size: 9pt;
+  }
+
+  .contenido {
+    max-width: none;
+    padding: 0;
+  }
+  /* Los capítulos fluyen, uno tras otro: empezar cada uno en hoja nueva dejaba
+     hojas casi vacías cada vez que un solo aviso se desbordaba. */
+  .capitulo {
+    margin: 9mm 0 0;
+    break-before: auto;
+  }
+  .capitulo:first-child {
+    margin-top: 0;
+  }
+  .apertura {
+    padding: 5mm 6mm;
+    gap: 5mm;
+    border-radius: 6mm;
+    break-after: avoid;
+    break-inside: avoid;
+  }
+  .numero {
+    width: 14mm;
+    height: 14mm;
+    border-radius: 1.6mm 7.5mm 1.6mm 7.5mm;
+    font-size: 19pt;
+  }
+  .manual .aperturaTexto h2 {
+    font-size: 17pt;
+  }
+  .resumen {
+    font-size: 9.5pt;
+  }
+  .motivo {
+    right: -3mm;
+    bottom: -5mm;
+    width: 30mm;
+    height: 30mm;
+  }
+  .cuerpo {
+    margin-top: 5mm;
+  }
+  .cuerpo > * + * {
+    margin-top: 4.2mm;
+  }
+  .texto {
+    max-width: none;
+    orphans: 3;
+    widows: 3;
+  }
+  .subtitulo2,
+  .tarjeta h4,
+  .etapa h4 {
+    break-after: avoid;
+  }
+  .tarjetas {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3mm;
+  }
+  .tarjeta,
+  .etapa {
+    padding: 4mm;
+    border-radius: 4.5mm;
+  }
+  .telefono {
+    width: 68mm;
+    padding: 2mm;
+    box-shadow: none;
+  }
+  .escena {
+    padding: 3mm 2.5mm 2.5mm;
+  }
+  .barraMovil small {
+    font-size: 6.4pt;
+  }
+  .glosario {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3mm 6mm;
+  }
+}

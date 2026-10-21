@@ -66,19 +66,43 @@ export async function abrirExportacion(
   const data = await response.json().catch(() => ({}));
   if (!response.ok)
     throw new Error(data.error || "No se pudo preparar la exportación.");
+  await abrirEnNavegadorDelSistema(
+    new URL(`/api/statistics/export/${data.ticket}/`, location.origin).href,
+  );
+}
+
+/**
+ * Abrir una dirección HTTPS en el navegador del sistema.
+ *
+ * Es la única salida que tiene la ventana de Capacitor para entregar un
+ * archivo: no sabe descargar ni imprimir (ver arriba). Lo comparten el informe
+ * de estadísticas y los PDF de los manuales.
+ */
+async function abrirEnNavegadorDelSistema(url: string): Promise<void> {
   const Ajustes = registerPlugin<{
     abrirEnlace(opciones: { url: string }): Promise<void>;
   }>("Ajustes");
-  const url = new URL(`/api/statistics/export/${data.ticket}/`, location.origin)
-    .href;
   try {
     await conPlazo(Ajustes.abrirEnlace({ url }));
   } catch {
     /* Un APK tan viejo que ni siquiera trae `Ajustes` —anterior a la propia
        autoactualización— se queda sin nada que ofrecer aquí. Quien llama
-       decide cómo decirlo; esta función solo deja de fingir que funcionó. */
+       decide cómo decirlo; esta función solo deja de fingir que funcionó, y
+       deja la dirección a la vista para poder abrirla a mano. */
     throw new Error(
-      "Esta versión de la aplicación no puede abrir el navegador del sistema. Actualízala e inténtalo de nuevo.",
+      `Esta versión de la aplicación no puede abrir el navegador del sistema. Actualízala, o abre esta dirección en tu navegador: ${url}`,
     );
   }
+}
+
+/**
+ * Entregar un archivo ya publicado —los PDF de los manuales— al navegador del
+ * sistema, que sí sabe descargarlo.
+ *
+ * No necesita billete: son archivos del propio sitio, iguales para todos y sin
+ * nada de nadie dentro. Una dirección relativa se completa con el origen de la
+ * aplicación.
+ */
+export async function abrirArchivo(ruta: string): Promise<void> {
+  await abrirEnNavegadorDelSistema(new URL(ruta, location.origin).href);
 }

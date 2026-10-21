@@ -1,5 +1,5 @@
 /* Public shell only. Authenticated APIs, photographs and tokens are never cached. */
-const CACHE = "mi-pueblo-shell-v8";
+const CACHE = "mi-pueblo-shell-v9";
 /* Los comunicados del Consejo, guardados aparte del armazón.
    Es lo único de la API que se conserva, y por tres razones: no llevan sesión
    —la regla de abajo descarta cualquier petición con token—, no contienen
@@ -23,7 +23,7 @@ const SHELL = ["/inicio/", "/reportar/", "/mis-reportes/", "/offline.html", "/br
    caía en la página de respaldo aunque la aplicación pudiera dibujarlas. Van
    aparte y una por una porque addAll es todo o nada: que falte el mapa no debe
    dejar sin instalar el formulario de reportes. */
-const EXTRA = ["/mapa/", "/comunidad/", "/historial/", "/estadisticas/", "/memoria/", "/cuenta/", "/documentacion/"];
+const EXTRA = ["/mapa/", "/comunidad/", "/historial/", "/estadisticas/", "/memoria/", "/cuenta/", "/documentacion/", "/manuales/", "/manuales/ciudadano/"];
 async function fill(cache, routes) {
   await Promise.all(routes.map(async route => {
     try { await cache.add(route); } catch { /* Se intentará de nuevo en la próxima visita con red. */ }

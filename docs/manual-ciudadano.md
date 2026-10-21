@@ -1,251 +1,285 @@
+<!-- Generado desde src/content/manual-ciudadano.ts con «npm run manuales:md». No lo edites a mano: el cambio se perdería y la prueba lo detecta. -->
+
 # Manual del ciudadano — Mi Pueblo Digital
 
-Guía para habitantes del territorio del Gran Consejo Comunitario Río Satinga.
-Describe lo que la aplicación hace hoy. Cuando algo todavía no está disponible,
-aquí se dice; no se promete nada que la aplicación no cumpla.
+> Para quien reporta · Actualizado el 20 de octubre de 2026
+> Versión ilustrada, para leer en la aplicación: `/manuales/ciudadano/`. PDF: `public/manuales/manual-ciudadano.pdf`.
+
+Reportar, seguir y cuidar el territorio con Mi Pueblo Digital
+
+## Contenido
+
+- [1. Qué es y qué no es](#1-qué-es-y-qué-no-es)
+- [2. Entrar y activar tu perfil](#2-entrar-y-activar-tu-perfil)
+- [3. Crear un reporte](#3-crear-un-reporte)
+- [4. Descripción, voz y fotografía](#4-descripción-voz-y-fotografía)
+- [5. Dónde ocurrió](#5-dónde-ocurrió)
+- [6. Cuando no hay señal](#6-cuando-no-hay-señal)
+- [7. Seguir tus reportes](#7-seguir-tus-reportes)
+- [8. Novedades y avisos](#8-novedades-y-avisos)
+- [9. Qué ve la comunidad y qué no](#9-qué-ve-la-comunidad-y-qué-no)
+- [10. El mapa, la comunidad y el Consejo](#10-el-mapa-la-comunidad-y-el-consejo)
+- [11. Mi cuenta](#11-mi-cuenta)
+- [12. Si algo falla](#12-si-algo-falla)
 
 ## 1. Qué es y qué no es
 
-Mi Pueblo Digital sirve para **avisar al Consejo Comunitario** de situaciones que
-afectan al territorio y para **seguir qué pasa con ese aviso**.
+*Para qué sirve la aplicación y hasta dónde llega.*
 
-No es una línea de emergencias. Ante un riesgo para la vida, la salud o la
-seguridad, comunícate primero por los medios de urgencia de la comunidad. El
-Consejo revisa los reportes en su jornada de trabajo, no de forma inmediata.
+Mi Pueblo Digital sirve para **avisar al Consejo Comunitario** de lo que afecta al territorio y para **seguir qué pasa con tu aviso**. Es la herramienta del Gran Consejo Comunitario Río Satinga.
 
-## 2. Entrar por primera vez
+- **Reportas.** Cuentas qué pasa y dónde, y subes una foto.
+- **Sigues.** Ves el estado y las notas del Consejo.
+- **Te enteras.** Recibes novedades y comunicados.
+- **Miras.** Mapa, cifras y noticias del territorio.
 
-1. Abre la aplicación y toca **Iniciar sesión**.
-2. Elige **Crear cuenta** y escribe tu nombre, tu correo y una contraseña.
-   - La contraseña necesita al menos 12 caracteres y debe repetirse igual en la
-     confirmación. El servicio puede exigir además mayúsculas, números o
-     símbolos; si los pide, la aplicación te lo dirá con un mensaje claro.
-   - También puedes entrar con **Google**, si el Consejo habilitó esa opción.
-3. Revisa tu correo y abre el enlace de verificación. **No hace falta para
-   reportar**, pero sí es lo que te permite recuperar la cuenta si olvidas la
-   contraseña, así que conviene hacerlo. La asistencia de redacción con IA sí lo
-   pide.
-4. Entra a **Mi cuenta** y toca **Activar perfil ciudadano**. Esto crea tu perfil
-   en el servidor del Consejo.
+> **Lo que no hace.** **No es una línea de emergencias.** Ante un riesgo para la vida, la salud o la seguridad, acude primero a los medios de urgencia de tu comunidad. El Consejo recibe un aviso al llegar un reporte, pero no tiene un plazo acordado para atenderlo.
 
-Si no tienes correo o tienes problemas para verificarlo, pide apoyo a la persona
-responsable en el Consejo antes de intentarlo muchas veces: el servicio bloquea
-temporalmente las cuentas con demasiados intentos.
+## 2. Entrar y activar tu perfil
+
+*Cómo crear tu cuenta y dejar el perfil listo para reportar.*
+
+Para enviar un reporte necesitas una cuenta. Con «Entrar sin iniciar sesión» puedes mirar el territorio y llenar el formulario. Si envías sin cuenta, el reporte espera en tu teléfono; al entrar pasa a tu nombre o «Mis reportes» te pregunta si es tuyo.
+
+**Con correo y contraseña**
+
+1. En la pantalla de acceso, toca «Crear una cuenta».
+2. Escribe tu nombre, tu correo y una contraseña.
+   12 caracteres o más, escrita dos veces.
+3. Toca «Crear cuenta».
+   Te llega un correo para verificarla.
+4. Abre el enlace del correo y vuelve a abrir la aplicación.
+   Así tu perfil ciudadano se activa solo.
+
+> **Consejo.** **Con Google es más corto.** Toca «Continuar con Google»: el correo ya viene verificado y el perfil se activa solo.
+
+> **Ojo con esto.** **¿No puedes verificar el correo?** Para reportar no hace falta. Entra a «Mi cuenta» y, si aparece, toca «Activar mi perfil». La ayuda con IA sí pide el correo verificado.
 
 ## 3. Crear un reporte
 
-Toca **Nuevo reporte**. El formulario tiene cuatro pasos y puedes **ir y venir
-entre ellos** tocando su nombre en la fila de arriba, sin perder lo escrito. Un
-trazo verde une los pasos ya completados. Si vuelves atrás y borras algo, los
-pasos siguientes se cierran hasta que lo completes de nuevo.
+*Los cuatro pasos del formulario, de la categoría al envío.*
 
-**Guardar borrador**, arriba a la derecha, deja el reporte a medias para
-continuarlo cuando quieras: conserva el texto, la fotografía y el punto que
-marcaste en el mapa. Al volver, la aplicación te abre **en el paso donde lo
-dejaste**, no al principio. Un borrador no llega al Consejo hasta que pulses
-**Enviar al Consejo**.
+Toca «Nuevo reporte» o, en el teléfono, «Reportar» en la barra de abajo. Son cuatro pasos y puedes volver a uno ya recorrido tocando su nombre.
 
-1. **Tipo.** Elige la categoría que mejor describa la situación: Infraestructura,
-   Ambiente, Territorio, Comunidad u Otro.
-2. **Ubicación.** Elige la vereda o el centro poblado más cercano. El catálogo
-   proviene del EOT de 2007 y de fuentes públicas, y **todavía está pendiente de
-   validación por el Consejo**: los nombres pueden cambiar. Al elegir una, el
-   mapa dice **de dónde sale el punto** que propone: del DANE, de cartografía
-   abierta, o deducido de la escuela rural que lleva el nombre de la vereda.
-   Cinco veredas todavía no tienen punto documentado —Cañas, José, Pueblo
-   Nuevo, La Victoria y Los Leyos—. **Su reporte se envía igual**: viaja con el
-   nombre de la vereda y el Consejo lo recibe como cualquier otro. Lo único que
-   cambia es que **no aparece como marcador en el mapa**, y tanto el mapa como
-   el expediente lo dicen. Si quieres que aparezca, puedes tocar el mapa para
-   marcar el sitio tú mismo. La aplicación no
-   envía las coordenadas de tu teléfono ni inventa un punto en el mapa.
-3. **Detalles.** Escribe qué pasó, cuándo y a quién afecta, con un máximo de
-   500 palabras.
-   - Puedes **dictar** el relato con el micrófono y corregirlo antes de aceptarlo.
-   - **Mejorar redacción con IA** corrige ortografía y claridad de un solo
-     toque, sobre el texto que ya escribiste. Necesita al menos **12 palabras**;
-     con menos, el botón espera. Después aparece **Deshacer**, que devuelve tu
-     texto tal como estaba mientras no sigas escribiendo. Si el servicio falla,
-     tu texto se conserva intacto.
-   - Solo se envía esa descripción al servicio de IA, nunca tus datos de cuenta.
-     Revisa siempre que la propuesta conserve los hechos: la IA puede
-     equivocarse.
-   - La **fotografía es obligatoria**: JPG, PNG o WebP, hasta 10 MB. Se envía el
-     archivo original, sin recortes ni cambios de resolución.
-   - El **celular es opcional**, hasta 10 dígitos. Solo lo ve el Consejo.
-   - Marca **«Contiene imágenes o información sensible»** si aparecen lesiones,
-     menores de edad o personas identificables.
-4. **Revisar.** Comprueba todo y elige una de las dos acciones.
+*Ilustración: «Reportar» está en el centro de la barra del teléfono.*
 
-### El último paso
+**Los cuatro pasos**
 
-**Enviar al Consejo** es la única salida del formulario. Requiere sesión
-iniciada y perfil ciudadano activo. Deja el reporte en la bandeja del Consejo y
-te devuelve un recibo con la fecha del servidor.
+1. «Tipo»: elige la categoría.
+   Infraestructura, Ambiente, Territorio, Comunidad u Otro.
+2. «Ubicación»: elige la vereda más cercana.
+3. «Detalles»: cuenta qué pasó y sube una foto.
+   La descripción y la foto son obligatorias.
+4. «Revisar»: comprueba y toca «Enviar al Consejo».
+   El servidor responde con un recibo y su fecha.
 
-Si todavía no quieres enviarlo, **Guardar borrador** lo conserva en este
-dispositivo para continuarlo después. **Un borrador no es un envío**: el Consejo
-no lo ve hasta que pulses Enviar.
+> **Consejo.** **Tu avance se guarda solo.** Mientras escribes, el avance se guarda en tu teléfono. Al volver a «Reportar», se abre el primer paso incompleto.
 
-Límite: **10 reportes nuevos por día** por cuenta. Los reintentos de un reporte
-que ya preparaste no gastan ese cupo.
+> **Ojo con esto.** **Un borrador no es un envío.** «Guardar borrador» lo deja para después; el Consejo no lo ve hasta que toques «Enviar al Consejo». Solo hay uno por cuenta; en «Inicio» y «Mis reportes» sale con «Continuar» y «Descartar».
 
-## 4. Cuando no hay señal
+> **Lo que no hace.** **Hasta 10 reportes nuevos por día.** El día cuenta en hora universal (UTC) y se renueva a las 7:00 p. m. en Colombia. Reintentar un reporte ya preparado no gasta cupo.
 
-La aplicación está hecha para el río: puedes preparar y enviar un reporte aunque
-no tengas datos en ese momento.
+## 4. Descripción, voz y fotografía
 
-- Al tocar **Enviar al Consejo** sin señal, el reporte queda **en cola** en tu
-  teléfono, con su fotografía.
-- Se reintenta solo cuando vuelve la señal, cuando vuelves a abrir la aplicación
-  con tu sesión iniciada, o cuando tocas **Reintentar ahora**. Entre intento e
-  intento espera cada vez un poco más, para no agotar la batería ni los datos.
-- **Nunca se duplica un caso.** Cada reporte lleva un identificador propio: si se
-  envía dos veces, el servidor devuelve el mismo expediente.
+*Cómo contar lo ocurrido y qué pasa con tu foto.*
 
-En **Mis reportes** verás la bandeja «Mis envíos» con el estado de cada uno:
+En «Detalles» cuentas qué pasó, cuándo y a quién afecta, con tus palabras. Un reporte claro ayuda al Consejo a decidir.
 
-| Estado                     | Significado                                                                                                                    |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| En cola · sin confirmar    | Guardado en el teléfono, esperando señal. El Consejo todavía no lo tiene.                                                      |
-| Enviando…                  | Se está transmitiendo en este momento.                                                                                         |
-| Requiere tu atención       | El servidor lo rechazó por un motivo que debes resolver (por ejemplo, correo sin verificar). Lee el mensaje y toca Reintentar. |
-| Confirmado por el servidor | El Consejo lo recibió. Aparece la fecha y hora del acuse.                                                                      |
+- **Dicta.** «Activar micrófono» pasa tu voz a texto. Puedes corregirlo o usar «Deshacer último dictado».
+- **Fotografía.** Es obligatoria. Elige una foto útil y segura.
+- **Sensible.** Marca «Contiene imágenes o información sensible» si hay lesiones, menores o personas identificables.
 
-La bandeja admite hasta **10 reportes o 50 MB** pendientes. Si se llena, envía
-los que están en cola antes de preparar otro.
+| Dato | Límite |
+| --- | --- |
+| Descripción | Hasta 500 palabras |
+| Fotografía | JPG, PNG o WebP, hasta 10 MB |
+| Celular | Opcional, hasta 10 dígitos |
+| Dictado | Hasta 1 minuto, con internet |
+| «Mejorar redacción con IA» | Desde 12 palabras |
 
-> **Importante:** mientras tengas envíos pendientes, no borres los datos del
-> navegador ni desinstales la aplicación. Esos reportes viven solo en tu
-> dispositivo hasta que el servidor los confirma.
+> **Lo que no hace.** **Tu foto no llega idéntica.** Si pesa más de 10 MB o pasa de 24 megapíxeles, el teléfono la reduce y te avisa. El servidor guarda una copia WebP de hasta 2200 píxeles por lado, no el archivo exacto.
 
-## 5. Seguir tus reportes
+> **Privacidad.** **La ayuda con IA.** «Mejorar redacción con IA» envía solo tu descripción a un servicio externo, nunca tus datos. Evita nombres propios y revisa el resultado. Pide el correo verificado; hay tope de 10 usos al día.
 
-En **Mis reportes**:
+> **Consejo.** **Si la foto no se adjunta.** Prueba «Tomar una foto ahora» o «Buscar en mis archivos».
 
-- **Consultar mis envíos** trae de vuelta los expedientes que el servidor recibió
-  con tu cuenta, con su estado actual.
-- **Ver fotografía original** descarga la foto que enviaste. Solo tú y el Consejo
-  pueden verla.
-- Debajo aparecen, por separado y bien señalados, los reportes de práctica que
-  guardaste en este dispositivo.
+## 5. Dónde ocurrió
 
-## 6. Novedades
+*Cómo situar tu reporte y qué se hace con tu ubicación.*
 
-La **campana** de la barra superior muestra un punto cuando tienes avisos sin
-leer. Recibirás una novedad cuando:
+En «Ubicación» eliges la vereda o el centro poblado más cercano; el Consejo la usa para saber dónde mirar.
 
-- el Consejo **cambie el estado** de tu reporte;
-- el Consejo **deje una nota pública** en tu caso;
-- el Consejo **publique un comunicado o una alerta** para la comunidad.
+1. Escribe unas letras para acortar la lista y elige tu vereda.
+2. Mira el mapa.
+   Muestra el punto de referencia de la vereda, no el sitio exacto. Necesita internet; el reporte no.
+3. Para afinar, toca el mapa donde ocurrió.
+   «Volver al punto de la vereda» lo deshace.
+4. O toca «Usar mi ubicación» si estás allí.
+   Puede tardar medio minuto. Con más de 500 m de margen, no se usa.
 
-Las novedades se actualizan cada 45 segundos mientras la aplicación está a la
-vista. Puedes marcarlas como leídas una por una.
+> **Privacidad.** **Tu ubicación, solo si tú la pides.** Solo se lee al tocar «Usar mi ubicación», una vez; no te sigue ni se recuerda. Viaja con el reporte; la ven tú y el Consejo, que la recibe sin verificar. El servidor también la suma a las de otras personas para situar la vereda.
 
-## 7. Mi cuenta
+> **Ojo con esto.** **¿Tu vereda no está en la lista?** Toca «Mi vereda no está en la lista» y escríbela. Para proponerla hace falta tu ubicación desde el sitio; si no estás allí, elige la más cercana.
 
-- **Nombre para mostrar.** Edítalo y toca Guardar; el cambio aparece de inmediato
-  en toda la aplicación. El **correo no se puede cambiar** desde aquí.
-- **Avatar.** Elige entre Persona, Árbol, Río u Hogar.
-- **Apariencia.** Cambia entre tema claro y oscuro. La preferencia se recuerda.
-- **Cambiar contraseña.** Pide la actual, la nueva y su confirmación. Si entras
-  con Google, la contraseña se gestiona desde tu cuenta de Google.
-- **Cerrar sesión.** Disponible en el menú lateral y en Mi cuenta.
+> **Lo que no hace.** **El catálogo no es definitivo.** Viene del EOT de 2007 y de fuentes abiertas; el Consejo aún no lo valida. Sin punto documentado, el reporte sale solo con el nombre de la vereda.
 
-### Eliminar mi cuenta
+## 6. Cuando no hay señal
 
-Está en Mi cuenta, dentro de **Eliminar mi cuenta**. Es una acción **que no se
-puede deshacer**:
+*Qué pasa con tu reporte sin internet y cómo saber que salió.*
 
-1. Antes de empezar, revisa que no te queden envíos pendientes: una cuenta
-   desactivada ya no puede sincronizarlos.
-2. Escribe tu contraseña actual (o reautentícate con Google).
-3. Escribe la frase **ELIMINAR MI CUENTA** y marca la casilla de confirmación.
+Puedes enviar un reporte sin señal. No se pierde: espera en tu teléfono y sale solo cuando vuelve la red.
 
-Al confirmar, el sistema retira tu acceso, **borra las fotografías originales**
-que enviaste y **quita de tus expedientes todo dato que te identifique**: relato,
-teléfono y autoría. El Consejo conserva únicamente categoría, vereda, estado y
-fechas, sin saber quién reportó, para que las cifras de la comunidad sigan
-siendo ciertas. Después de eliminar, la sesión se cierra en este dispositivo.
+*Ilustración: Así avisa el formulario sin conexión.*
 
-Si el proceso no alcanza a terminar (por ejemplo, por un fallo de red), verás un
-aviso: tu acceso ya quedó retirado y la eliminación continúa donde se detuvo la
-próxima vez. Avisa al Consejo si el mensaje persiste.
+1. **Lo envías.** Tocas «Enviar al Consejo».
+2. **Espera.** Queda en tu teléfono, con su foto.
+3. **Vuelve la red.** Sale solo, sin duplicarse.
+4. **Recibo.** Llega con fecha. Su estado, en «Mis reportes».
 
-## 8. Qué ve la comunidad y qué no
+| Lo que ves | Qué significa |
+| --- | --- |
+| «En cola · sin confirmar» | Está en tu teléfono; se reintenta solo. |
+| «Enviando…» | Se transmite ahora. |
+| «Requiere tu atención» | Lo rechazaron o falló varias veces. Lee el mensaje y toca «Reintentar ahora». |
 
-Léelo antes de escribir tu primer reporte. **Tu reporte nace privado**: nada de
-lo que escribes se publica por sí solo. La comunidad solo ve un resumen que
-redacta y aprueba el Consejo.
+> **Consejo.** **En Android, con la app cerrada.** Con la versión 2.2, Android reintenta al volver la red aunque cierres la app. Con los avisos permitidos verás **Enviando reporte** y **Reporte entregado**; sin ellos, el envío sigue igual.
 
-| Dato                              | Quién lo ve                                                          |
-| --------------------------------- | -------------------------------------------------------------------- |
-| Tu nombre, tu correo, tu teléfono | Solo tú y el Consejo. Nunca salen                                    |
-| La fotografía                     | Solo tú y el Consejo. **Nunca** consta ante la comunidad             |
-| Tu título y tu relato             | Solo tú y el Consejo. **Nunca** se publican tal como los escribiste  |
-| Notas internas del Consejo        | Solo el Consejo                                                      |
-| El resumen que redacta el Consejo | Toda la comunidad, **24 horas después de que el Consejo lo apruebe** |
+> **Ojo con esto.** **Cuida lo pendiente.** No borres los datos ni desinstales la app con borradores o envíos pendientes: viven solo en tu teléfono. Si cierras sesión, esperan a que vuelvas a entrar. Caben 10 reportes o 50 MB.
 
-### Cómo llega un resumen a la comunidad
+> **Lo que no hace.** **No siempre es al instante.** Android puede aplazar el envío por la batería, y **Forzar detención** lo impide hasta que abras la app. En el navegador, la página debe estar abierta.
 
-1. El Consejo revisa tu reporte y lo declara sin contenido sensible.
-2. Redacta un título, un resumen y una vereda públicos, sin datos personales, y
-   los aprueba.
-3. Pasadas **24 horas** desde esa aprobación, el resumen consta ante la
-   comunidad. El plazo lo fija el servidor del Consejo; hoy son 24 horas.
+## 7. Seguir tus reportes
 
-El texto es del Consejo, no tuyo. Mientras no lo apruebe, tu reporte sigue
-siendo solo tuyo y del Consejo.
+*Dónde ver en qué va cada reporte y qué significa cada estado.*
 
-### Qué hacer si no quieres que conste
+En «Mis reportes» ves lo que el Consejo tiene a tu nombre, desde cualquier teléfono, y lo que aún no salió del tuyo. En el teléfono, abre «Cuenta» y toca «Mis reportes», o usa «Ver mis reportes» en «Inicio».
 
-Marca el reporte como **delicado** al enviarlo. Un reporte delicado no se publica
-de ninguna manera, ni siquiera revisado. El Consejo lo recibe y lo gestiona
-igual. También puede marcarlo el Consejo en cualquier momento, incluso después
-de haber aprobado un resumen, y eso lo retira.
+*Ilustración: Reportes de ejemplo, inventados: ninguno es de nadie.*
 
-Si dudas, márcalo. Siempre se puede publicar después; lo que constó, constó.
+| Estado | Qué significa |
+| --- | --- |
+| «Esperando señal» | Aún no llegó al Consejo; sale solo. |
+| «Pendiente» | Llegó y espera revisión. |
+| «En proceso» | El Consejo le hace seguimiento. |
+| «Solucionado» | Se resolvió. |
+| «No solucionado» | Se cerró sin resolverse. |
+| «Descartado» | No era una incidencia, por ejemplo un duplicado. La nota pública dice por qué. |
+| «Bloqueado por conflicto» | Un conflicto impide avanzar. |
+| «Escalado a otra entidad» | El Consejo lo pasó a otra entidad. |
 
-## 8.1. Si el Consejo retira tu reporte
+> **Consejo.** **Abre un reporte.** Tócalo para abrir «Detalle del reporte». En «Seguimiento», cada paso lleva fecha (hora de Bogotá) y la nota pública del Consejo. Al hablar con el Consejo, dile el código corto de «Identificador».
 
-El Consejo puede **retirar** un expediente: un reporte repetido, uno hecho por
-error, uno que no corresponde al territorio. Cuando lo hace:
+## 8. Novedades y avisos
 
-- El expediente se borra, con su fotografía. Deja de aparecer en el mapa, en las
-  cifras y en tu historial.
-- **Te llega un aviso a tus novedades con el motivo**, escrito por la persona del
-  Consejo que lo retiró.
-- Si abres después el enlace de ese reporte, la aplicación te dice que se retiró,
-  cuándo y por qué, en vez de decirte que no lo encuentra.
+*Cómo te enteras de lo que el Consejo hace con tu reporte.*
 
-Si no estás de acuerdo con el motivo, háblalo con la persona responsable del
-Consejo. Retirar un reporte no impide volver a enviarlo.
+La campana de la barra superior muestra un punto cuando tienes algo sin leer. Ábrela para ver «Tus novedades» y límpialas con «Marcar como leída» o «Marcar todas».
 
-## 9. Instalar la aplicación en el teléfono
+- **Tu reporte fue recibido:** el servidor ya lo tiene.
+- **El Consejo actualizó tu reporte:** cambió de estado o dejó una nota pública.
+- **El Consejo retiró tu reporte:** con el motivo que escribió el Consejo. Al abrirlo, la aplicación dice cuándo se retiró.
+- **Nuevo comunicado del Consejo** o **Alerta del Consejo:** para toda la comunidad.
 
-Desde el navegador, usa la opción **Instalar aplicación** o **Añadir a pantalla
-de inicio**. Una vez instalada, la pantalla de reporte abre aunque no tengas
-señal, con los datos que ya estén en tu dispositivo.
+> **Consejo.** **También en el teléfono.** Al enviar un reporte, la aplicación puede pedirte permiso para avisarte en el teléfono. Lo cambias en «Avisos en este dispositivo», dentro de «Mi cuenta».
 
-## 10. Si algo falla
+> **Lo que no hace.** **No es en tiempo real.** Con la aplicación a la vista, las novedades se consultan cada 45 segundos. Sin señal llegan al volver la red.
 
-- **«Verifica tu correo antes de usar la asistencia».** Solo afecta a la
-  redacción con IA. Abre el enlace que te llegó y vuelve a intentarlo; para
-  reportar no hace falta.
-- **«La cuenta no está habilitada».** Entra a Mi cuenta y toca Activar perfil
-  ciudadano.
-- **«Selecciona una vereda del catálogo territorial vigente».** El catálogo
-  cambió; vuelve al paso de Ubicación y elige de nuevo.
-- **Un envío lleva mucho tiempo en cola.** Comprueba la señal y toca Reintentar
-  ahora. Si el mensaje dice «Requiere tu atención», léelo: explica qué resolver.
-- **Cualquier otro problema:** anota la hora, lo que estabas haciendo y el
-  mensaje exacto, y repórtalo a la persona responsable del Consejo.
-# Novedades de la versión Android 2.2
+> **Privacidad.** **Si prestas el teléfono.** Al cerrar sesión, ese teléfono deja de recibir tus avisos.
 
-El formulario guarda automáticamente el avance en este dispositivo. Al volver a Reportar recupera texto, ubicación y fotografía y abre el primer paso incompleto. El aviso «Avance guardado» confirma la escritura. **Guardar un borrador no lo envía al Consejo**; hace falta revisar y enviar. Borrar los datos de la aplicación o desinstalar puede eliminar borradores y pendientes.
+## 9. Qué ve la comunidad y qué no
 
-Después de enviar sin señal, consulta Mis envíos: muestra cola, envío, atención o recibo confirmado. La bandeja admite 10 reportes y 50 MiB. Con la APK 2.2 y sesión nativa activa, Android reintenta al recuperar red aunque hayas retirado la app de recientes; puede aplazarlo por batería. «Forzar detención» en Ajustes impide hacerlo hasta reabrir. En navegador la página debe estar viva o abrirse de nuevo.
+*Tu reporte nace privado. Esto es lo único que puede salir de él.*
 
-Permite notificaciones si quieres ver «Enviando reporte» y «Reporte entregado» en la barra de Android. Denegarlas no impide transmitir. Si la app indica que el envío con la app cerrada no está listo, conserva la cola y vuelve a entrar con conexión; puede ocurrir al actualizar desde una sesión que solo estaba en la web. Un rechazo requiere revisar el reporte; un problema de conexión se reintenta sin crear otro expediente.
+Léelo antes de tu primer reporte. **Nada de lo que escribes se publica por sí solo.** La comunidad ve, a lo sumo, un resumen que escribe y aprueba el Consejo.
 
-En Comunidad → El Consejo puedes consultar su historia, filtrar la línea de tiempo y abrir las fuentes públicas. Es un banco de consulta con referencias, no un certificado ni un archivo de actas privadas.
+1. **Relato privado.** Tu texto, tu foto y tu celular quedan entre tú y el Consejo.
+2. **Revisión del Consejo.** Mira si hay algo sensible. Si lo hay, ahí termina.
+3. **Resumen público.** Un resumen sin datos personales, visible 24 horas después de aprobarlo.
+
+| Dato | Quién lo ve |
+| --- | --- |
+| Tu relato, tal como lo escribiste | Tú y el Consejo |
+| La fotografía y tu celular | Tú y el Consejo |
+| El punto exacto que marcaste | Tú y el Consejo |
+| Tu nombre y tu correo | No se publican nunca |
+| Las notas internas | Solo el Consejo |
+| El resumen: título, texto, categoría, vereda, estado y fecha | Quien tenga cuenta, 24 horas después |
+
+> **Privacidad.** **Si no quieres que conste.** Marca «Contiene imágenes o información sensible» en «Detalles»: no se publica de ninguna forma, ni revisado. El Consejo también puede marcarlo después y lo retira. Si dudas, márcalo; el Consejo lo recibe igual.
+
+> **Lo que no hace.** **El resumen es del Consejo.** Solo lo ven quienes tienen cuenta. El plazo lo fija el servidor; la aplicación indica 24 horas. Más en «Privacidad, alcance y mantenimiento», en la bienvenida.
+
+## 10. El mapa, la comunidad y el Consejo
+
+*Qué encuentras en las secciones para mirar el territorio.*
+
+Estas secciones no hacen falta para reportar, pero ayudan a entender el río. Reportes, cifras y puntos del mapa piden entrar.
+
+- **Mapa del territorio.** Tus reportes y los que la comunidad puede ver; los ajenos, en su vereda y no en el sitio exacto.
+- **Noticias.** Comunicados del Consejo. Si los abres con señal, luego se leen sin ella.
+- **Reportes.** Resúmenes del Consejo, 24 horas después de aprobarlos.
+- **Estadísticas.** Cifras del territorio, con informe y datos en CSV. Miden participación, no son un censo.
+
+En «Comunidad», la pestaña «El Consejo» es un archivo de consulta: por qué existe, línea de tiempo, organización, derechos, territorio y fuentes.
+
+> **Lo que no hace.** **Consulta, no certificado.** Reúne fuentes públicas con su enlace. No es asesoría jurídica ni un archivo de actas privadas, y la comunidad aún no lo valida. Si un enlace no abre, avisa al Consejo.
+
+## 11. Mi cuenta
+
+*Tu perfil, tus avisos y cómo cerrar o eliminar la cuenta.*
+
+En el teléfono, toca «Cuenta»; en pantalla grande, tu nombre al final del menú. Allí está «Mi cuenta».
+
+- **Foto:** toca tu avatar y elige «Persona», «Árbol», «Río», «Hogar» o «Subir una foto». Se recorta en cuadrado y se reduce en tu teléfono. Confirma con «Guardar perfil».
+- **Nombre:** toca el lápiz. El correo no se cambia aquí.
+- **Tema y avisos:** «Apariencia» (claro u oscuro) y «Avisos en este dispositivo».
+- **Permisos:** «Micrófono para dictar» y «Ubicación para tus reportes» se piden aquí; si están bloqueados, se cambian en los ajustes.
+- **Contraseña**, con correo: «Cambiar contraseña de forma segura» pide la actual y la nueva, de 12 caracteres o más.
+
+**Eliminar mi cuenta**
+
+1. Revisa que no queden envíos pendientes.
+   Con pendientes, la aplicación no te deja eliminarla.
+2. Abre «Eliminar mi cuenta» y escribe tu contraseña, o confirma con Google.
+3. Escribe **ELIMINAR MI CUENTA**, marca la casilla y toca «Eliminar mi cuenta definitivamente».
+
+> **Ojo con esto.** **No se puede deshacer.** Pierdes el acceso, se borra la fotografía principal que guardó el servidor y tus reportes quedan sin datos que te identifiquen. El Consejo conserva categoría, vereda, estado y fechas para las cifras.
+
+> **Lo que no hace.** **Lo que no se borra.** Hoy no se borran la segunda copia reducida de cada foto, que el servidor guarda de respaldo y la aplicación no puede abrir, ni los puntos de «Usar mi ubicación» sumados para situar veredas.
+
+## 12. Si algo falla
+
+*Qué hacer con los problemas más comunes, y palabras útiles.*
+
+Casi todo se arregla con señal y un nuevo intento. Si no, esto es lo más probable.
+
+**Dice que mi perfil no está activo**
+
+Verifica el correo y vuelve a abrir la aplicación. Si sigue igual, toca «Activar mi perfil» en «Mi cuenta». Si dice que la cuenta está deshabilitada, avisa al Consejo Comunitario.
+
+**Un envío no sale**
+
+Revisa la señal y toca «Reintentar ahora». Si dice «Requiere tu atención», lee el mensaje: explica qué corregir.
+
+**Olvidé mi contraseña**
+
+En la pantalla de acceso toca «Olvidé mi contraseña»: te llega un correo para recuperarla.
+
+**Dice que el envío con la app cerrada no está listo**
+
+Vuelve a entrar a tu cuenta con conexión. Mientras tanto, el reporte se reintenta al abrir la app.
+
+**Otro problema**
+
+Anota la hora, qué hacías y el mensaje exacto, y cuéntaselo al Consejo Comunitario.
+
+**Palabras útiles**
+
+- **Expediente**: Tu reporte y todo lo que el Consejo hace con él.
+- **Bandeja de salida**: Donde esperan, en tu teléfono, los reportes que no han salido.
+- **Recibo**: Constancia, con fecha, de que el servidor recibió tu reporte.
+- **Resumen público**: Texto del Consejo para la comunidad, sin datos personales.
+
+---
+
+**Gracias por cuidar lo que nos une.** Un reporte claro es el primer paso. La aplicación guarda, envía y muestra; las decisiones las toma el Consejo. Este manual se comprobó el 20 de octubre de 2026: si algo ya no coincide con tu pantalla, avisa al Consejo Comunitario.

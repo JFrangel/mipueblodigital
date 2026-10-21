@@ -18,6 +18,7 @@ import {
   Users,
   BarChart3,
   BookOpen,
+  BookMarked,
   Settings,
   Search,
   Bell,
@@ -401,6 +402,12 @@ export function Workspace({
           >
             <BookOpen size={19} />
             Guía del proyecto
+          </Link>
+          {/* Los manuales viven fuera de la columna a propósito: son un
+              documento para leer o llevarse en PDF, no una pantalla de trabajo. */}
+          <Link href="/manuales/">
+            <BookMarked size={19} />
+            Manuales
           </Link>
           {/* Aquí no va «Mi cuenta»: la ficha del final de esta misma columna
               ya es la entrada a la cuenta, y con más de lo que cabía en una

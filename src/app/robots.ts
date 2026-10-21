@@ -15,7 +15,13 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/bienvenida/", "/acceso/", "/documentacion/", "/terminos/"],
+      allow: [
+        "/bienvenida/",
+        "/acceso/",
+        "/documentacion/",
+        "/terminos/",
+        "/manuales/",
+      ],
       disallow: [
         "/api/",
         "/admin/",
@@ -28,6 +34,11 @@ export default function robots(): MetadataRoute.Robots {
         "/mapa/",
         "/inicio/",
         "/reportar/",
+        /* El manual del Consejo es una guía de trabajo, y la ruta que imprime
+           los PDF no existe en producción: ninguno de los dos es para un
+           buscador. */
+        "/manuales/consejo/",
+        "/manuales/impresion/",
         /* La descarga del APK: es una compilación de prueba, no la aplicación
            publicada, y no tiene por qué aparecer en un buscador. Quien la
            necesita llega por el enlace que se le pasa. */
