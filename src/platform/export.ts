@@ -42,12 +42,26 @@ export async function abrirExportacion(
   filename: string,
   body: string,
 ): Promise<void> {
+  /* Sin señal no hay a dónde mandarlo, y el viaje al servidor es lo primero:
+     el navegador del sistema solo recoge lo que el servidor ya guardó. Se dice
+     antes de esperar veinte segundos, y en español: el error crudo del
+     navegador («Failed to fetch») no le dice nada a quien está en el río. */
+  const sinSenal =
+    "Sin conexión. El informe se prepara en el servidor: vuelve a intentarlo cuando haya señal.";
+  if (typeof navigator !== "undefined" && navigator.onLine === false)
+    throw new Error(sinSenal);
   const { headers } = await memberHeaders();
   const response = await fetch("/api/statistics/export/", {
     method: "POST",
     headers,
     body: JSON.stringify({ contentType, filename, body }),
     signal: AbortSignal.timeout(20000),
+  }).catch((error: unknown) => {
+    throw new Error(
+      error instanceof DOMException && error.name === "TimeoutError"
+        ? "El servidor tardó demasiado en contestar. Inténtalo de nuevo."
+        : sinSenal,
+    );
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok)

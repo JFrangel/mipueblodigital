@@ -6845,7 +6845,7 @@ div.account-permiso {
   .tabs,
   .filters,
   .export-actions,
-  .page-intro > div,
+  .page-intro,
   .footer,
   .pagination,
   .stats-caveat,
@@ -6854,18 +6854,29 @@ div.account-permiso {
   .waiting-list a svg.lucide-chevron-right {
     display: none !important;
   }
-  .page-intro {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
   /* Sobre el papel manda otro orden: primero lo que dicen las cifras y después
-     las cifras. En pantalla es al revés porque ahí se explora, no se lee. */
+     las cifras. En pantalla es al revés porque ahí se explora, no se lee.
+
+     **Todo lo que cuelga de `.main-content` necesita un `order` explícito.**
+     Un hijo sin él vale 0 y se imprime *antes de la portada*. Eso es lo que
+     dejaba en blanco la primera hoja de quien imprimía con sesión del Consejo:
+     el panel «Dónde está el trabajo» no tenía orden, salía el primero y, como
+     es más alto que una hoja y llevaba `break-inside: avoid`, el navegador lo
+     empujaba a la hoja siguiente dejando la primera vacía. */
   .main-content {
     display: flex !important;
     flex-direction: column;
   }
   .report-cover {
     order: 1;
+  }
+  /* Los avisos de las cifras (sin sesión, sin conexión) van pegados a la
+     portada, no antes: son lo que matiza el informe, no lo que lo abre. A
+     igual `order` manda el orden del documento, que los pone tras la portada. */
+  .main-content > .notice,
+  .main-content > .errors {
+    order: 1;
+    margin: 0 0 12px !important;
   }
   .insight-panel {
     order: 2;
@@ -6906,6 +6917,12 @@ div.account-permiso {
   }
   .stats-grid {
     order: 4;
+  }
+  /* Las cifras de todo el territorio, tras las de este conjunto. Es del
+     Consejo y puede ocupar más de una hoja: se deja partir —ver más abajo—. */
+  .council-stats {
+    order: 4;
+    margin: 12px 0 0 !important;
   }
   .waiting-panel {
     order: 5;
@@ -6972,6 +6989,21 @@ div.account-permiso {
     box-shadow: none !important;
     border: 1px solid var(--line) !important;
     background: #fff !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* Un panel más alto que una hoja no puede ir «sin partir»: el navegador lo
+     empuja a la hoja siguiente y deja la anterior vacía. El del Consejo lo es,
+     así que se parte; lo que no se parte son sus bloques por dentro, para que
+     una alerta, una tabla pequeña o una cifra no queden cortadas a medias. */
+  .panel.council-stats {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+  .council-stats .council-split,
+  .council-stats .council-alerts li,
+  .council-stats .council-table tr,
+  .council-stats .council-stack li {
     break-inside: avoid;
     page-break-inside: avoid;
   }

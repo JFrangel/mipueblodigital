@@ -27,6 +27,7 @@ import { managementMetrics, waitingCases } from "@/domain/management-metrics";
 import { useToday } from "@/data/today";
 import { useSession } from "@/data/session";
 import { CouncilStatistics } from "./council-statistics";
+import { informeHtml, type InformeModelo } from "@/domain/informe-html";
 import { esNativo } from "@/platform/native";
 import { abrirExportacion } from "@/platform/export";
 import { toast } from "@/data/toasts";
@@ -172,153 +173,69 @@ export function Statistics({
     URL.revokeObjectURL(url);
   }
   /**
-   * Neutraliza texto libre antes de meterlo en una cadena de HTML.
+   * Las cifras del informe, tal como las muestra la pantalla.
    *
-   * Lo que sigue arma el informe como texto, no como JSX, así que aquí no hay
-   * escapado automático de React: un título de reporte con `<` o `&` viajaría
-   * tal cual al navegador del sistema que abre este archivo. Se aplica a todo
-   * lo que se interpola, venga o no de un catálogo cerrado —es más barato
-   * escapar de más que confiar de más.
+   * El documento que abre el navegador del sistema se redacta con estas mismas
+   * cifras —ver `src/domain/informe-html.ts` para el porqué de no copiar la
+   * pantalla—, así que es tan reproducible como ella: el mismo filtro da el
+   * mismo informe.
    */
-  const esc = (value: string | number) =>
-    String(value).replaceAll(
-      /[&<>]/g,
-      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!,
-    );
-  /**
-   * El informe, como documento propio, no como una copia de la pantalla.
-   *
-   * La primera idea era capturar el `outerHTML` de las secciones ya
-   * pintadas —es lo que se ve, así que parecía lo más simple—, pero esa
-   * pantalla depende de clases con nombre generado por los módulos CSS (el
-   * calendario, por ejemplo) y de la hoja de estilos entera de la aplicación,
-   * con su capa `.dark` y sus reglas de impresión, que existen para reordenar
-   * un documento que **ya está en el DOM de la aplicación**, no uno suelto
-   * que abre otro proceso: reproducirlas fuera de ese contexto es frágil, y
-   * un cambio de nombre de clase en cualquier otro sitio lo rompería en
-   * silencio. En vez de eso, el informe se redacta con las mismas cifras que
-   * ya se calcularon arriba —`s`, `management`, `counts`, `waiting`—, así que
-   * es tan reproducible como la pantalla y no depende de su marcado.
-   *
-   * **Sin la lectura de IA, a propósito.** Puede nombrar expedientes y
-   * señalar a quién le falta responsable —es material de trabajo interno del
-   * Consejo, ver el comentario de `reading` más arriba— y este archivo puede
-   * acabar abierto en un navegador que ya no es la ventana con sesión de
-   * quien lo pidió.
-   */
-  function informeHtml(): string {
-    const periodo =
-      from || until
-        ? `${from ? spokenDay(from) : "desde el inicio"} — ${until ? spokenDay(until) : "hasta hoy"}`
-        : "Todo el registro disponible";
-    const nombreCategoria =
-      category === "all"
-        ? "Todas"
-        : (categories.find((c) => c.id === category)?.name ?? category);
-    const filaHtml = (celdas: (string | number)[]) =>
-      `<tr>${celdas.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`;
-    const categoriasFilas = counts
-      .map((c) => filaHtml([c.name, c.value]))
-      .join("");
-    const estadosFilas = Object.entries(statuses)
-      .map(([id, label]) =>
-        filaHtml([label, selected.filter((i) => i.status === id).length]),
-      )
-      .join("");
-    const esperaFilas = waiting.length
-      ? waiting
-          .map(({ item, days }) => filaHtml([item.title, item.vereda, days]))
-          .join("")
-      : `<tr><td colspan="3">Ningún caso abierto en este conjunto.</td></tr>`;
-    const tiempoSolucion =
-      management.medianHours === null
-        ? "Sin datos"
-        : `${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(management.medianHours)} h`;
-    const esperaAbierto =
-      management.medianWait === null
-        ? "—"
-        : `${management.medianWait} ${management.medianWait === 1 ? "día" : "días"}`;
-    return `<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Informe del observatorio comunitario</title>
-<style>
-:root { color-scheme: light; }
-body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; color: #17231d; background: #fff; margin: 0; padding: 28px 24px; max-width: 780px; margin-inline: auto; line-height: 1.5; }
-h2 { color: #174f3b; }
-header.portada { border-bottom: 2px solid #174f3b; padding-bottom: 14px; margin-bottom: 20px; }
-header.portada strong { display: block; font-size: 19px; }
-header.portada .lugar { font-size: 11px; color: #55635b; }
-h2.titulo { margin: 14px 0 12px; font-size: 22px; }
-dl.meta { display: grid; grid-template-columns: repeat(2, auto); gap: 4px 30px; margin: 0 0 22px; font-size: 12px; }
-dl.meta dt { text-transform: uppercase; letter-spacing: .05em; color: #55635b; font-size: 9px; }
-dl.meta dd { margin: 2px 0 0; font-weight: 600; }
-.metricas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
-.metricas div { border: 1px solid #d9e0da; border-radius: 8px; padding: 10px; }
-.metricas small { display: block; color: #55635b; font-size: 10px; }
-.metricas strong { font-size: 20px; }
-section { margin-bottom: 22px; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #e7ece6; }
-footer { font-size: 11px; color: #55635b; border-top: 1px solid #d9e0da; padding-top: 12px; margin-top: 26px; }
-footer p { margin: 0 0 8px; }
-</style>
-</head>
-<body>
-<header class="portada">
-<strong>Mi Pueblo Digital</strong>
-<span class="lugar">Gran Consejo Comunitario Río Satinga · Olaya Herrera, Nariño</span>
-<h2 class="titulo">Informe del observatorio comunitario</h2>
-<dl class="meta">
-<div><dt>Periodo</dt><dd>${esc(periodo)}</dd></div>
-<div><dt>Categoría</dt><dd>${esc(nombreCategoria)}</dd></div>
-<div><dt>Vereda</dt><dd>${esc(vereda === "all" ? "Todas" : vereda)}</dd></div>
-<div><dt>Registros</dt><dd>${s.total}</dd></div>
-<div><dt>Emitido</dt><dd>${esc(today ? spokenDay(today) : "—")}</dd></div>
-</dl>
-</header>
-<div class="metricas">
-<div><small>Reportes</small><strong>${s.total}</strong></div>
-<div><small>Solucionados</small><strong>${s.solved}</strong></div>
-<div><small>Pendientes</small><strong>${s.pending}</strong></div>
-<div><small>Tasa de solución</small><strong>${s.rate}%</strong></div>
-</div>
-<section>
-<h2>Capacidad de seguimiento</h2>
-<table>
-${filaHtml(["Casos abiertos", management.open])}
-${filaHtml(["Abiertos sin responsable", management.unassigned])}
-${filaHtml(["Escalados a otra entidad", management.escalated])}
-${filaHtml(["Espera mediana de lo abierto", esperaAbierto])}
-${filaHtml(["Tiempo mediano hasta solución", tiempoSolucion])}
-</table>
-</section>
-<section>
-<h2>Incidencias por categoría</h2>
-<table><tr><th>Categoría</th><th>Reportes</th></tr>${categoriasFilas}</table>
-</section>
-<section>
-<h2>Estado de la gestión</h2>
-<table><tr><th>Estado</th><th>Reportes</th></tr>${estadosFilas}</table>
-</section>
-<section>
-<h2>Lo que lleva más esperando</h2>
-<table><tr><th>Caso</th><th>Vereda</th><th>Días</th></tr>${esperaFilas}</table>
-</section>
-<footer>
-<p>Emitido por el Gran Consejo Comunitario del Río Satinga a través de Mi Pueblo Digital. Las cifras corresponden al conjunto filtrado que se declara en la portada y se calculan de forma reproducible: el mismo filtro da el mismo informe.</p>
-<p>Los reportes reflejan participación, no un censo de todos los problemas del territorio. Un dato ausente significa que nadie lo reportó, no que no exista.</p>
-</footer>
-</body>
-</html>`;
+  const periodoTexto =
+    from || until
+      ? `${from ? spokenDay(from) : "desde el inicio"} — ${
+          until ? spokenDay(until) : "hasta hoy"
+        }`
+      : "Todo el registro disponible";
+  const categoriaTexto =
+    category === "all"
+      ? "Todas"
+      : (categories.find((c) => c.id === category)?.name ?? category);
+  function modeloDelInforme(): InformeModelo {
+    return {
+      periodo: periodoTexto,
+      categoria: categoriaTexto,
+      vereda: vereda === "all" ? "Todas" : vereda,
+      registros: s.total,
+      emitido: today ? spokenDay(today) : "—",
+      resumen: {
+        total: s.total,
+        solucionados: s.solved,
+        pendientes: s.pending,
+        tasa: s.rate,
+      },
+      seguimiento: {
+        abiertos: management.open,
+        sinResponsable: management.unassigned,
+        escalados: management.escalated,
+        esperaMediana:
+          management.medianWait === null
+            ? "—"
+            : `${management.medianWait} ${management.medianWait === 1 ? "día" : "días"}`,
+        tiempoMediano:
+          management.medianHours === null
+            ? "Sin datos"
+            : `${new Intl.NumberFormat("es-CO", { maximumFractionDigits: 1 }).format(management.medianHours)} h`,
+      },
+      categorias: counts.map((c) => ({ nombre: c.name, valor: c.value })),
+      estados: Object.entries(statuses).map(([id, nombre]) => ({
+        id,
+        nombre,
+        valor: selected.filter((i) => i.status === id).length,
+      })),
+      espera: waiting.map(({ item, days }) => ({
+        titulo: item.title,
+        vereda: item.vereda,
+        dias: days,
+      })),
+    };
   }
   /**
    * Fuera del APK, imprimir es lo de siempre: el propio navegador ya sabe.
    * Dentro, `window.print()` no hace nada —Android WebView no le conecta
-   * `PrintManager`—, así que el mismo informe se manda al navegador del
-   * sistema, donde «Compartir › Imprimir» sí convierte a PDF de verdad.
+   * `PrintManager`—, así que el informe se manda al navegador del sistema.
+   * Allí la página trae su propio botón «Guardar como PDF», y el aviso de
+   * aquí dice qué buscar al volver: sin él, quien regresa a la aplicación no
+   * sabe si «Descargar informe» hizo algo.
    */
   function exportInforme() {
     if (!esNativo()) {
@@ -329,8 +246,13 @@ ${filaHtml(["Tiempo mediano hasta solución", tiempoSolucion])}
     abrirExportacion(
       "text/html;charset=utf-8",
       `mi-pueblo-informe_${today || "sin-fecha"}.html`,
-      informeHtml(),
+      informeHtml(modeloDelInforme()),
     )
+      .then(() =>
+        toast(
+          "El informe se abrió en el navegador del teléfono. Allí pulsa «Guardar como PDF».",
+        ),
+      )
       .catch((e: unknown) =>
         toast(
           e instanceof Error ? e.message : "No se pudo abrir el informe.",
@@ -424,21 +346,11 @@ ${filaHtml(["Tiempo mediano hasta solución", tiempoSolucion])}
         <dl className="report-meta">
           <div>
             <dt>Periodo</dt>
-            <dd>
-              {from || until
-                ? `${from ? spokenDay(from) : "desde el inicio"} — ${
-                    until ? spokenDay(until) : "hasta hoy"
-                  }`
-                : "Todo el registro disponible"}
-            </dd>
+            <dd>{periodoTexto}</dd>
           </div>
           <div>
             <dt>Categoría</dt>
-            <dd>
-              {category === "all"
-                ? "Todas"
-                : (categories.find((c) => c.id === category)?.name ?? category)}
-            </dd>
+            <dd>{categoriaTexto}</dd>
           </div>
           <div>
             <dt>Vereda</dt>
