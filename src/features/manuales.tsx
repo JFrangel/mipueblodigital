@@ -424,6 +424,18 @@ function CapituloVista({
           <BloqueVista key={i} bloque={bloque} />
         ))}
       </div>
+      {/* El remate del capítulo: su dibujo del territorio entre dos olas. Cierra
+          el capítulo y, de paso, llena el hueco que deja al pie de la hoja. */}
+      <div className={styles.remate} aria-hidden="true">
+        <span className={styles.remateOla} />
+        <span
+          className={styles.remateDibujo}
+          style={{ "--tinte": TINTES[motivo] } as CSSProperties}
+        >
+          <Filigrana motivo={motivo} />
+        </span>
+        <span className={styles.remateOla} />
+      </div>
     </section>
   );
 }
