@@ -44,12 +44,13 @@ export default async function Page({
     paginas?: string;
     rellenos?: string;
     compactos?: string;
+    saltos?: string;
   }>;
 }) {
   if (process.env.MPD_IMPRIMIR_MANUALES !== "1") notFound();
   const { manual } = await params;
   if (manual !== "ciudadano" && manual !== "consejo") notFound();
-  const { paginas, rellenos, compactos } = await searchParams;
+  const { paginas, rellenos, compactos, saltos } = await searchParams;
   const nivel = Object.fromEntries(
     (compactos ?? "")
       .split(",")
@@ -76,6 +77,7 @@ export default async function Page({
       manual={manuales[manual]}
       rellenos={huecos}
       compactos={nivel}
+      saltos={(saltos ?? "").split(",").filter((id) => /^[a-z0-9-]+$/.test(id))}
       paginas={
         numeros?.length === manuales[manual].capitulos.length
           ? numeros

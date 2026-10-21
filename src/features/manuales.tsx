@@ -403,6 +403,7 @@ function CapituloVista({
   numero,
   relleno,
   compacto,
+  salto,
 }: {
   capitulo: Capitulo;
   numero: number;
@@ -410,6 +411,8 @@ function CapituloVista({
   relleno?: number;
   /** 1 o 2: letra y espacios algo menores, para que quepa en la hoja. */
   compacto?: number;
+  /** Empieza en hoja nueva: arrancaba al pie con apenas unas líneas. */
+  salto?: boolean;
 }) {
   const motivo = capitulo.motivo ?? MOTIVOS[(numero - 1) % MOTIVOS.length];
   return (
@@ -417,6 +420,7 @@ function CapituloVista({
       id={capitulo.id}
       className={styles.capitulo}
       data-compacto={compacto || undefined}
+      data-salto={salto || undefined}
     >
       <header className={styles.apertura}>
         <span className={styles.numero} aria-hidden="true">
@@ -480,6 +484,7 @@ export function ManualDocumento({
   paginas,
   rellenos,
   compactos,
+  saltos,
 }: {
   manual: Manual;
   /** El botón de descargar, que solo existe en pantalla. */
@@ -497,6 +502,8 @@ export function ManualDocumento({
   rellenos?: Record<string, number>;
   /** Nivel de compactación de cada capítulo, por su `id`. */
   compactos?: Record<string, number>;
+  /** Los capítulos que empiezan en hoja nueva, por su `id`. */
+  saltos?: string[];
 }) {
   return (
     <article
@@ -575,6 +582,7 @@ export function ManualDocumento({
             numero={i + 1}
             relleno={rellenos?.[c.id]}
             compacto={compactos?.[c.id]}
+            salto={saltos?.includes(c.id)}
           />
         ))}
       </div>

@@ -154,10 +154,15 @@ try {
           const pie = Math.min(...ys);
           const cuerpo = ys.filter((y) => y > pie + 8);
           const bajo = cuerpo.length ? Math.min(...cuerpo) : alto;
+          const rotulos = items
+            .filter((t) => RE_CAPITULO.test(t.str))
+            .map((t) => t.transform[5]);
           hojas.push({
-            arriba: items.some(
-              (t) => RE_CAPITULO.test(t.str) && t.transform[5] > alto - 150,
-            ),
+            arriba: rotulos.some((y) => y > alto - 150),
+            // Cuánto de un capítulo que empieza en esta hoja cabe en ella.
+            restoMm: rotulos.length
+              ? (Math.min(...rotulos) - bajo) / 2.8346
+              : Infinity,
             huecoMm: (bajo - margenInferior * 2.8346) / 2.8346 - 6,
           });
         }
@@ -193,16 +198,31 @@ try {
        * la hoja anterior. Hasta dos niveles; donde no basta, se deja como está.
        */
       const compactos = {};
+      const saltos = new Set();
       let medida;
       for (let vuelta = 0; vuelta < 5; vuelta++) {
         const consulta = Object.entries(compactos)
           .map(([c, n]) => `${c}:${n}`)
           .join(",");
         medida = await medir(
-          await imprimir(consulta ? `?compactos=${consulta}` : "", archivo),
+          await imprimir(
+            `?compactos=${consulta}&saltos=${[...saltos]}`,
+            archivo,
+          ),
         );
         let cambio = false;
         for (let h = 2; h < medida.numPages - 2; h++) {
+          // Un capítulo que arranca al pie de la hoja con apenas unas líneas se
+          // pasa entero a la hoja siguiente; el hueco que deja lo llena una
+          // figura más abajo.
+          if (!medida.hojas[h].arriba && medida.hojas[h].restoMm < 60) {
+            const id = ids[capituloDe(medida.inicios, h + 1)];
+            if (id && !saltos.has(id)) {
+              saltos.add(id);
+              cambio = true;
+              continue;
+            }
+          }
           const cola =
             !medida.hojas[h].arriba &&
             medida.hojas[h + 1].arriba &&
@@ -238,7 +258,7 @@ try {
       }
       const inicios = medida.inicios;
       const bytes = await imprimir(
-        `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}&compactos=${consultaCompactos}`,
+        `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}&compactos=${consultaCompactos}&saltos=${[...saltos]}`,
         archivo,
       );
       const textoPrimera = medida.texto;

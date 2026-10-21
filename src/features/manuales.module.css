@@ -1148,7 +1148,14 @@
   .capitulo[data-compacto="2"] {
     font-size: 0.87em;
   }
-  .capitulo[data-compacto] .cuerpo > * + * {
+  /* Un capítulo que arrancaba al pie con apenas unas líneas empieza en hoja
+     nueva; el hueco que deja lo llena una figura. */
+  .capitulo[data-salto] {
+    break-before: page;
+    margin-top: 0;
+  }
+  .capitulo[data-compacto="1"] .cuerpo > * + *,
+  .capitulo[data-compacto="2"] .cuerpo > * + * {
     margin-top: 2.6mm;
   }
   .apertura {
