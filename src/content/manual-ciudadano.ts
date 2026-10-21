@@ -376,7 +376,7 @@ export const manualCiudadano: Manual = {
           nivel: "limite",
           titulo: "La lista puede cambiar",
           texto:
-            "La mantiene el Consejo Comunitario: puede añadir, renombrar o retirar veredas. La aplicación guarda la última lista en tu teléfono, así que sirve sin señal. Bajo la lista dice si esta versión está validada o pendiente de validación; los puntos son referencias aproximadas, y sin punto el reporte sale solo con el nombre de la vereda.",
+            "La mantiene el Consejo Comunitario y puede cambiar. Se guarda en tu teléfono, así que sirve sin señal; bajo la lista dice si está validada. Los puntos son aproximados; sin punto, el reporte sale solo con el nombre de la vereda.",
         },
       ],
     },

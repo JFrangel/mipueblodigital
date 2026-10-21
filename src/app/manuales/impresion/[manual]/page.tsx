@@ -55,7 +55,9 @@ export default async function Page({
     (compactos ?? "")
       .split(",")
       .map((par) => par.split(":"))
-      .filter(([id, n]) => /^[a-z0-9-]+$/.test(id) && ["1", "2"].includes(n))
+      .filter(
+        ([id, n]) => /^[a-z0-9-]+$/.test(id) && ["1", "2", "3"].includes(n),
+      )
       .map(([id, n]) => [id, Number(n)]),
   );
   const huecos = Object.fromEntries(

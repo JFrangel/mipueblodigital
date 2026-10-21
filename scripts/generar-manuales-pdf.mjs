@@ -159,6 +159,12 @@ try {
             .map((t) => t.transform[5]);
           hojas.push({
             arriba: rotulos.some((y) => y > alto - 150),
+            rotulos: rotulos.length,
+            // Cuánto ocupa lo que queda arriba, antes del rótulo de un capítulo
+            // que empieza más abajo: si es poco, es la cola del anterior.
+            colaMm: rotulos.length
+              ? (alto - margenInferior * 2.8346 - Math.max(...rotulos)) / 2.8346
+              : Infinity,
             // Cuánto de un capítulo que empieza en esta hoja cabe en ella.
             restoMm: rotulos.length
               ? (Math.min(...rotulos) - bajo) / 2.8346
@@ -200,7 +206,7 @@ try {
       const compactos = {};
       const saltos = new Set();
       let medida;
-      for (let vuelta = 0; vuelta < 5; vuelta++) {
+      for (let vuelta = 0; vuelta < 25; vuelta++) {
         const consulta = Object.entries(compactos)
           .map(([c, n]) => `${c}:${n}`)
           .join(",");
@@ -215,10 +221,25 @@ try {
           // Un capítulo que arranca al pie de la hoja con apenas unas líneas se
           // pasa entero a la hoja siguiente; el hueco que deja lo llena una
           // figura más abajo.
-          if (!medida.hojas[h].arriba && medida.hojas[h].restoMm < 60) {
+          if (
+            (!medida.hojas[h].arriba || medida.hojas[h].rotulos > 1) &&
+            medida.hojas[h].restoMm < 55
+          ) {
             const id = ids[capituloDe(medida.inicios, h + 1)];
             if (id && !saltos.has(id)) {
               saltos.add(id);
+              cambio = true;
+              continue;
+            }
+          }
+          // La cola de un capítulo en lo alto de una hoja, con otro capítulo
+          // empezando justo debajo: se aprieta el capítulo anterior.
+          const colaArriba = medida.hojas[h].colaMm;
+          if (colaArriba > 18 && colaArriba < 70) {
+            const previo = ids[capituloDe(medida.inicios, h + 1) - 1];
+            const nivel = compactos[previo] ?? 0;
+            if (previo && nivel < 3) {
+              compactos[previo] = nivel + 1;
               cambio = true;
               continue;
             }
@@ -229,13 +250,30 @@ try {
             medida.hojas[h].huecoMm >= cuerpoMm * 0.5;
           const capitulo = capituloDe(medida.inicios, h + 1);
           if (!cola || capitulo < 0) continue;
-          const actual = compactos[ids[capitulo]] ?? 0;
-          if (actual >= 2) continue;
-          compactos[ids[capitulo]] = actual + 1;
+          const id = ids[capitulo];
+          const actual = compactos[id] ?? 0;
+          // Ni compacto cabe: que al menos arranque en hoja nueva y no comparta
+          // la suya con la cola del capítulo anterior; ahí se aprieta un poco más.
+          if (actual >= 2 && !saltos.has(id)) {
+            saltos.add(id);
+            cambio = true;
+            continue;
+          }
+          if (actual >= 3) continue;
+          compactos[id] = actual + 1;
           cambio = true;
         }
         if (!cambio) break;
       }
+      // El último ajuste del bucle puede no haberse medido: se mide lo definitivo.
+      medida = await medir(
+        await imprimir(
+          `?compactos=${Object.entries(compactos)
+            .map(([c, n]) => `${c}:${n}`)
+            .join(",")}&saltos=${[...saltos]}`,
+          archivo,
+        ),
+      );
       const consultaCompactos = Object.entries(compactos)
         .map(([c, n]) => `${c}:${n}`)
         .join(",");
@@ -256,6 +294,13 @@ try {
             `${ids[capitulo]}:${Math.min(huecoMm - 6, 60).toFixed(0)}`,
           );
       }
+      console.log(
+        id,
+        "compactos",
+        JSON.stringify(compactos),
+        "saltos",
+        [...saltos].join(),
+      );
       const inicios = medida.inicios;
       const bytes = await imprimir(
         `?paginas=${inicios.join(",")}&rellenos=${rellenos.join(",")}&compactos=${consultaCompactos}&saltos=${[...saltos]}`,
