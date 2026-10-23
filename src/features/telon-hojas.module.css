@@ -404,3 +404,17 @@
     display: none;
   }
 }
+
+/**
+ * En el teléfono no hay telón.
+ *
+ * Es el gesto de entrar, hecho con hojas que cruzan toda la pantalla mientras se
+ * pinta la aplicación: justo donde un WebView de gama baja va más justo. Los
+ * tiempos los lleva el componente, no el CSS, así que ocultarlo no cambia lo que
+ * pasa debajo; solo se queda sin las hojas.
+ */
+@media (max-width: 800px) {
+  .telon {
+    display: none;
+  }
+}

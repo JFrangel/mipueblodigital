@@ -138,20 +138,39 @@
 }
 
 /**
- * En el teléfono la hoja de la barra no respira.
+ * En el teléfono las hojas no se animan.
  *
- * Es una figura de muchos trazos que se mece sin parar, y mientras se mece el
- * navegador la repinta y recalcula estilos en cada cuadro, incluso con la barra
- * cerrada y la pantalla desplazándose por debajo. En un WebView de gama baja
- * eso se nota como tirones al desplazar listas largas. Aquí se queda quieta,
- * ladeada como en reposo: en escritorio, donde la barra siempre está a la vista
- * y hay de sobra, sigue respirando. Medido en una pantalla larga con la CPU
- * cuatro veces más lenta: de 128 a 0 ms de pintado por desplazamiento.
+ * Son figuras de muchos trazos: mientras se mecen, entran o se van, el
+ * navegador las repinta y recalcula estilos en cada cuadro, aunque la pantalla
+ * que se desplaza sea otra. En un WebView de gama baja eso se nota como tirones
+ * al recorrer listas largas. Medido en una pantalla larga con la CPU cuatro
+ * veces más lenta: de 128 a 0 ms de pintado por desplazamiento.
+ *
+ * Por eso aquí cada una queda en su estado de reposo, sin movimiento:
+ *  - la de la barra, ladeada y quieta;
+ *  - las de «esperando señal», abiertas y quietas, porque dicen algo
+ *    (el reporte espera) que no se debe perder;
+ *  - las que acompañan un envío, que solo eran un gesto de paso, se quitan.
+ * En escritorio, donde hay de sobra, siguen igual. El desenfoque de la barra
+ * superior no se toca: medido, no pesa.
  */
 @media (max-width: 800px) {
+  .left,
+  .right {
+    animation: none;
+  }
   .calm .left {
     animation: none;
     transform: rotate(-6deg);
+  }
+  .waiting .left,
+  .waiting .right {
+    animation: none;
+    opacity: 0.5;
+    transform: none;
+  }
+  .frame:not(.waiting):not(.calm) {
+    display: none;
   }
 }
 
