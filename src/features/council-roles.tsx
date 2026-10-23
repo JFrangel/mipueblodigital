@@ -2,7 +2,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { Check, DoorOpen, Search, ShieldCheck, UserMinus } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
-import { useSession } from "@/data/session";
+import { useSession, getSession } from "@/data/session";
 import { toast } from "@/data/toasts";
 
 type Person = {
@@ -37,7 +37,7 @@ const plain = (text: string) =>
  * sesión y vuelva a entrar— su aplicación la seguirá tratando como ciudadana.
  * Se dice aquí para que nadie crea que no funcionó.
  */
-export function CouncilRoles() {
+export function CouncilRoles({ activo = true }: { activo?: boolean }) {
   const account = useSession().uid;
   const [people, setPeople] = useState<Person[]>([]);
   const [query, setQuery] = useState("");
@@ -46,11 +46,22 @@ export function CouncilRoles() {
   const [error, setError] = useState("");
   /** El uid de la cuenta cuya reapertura se está confirmando, si hay alguna. */
   const [abriendo, setAbriendo] = useState<string | null>(null);
+  const [deletionEmail, setDeletionEmail] = useState("");
+  const [loadedAccount, setLoadedAccount] = useState(account);
+  if (loadedAccount !== account) {
+    setLoadedAccount(account);
+    setPeople([]);
+    setBusy(true);
+    setError("");
+    setMessage("");
+    setAbriendo(null);
+    setDeletionEmail("");
+  }
   const list = useRef<HTMLDivElement>(null);
 
   const request = useCallback(
     async (body?: { email: string; admin: boolean }) => {
-      const { headers } = await memberHeaders();
+      const { headers } = await memberHeaders(account ?? undefined);
       const response = await fetch("/api/admin/roles/", {
         method: body ? "POST" : "GET",
         headers,
@@ -62,14 +73,18 @@ export function CouncilRoles() {
       if (!response.ok) throw new Error(data.error);
       return data.people as Person[];
     },
-    [],
+    [account],
   );
 
   useEffect(() => {
+    if (!activo) return;
     let alive = true;
     request()
       .then((list) => {
-        if (alive) setPeople(list);
+        if (alive) {
+          setPeople(list);
+          setError("");
+        }
       })
       .catch((e: unknown) => {
         if (alive)
@@ -81,7 +96,7 @@ export function CouncilRoles() {
     return () => {
       alive = false;
     };
-  }, [request]);
+  }, [request, activo]);
 
   function change(target: string, admin: boolean) {
     setBusy(true);
@@ -89,6 +104,7 @@ export function CouncilRoles() {
     setMessage("");
     request({ email: target, admin })
       .then((list) => {
+        if (getSession().uid !== account) return;
         setPeople(list);
         toast(
           admin
@@ -102,11 +118,14 @@ export function CouncilRoles() {
         );
       })
       .catch((e: unknown) => {
+        if (getSession().uid !== account) return;
         const dicho = e instanceof Error ? e.message : "No se pudo guardar.";
         setError(dicho);
         toast(dicho, "error");
       })
-      .finally(() => setBusy(false));
+      .finally(() => {
+        if (getSession().uid === account) setBusy(false);
+      });
   }
 
   /**
@@ -123,7 +142,7 @@ export function CouncilRoles() {
     setError("");
     setMessage("");
     (async () => {
-      const { headers } = await memberHeaders();
+      const { headers } = await memberHeaders(account ?? undefined);
       const response = await fetch("/api/admin/accounts/restablecer/", {
         method: "POST",
         headers,
@@ -135,25 +154,59 @@ export function CouncilRoles() {
       return data.message as string;
     })()
       .then(async (dicho) => {
+        if (getSession().uid !== account) return;
         setAbriendo(null);
         toast(`${person.name || person.email} ya puede entrar.`);
         setMessage(dicho);
-        setPeople(await request());
+        const list = await request();
+        if (getSession().uid === account) setPeople(list);
       })
       .catch((e: unknown) => {
+        if (getSession().uid !== account) return;
         const dicho =
           e instanceof Error ? e.message : "No se pudo restablecer la cuenta.";
         setError(dicho);
         toast(dicho, "error");
       })
-      .finally(() => setBusy(false));
+      .finally(() => {
+        if (getSession().uid === account) setBusy(false);
+      });
+  }
+
+  async function resumeDeletion(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const { headers } = await memberHeaders(account ?? undefined);
+      const response = await fetch("/api/admin/accounts/eliminacion/", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ email: deletionEmail }),
+        signal: AbortSignal.timeout(60000),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      if (getSession().uid !== account) return;
+      setMessage(data.message);
+      const list = await request();
+      if (getSession().uid === account) setPeople(list);
+    } catch (e) {
+      if (getSession().uid === account)
+        setError(
+          e instanceof Error ? e.message : "No se pudo completar la limpieza.",
+        );
+    } finally {
+      if (getSession().uid === account) setBusy(false);
+    }
   }
 
   const needle = plain(query);
   const shown = people.filter(
     (person) =>
-      !needle ||
-      plain(`${person.name} ${person.email}`).includes(needle),
+      !needle || plain(`${person.name} ${person.email}`).includes(needle),
   );
   const admins = people.filter((person) => person.admin).length;
 
@@ -161,6 +214,29 @@ export function CouncilRoles() {
     <section className="panel council-roles">
       <span className="eyebrow">CONSEJO COMUNITARIO</span>
       <h2>Quién administra</h2>
+      <details className="writing-assistant">
+        <summary>Terminar una eliminación pendiente</summary>
+        <p>
+          Si una persona pidió eliminar su cuenta y la limpieza quedó
+          incompleta, continúa aquí. La cuenta permanece cerrada y no se inicia
+          una solicitud nueva.
+        </p>
+        <form onSubmit={resumeDeletion}>
+          <label className="field-label">
+            Correo de la cuenta con eliminación pendiente
+            <input
+              type="email"
+              required
+              value={deletionEmail}
+              onChange={(e) => setDeletionEmail(e.target.value)}
+              disabled={busy}
+            />
+          </label>
+          <button className="btn" disabled={busy}>
+            Completar eliminación pendiente
+          </button>
+        </form>
+      </details>
       <p>
         El rol da acceso a los expedientes, a los comunicados y al análisis. Se
         concede a cuentas que ya entraron alguna vez a la aplicación.
@@ -285,8 +361,8 @@ export function CouncilRoles() {
                   <DoorOpen size={16} /> Volver a abrir esta cuenta
                 </h4>
                 <p>
-                  Se le abre a <strong>{person.name || person.email}</strong> con
-                  su mismo correo. Puede entrar y reportar desde hoy.
+                  Se le abre a <strong>{person.name || person.email}</strong>{" "}
+                  con su mismo correo. Puede entrar y reportar desde hoy.
                 </p>
                 <p>
                   <strong>Lo que reportó antes no vuelve.</strong> Se anonimizó

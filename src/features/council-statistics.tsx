@@ -9,6 +9,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { memberHeaders } from "@/data/remote-reports";
+import { onReportUpdate } from "@/data/report-updates";
 import type { Aggregate } from "@/domain/aggregate";
 import { alertsFor } from "@/domain/council-alerts";
 
@@ -24,6 +25,8 @@ import { alertsFor } from "@/domain/council-alerts";
  * cuentan en el servidor y lo que viaja ya son números.
  */
 export function CouncilStatistics() {
+  const [revision, setRevision] = useState(0);
+  useEffect(() => onReportUpdate(() => setRevision((value) => value + 1)), []);
   const [data, setData] = useState<Aggregate | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
@@ -44,7 +47,10 @@ export function CouncilStatistics() {
     let alive = true;
     request()
       .then((body) => {
-        if (alive) setData(body);
+        if (alive) {
+          setData(body);
+          setError("");
+        }
       })
       .catch((e: unknown) => {
         if (alive)
@@ -56,7 +62,7 @@ export function CouncilStatistics() {
     return () => {
       alive = false;
     };
-  }, [request]);
+  }, [request, revision]);
 
   if (busy && !data)
     return (
@@ -190,7 +196,9 @@ export function CouncilStatistics() {
                 <b>
                   {row.late} de {row.open}
                 </b>
-                <small>{row.late ? "pasados de plazo" : "dentro de plazo"}</small>
+                <small>
+                  {row.late ? "pasados de plazo" : "dentro de plazo"}
+                </small>
               </li>
             ))}
           </ul>

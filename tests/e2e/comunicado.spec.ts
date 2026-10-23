@@ -30,6 +30,36 @@ test("abrir un comunicado lleva a su pantalla de lectura con enlace propio", asy
 test("un comunicado largo se lee con sus apartados, listas, citas e imágenes", async ({
   page,
 }) => {
+  // Fixture propia: editar el comunicado publicado no debe romper la prueba del lector.
+  await page.route("**/api/news/jornada-de-limpieza-del-rio/", (route) =>
+    route.fulfill({
+      json: {
+        id: "jornada-de-limpieza-del-rio",
+        title: "Jornada de limpieza del río Satinga",
+        body: "## Qué se hizo\n\nSe revisaron **catorce puntos**.\n\n- Retiro de residuos\n- Revisión del muelle\n\n> El territorio se corrige entre todos.\n\n## Lo que falta\n\nLa siguiente salida se coordina con la comunidad.\n\n## Cómo participar\n\nAcércate al Consejo.",
+        kind: "boletin",
+        art: null,
+        cover: null,
+        pinned: false,
+        saying: null,
+        publishedAt: "2026-09-14T12:00:00Z",
+        images: [
+          {
+            id: "11111111-1111-4111-8111-111111111111",
+            caption: "Jornada de limpieza",
+          },
+        ],
+      },
+    }),
+  );
+  await page.route(
+    "**/api/news/jornada-de-limpieza-del-rio/media/11111111-1111-4111-8111-111111111111/",
+    (route) =>
+      route.fulfill({
+        path: "public/brand/territorio.webp",
+        contentType: "image/webp",
+      }),
+  );
   await page.goto("/noticia/jornada-de-limpieza-del-rio/");
   const body = page.locator(".bulletin-body");
   await expect(body).toBeVisible();
@@ -44,12 +74,14 @@ test("un comunicado largo se lee con sus apartados, listas, citas e imágenes", 
   await expect(body).not.toContainText("**");
   await expect(body).not.toContainText("## ");
 
-  // Las imágenes viven aparte del documento y se sirven por la aplicación.
+  // Prueba del lector con respuesta controlada. La ruta real se cubre en news-media-read.test.ts.
   const gallery = page.locator(".bulletin-gallery img");
   await expect(gallery.first()).toBeVisible();
   // Que decodifique es la prueba de que los bytes viajaron enteros.
   await expect
-    .poll(() => gallery.first().evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .poll(() =>
+      gallery.first().evaluate((img: HTMLImageElement) => img.naturalWidth),
+    )
     .toBeGreaterThan(0);
 
   // La columna lateral trae el índice del propio texto; la firma cierra abajo.
@@ -66,7 +98,10 @@ test("un comunicado largo se lee con sus apartados, listas, citas e imágenes", 
   await expect(sign.locator("p")).not.toBeEmpty();
 
   // Ampliar es lo que hace visible el detalle del original sin recomprimir.
-  await page.getByRole("button", { name: /^Ampliar/ }).first().click();
+  await page
+    .getByRole("button", { name: /^Ampliar/ })
+    .first()
+    .click();
   const viewer = page.getByRole("dialog");
   await expect(viewer).toBeVisible();
   await expect(viewer.locator("img")).toBeVisible();

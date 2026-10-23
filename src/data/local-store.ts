@@ -127,6 +127,18 @@ async function openDb(): Promise<IDBDatabase> {
  * que cuenta.
  */
 export async function readLocalCases(owner?: string | null): Promise<Case[]> {
+  // Recuperar también los recibos de envíos confirmados por versiones anteriores.
+  if (owner) {
+    const { outgoingFor } = await import("./outbox");
+    for (const entry of await outgoingFor(owner)) {
+      if (entry.receipt)
+        await markCaseDelivered(
+          `LOCAL-${entry.key}`,
+          entry.receipt.receivedAt,
+          entry.receipt.id,
+        );
+    }
+  }
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction("cases", "readonly");
@@ -161,6 +173,7 @@ export async function readLocalCases(owner?: string | null): Promise<Case[]> {
 export async function markCaseDelivered(
   id: string,
   receivedAt: string,
+  serverId = id,
 ): Promise<void> {
   const db = await openDb();
   return new Promise((resolve, reject) => {
@@ -172,12 +185,15 @@ export async function markCaseDelivered(
       if (!item) return;
       store.put({
         ...item,
+        id: serverId,
+        date: receivedAt,
         delivery: "enviado",
         notes: [
           ...item.notes.filter((note) => !note.startsWith("En la bandeja")),
           `Recibido por el Consejo el ${new Date(receivedAt).toLocaleString("es-CO")}.`,
         ],
       });
+      if (serverId !== id) store.delete(id);
     };
     tx.oncomplete = () => {
       db.close();

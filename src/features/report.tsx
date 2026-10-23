@@ -358,7 +358,7 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         lat: point?.lat ?? reference?.lat,
         lng: point?.lng ?? reference?.lng,
         status: "pendiente",
-        date: new Date().toISOString(),
+        date: updated?.receipt?.receivedAt ?? entry.createdAt,
         owner: "propio",
         /* Con recibo ya está en el Consejo; sin él espera señal en la bandeja
            de salida, que no es lo mismo que un borrador: este sale solo. */

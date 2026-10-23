@@ -121,6 +121,10 @@ test("oscuro conserva contraste y banner a color, detalle navega como página", 
     path: "test-results/inicio-dark-color.png",
     fullPage: true,
   });
+  // Los reportes recientes del inicio son comunitarios; los propios se abren en su historial.
+  await page
+    .getByRole("link", { name: "Ver mis reportes", exact: true })
+    .click();
   await page.getByRole("button", { name: /Alumbrado en el malecón/ }).click();
   await expect(page).toHaveURL(/\/reporte\//);
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -133,7 +137,7 @@ test("oscuro conserva contraste y banner a color, detalle navega como página", 
     fullPage: true,
   });
   await page.getByRole("link", { name: "Volver a los reportes" }).click();
-  await expect(page).toHaveURL(/\/inicio\//);
+  await expect(page).toHaveURL(/\/mis-reportes\//);
 });
 
 /**

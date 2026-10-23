@@ -78,7 +78,12 @@ export async function POST(
        * cayendo aquí, porque en ese caso el expediente sí falta.
        */
       if (!old) {
-        if (previous.exists) return { removed: true, repeated: true };
+        if (previous.exists)
+          return {
+            removed: true,
+            repeated: true,
+            owner: String(previous.data()?.owner ?? ""),
+          };
         throw new ApiError(404, "Caso no encontrado.");
       }
       const at = new Date().toISOString();
@@ -123,11 +128,6 @@ export async function POST(
       });
       return { removed: true, repeated: false, owner: String(old.owner ?? "") };
     });
-    if (result.repeated)
-      return Response.json(
-        { removed: true, complete: true },
-        { headers: { "Cache-Control": "no-store" } },
-      );
     /* El motivo, también en el teléfono. Es el aviso que más falta hace de
        los cuatro: a quien reportó le desaparece el expediente de la lista, y
        sin esto se entera cuando vuelva a abrir la aplicación —o no se entera—.
@@ -136,7 +136,7 @@ export async function POST(
        Va antes de la limpieza y con `void`: el expediente ya está retirado, y
        que falle barrer sus actuaciones no puede dejar a la persona sin saberlo.
        Y lleva a «Mis reportes», no al expediente, que ya no existe. */
-    if (result.owner)
+    if (result.owner && !result.repeated)
       void avisar(
         db,
         { uid: result.owner },
@@ -170,17 +170,26 @@ export async function POST(
          `incidentId`, así que la consulta no lo alcanza y se queda, que es
          justo el que hay que conservar. */
       if (result.owner)
-        await barrer(
-          db
-            .collection(`notifications/${result.owner}/items`)
-            .where("incidentId", "==", id),
-        );
-      await barrer(
-        db.collection("councilNotifications").where("incidentId", "==", id),
-      );
-      await barrer(
-        db.collection("incidentEvidence").where("incident_id", "==", id),
-      );
+        if (
+          !(await barrer(
+            db
+              .collection(`notifications/${result.owner}/items`)
+              .where("incidentId", "==", id),
+          ))
+        )
+          complete = false;
+      if (
+        !(await barrer(
+          db.collection("councilNotifications").where("incidentId", "==", id),
+        ))
+      )
+        complete = false;
+      if (
+        !(await barrer(
+          db.collection("incidentEvidence").where("incident_id", "==", id),
+        ))
+      )
+        complete = false;
     } catch {
       complete = false;
     }

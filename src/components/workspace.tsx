@@ -111,13 +111,21 @@ export function Workspace({
   const router = useRouter();
   /* Arranca vacío: lo que se vea vendrá de lo que la comunidad haya reportado
      en este dispositivo, no de un conjunto fabricado. */
-  const [items, setItems] = useState<Case[]>([]),
+  const [storedItems, setItems] = useState<Case[]>([]),
+    [deliveryRevision, setDeliveryRevision] = useState(0),
     [loaded, setLoaded] = useState(false),
     [menu, setMenu] = useState(false),
     [notifications, setNotifications] = useState(false),
     [storageError, setStorageError] = useState("");
   const dark = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
   const session = useSession();
+  const items = useMemo(
+    () =>
+      storedItems.filter((item) =>
+        session.uid ? item.account === session.uid : !item.account,
+      ),
+    [storedItems, session.uid],
+  );
   /* Los que esperan a nombre de nadie: si la bandeja ya los está enseñando con
      su botón de entrar, la tarjeta de «esto es tuyo» sobra. Ver sin-cuenta.ts. */
   const esperandoSinCuenta = usePendientesSinCuenta();
@@ -128,26 +136,26 @@ export function Workspace({
   const council = section === "admin" && session.admin;
   const online = useOnline();
   const tono = useTonoDeMarca();
-  /* Cifras propias para la tarjeta de «Mis reportes». */
-  const mine = summarize(items.filter((i) => i.owner !== "community"));
-  /* El historial es de la cuenta, no del teléfono: lo que el servidor guarda a
-     su nombre más lo que este dispositivo tiene y todavía no ha salido. Solo
-     en «Mis reportes»: el mapa y las estadísticas hablan del territorio y leen
-     lo que hay aquí. */
-  /* Se pide en «Mis reportes», que es su pantalla, y además en cualquier otra
-     mientras este aparato guarde copias de reportes que ya salieron: son las
-     que pueden estar contando un expediente que el Consejo retiró, y el mapa y
-     las cifras del inicio las leen igual que el historial. */
-  const account = useAccountReports(
-    section === "mis-reportes" ||
-      items.some((item) => deliveryOf(item) === "enviado"),
-    session.uid,
-    online,
-  );
+  /* Todas las vistas propias consultan la cuenta, aunque este dispositivo esté vacío. */
+  const account = useAccountReports(true, session.uid, online);
+  const reloadAccount = account.reload;
+  useEffect(() => {
+    const refresh = () => {
+      reloadAccount();
+      setDeliveryRevision((value) => value + 1);
+    };
+    window.addEventListener("case-delivered", refresh);
+    return () => window.removeEventListener("case-delivered", refresh);
+  }, [reloadAccount]);
   const mineItems = useMemo(
     () => mergeAccountReports(items, account.items),
     [items, account.items],
   );
+  const mine = summarize(mineItems.filter((i) => i.owner !== "community"));
+  const ownUnknown =
+    !!session.uid &&
+    !mineItems.length &&
+    (account.loading || !online || !!account.error);
   /**
    * Lo que el servidor ya no tiene, se va también de aquí.
    *
@@ -180,8 +188,21 @@ export function Workspace({
    * proceso» en un caso que el Consejo ya había cerrado: la copia de este
    * aparato es del día en que se envió.
    */
-  const shared = useCommunityReports(!!session.uid);
+  const shared = useCommunityReports(session.uid, online);
   const community = shared.items;
+  const ownNotice = !online
+    ? "Sin conexión: se muestra la última información disponible de tus reportes."
+    : account.loading
+      ? "Consultando tus reportes…"
+      : account.error;
+  const communityNotice = !online
+    ? "Sin conexión: los reportes de la comunidad se consultan al volver la señal. Se conserva la última información disponible."
+    : !session.uid
+      ? "Entra a tu cuenta para consultar los reportes de la comunidad."
+      : shared.loading
+        ? "Consultando los reportes de la comunidad…"
+        : shared.error;
+
   /**
    * Lo que se dibuja en el mapa del territorio.
    *
@@ -238,22 +259,13 @@ export function Workspace({
       mine={section === "mis-reportes"}
       /* Volver a pedir la lista de la comunidad. Lo propio no lo lleva: se
          reconsulta solo al entrar y al recuperar la señal. */
-      onRefresh={section === "historial" ? shared.reload : undefined}
+      onRefresh={section === "historial" ? shared.reload : account.reload}
+      loading={section === "mis-reportes" ? account.loading : shared.loading}
       /* Sin señal, «Mis reportes» enseña solo la copia de este aparato, pero
          el rótulo sigue prometiendo «lo que el Consejo tiene a tu nombre». Con
          un reporte hecho desde otro teléfono, la lista parecía completa y no lo
          era. Decirlo cuesta una línea; callarlo, la confianza en la lista. */
-      notice={
-        section === "mis-reportes"
-          ? !online
-            ? "Sin conexión: esto es lo que guarda este teléfono. Lo que el Consejo tiene a tu nombre se consulta al volver la señal."
-            : account.error
-          : !online
-            ? "Sin conexión: los reportes de la comunidad se consultan al volver la señal."
-            : session.uid
-              ? ""
-              : "Los reportes de la comunidad son de quienes la forman: hay que entrar para verlos."
-      }
+      notice={section === "mis-reportes" ? ownNotice : communityNotice}
     />
   ) : null;
   /**
@@ -301,21 +313,32 @@ export function Workspace({
   /* Se relee al cambiar de cuenta: si no, quien entra encuentra en pantalla lo
      que dejó cargado la sesión anterior. */
   useEffect(() => {
+    let alive = true;
     readLocalCases(session.uid)
       /* El almacén devuelve por clave, no por fecha. Sin este orden, «Reportes
          recientes» mostraba los más antiguos y recortaba los de esta semana. */
-      .then((saved) =>
-        setItems(
-          [...saved].sort(
-            (a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id),
+      .then(
+        (saved) =>
+          alive &&
+          setItems(
+            [...saved].sort(
+              (a, b) =>
+                b.date.localeCompare(a.date) || b.id.localeCompare(a.id),
+            ),
           ),
-        ),
       )
-      .catch(() =>
-        setStorageError("El almacenamiento local no está disponible."),
+      .catch(
+        () =>
+          alive &&
+          setStorageError("El almacenamiento local no está disponible."),
       )
-      .finally(() => setLoaded(true));
-  }, [session.uid]);
+      .finally(() => {
+        if (alive) setLoaded(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [session.uid, deliveryRevision]);
   /**
    * Las veredas que el Consejo situó a partir de los reportes de la comunidad.
    *
@@ -341,7 +364,11 @@ export function Workspace({
     /* Firmado con la cuenta que lo guardó: el almacén es de este aparato, pero
        cada reporte es de alguien. */
     await saveLocalCase({ ...item, account: session.uid ?? undefined });
-    setItems((current) => [item, ...current]);
+    account.reload();
+    setItems((current) => [
+      { ...item, account: session.uid ?? undefined },
+      ...current,
+    ]);
   }
   return (
     <div className={dark ? "workspace dark" : "workspace"}>
@@ -567,6 +594,7 @@ export function Workspace({
               </header>
               {selected ? (
                 <ReportDetail
+                  key={`${session.uid ?? "local"}:${selected.id}`}
                   item={selected}
                   /* Se decide por el rol, no por la dirección desde la que se
                      llegó: un parámetro en la barra no es permiso.
@@ -673,7 +701,11 @@ export function Workspace({
           )}
           {section === "inicio" && (
             <Dashboard
-              items={items}
+              items={mineItems}
+              ownUnknown={ownUnknown}
+              ownNotice={ownNotice}
+              communityNotice={communityNotice}
+              onRefreshCommunity={shared.reload}
               community={community}
               onSelect={setSelected}
             />
@@ -707,17 +739,17 @@ export function Workspace({
               figures={[
                 {
                   Icon: Files,
-                  value: String(mine.total),
+                  value: ownUnknown ? "—" : String(mine.total),
                   label: "Registrados",
                 },
                 {
                   Icon: Clock,
-                  value: String(mine.active),
+                  value: ownUnknown ? "—" : String(mine.active),
                   label: "En proceso",
                 },
                 {
                   Icon: CheckCircle2,
-                  value: String(mine.solved),
+                  value: ownUnknown ? "—" : String(mine.solved),
                   label: "Solucionados",
                 },
               ]}
@@ -783,6 +815,20 @@ export function Workspace({
                   ocurrió.
                 </AccesoNecesario>
               )}
+              {session.uid && (ownNotice || communityNotice) && (
+                <p className="notice" role="status">
+                  {[ownNotice, communityNotice].filter(Boolean).join(" ")}{" "}
+                  <button
+                    className="text-button"
+                    onClick={() => {
+                      account.reload();
+                      shared.reload();
+                    }}
+                  >
+                    Actualizar reportes
+                  </button>
+                </p>
+              )}
               <Territory items={territory} onSelect={setSelected} />
             </>
           )}
@@ -792,13 +838,40 @@ export function Workspace({
               COMUNITARIO» una tasa de solución calculada sobre los reportes de
               un teléfono. Es el mismo error que ya se había corregido en el
               mapa y en el historial, en la pantalla que faltaba. */}
-          {section === "estadisticas" && (
-            <Statistics
-              items={territory}
-              partial={!online}
-              signed={!!session.uid}
-            />
-          )}
+          {section === "estadisticas" &&
+            (session.uid &&
+            !territory.length &&
+            (!account.complete || !shared.complete) ? (
+              <section className="panel">
+                <h2>Estadísticas del territorio</h2>
+                <p className="notice" role="status">
+                  {[ownNotice, communityNotice].filter(Boolean).join(" ") ||
+                    "Consultando los reportes del territorio…"}
+                </p>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    account.reload();
+                    shared.reload();
+                  }}
+                >
+                  Actualizar reportes
+                </button>
+              </section>
+            ) : (
+              <Statistics
+                items={territory}
+                partial={
+                  !online ||
+                  (!!session.uid && (!account.complete || !shared.complete))
+                }
+                partialNotice={
+                  [ownNotice, communityNotice].filter(Boolean).join(" ") ||
+                  undefined
+                }
+                signed={!!session.uid}
+              />
+            ))}
           {section === "documentacion" && <Knowledge />}
           {section === "reportar" && <Report onSave={save} />}
           {section === "comunidad" && <CommunityFeed />}
@@ -857,10 +930,18 @@ function Dashboard({
   items,
   community,
   onSelect,
+  ownUnknown,
+  ownNotice,
+  communityNotice,
+  onRefreshCommunity,
 }: {
   items: Case[];
   community: Case[];
   onSelect: (c: Case) => void;
+  ownUnknown: boolean;
+  ownNotice: string;
+  communityNotice: string;
+  onRefreshCommunity: () => void;
 }) {
   const s = summarize(items.filter((i) => i.owner !== "community"));
   const month = new Date().toISOString().slice(0, 7);
@@ -874,6 +955,7 @@ function Dashboard({
      publicado por el Consejo seguía diciendo cero, y el rótulo prometía otra
      cosa. Lo de la comunidad son los reportes que la comunidad puede ver. */
   const pulse = summarize(community);
+  const communityUnknown = !!communityNotice && community.length === 0;
   const monthlyCommunity = community.filter((item) =>
     item.date.startsWith(month),
   ).length;
@@ -1031,12 +1113,17 @@ function Dashboard({
                 <m.Icon size={20} />
               </span>
               <small>{m.label}</small>
-              <strong>{m.value}</strong>
+              <strong>{ownUnknown ? "—" : m.value}</strong>
               <p>{m.desc}</p>
               <ArrowUpRight className="metric-arrow" size={15} />
             </Link>
           ))}
         </div>
+      )}
+      {session.uid && ownNotice && (
+        <p className="notice" role="status">
+          {ownNotice}
+        </p>
       )}
       <div className="dashboard-grid">
         <section className="panel reports-panel">
@@ -1049,7 +1136,27 @@ function Dashboard({
               Ver todos <ArrowUpRight size={16} />
             </Link>
           </div>
-          <CaseList items={items.slice(0, 4)} onSelect={onSelect} />
+          {communityNotice && (
+            <p className="notice" role="status">
+              {communityNotice}
+              {session.uid && (
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={onRefreshCommunity}
+                >
+                  Reintentar consulta
+                </button>
+              )}
+            </p>
+          )}
+          {community.length ? (
+            <CaseList items={community.slice(0, 4)} onSelect={onSelect} />
+          ) : !communityNotice ? (
+            <p className="subtle-note">
+              Todavía no hay reportes comunitarios publicados.
+            </p>
+          ) : null}
           <Link href="/mapa/" className="panel-foot">
             <Map size={16} /> Explorar el mapa del territorio{" "}
             <ArrowRight size={16} />
@@ -1121,17 +1228,19 @@ function Dashboard({
         figures={[
           {
             Icon: Users,
-            value: session.uid ? String(monthlyCommunity) : "—",
+            value:
+              session.uid && !communityUnknown ? String(monthlyCommunity) : "—",
             label: "Reportes este mes",
           },
           {
             Icon: CheckCircle2,
-            value: session.uid ? String(pulse.solved) : "—",
+            value:
+              session.uid && !communityUnknown ? String(pulse.solved) : "—",
             label: "Solucionados",
           },
           {
             Icon: TrendingUp,
-            value: session.uid ? `${pulse.rate} %` : "—",
+            value: session.uid && !communityUnknown ? `${pulse.rate} %` : "—",
             label: "Tasa de resolución",
           },
         ]}
@@ -1258,6 +1367,7 @@ function CaseBrowser({
   mine,
   notice,
   onRefresh,
+  loading = false,
 }: {
   items: Case[];
   onSelect: (c: Case) => void;
@@ -1266,6 +1376,7 @@ function CaseBrowser({
   notice?: string;
   /** Volver a pedir la lista, donde la lista viene del servidor. */
   onRefresh?: () => void;
+  loading?: boolean;
 }) {
   const catalogue = useCatalogue();
   const items = useMemo(
@@ -1339,7 +1450,6 @@ function CaseBrowser({
       {notice && (
         <div className="notice" role="status">
           {notice}
-          {mine && " Abajo está lo que hay guardado en este teléfono."}
         </div>
       )}
       <div className="filters">
@@ -1403,7 +1513,9 @@ function CaseBrowser({
           <h2>{mine ? "Tus reportes" : "Historial de incidencias"}</h2>
           <span className="tag">{filtered.length} reportes</span>
         </div>
-        <CaseList items={pageItems(filtered, page, 10)} onSelect={onSelect} />
+        {filtered.length || (!loading && !notice) ? (
+          <CaseList items={pageItems(filtered, page, 10)} onSelect={onSelect} />
+        ) : null}
         <div className="pagination">
           <small>
             Página {page} de {Math.max(1, Math.ceil(filtered.length / 10))}

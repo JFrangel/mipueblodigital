@@ -80,7 +80,13 @@ function baseDeDatos() {
             state.existentes.set(ref.path, data);
           }),
         set: (ref: { path: string }, data: Record<string, unknown>) =>
-          escrituras.push(() => state.escrito.push({ path: ref.path, data })),
+          escrituras.push(() => {
+            state.escrito.push({ path: ref.path, data });
+            state.existentes.set(ref.path, {
+              ...state.existentes.get(ref.path),
+              ...data,
+            });
+          }),
         update: (ref: { path: string }, data: Record<string, unknown>) =>
           escrituras.push(() => state.escrito.push({ path: ref.path, data })),
         delete: (ref: { path: string }) =>

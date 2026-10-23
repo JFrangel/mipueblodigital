@@ -98,11 +98,15 @@ export async function reconcileNative(owner: string) {
           item.requestId,
           item.receipt,
         )
-      )
+      ) {
         await markCaseDelivered(
           `LOCAL-${item.key}`,
           item.receipt.receivedAt,
+          item.receipt.id,
         ).catch(() => undefined);
+        if (typeof window !== "undefined")
+          window.dispatchEvent(new Event("case-delivered"));
+      }
     } else if (item.state === "attention") {
       await markNativeAttention(item.key, owner, item.requestId);
     }

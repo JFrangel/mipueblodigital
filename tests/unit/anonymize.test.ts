@@ -15,27 +15,35 @@ type Doc = Record<string, unknown>;
 const store = new Map<string, Doc>();
 
 /** Firestore mínimo: consultas por igualdad, lotes y borrados sobre un mapa. */
-function collection(prefix: string, filters: [string, unknown][] = []) {
-  const query = {
+function collection(
+  prefix: string,
+  filters: [string, unknown][] = [],
+  after = "",
+  max = Infinity,
+): FirebaseFirestore.Query {
+  return {
     doc: (id: string) => doc(`${prefix}/${id}`),
     where: (field: string, _op: string, value: unknown) =>
-      collection(prefix, [...filters, [field, value]]),
-    limit: (max: number) => ({
-      get: async () => {
-        const docs = [...store.entries()]
-          .filter(
-            ([path, data]) =>
-              path.startsWith(`${prefix}/`) &&
-              !path.slice(prefix.length + 1).includes("/") &&
-              filters.every(([field, value]) => data[field] === value),
-          )
-          .slice(0, max)
-          .map(([path, data]) => ({ ref: doc(path), data: () => data }));
-        return { docs, size: docs.length, empty: !docs.length };
-      },
-    }),
-  };
-  return query as unknown as FirebaseFirestore.Query;
+      collection(prefix, [...filters, [field, value]], after, max),
+    orderBy: () => collection(prefix, filters, after, max),
+    startAfter: (snapshot: { ref: { path: string } }) =>
+      collection(prefix, filters, snapshot.ref.path, max),
+    limit: (limit: number) => collection(prefix, filters, after, limit),
+    get: async () => {
+      const docs = [...store.entries()]
+        .filter(
+          ([path, data]) =>
+            path.startsWith(`${prefix}/`) &&
+            !path.slice(prefix.length + 1).includes("/") &&
+            path > after &&
+            filters.every(([field, value]) => data[field] === value),
+        )
+        .sort(([a], [b]) => a.localeCompare(b))
+        .slice(0, max)
+        .map(([path, data]) => ({ ref: doc(path), data: () => data }));
+      return { docs, size: docs.length, empty: !docs.length };
+    },
+  } as unknown as FirebaseFirestore.Query;
 }
 
 function doc(path: string) {
@@ -135,14 +143,62 @@ beforeEach(() => {
 });
 
 describe("anonimización de cuenta", () => {
-  it("no declara terminada la limpieza si quedan copias de las fotografías", async () => {
-    for (let i = 0; i < 1005; i++) store.set(`incidentEvidence/copia-${i}`, { owner: "ana", content_base64: "foto" });
-    const first = await anonymizeAccount(db, "ana", "anon-1");
+  it("retoma las notas si falla su limpieza después de retirar los datos del expediente", async () => {
+    const original = db.batch.bind(db);
+    let count = 0;
+    const spy = vi.spyOn(db, "batch").mockImplementation(() => {
+      const batch = original();
+      count++;
+      if (count === 2)
+        vi.spyOn(batch, "commit").mockRejectedValueOnce(
+          new Error("corte de red"),
+        );
+      return batch;
+    });
+    let first;
+    try {
+      first = await anonymizeAccount(db, "ana", "anon-1");
+    } finally {
+      spy.mockRestore();
+    }
     expect(first.complete).toBe(false);
-    expect([...store.keys()].filter(k => k.startsWith("incidentEvidence/"))).toHaveLength(5);
     const second = await anonymizeAccount(db, "ana", "anon-1");
     expect(second.complete).toBe(true);
-    expect([...store.keys()].filter(k => k.startsWith("incidentEvidence/"))).toHaveLength(0);
+    expect(store.get("incidents/uno/events/cambio-1")!.internalNote).toBe("");
+  });
+  it("limpia más de quinientas actuaciones y expedientes parciales anteriores", async () => {
+    store.set("incidents/uno", {
+      ...store.get("incidents/uno"),
+      owner: "anon-1",
+      anonymizedAt: "ayer",
+    });
+    for (let i = 0; i < 510; i++)
+      store.set(`incidents/uno/events/nota-${i.toString().padStart(4, "0")}`, {
+        internalNote: "dato personal",
+      });
+    expect((await anonymizeAccount(db, "ana", "anon-1")).complete).toBe(true);
+    expect(
+      [...store.entries()]
+        .filter(([p]) => p.startsWith("incidents/uno/events/"))
+        .every(([, v]) => v.internalNote === ""),
+    ).toBe(true);
+  });
+  it("no declara terminada la limpieza si quedan copias de las fotografías", async () => {
+    for (let i = 0; i < 1005; i++)
+      store.set(`incidentEvidence/copia-${i}`, {
+        owner: "ana",
+        content_base64: "foto",
+      });
+    const first = await anonymizeAccount(db, "ana", "anon-1");
+    expect(first.complete).toBe(false);
+    expect(
+      [...store.keys()].filter((k) => k.startsWith("incidentEvidence/")),
+    ).toHaveLength(5);
+    const second = await anonymizeAccount(db, "ana", "anon-1");
+    expect(second.complete).toBe(true);
+    expect(
+      [...store.keys()].filter((k) => k.startsWith("incidentEvidence/")),
+    ).toHaveLength(0);
   });
   it("retira los datos personales y conserva la trazabilidad comunitaria", async () => {
     const result = await anonymizeAccount(db, "ana", "anon-1");

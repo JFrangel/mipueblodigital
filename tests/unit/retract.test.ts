@@ -12,6 +12,9 @@ const id = "b".repeat(64);
 const state = vi.hoisted(() => ({
   incidente: undefined as Record<string, unknown> | undefined,
   acta: false,
+  failEvidence: false,
+  saturated: "",
+  scanned: [] as string[],
   escrito: [] as Array<{ op: string; path: string; data?: unknown }>,
   evidencia: [] as string[],
   avisos: [] as Array<{
@@ -47,12 +50,22 @@ vi.mock("../../src/server/admin-auth", () => ({
         collection: () => ({ doc: (d: string) => ({ path: `${path}/${d}` }) }),
       }),
       collection: (path: string) => {
+        state.scanned.push(path);
         /* El barrido encadena `where(...).limit(...)`, así que el doble tiene
            que devolverse a sí mismo. Vacío: nada cuelga del caso. */
         const vacia: Record<string, unknown> = { path };
         vacia.where = () => vacia;
         vacia.limit = () => ({
-          get: async () => ({ empty: true, docs: [], size: 0 }),
+          get: async () =>
+            path === state.saturated
+              ? {
+                  empty: false,
+                  docs: Array.from({ length: 100 }, () => ({
+                    ref: { path: "pending" },
+                  })),
+                  size: 100,
+                }
+              : { empty: true, docs: [], size: 0 },
         });
         return vacia;
       },
@@ -72,7 +85,7 @@ vi.mock("../../src/server/admin-auth", () => ({
               : !!state.incidente,
             data: () =>
               ref.path.startsWith("removedIncidents/")
-                ? undefined
+                ? { owner: "uid-de-quien-reporto" }
                 : state.incidente,
           }),
           create: (ref, data) =>
@@ -90,7 +103,8 @@ vi.mock("../../src/server/admin-auth", () => ({
 vi.mock("../../src/server/evidence", () => ({
   evidenceRequest: async (query: string) => {
     state.evidencia.push(query);
-    return new Response("", { status: 204 });
+    if (state.failEvidence) throw new Error("Archivo no disponible");
+    return new Response(null, { status: 204 });
   },
 }));
 
@@ -112,6 +126,9 @@ const retirar = (reason: string, codigo = id) =>
 beforeEach(() => {
   state.avisos = [];
   state.acta = false;
+  state.failEvidence = false;
+  state.saturated = "";
+  state.scanned = [];
   state.escrito = [];
   state.evidencia = [];
   state.incidente = {
@@ -123,6 +140,39 @@ beforeEach(() => {
     description: "El río se desbordó.",
     phone: "3001234567",
   };
+});
+
+it("reintenta la limpieza de una retirada parcial sin repetir acta ni avisos", async () => {
+  state.failEvidence = true;
+  expect(
+    await (
+      await retirar("Reporte duplicado del expediente del muelle.")
+    ).json(),
+  ).toMatchObject({ complete: false });
+  state.acta = true;
+  state.incidente = undefined;
+  state.failEvidence = false;
+  state.escrito = [];
+  state.avisos = [];
+  state.scanned = [];
+  expect(
+    await (
+      await retirar("Reporte duplicado del expediente del muelle.")
+    ).json(),
+  ).toMatchObject({ complete: true });
+  expect(state.evidencia).toHaveLength(2);
+  expect(state.scanned).toContain("notifications/uid-de-quien-reporto/items");
+  expect(state.escrito).toHaveLength(0);
+  expect(state.avisos).toHaveLength(0);
+});
+
+it("no confirma limpieza completa si quedan copias por encima del lote máximo", async () => {
+  state.saturated = "incidentEvidence";
+  expect(
+    await (
+      await retirar("Reporte duplicado del expediente del muelle.")
+    ).json(),
+  ).toMatchObject({ complete: false });
 });
 
 it("sin motivo no se retira nada", async () => {

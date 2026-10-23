@@ -165,12 +165,14 @@ test("sin señal, cada lista dice que va corta", async ({ page, context }) => {
 
   await page.goto("/mis-reportes/");
   await expect(
-    page.getByText(/Sin conexión: esto es lo que guarda/),
+    page.getByText(/Sin conexión: se muestra la última información disponible/),
   ).toBeVisible({ timeout: 15000 });
 
   await page.goto("/estadisticas/");
   await expect(
-    page.getByText(/cuentan solo lo que guarda este teléfono/),
+    page
+      .getByRole("status")
+      .filter({ hasText: /última información disponible/ }),
   ).toBeVisible({ timeout: 15000 });
 
   await page.goto("/historial/");

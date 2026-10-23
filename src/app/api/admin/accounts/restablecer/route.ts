@@ -39,6 +39,14 @@ export async function POST(request: Request) {
 
     const uid = target.uid;
     const cuenta = (await db.doc(`accounts/${uid}`).get()).data();
+    const deletion = (
+      await db.doc(`accountDeletionRequests/${uid}`).get()
+    ).data();
+    if (deletion && ["pending", "partial"].includes(String(deletion.state)))
+      throw new ApiError(
+        409,
+        "Primero completa la eliminación pendiente desde Quién administra. No se puede reabrir mientras quedan datos por limpiar.",
+      );
     /* Restablecer lo que está abierto no es inocuo: escribiría `active: true`
        sobre una cuenta que quizá esté apagada por otro motivo, y este no es el
        sitio donde se decide eso. */
@@ -127,7 +135,9 @@ export async function POST(request: Request) {
     return Response.json(
       {
         error:
-          e instanceof ApiError ? e.message : "No se pudo restablecer la cuenta.",
+          e instanceof ApiError
+            ? e.message
+            : "No se pudo restablecer la cuenta.",
       },
       { status: e instanceof ApiError ? e.status : 503, headers },
     );

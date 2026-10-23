@@ -188,7 +188,7 @@ export function CouncilPanel({ pending }: { pending: Case[] }) {
         aria-labelledby="council-tab-roles"
         hidden={active !== "roles"}
       >
-        <CouncilRoles />
+        <CouncilRoles activo={active === "roles"} />
       </div>
     </>
   );

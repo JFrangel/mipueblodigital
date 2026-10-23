@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import type { Case } from "@/data/catalog";
 import { memberHeaders } from "@/data/remote-reports";
+import { onReportUpdate } from "./report-updates";
+import { useSession } from "./session";
 
 /** Las dos respuestas posibles del servidor, que no se pueden confundir. */
 type Found =
@@ -54,8 +56,12 @@ export type Removed = {
 
 type Answer = { item: Case | null; removed: Removed | null };
 
-async function lookup(id: string, signal: AbortSignal): Promise<Answer> {
-  const { headers } = await memberHeaders();
+async function lookup(
+  id: string,
+  signal: AbortSignal,
+  uid: string,
+): Promise<Answer> {
+  const { headers } = await memberHeaders(uid);
   const response = await fetch(`/api/incidents/${encodeURIComponent(id)}/`, {
     headers,
     cache: "no-store",
@@ -89,24 +95,32 @@ async function lookup(id: string, signal: AbortSignal): Promise<Answer> {
  * pantalla no anuncie una ausencia mientras la respuesta viene en camino.
  */
 export function useReportLookup(id: string | undefined, enabled: boolean) {
+  const { uid } = useSession();
+  const [revision, setRevision] = useState(0);
+  useEffect(
+    () => onReportUpdate(() => setRevision((value) => value + 1), id),
+    [id],
+  );
   const [state, setState] = useState<{
+    uid: string | null;
     id: string;
     item: Case | null;
     removed: Removed | null;
     error: string;
-  }>({ id: "", item: null, removed: null, error: "" });
+  }>({ uid: null, id: "", item: null, removed: null, error: "" });
 
   useEffect(() => {
-    if (!id || !enabled) return;
+    if (!id || !enabled || !uid) return;
     const controller = new AbortController();
     let alive = true;
-    lookup(id, controller.signal)
+    lookup(id, controller.signal, uid)
       .then(({ item, removed }) => {
-        if (alive) setState({ id, item, removed, error: "" });
+        if (alive) setState({ uid, id, item, removed, error: "" });
       })
       .catch((error: unknown) => {
         if (!alive || controller.signal.aborted) return;
         setState({
+          uid,
           id,
           item: null,
           removed: null,
@@ -120,12 +134,13 @@ export function useReportLookup(id: string | undefined, enabled: boolean) {
       alive = false;
       controller.abort();
     };
-  }, [id, enabled]);
+  }, [id, enabled, uid, revision]);
 
   /* Sin identificador o sin a quién preguntar no hay nada pendiente: la
      pantalla puede decir ya lo que sabe. */
-  const answered = !id || !enabled || state.id === id;
-  return state.id === id
+  const matches = state.id === id && state.uid === uid && enabled && !!uid;
+  const answered = !id || !enabled || !uid || matches;
+  return matches
     ? {
         item: state.item,
         removed: state.removed,

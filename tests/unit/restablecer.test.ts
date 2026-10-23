@@ -83,7 +83,11 @@ vi.mock("../../src/server/admin-auth", () => ({
     return { uid: "quien-administra", db: baseDeDatos() };
   },
   requireIdentity: async () => ({
-    identity: { uid: state.identidad.uid, admin: false, auth_time: Date.now() / 1000 },
+    identity: {
+      uid: state.identidad.uid,
+      admin: false,
+      auth_time: Date.now() / 1000,
+    },
     db: baseDeDatos(),
   }),
 }));
@@ -94,11 +98,10 @@ function baseDeDatos() {
     batch: () => {
       const pendientes: Array<() => void> = [];
       return {
-        set: (
-          d: { get: () => unknown },
-          campos: Record<string, unknown>,
-        ) => {
-          pendientes.push(() => void (d as unknown as ReturnType<typeof doc>).set(campos));
+        set: (d: { get: () => unknown }, campos: Record<string, unknown>) => {
+          pendientes.push(
+            () => void (d as unknown as ReturnType<typeof doc>).set(campos),
+          );
         },
         commit: async () => {
           if (state.falloAlEscribir) throw new Error("Firestore no contestó.");
@@ -114,7 +117,10 @@ function baseDeDatos() {
     runTransaction: async (
       fn: (tx: {
         get: (d: ReturnType<typeof doc>) => Promise<unknown>;
-        set: (d: ReturnType<typeof doc>, campos: Record<string, unknown>) => void;
+        set: (
+          d: ReturnType<typeof doc>,
+          campos: Record<string, unknown>,
+        ) => void;
       }) => Promise<unknown>,
     ) =>
       fn({
@@ -139,7 +145,13 @@ vi.mock("../../src/server/anonymize", () => ({
       active: false,
       deleted: true,
     });
-    return { incidents: 2, notifications: 0, devices: 0, evidence: true, complete: true };
+    return {
+      incidents: 2,
+      notifications: 0,
+      devices: 0,
+      evidence: true,
+      complete: true,
+    };
   },
 }));
 
@@ -152,6 +164,21 @@ vi.mock("../../src/server/push", () => ({
 import { POST as restablecer } from "../../src/app/api/admin/accounts/restablecer/route";
 import { POST as eliminar } from "../../src/app/api/account/deletion/route";
 
+it("no reabre una cuenta cuya eliminación sigue parcial", async () => {
+  cuentaCerrada();
+  state.docs.set("accountDeletionRequests/vecina", {
+    state: "partial",
+    pseudonym: "anon-pendiente",
+  });
+  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(
+    409,
+  );
+  expect(state.identidadEscrita).toHaveLength(0);
+  expect(state.docs.get("accountDeletionRequests/vecina")?.pseudonym).toBe(
+    "anon-pendiente",
+  );
+});
+
 const pide = (cuerpo: unknown, sesion = true) =>
   new Request("http://localhost/api/admin/accounts/restablecer/", {
     method: "POST",
@@ -161,7 +188,11 @@ const pide = (cuerpo: unknown, sesion = true) =>
 
 /** Una cuenta tal como la deja una eliminación completada. */
 function cuentaCerrada() {
-  state.docs.set("accounts/vecina", { active: false, deleted: true, role: "citizen" });
+  state.docs.set("accounts/vecina", {
+    active: false,
+    deleted: true,
+    role: "citizen",
+  });
   state.docs.set("accountDeletionRequests/vecina", {
     owner: "vecina",
     state: "completed",
@@ -188,7 +219,9 @@ beforeEach(() => {
 it("sin rol del Consejo no se restablece nada", async () => {
   cuentaCerrada();
   state.admin = false;
-  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(403);
+  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(
+    403,
+  );
   expect(state.identidadEscrita).toEqual([]);
   expect(state.escrituras).toEqual([]);
 });
@@ -216,7 +249,9 @@ it("una cuenta que no está cerrada no se restablece", async () => {
    casa cerrada, o al revés, y ninguna de las dos mitades se nota sola. */
 it("abre la puerta", async () => {
   cuentaCerrada();
-  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(200);
+  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(
+    200,
+  );
   expect(state.identidadEscrita).toEqual([["vecina", { disabled: false }]]);
 });
 
@@ -249,7 +284,8 @@ it("no concede el rol del Consejo", async () => {
   cuentaCerrada();
   await restablecer(pide({ email: "vecina@rio.co" }));
   expect(state.docs.get("accounts/vecina")?.role).toBe("citizen");
-  for (const { campos } of state.escrituras) expect(campos).not.toHaveProperty("role");
+  for (const { campos } of state.escrituras)
+    expect(campos).not.toHaveProperty("role");
 });
 
 it("deja constancia de quién la reabrió", async () => {
@@ -279,7 +315,9 @@ it("marca la Novedad como atendida", async () => {
    decirlo, el Consejo acabaría prometiendo unos reportes que ya no existen. */
 it("la respuesta avisa de que los reportes no vuelven", async () => {
   cuentaCerrada();
-  const datos = await (await restablecer(pide({ email: "vecina@rio.co" }))).json();
+  const datos = await (
+    await restablecer(pide({ email: "vecina@rio.co" }))
+  ).json();
   expect(datos.message).toMatch(/anónimo|anonimiz/i);
 });
 
@@ -296,7 +334,9 @@ it("la respuesta avisa de que los reportes no vuelven", async () => {
 it("si la base falla, la puerta no llega a abrirse", async () => {
   cuentaCerrada();
   state.falloAlEscribir = true;
-  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(503);
+  expect((await restablecer(pide({ email: "vecina@rio.co" }))).status).toBe(
+    503,
+  );
   expect(state.identidadEscrita).toEqual([]);
   expect(state.identidad.disabled).toBe(true);
 });
@@ -332,9 +372,9 @@ it("la segunda solicitud lleva su propia fecha", async () => {
   cuentaCerrada();
   await restablecer(pide({ email: "vecina@rio.co" }));
   await eliminar(pideBaja());
-  expect(state.docs.get("accountDeletionRequests/vecina")?.requestedAt).not.toBe(
-    "2026-03-01T10:00:00.000Z",
-  );
+  expect(
+    state.docs.get("accountDeletionRequests/vecina")?.requestedAt,
+  ).not.toBe("2026-03-01T10:00:00.000Z");
 });
 
 /* Y avisa. `nuevo` distingue la primera solicitud del reintento mirando si el
@@ -414,5 +454,7 @@ it("el nombre de quien administra no acaba en el documento de la cuenta", async 
   expect(state.docs.get("accountDeletionRequests/vecina")).toMatchObject({
     restoredBy: "quien-administra",
   });
-  expect(state.añadidos[0]).toMatchObject({ coleccion: "accountRestoreEvents" });
+  expect(state.añadidos[0]).toMatchObject({
+    coleccion: "accountRestoreEvents",
+  });
 });

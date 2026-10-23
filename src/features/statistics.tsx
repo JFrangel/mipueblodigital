@@ -37,11 +37,13 @@ const colors = ["#174d3d", "#709c75", "#cfad63", "#9bc5c7", "#c8d1cb"];
 export function Statistics({
   items: rawItems,
   partial = false,
+  partialNotice,
   signed = true,
 }: {
   items: Case[];
   /** Sin señal no se pudo traer lo de la comunidad: las cifras van cortas. */
   partial?: boolean;
+  partialNotice?: string;
   /** Sin sesión no hay territorio que contar: no es que valga cero. */
   signed?: boolean;
 }) {
@@ -433,8 +435,8 @@ export function Statistics({
           comunitario calculado sobre un aparato no es un observatorio. */}
       {partial ? (
         <p className="notice" role="status">
-          Sin conexión. Estas cifras cuentan solo lo que guarda este teléfono,
-          no el territorio entero: vuelve a abrirlas cuando haya señal.
+          {partialNotice ||
+            "Sin conexión. Estas cifras cuentan solo lo que guarda este teléfono, no el territorio entero: vuelve a abrirlas cuando haya señal."}
         </p>
       ) : (
         !signed && (

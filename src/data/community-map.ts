@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useRemoteReportList } from "./remote-report-list";
 import type { Case } from "@/data/catalog";
 import { memberHeaders } from "@/data/remote-reports";
 import { referencia as veredaReference } from "./territorio-vivo";
@@ -34,15 +34,24 @@ type Shared = {
  * la lista y de las cifras, como el resto.
  */
 
-export async function fetchCommunityReports(): Promise<Case[]> {
-  const { headers } = await memberHeaders();
+export async function fetchCommunityReports(
+  signal?: AbortSignal,
+  expectedUid?: string,
+): Promise<Case[]> {
+  const { headers } = await memberHeaders(expectedUid);
   const all: Case[] = [];
   let after: string | null = null;
   const seen = new Set<string>();
   while (true) {
     const response = await fetch(
       `/api/community/reports/${after ? `?after=${encodeURIComponent(after)}` : ""}`,
-      { headers, cache: "no-store", signal: AbortSignal.timeout(20000) },
+      {
+        headers,
+        cache: "no-store",
+        signal: signal
+          ? AbortSignal.any([signal, AbortSignal.timeout(20000)])
+          : AbortSignal.timeout(20000),
+      },
     );
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
@@ -57,31 +66,11 @@ export async function fetchCommunityReports(): Promise<Case[]> {
   return all;
 }
 
-export function useCommunityReports(enabled: boolean) {
-  const [items, setItems] = useState<Case[]>([]);
-  /* Sube al pedir «Actualizar»: es lo que vuelve a disparar la consulta sin
-     que el efecto tenga que mirar el estado. */
-  const [attempt, setAttempt] = useState(0);
-  const reload = useCallback(() => setAttempt((n) => n + 1), []);
-
-  useEffect(() => {
-    if (!enabled) return;
-    let alive = true;
-    fetchCommunityReports()
-      .then((list) => {
-        if (alive) setItems(list);
-      })
-      .catch(() => {
-        /* Sin señal o sin sesión el mapa sigue dibujando lo de este aparato:
-           media verdad es mejor que una pantalla vacía. */
-        if (alive) setItems([]);
-      });
-    return () => {
-      alive = false;
-    };
-  }, [enabled, attempt]);
-
-  return { items, reload };
+async function loadCommunity(signal: AbortSignal, uid: string) {
+  return { items: await fetchCommunityReports(signal, uid), complete: true };
+}
+export function useCommunityReports(uid: string | null, online = true) {
+  return useRemoteReportList(uid, online, !!uid, loadCommunity);
 }
 
 function asMapCase(item: Shared): Case {

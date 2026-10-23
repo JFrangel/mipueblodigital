@@ -3,7 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, RefreshCw } from "lucide-react";
 import { type Case, statuses } from "@/data/catalog";
 import { memberHeaders } from "@/data/remote-reports";
-import { useSession } from "@/data/session";
+import { useSession, getSession } from "@/data/session";
+import { notifyReportUpdate } from "@/data/report-updates";
 import { toast } from "@/data/toasts";
 
 /**
@@ -189,12 +190,15 @@ export function GestionConsejo({
         }
         throw new Error(data.error);
       }
+      if (!vivo.current || getSession().uid !== session.uid) return;
+      notifyReportUpdate(item.id);
       setGestion({ ...gestion, version: data.version, status, assignee });
       onChange({ ...item, status, assignee, version: data.version });
       setNote("");
       setSaved(true);
       toast("Guardado en el servidor.");
     } catch (e) {
+      if (!vivo.current || getSession().uid !== session.uid) return;
       const dicho =
         e instanceof Error
           ? `No se guardó: ${e.message}`
@@ -203,7 +207,7 @@ export function GestionConsejo({
       toast(dicho, "error");
     } finally {
       lock.current = false;
-      setBusy(false);
+      if (vivo.current && getSession().uid === session.uid) setBusy(false);
     }
   }
 

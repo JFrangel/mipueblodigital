@@ -1,4 +1,5 @@
 import type { Firestore } from "firebase-admin/firestore";
+import { FieldPath } from "firebase-admin/firestore";
 import { evidenceRequest } from "./evidence";
 import { coleccionDeAparatos } from "./push-tokens";
 import { proponer, type Aporte } from "@/domain/veredas";
@@ -77,12 +78,22 @@ async function limpiarHistorial(
   db: Firestore,
   incident: FirebaseFirestore.DocumentReference,
 ): Promise<void> {
-  const page = await incident.collection("events").limit(500).get();
-  if (page.empty) return;
-  const batch = db.batch();
-  for (const doc of page.docs)
-    batch.set(doc.ref, TEXTOS_DEL_HISTORIAL, { merge: true });
-  await batch.commit();
+  let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+  while (true) {
+    let query = incident
+      .collection("events")
+      .orderBy(FieldPath.documentId())
+      .limit(450);
+    if (cursor) query = query.startAfter(cursor);
+    const page = await query.get();
+    if (page.empty) return;
+    const batch = db.batch();
+    for (const doc of page.docs)
+      batch.set(doc.ref, TEXTOS_DEL_HISTORIAL, { merge: true });
+    await batch.commit();
+    if (page.size < 450) return;
+    cursor = page.docs.at(-1);
+  }
 }
 
 /**
@@ -177,14 +188,29 @@ export async function anonymizeAccount(
       );
     }
     await batch.commit();
-    try {
-      for (const doc of page.docs) await limpiarHistorial(db, doc.ref);
-    } catch {
-      complete = false;
-    }
     incidents += page.size;
     if (page.size < BATCH) break;
     if (round === MAX_BATCHES - 1) complete = false;
+  }
+
+  // El propietario ya cambió: buscar por el seudónimo permite retomar también
+  // historiales pendientes de intentos anteriores, incluso de versiones antiguas.
+  try {
+    let cursor: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+    while (true) {
+      let query = db
+        .collection("incidents")
+        .where("owner", "==", pseudonym)
+        .orderBy(FieldPath.documentId())
+        .limit(BATCH);
+      if (cursor) query = query.startAfter(cursor);
+      const page = await query.get();
+      for (const doc of page.docs) await limpiarHistorial(db, doc.ref);
+      if (page.size < BATCH) break;
+      cursor = page.docs.at(-1);
+    }
+  } catch {
+    complete = false;
   }
 
   try {

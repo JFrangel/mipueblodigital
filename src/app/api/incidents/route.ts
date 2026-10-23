@@ -147,25 +147,9 @@ export async function POST(request: Request) {
      * se puede ni situar ni contrastar, y sería la puerta por la que el catálogo
      * territorial de un consejo comunitario se llena de ruido.
      */
+    const originalVereda = data.vereda;
     const catalogue = await readCatalogue(db);
     const known = resolveVereda(catalogue, data.vereda);
-    if (known && !known.active)
-      throw new ApiError(
-        400,
-        "Esa vereda fue retirada del catálogo. Conserva el reporte y elige una vereda activa.",
-      );
-    const delCatalogo =
-      known?.name ??
-      (catalogue.version === 0
-        ? comoLaDelCatalogo(data.vereda, veredaNames)
-        : null);
-    if (delCatalogo) data.vereda = delCatalogo;
-    const veredaProposed = !delCatalogo;
-    if (veredaProposed && pointSource !== "aparato")
-      throw new ApiError(
-        400,
-        "Para proponer una vereda que no está en la lista, usa tu ubicación desde el sitio. Si no estás allí, elige la vereda más cercana del catálogo.",
-      );
 
     /**
      * Se valida el archivo tal como llegó —formato, peso, que no esté
@@ -190,7 +174,7 @@ export async function POST(request: Request) {
         413,
         "Las fotografías juntas superan el tamaño del envío. Reduce su tamaño y reintenta.",
       );
-    const photos = [];
+    const photos: Awaited<ReturnType<typeof archivePhoto>>[] = [];
     for (const image of images) {
       const subida = await validateOriginal(image);
       photos.push(
@@ -204,23 +188,67 @@ export async function POST(request: Request) {
     if (input.sensitive !== undefined && typeof input.sensitive !== "boolean")
       throw new ApiError(400, "Clasificación inválida.");
     const sensitivity = input.sensitive === true ? "sensitive" : "unreviewed";
-    const hash = createHash("sha256")
-      .update(
-        JSON.stringify({
-          ...data,
-          sensitivity,
-          point,
-          photo:
-            photos.length === 1 ? photo.sha256 : photos.map((p) => p.sha256),
-        }),
-      )
-      .digest("hex");
+    const fingerprint = (vereda: string) =>
+      createHash("sha256")
+        .update(
+          JSON.stringify({
+            ...data,
+            vereda,
+            sensitivity,
+            point,
+            photo:
+              photos.length === 1 ? photo.sha256 : photos.map((p) => p.sha256),
+          }),
+        )
+        .digest("hex");
+    const requestHash = fingerprint(originalVereda);
+    const legacyHashes = new Set(
+      [originalVereda, ...(known ? [known.name, ...known.aliases] : [])].map(
+        fingerprint,
+      ),
+    );
+    const matches = (old: FirebaseFirestore.DocumentData) =>
+      old.owner === uid &&
+      (old.requestHash
+        ? old.requestHash === requestHash
+        : legacyHashes.has(old.hash));
     const ref = db.doc(`incidents/${id}`),
       intake = db.doc(`incidentIntake/${id}`);
+    const reserved = (await db.runTransaction((tx) => tx.get(intake))).data();
+    if (reserved && !matches(reserved))
+      throw new ApiError(
+        409,
+        "Este envío ya tiene otro contenido. Recupera el original antes de reintentar.",
+      );
+    if (reserved) {
+      const received = (await db.runTransaction((tx) => tx.get(ref))).data();
+      if (received?.owner === uid && !received.anonymizedAt)
+        return Response.json({ id, receivedAt: received.date }, { headers });
+    }
+    // La validación del catálogo vigente rige para envíos nuevos, no para
+    // invalidar un contenido que ya había sido aceptado y reservado.
+    if (!reserved && known && !known.active)
+      throw new ApiError(
+        400,
+        "Esa vereda fue retirada del catálogo. Conserva el reporte y elige una vereda activa.",
+      );
+    const delCatalogo =
+      known?.name ??
+      (catalogue.version === 0
+        ? comoLaDelCatalogo(data.vereda, veredaNames)
+        : null);
+    if (delCatalogo) data.vereda = delCatalogo;
+    const veredaProposed = !delCatalogo;
+    if (!reserved && veredaProposed && pointSource !== "aparato")
+      throw new ApiError(
+        400,
+        "Para proponer una vereda que no está en la lista, usa tu ubicación desde el sitio. Si no estás allí, elige la vereda más cercana del catálogo.",
+      );
+    const hash = fingerprint(data.vereda);
     const evidenceId = await db.runTransaction(async (tx) => {
       const old = (await tx.get(intake)).data();
       if (old) {
-        if (old.hash !== hash || old.owner !== uid)
+        if (!matches(old))
           throw new ApiError(
             409,
             "Este envío ya tiene otro contenido. Recupera el original antes de reintentar.",
@@ -240,6 +268,7 @@ export async function POST(request: Request) {
       tx.create(intake, {
         owner: uid,
         hash,
+        requestHash,
         evidenceId,
         state: "pending",
         createdAt: new Date().toISOString(),

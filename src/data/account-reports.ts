@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useRemoteReportList } from "./remote-report-list";
 import { memberHeaders } from "./remote-reports";
 import type { AccountReport } from "@/domain/account-reports";
 
@@ -7,15 +7,20 @@ import type { AccountReport } from "@/domain/account-reports";
    toca estado antes del primer `await`. */
 export async function fetchAccountReports(
   signal: AbortSignal,
+  expectedUid?: string,
 ): Promise<{ items: AccountReport[]; complete: boolean }> {
-  const { headers } = await memberHeaders();
+  const { headers } = await memberHeaders(expectedUid);
   const all: AccountReport[] = [];
   let after: string | null = null;
   const seen = new Set<string>();
   while (true) {
     const response = await fetch(
       `/api/incidents/${after ? `?after=${encodeURIComponent(after)}` : ""}`,
-      { headers, cache: "no-store", signal },
+      {
+        headers,
+        cache: "no-store",
+        signal: AbortSignal.any([signal, AbortSignal.timeout(20000)]),
+      },
     );
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
@@ -48,41 +53,5 @@ export function useAccountReports(
   uid: string | null,
   online: boolean,
 ) {
-  const [state, setState] = useState<{
-    uid: string | null;
-    items: AccountReport[];
-    error: string;
-    /** El servidor contestó, y contestó entero. */
-    complete: boolean;
-  }>({ uid: null, items: [], error: "", complete: false });
-
-  useEffect(() => {
-    if (!active || !uid || !online) return;
-    const controller = new AbortController();
-    let alive = true;
-    fetchAccountReports(controller.signal)
-      .then(({ items, complete }) => {
-        if (alive) setState({ uid, items, error: "", complete });
-      })
-      .catch((error: unknown) => {
-        if (!alive || controller.signal.aborted) return;
-        setState({
-          uid,
-          items: [],
-          complete: false,
-          error:
-            error instanceof Error
-              ? error.message
-              : "No se pudo consultar tu historial en el servidor.",
-        });
-      });
-    return () => {
-      alive = false;
-      controller.abort();
-    };
-  }, [active, uid, online]);
-
-  return state.uid === uid
-    ? { items: state.items, error: state.error, complete: state.complete }
-    : { items: [], error: "", complete: false };
+  return useRemoteReportList(uid, online, active, fetchAccountReports);
 }

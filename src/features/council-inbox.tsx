@@ -1,7 +1,15 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { memberHeaders } from "@/data/remote-reports";
-import { useSession } from "@/data/session";
+import { notifyReportUpdate } from "@/data/report-updates";
+import { useSession, getSession } from "@/data/session";
 import { statuses, categories, shortDate } from "@/data/catalog";
 import { abrirEnNavegadorDelSistema } from "@/platform/export";
 import { esNativo } from "@/platform/native";
@@ -138,6 +146,7 @@ function Retract({
   onRemoved: (message: string) => void;
 }) {
   const [open, setOpen] = useState(false),
+    [partial, setPartial] = useState(false),
     [reason, setReason] = useState(""),
     [busy, setBusy] = useState(false),
     [problem, setProblem] = useState("");
@@ -159,10 +168,17 @@ function Retract({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
+      notifyReportUpdate(id);
+      if (!data.complete) {
+        setPartial(true);
+        setBusy(false);
+        setProblem(
+          "El reporte ya salió de las listas, pero quedan archivos o actuaciones por borrar. Pulsa «Terminar limpieza» para reintentar; no se repetirá el aviso.",
+        );
+        return;
+      }
       onRemoved(
-        data.complete
-          ? "Reporte retirado. Quien lo envió recibe el motivo en sus novedades, y queda el acta de la retirada."
-          : "Reporte retirado de las listas, pero quedó algo sin borrar —la fotografía o el historial—. Vuelve a intentarlo para terminar.",
+        "Reporte retirado. Quien lo envió recibe el motivo en sus novedades, y queda el acta de la retirada.",
       );
     } catch (error) {
       const dicho =
@@ -203,7 +219,7 @@ function Retract({
           rows={3}
           maxLength={600}
           value={reason}
-          disabled={busy}
+          disabled={busy || partial}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Por ejemplo: está repetido con el expediente del muelle enviado el mismo día."
         />
@@ -214,18 +230,20 @@ function Retract({
         </p>
       )}
       <div className="account-actions">
-        <button
-          type="button"
-          className="btn"
-          disabled={busy}
-          onClick={() => {
-            setOpen(false);
-            setReason("");
-            setProblem("");
-          }}
-        >
-          Conservar el reporte
-        </button>
+        {!partial && (
+          <button
+            type="button"
+            className="btn"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              setReason("");
+              setProblem("");
+            }}
+          >
+            Conservar el reporte
+          </button>
+        )}
         <button
           type="button"
           className="btn danger"
@@ -233,7 +251,11 @@ function Retract({
           onClick={remove}
         >
           <Trash2 size={16} />{" "}
-          {busy ? "Retirando…" : "Retirar y avisar a quien reportó"}
+          {busy
+            ? "Procesando…"
+            : partial
+              ? "Terminar limpieza"
+              : "Retirar y avisar a quien reportó"}
         </button>
       </div>
       {short && (
@@ -282,6 +304,17 @@ export function CouncilInbox({
     /* Las horas de gracia, tal como las tiene puestas el servidor. */
     [delay, setDelay] = useState(24);
   const [notes, setNotes] = useState(blankNotes);
+  const view = useRef(0);
+  const close = useCallback(() => {
+    setSelected(null);
+  }, []);
+  useLayoutEffect(() => {
+    const generation = ++view.current;
+    return () => {
+      view.current = generation + 1;
+    };
+  }, [selected?.id, session.uid]);
+
   /** HU-15.2: cuatro filtros independientes sobre el conjunto cargado. */
   const [category, setCategory] = useState(ALL),
     [vereda, setVereda] = useState(ALL),
@@ -307,7 +340,7 @@ export function CouncilInbox({
     /* Si aún no ha llegado en ninguna tanda se deja buscado, y el mensaje de
        la lista explica cómo traer más del servidor. */
     if (found) open(found);
-    else setSelected(null);
+    else close();
   }
   /** El catálogo de veredas del filtro sale de los expedientes reales. */
   const veredas = useMemo(
@@ -421,9 +454,9 @@ export function CouncilInbox({
       setItems((old) => (after ? [...old, ...page.items] : page.items));
       setCursor(page.next);
       setDelay(page.delay);
-      setSelected(null);
+      close();
     },
-    [account],
+    [account, close],
   );
   const failed = (error: unknown) =>
     setProblem(
@@ -501,6 +534,44 @@ export function CouncilInbox({
       alive = false;
     };
   }, [tocaPedirla, requestPage, receive]);
+  const detailId = selected?.id;
+  const detailPublication = selected?.publication;
+  const detailVereda = selected?.vereda;
+  useEffect(() => {
+    if (!detailId || detailPublication !== "public" || !session.uid) return;
+    let alive = true;
+    const controller = new AbortController();
+    void memberHeaders(session.uid)
+      .then(({ headers }) =>
+        fetch(`/api/admin/incidents/${detailId}/`, {
+          headers,
+          cache: "no-store",
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(15000),
+          ]),
+        }),
+      )
+      .then((response) => (response.ok ? response.json() : null))
+      .then((approved) => {
+        if (!alive || !approved) return;
+        // La consulta solo rellena lo que todavía no editó quien gestiona.
+        setNotes((current) => ({
+          ...current,
+          publicTitle: current.publicTitle || approved.publicTitle || "",
+          publicSummary: current.publicSummary || approved.publicSummary || "",
+          publicVereda:
+            current.publicVereda === detailVereda
+              ? approved.publicVereda || current.publicVereda
+              : current.publicVereda,
+        }));
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [detailId, detailPublication, detailVereda, session.uid]);
   function open(item: Incident) {
     setSelected({ ...item, priority: item.priority ?? DEFAULT_PRIORITY });
     /* La versión pública parte de lo que el expediente ya dice. Quien revisa
@@ -518,37 +589,20 @@ export function CouncilInbox({
       publicSummary: publicado ? "" : firstWords(item.description, 30),
       publicVereda: item.vereda,
     });
-    if (publicado)
-      void memberHeaders()
-        .then(({ headers }) =>
-          fetch(`/api/admin/incidents/${item.id}/`, {
-            headers,
-            cache: "no-store",
-            signal: AbortSignal.timeout(15000),
-          }),
-        )
-        .then((response) => (response.ok ? response.json() : null))
-        .then((aprobado) => {
-          if (!aprobado) return;
-          setNotes((actual) => ({
-            ...actual,
-            publicTitle: aprobado.publicTitle || actual.publicTitle,
-            publicSummary: aprobado.publicSummary || actual.publicSummary,
-            publicVereda: aprobado.publicVereda || actual.publicVereda,
-          }));
-        })
-        .catch(() => undefined);
     setMessage("");
     setProblem("");
   }
   async function save(event: React.FormEvent) {
     event.preventDefault();
     if (!selected || busy || preparingImage) return;
+    const generation = view.current;
+    const sameView = () =>
+      generation === view.current && getSession().uid === session.uid;
     setBusy(true);
     setMessage("");
     setProblem("");
     try {
-      const { headers, uid } = await memberHeaders();
+      const { headers, uid } = await memberHeaders(session.uid ?? undefined);
       const body = JSON.stringify({ ...selected, ...notes });
       if (mutation.current?.body !== body)
         mutation.current = { id: crypto.randomUUID(), body };
@@ -564,7 +618,8 @@ export function CouncilInbox({
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      if (session.uid !== uid) return;
+      if (getSession().uid === uid) notifyReportUpdate(selected.id);
+      if (!sameView() || session.uid !== uid) return;
       const updated = { ...selected, version: data.version };
       setSelected(updated);
       setItems((old) => old.map((i) => (i.id === selected.id ? updated : i)));
@@ -575,6 +630,7 @@ export function CouncilInbox({
       );
       toast("Expediente guardado en el servidor.");
     } catch (error) {
+      if (!sameView()) return;
       const dicho =
         error instanceof Error
           ? `No se guardó: ${error.message}`
@@ -582,7 +638,7 @@ export function CouncilInbox({
       setProblem(dicho);
       toast(dicho, "error");
     } finally {
-      setBusy(false);
+      if (sameView()) setBusy(false);
     }
   }
   return (
@@ -803,11 +859,7 @@ export function CouncilInbox({
         <form onSubmit={save} className="council-form">
           {/* Volver arriba del todo: es lo primero que se busca al terminar de
               mirar un expediente, no al final de un formulario largo. */}
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => setSelected(null)}
-          >
+          <button type="button" className="text-button" onClick={close}>
             <ArrowLeft size={15} /> Volver a la bandeja
           </button>
           {/* La misma ficha que se lee en el detalle de un reporte: la
@@ -1211,7 +1263,7 @@ export function CouncilInbox({
               type="button"
               className="btn"
               disabled={busy}
-              onClick={() => setSelected(null)}
+              onClick={close}
             >
               Volver a la bandeja
             </button>
@@ -1223,7 +1275,7 @@ export function CouncilInbox({
             title={selected.title}
             onRemoved={(dicho) => {
               setItems((old) => old.filter((i) => i.id !== selected.id));
-              setSelected(null);
+              close();
               setMessage(dicho);
               toast("Reporte retirado.");
             }}

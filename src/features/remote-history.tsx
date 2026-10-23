@@ -26,7 +26,22 @@ export function HistoryList({ state }: { state: RemoteHistoryState }) {
     );
   /* Que no se pueda consultar el servidor no es una alarma: el expediente se
      sigue leyendo entero con lo que hay en el dispositivo. */
-  if (error) return <p className="remote-history-note">{error}</p>;
+  if (error)
+    return (
+      <div>
+        <p className="remote-history-note">{error}</p>
+        {next && (
+          <button
+            type="button"
+            className="text-button"
+            disabled={busy}
+            onClick={more}
+          >
+            Reintentar actuaciones
+          </button>
+        )}
+      </div>
+    );
   if (!items.length) return null;
   return (
     <section className="remote-history">

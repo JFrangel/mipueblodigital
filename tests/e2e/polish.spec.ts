@@ -49,6 +49,7 @@ test("bienvenida, tema oscuro y navegación", async ({ page }) => {
   // El tema viaja con la sesión del navegador. En el teléfono se cambia desde
   // Mi cuenta, así que aquí se comprueba el resultado, no el control.
   await expect(page.locator(".workspace.dark")).toBeVisible();
+  await page.getByRole("link", { name: "Ver mis reportes" }).click();
   await page.getByRole("button", { name: /Alumbrado en el malecón/ }).click();
   const dialog = page.getByRole("region", { name: "Detalle del reporte" });
   await expect(

@@ -1,5 +1,5 @@
 "use client";
-import { resolveVereda } from "@/domain/vereda-catalogue";
+import { locateMapCase } from "@/domain/map-catalogue";
 import { useCatalogue } from "@/data/vereda-catalogue";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import type { Map as LeafletMap } from "leaflet";
@@ -28,10 +28,7 @@ export function Territory({
   const catalogue = useCatalogue();
   const items = useMemo(
     () =>
-      rawItems.map((item) => ({
-        ...item,
-        vereda: resolveVereda(catalogue, item.vereda)?.name ?? item.vereda,
-      })),
+      rawItems.map((item) => locateMapCase(item, catalogue)),
     [rawItems, catalogue],
   );
   const veredaCatalogue = useMemo(

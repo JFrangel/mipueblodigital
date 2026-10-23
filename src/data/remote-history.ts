@@ -1,7 +1,9 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { firebaseClient } from "@/data/firebase/client";
 import { memberHeaders } from "@/data/remote-reports";
+import { useSession } from "./session";
+import { onReportUpdate } from "./report-updates";
 
 export type CouncilEvent = {
   id: string;
@@ -41,84 +43,90 @@ export function useRemoteHistory(
   id: string,
   enabled: boolean,
 ): RemoteHistoryState {
-  const [items, setItems] = useState<CouncilEvent[]>([]);
-  const [next, setNext] = useState<string | null>(null);
-  /* Arranca ocupado desde el estado inicial: así el efecto solo encadena
-     promesas y no toca el estado antes de tiempo. Se apaga por fuera cuando no
-     hay nada que consultar, para que al habilitarse siga contando como carga
-     en vez de parecer un historial vacío. */
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const alive = useRef(true);
-  useEffect(() => {
-    alive.current = true;
-    return () => {
-      alive.current = false;
-    };
-  }, []);
+  const { uid } = useSession();
+  const [context, setContext] = useState({ id, uid, enabled });
+  const [after, setAfter] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [state, setState] = useState<{
+    items: CouncilEvent[];
+    next: string | null;
+    loading: boolean;
+    error: string;
+  }>({ items: [], next: null, loading: true, error: "" });
+  useEffect(
+    () =>
+      onReportUpdate(() => {
+        setAfter(null);
+        setAttempt((value) => value + 1);
+        setState((previous) => ({ ...previous, loading: true, error: "" }));
+      }, id),
+    [id],
+  );
+  // Invalidar datos y cursor antes de mostrar otro expediente o cuenta.
+  if (context.id !== id || context.uid !== uid || context.enabled !== enabled) {
+    setContext({ id, uid, enabled });
+    setAfter(null);
+    setState({ items: [], next: null, loading: true, error: "" });
+  }
 
-  const requestPage = useCallback(
-    async (after?: string) => {
-      const { headers, uid } = await memberHeaders();
+  useEffect(() => {
+    if (!enabled || !uid) return;
+    let alive = true;
+    const controller = new AbortController();
+    void (async () => {
+      const { headers } = await memberHeaders(uid);
       const response = await fetch(
-        `/api/incidents/${id}/history/${after ? `?after=${after}` : ""}`,
-        { headers, cache: "no-store", signal: AbortSignal.timeout(15000) },
+        `/api/incidents/${id}/history/${after ? `?after=${encodeURIComponent(after)}` : ""}`,
+        {
+          headers,
+          cache: "no-store",
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(15000),
+          ]),
+        },
       );
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      return {
-        uid,
-        items: data.items as CouncilEvent[],
-        next: data.next as string | null,
-      };
-    },
-    [id],
-  );
-
-  const receive = useCallback(
-    (
-      page: { uid: string | null; items: CouncilEvent[]; next: string | null },
-      after?: string,
-    ) => {
-      /* Si la sesión cambió entre la petición y la respuesta, lo traído ya no
-         es de quien mira. */
-      if (!alive.current || firebaseClient().auth.currentUser?.uid !== page.uid)
-        return;
-      setItems((old) => (after ? [...old, ...page.items] : page.items));
-      setNext(page.next);
-    },
-    [],
-  );
-
-  useEffect(() => {
-    if (!enabled) return;
-    requestPage()
-      .then((page) => receive(page))
-      .catch((e: unknown) => {
-        if (alive.current)
-          setError(
-            e instanceof Error
-              ? e.message
-              : "No se pudo consultar el historial.",
-          );
-      })
-      .finally(() => {
-        if (alive.current) setLoading(false);
-      });
-  }, [enabled, requestPage, receive]);
+      if (!alive || firebaseClient().auth.currentUser?.uid !== uid) return;
+      if (data.next && data.next === after)
+        throw new Error("El servidor repitió la página del historial.");
+      setState((previous) => ({
+        items: after ? [...previous.items, ...data.items] : data.items,
+        next: data.next,
+        loading: false,
+        error: "",
+      }));
+    })().catch((error: unknown) => {
+      if (!alive || firebaseClient().auth.currentUser?.uid !== uid) return;
+      setState((previous) => ({
+        ...previous,
+        loading: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "No se pudo consultar el historial.",
+      }));
+    });
+    return () => {
+      alive = false;
+      controller.abort();
+    };
+  }, [id, uid, enabled, after, attempt]);
 
   const more = useCallback(() => {
-    if (!next) return;
-    setLoading(true);
-    requestPage(next)
-      .then((page) => receive(page, next))
-      .catch(() => {
-        if (alive.current) setError("No se pudieron traer más actuaciones.");
-      })
-      .finally(() => {
-        if (alive.current) setLoading(false);
-      });
-  }, [next, requestPage, receive]);
+    if (!enabled || !uid || state.loading || !state.next) return;
+    if (state.next === after && !state.error) return;
+    setState((previous) => ({ ...previous, loading: true, error: "" }));
+    if (state.next === after) setAttempt((value) => value + 1);
+    else setAfter(state.next);
+  }, [enabled, uid, state.loading, state.next, state.error, after]);
 
-  return { items, busy: enabled && loading, error, next, more };
+  return {
+    items: state.items,
+    busy: enabled && !!uid && state.loading,
+    error: state.error,
+    next: state.next,
+    more,
+  };
 }

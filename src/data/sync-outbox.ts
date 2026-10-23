@@ -29,9 +29,13 @@ export async function syncOutbox(
         /* El espejo local deja de decir «esperando señal»: ya llegó, y con
            fecha del servidor. Sin esto el reporte se quedaba en ese estado
            para siempre aunque el Consejo lo tuviera desde el primer día. */
-        await markCaseDelivered(`LOCAL-${item.key}`, receipt.receivedAt).catch(
-          () => undefined,
-        );
+        await markCaseDelivered(
+          `LOCAL-${item.key}`,
+          receipt.receivedAt,
+          receipt.id,
+        ).catch(() => undefined);
+        if (typeof window !== "undefined")
+          window.dispatchEvent(new Event("case-delivered"));
         if (announce) delivered.push(item.title);
       } catch (error) {
         const permanent =
@@ -71,8 +75,8 @@ type SyncCapableRegistration = ServiceWorkerRegistration & {
 export async function requestBackgroundSync() {
   try {
     if (!("serviceWorker" in navigator)) return;
-    const registration =
-      (await navigator.serviceWorker.ready) as SyncCapableRegistration;
+    const registration = (await navigator.serviceWorker
+      .ready) as SyncCapableRegistration;
     await registration.sync?.register(OUTBOX_TAG);
   } catch {
     /* Sin Background Sync la cola se vacía al volver a abrir la aplicación. */
@@ -86,6 +90,5 @@ export function onFlushRequest(handler: () => void) {
     if (event.data?.type === "flush-outbox") handler();
   };
   navigator.serviceWorker.addEventListener("message", listener);
-  return () =>
-    navigator.serviceWorker.removeEventListener("message", listener);
+  return () => navigator.serviceWorker.removeEventListener("message", listener);
 }
