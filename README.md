@@ -4,10 +4,14 @@ Aplicación de gestión de incidencias del **Gran Consejo Comunitario Río
 Satinga**, Olaya Herrera, Nariño. La comunidad reporta lo que pasa en el
 territorio; el Consejo lo recibe, lo gestiona y responde.
 
-[![Video de demostración: de la vereda al Consejo y de vuelta](docs/imagenes/video-portada.png)](docs/video/mi-pueblo-digital-demo.mp4)
+[![Avance del video de demostración: de la vereda al Consejo y de vuelta](docs/video/mi-pueblo-digital-demo.gif)](https://github.com/JFrangel/mipueblodigital/raw/develop/docs/video/mi-pueblo-digital-demo.mp4)
 
-▶ **[Ver el video de demostración](docs/video/mi-pueblo-digital-demo.mp4)** (4 min 28 s, con voz): cómo un reporte sale de la vereda,
-llega al Consejo, se gestiona, se publica como resumen y vuelve a quien lo envió.
+▶ **[Ver el video completo](https://github.com/JFrangel/mipueblodigital/raw/develop/docs/video/mi-pueblo-digital-demo.mp4)**
+(4 min 28 s, con voz): cómo un reporte sale de la vereda, llega al Consejo, se
+gestiona, se publica como resumen y vuelve a quien lo envió. El avance de arriba
+son seis momentos del video. El archivo está en
+[`docs/video/`](docs/video); el visor de GitHub no
+reproduce archivos tan grandes, por eso el enlace abre el video directo.
 
 ## Cómo se ve
 
