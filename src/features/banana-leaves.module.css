@@ -137,6 +137,24 @@
   }
 }
 
+/**
+ * En el teléfono la hoja de la barra no respira.
+ *
+ * Es una figura de muchos trazos que se mece sin parar, y mientras se mece el
+ * navegador la repinta y recalcula estilos en cada cuadro, incluso con la barra
+ * cerrada y la pantalla desplazándose por debajo. En un WebView de gama baja
+ * eso se nota como tirones al desplazar listas largas. Aquí se queda quieta,
+ * ladeada como en reposo: en escritorio, donde la barra siempre está a la vista
+ * y hay de sobra, sigue respirando. Medido en una pantalla larga con la CPU
+ * cuatro veces más lenta: de 128 a 0 ms de pintado por desplazamiento.
+ */
+@media (max-width: 800px) {
+  .calm .left {
+    animation: none;
+    transform: rotate(-6deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .frame {
     display: none;
