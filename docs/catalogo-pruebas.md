@@ -2,8 +2,8 @@
 
 Inventario generado a partir de los nombres que reportan Vitest y Playwright. **Aparecer en el catálogo no significa que una prueba de navegador se haya ejecutado**: Playwright se consultó con `--list`. Los resultados de ejecución se registran por separado en [Pruebas y rendimiento](pruebas-y-rendimiento.md).
 
-- Unitarias: **492 casos en 59 archivos**; estado del reporte usado: 492 pasan, 0 fallan, 0 pendientes.
-- Navegador: **88 casos en 18 archivos** registrados por Playwright.
+- Unitarias: **554 casos en 76 archivos**; estado del reporte usado: 554 pasan, 0 fallan, 0 pendientes.
+- Navegador: **91 casos en 19 archivos** registrados por Playwright.
 
 ## Vitest: lógica, datos y rutas
 
@@ -29,9 +29,13 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - registra cambio y repetir operación no duplica historial
 - rechaza versión antigua y notas de más de 30 palabras
 
-### [tests/unit/anonymize.test.ts](../tests/unit/anonymize.test.ts) — 4 casos
+### [tests/unit/anonymize.test.ts](../tests/unit/anonymize.test.ts) — 8 casos
 
+- anonimización de cuenta retoma las notas si falla su limpieza después de retirar los datos del expediente
+- anonimización de cuenta limpia más de quinientas actuaciones y expedientes parciales anteriores
+- anonimización de cuenta no declara terminada la limpieza si quedan copias de las fotografías
 - anonimización de cuenta retira los datos personales y conserva la trazabilidad comunitaria
+- anonimización de cuenta quita el punto exacto, las notas del historial y los aportes de ubicación
 - anonimización de cuenta no toca los expedientes de otras personas
 - anonimización de cuenta repetirla no cambia el resultado
 - anonimización de cuenta marca incompleta la eliminación si el archivo privado falla
@@ -53,6 +57,11 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - la fecha como se dice en voz alta escribe el día con su nombre y no el formato de la base
 - la fecha como se dice en voz alta devuelve lo recibido si no es una fecha
 
+### [tests/unit/catalogue-api.test.ts](../tests/unit/catalogue-api.test.ts) — 2 casos
+
+- valida una versión y la consulta ciudadana omite la identidad de quien validó
+- no pierde la edición de otro administrador y niega escritura a ciudadanos
+
 ### [tests/unit/community-projection.test.ts](../tests/unit/community-projection.test.ts) — 9 casos
 
 - el relato original nunca se publica automáticamente
@@ -64,6 +73,11 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - marcarlo como delicado lo retira aunque ya tuviera resumen publicado
 - un caso resuelto después de publicarse se lee resuelto
 - deja constar todos los finales, incluido el descartado
+
+### [tests/unit/council-action.test.ts](../tests/unit/council-action.test.ts) — 2 casos
+
+- las notas anteriores siguen siendo actuaciones ordinarias
+- una visita requiere fecha válida y responsable
 
 ### [tests/unit/council-alerts.test.ts](../tests/unit/council-alerts.test.ts) — 5 casos
 
@@ -112,6 +126,10 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - archivo histórico del Consejo la ficha pública sale campo a campo: sin versión, estado ni autor
 - archivo histórico del Consejo la biblioteca de fuentes solo enlaza por HTTPS y sin repetir direcciones
 
+### [tests/unit/council-image-api.test.ts](../tests/unit/council-image-api.test.ts) — 1 casos
+
+- registra visita con imagen sin cambiar estado y permite reintento idéntico
+
 ### [tests/unit/csv.test.ts](../tests/unit/csv.test.ts) — 4 casos
 
 - CSV conserva comillas y neutraliza fórmulas
@@ -124,6 +142,11 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - avisos locales de entrega en Android pide el permiso nativo aunque WebView no tenga Notification
 - avisos locales de entrega en Android refleja la denegación sin prometer avisos
 - avisos locales de entrega en Android un fallo del complemento no impide usar la bandeja
+
+### [tests/unit/delivery-receipt.test.ts](../tests/unit/delivery-receipt.test.ts) — 2 casos
+
+- el recibo sustituye la identidad local sin perder fotos ni duplicar el historial
+- recupera la identidad de una copia antigua desde su recibo conservado
 
 ### [tests/unit/delivery.test.ts](../tests/unit/delivery.test.ts) — 3 casos
 
@@ -162,8 +185,21 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - sin señal, exportar lo dice en español y antes de esperar
 - si el servidor no contesta, el error no es el crudo del navegador
 
-### [tests/unit/incident-api.test.ts](../tests/unit/incident-api.test.ts) — 18 casos
+### [tests/unit/export-multipart.test.ts](../tests/unit/export-multipart.test.ts) — 1 casos
 
+- la descarga grande conserva Unicode, cabe por documento y se consume una sola vez
+
+### [tests/unit/inbox-pagination-api.test.ts](../tests/unit/inbox-pagination-api.test.ts) — 4 casos
+
+- pagina 501 expedientes con hora idéntica sin perder ni duplicar
+- un filtro encuentra el expediente más allá de las primeras ocho páginas
+- el CSV contiene la bandeja entera, aun si no se cargó en pantalla
+- un nombre corregido encuentra expedientes guardados con su alias anterior
+
+### [tests/unit/incident-api.test.ts](../tests/unit/incident-api.test.ts) — 22 casos
+
+- archiva todas las fotos y conserva los identificadores al reintentar
+- rechaza más de cinco fotos y una lista vacía
 - recibo repetido no crea otro expediente ni notificación
 - guarda una copia reducida de la fotografía junto al expediente
 - rechaza cambiar el contenido de una solicitud reservada
@@ -182,6 +218,8 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - un reporte nuevo le suena el teléfono al Consejo
 - a quien reportó no le suena su propio envío
 - un recibo repetido no vuelve a sonar
+- un reintento idéntico conserva el recibo después de renombrar o retirar la vereda
+- una reserva anterior sin firma original también admite el reintento tras renombrar
 
 ### [tests/unit/incidente-parcial.test.ts](../tests/unit/incidente-parcial.test.ts) — 9 casos
 
@@ -233,6 +271,10 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - los PDF de public/manuales el de ciudadano es el archivo que dice el manifiesto, con portada, índice y sin hojas en blanco
 - los PDF de public/manuales el de consejo es el archivo que dice el manifiesto, con portada, índice y sin hojas en blanco
 
+### [tests/unit/map-catalogue.test.ts](../tests/unit/map-catalogue.test.ts) — 1 casos
+
+- el mapa usa el punto actual del catálogo y conserva puntos propios
+
 ### [tests/unit/membership.test.ts](../tests/unit/membership.test.ts) — 6 casos
 
 - sin perfil dice cómo se activa, no solo que no está habilitada
@@ -241,6 +283,13 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - el rol escrito en la cuenta vale, y se sella en el token
 - la reivindicación sin reflejo se escribe en la cuenta, y solo si falta
 - perfil activo pasa, y el rol sigue siendo cosa aparte
+
+### [tests/unit/module-audit.test.ts](../tests/unit/module-audit.test.ts) — 4 casos
+
+- detecta un helper olvidado dentro de app
+- incluye JavaScript aunque tsconfig enumere solo TS
+- conserva helpers usados por generadores anidados y por import dinámico
+- no omite silenciosamente un import local roto
 
 ### [tests/unit/native-auth.test.ts](../tests/unit/native-auth.test.ts) — 10 casos
 
@@ -255,6 +304,10 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - un código de Firebase que ya viene bien se respeta
 - otro fallo del complemento no se disfraza de cuenta cerrada
 
+### [tests/unit/native-receipt.test.ts](../tests/unit/native-receipt.test.ts) — 1 casos
+
+- Android vincula el recibo y actualiza la pantalla solo para la cuenta correspondiente
+
 ### [tests/unit/news-format.test.ts](../tests/unit/news-format.test.ts) — 7 casos
 
 - marcas dentro de una línea reconoce negrita y cursiva sin tocar el resto
@@ -264,6 +317,14 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - bloques del comunicado no confunde una frase larga con un título
 - bloques del comunicado agrupa los renglones de una lista en un solo bloque
 - resumen para el feed retira las marcas y conserva el texto
+
+### [tests/unit/news-media-read.test.ts](../tests/unit/news-media-read.test.ts) — 5 casos
+
+- la API real entrega la lista de imágenes y los bytes del archivo publicado
+- no expone el texto ni las imágenes de un comunicado draft
+- no expone el texto ni las imágenes de un comunicado archived
+- rechaza identificadores inválidos y archivos inexistentes
+- distingue una caída del archivo y permite seguir leyendo el texto
 
 ### [tests/unit/news-publish.test.ts](../tests/unit/news-publish.test.ts) — 5 casos
 
@@ -310,6 +371,14 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - bandeja persistente espera progresiva acotada
 - bandeja persistente un fallo web tardío no reactiva un rechazo nativo definitivo
 - bandeja persistente acepta el recibo nativo al reabrir sin entregar el caso a otra cuenta
+
+### [tests/unit/publicacion-resumen.test.ts](../tests/unit/publicacion-resumen.test.ts) — 5 casos
+
+- reconoce el principio del relato como copia, y una versión reescrita no
+- guardar sin tocar el relato precargado no lo publica
+- un resumen escrito por el Consejo se guarda y estrena su plazo
+- guardar un caso ya publicado con el mismo texto no reinicia las 24 horas
+- el editor puede pedir lo aprobado para partir de ello y no del relato
 
 ### [tests/unit/publication.test.ts](../tests/unit/publication.test.ts) — 4 casos
 
@@ -442,6 +511,10 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - antigüedad de un aviso una fecha ilegible no rompe la lista
 - antigüedad de un aviso la fecha exacta se conserva para el título
 
+### [tests/unit/report-cursor.test.ts](../tests/unit/report-cursor.test.ts) — 1 casos
+
+- conserva fecha e identidad para no saltar empates
+
 ### [tests/unit/report-lookup.test.ts](../tests/unit/report-lookup.test.ts) — 13 casos
 
 - quien lo reportó recibe su expediente tal como lo mandó
@@ -458,8 +531,19 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - al Consejo también, que es quien lo retiró
 - a un tercero el acta no le consta
 
-### [tests/unit/restablecer.test.ts](../tests/unit/restablecer.test.ts) — 18 casos
+### [tests/unit/report-pagination.test.ts](../tests/unit/report-pagination.test.ts) — 3 casos
 
+- consulta 501 reportes personales sin detenerse en 200
+- continúa tras páginas comunitarias vacías con cursor y alcanza el resto
+- una página repetida falla y no declara completa una lista parcial
+
+### [tests/unit/report-updates.test.ts](../tests/unit/report-updates.test.ts) — 1 casos
+
+- actualiza las vistas del expediente y permite desmontar la suscripción
+
+### [tests/unit/restablecer.test.ts](../tests/unit/restablecer.test.ts) — 19 casos
+
+- no reabre una cuenta cuya eliminación sigue parcial
 - sin rol del Consejo no se restablece nada
 - un correo que no existe se dice, y no se toca nada
 - una cuenta que no está cerrada no se restablece
@@ -479,8 +563,19 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - la eliminación sigue anonimizando, antes y después de un restablecimiento
 - el nombre de quien administra no acaba en el documento de la cuenta
 
-### [tests/unit/retract.test.ts](../tests/unit/retract.test.ts) — 12 casos
+### [tests/unit/resume-deletion.test.ts](../tests/unit/resume-deletion.test.ts) — 6 casos
 
+- exige el rol del Consejo
+- no ejecuta otra limpieza mientras hay un intento vigente
+- conserva la solicitud parcial y su seudónimo si se interrumpe la limpieza
+- retoma una eliminación parcial sin la sesión deshabilitada y conserva su fecha
+- no inicia una eliminación desde la herramienta de reanudación
+- rechaza continuar una solicitud sobre una cuenta reabierta
+
+### [tests/unit/retract.test.ts](../tests/unit/retract.test.ts) — 14 casos
+
+- reintenta la limpieza de una retirada parcial sin repetir acta ni avisos
+- no confirma limpieza completa si quedan copias por encima del lote máximo
 - sin motivo no se retira nada
 - un motivo de dos palabras tampoco es un motivo
 - retirar borra el expediente y su resumen público
@@ -494,7 +589,7 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - el aviso de retirada no lleva a un expediente que ya no existe
 - repetir la retirada no vuelve a sonar el teléfono
 
-### [tests/unit/roles.test.ts](../tests/unit/roles.test.ts) — 8 casos
+### [tests/unit/roles.test.ts](../tests/unit/roles.test.ts) — 10 casos
 
 - concede el rol y lo deja registrado
 - si el campo de la cuenta no se puede escribir, el rol no se concede a medias
@@ -504,6 +599,8 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - no se retira al último administrador
 - la consulta y el cambio exigen el rol
 - la consulta devuelve todas las cuentas con su rol, no solo las que administran
+- retirar el rol revoca las sesiones abiertas antes de escribir el campo
+- conceder el rol no revoca ninguna sesión
 
 ### [tests/unit/service-worker.test.ts](../tests/unit/service-worker.test.ts) — 12 casos
 
@@ -592,6 +689,12 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - cada motivo dice algo distinto y ninguno queda mudo
 - solo el permiso manda a los ajustes; los demás, al mapa
 
+### [tests/unit/vereda-catalogue.test.ts](../tests/unit/vereda-catalogue.test.ts) — 3 casos
+
+- valida una versión y pide nueva validación después de editar
+- retira sin borrar y conserva el ID al renombrar
+- rechaza duplicados normalizados y coordenadas incompletas
+
 ### [tests/unit/vereda-load.test.ts](../tests/unit/vereda-load.test.ts) — 5 casos
 
 - carga por vereda ordena por casos abiertos, no por total
@@ -669,6 +772,16 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - el permiso negado y la falta de servicio se distinguen
 - el tope de un minuto es el mismo en los dos mundos
 
+### [tests/unit/workspace-reports.test.ts](../tests/unit/workspace-reports.test.ts) — 7 casos
+
+- el inicio consulta la cuenta sin depender de copias en el dispositivo y cuenta sus cuatro reportes
+- el resumen del historial usa los mismos cuatro casos que su lista
+- reportes recientes enseña resúmenes comunitarios y no relatos privados
+- una consulta comunitaria fallida no se presenta como una lista vacía
+- mientras se consulta la cuenta no inventa un cero ni muestra una lista vacía
+- el historial comunitario informa el error y permite reintentar
+- una respuesta comunitaria vacía confirmada se explica como tal
+
 ### [tests/unit/writing-api.test.ts](../tests/unit/writing-api.test.ts) — 4 casos
 
 - IA exige correo verificado sin llamar al proveedor
@@ -701,9 +814,9 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 
 - abrir un comunicado lleva a su pantalla de lectura con enlace propio ([línea 4](../tests/e2e/comunicado.spec.ts#L4))
 - un comunicado largo se lee con sus apartados, listas, citas e imágenes ([línea 30](../tests/e2e/comunicado.spec.ts#L30))
-- un comunicado inexistente lo dice en vez de quedarse en blanco ([línea 77](../tests/e2e/comunicado.spec.ts#L77))
-- los pasos recorridos del reporte se pueden reabrir ([línea 87](../tests/e2e/comunicado.spec.ts#L87))
-- vaciar un paso anterior vuelve a cerrar los siguientes ([línea 113](../tests/e2e/comunicado.spec.ts#L113))
+- un comunicado inexistente lo dice en vez de quedarse en blanco ([línea 112](../tests/e2e/comunicado.spec.ts#L112))
+- los pasos recorridos del reporte se pueden reabrir ([línea 122](../tests/e2e/comunicado.spec.ts#L122))
+- vaciar un paso anterior vuelve a cerrar los siguientes ([línea 148](../tests/e2e/comunicado.spec.ts#L148))
 
 ### [tests/e2e/council-memory.spec.ts](../tests/e2e/council-memory.spec.ts) — 3 casos
 
@@ -745,21 +858,27 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - imprimir la página del manual da un cuadernillo, no una pantalla ([línea 140](../tests/e2e/manuales.spec.ts#L140))
 - «Manuales» está en la columna de herramientas ([línea 168](../tests/e2e/manuales.spec.ts#L168))
 
+### [tests/e2e/mejoras-consejo.spec.ts](../tests/e2e/mejoras-consejo.spec.ts) — 3 casos
+
+- varias fotografías conservan el borrador y se pueden quitar individualmente ([línea 4](../tests/e2e/mejoras-consejo.spec.ts#L4))
+- la captura usa los nombres y la validación del catálogo guardado ([línea 40](../tests/e2e/mejoras-consejo.spec.ts#L40))
+- las rutas nuevas no permiten gestionar ni descargar sin sesión ([línea 86](../tests/e2e/mejoras-consejo.spec.ts#L86))
+
 ### [tests/e2e/polish.spec.ts](../tests/e2e/polish.spec.ts) — 13 casos
 
 - bienvenida, tema oscuro y navegación ([línea 4](../tests/e2e/polish.spec.ts#L4))
-- el acceso comparte el escenario de la bienvenida ([línea 67](../tests/e2e/polish.spec.ts#L67))
-- el acceso se adapta al teléfono sin perder el formulario ([línea 84](../tests/e2e/polish.spec.ts#L84))
-- el acceso con Google lleva su marca de cuatro colores ([línea 104](../tests/e2e/polish.spec.ts#L104))
-- acceso presenta formulario sin simular una sesión ([línea 119](../tests/e2e/polish.spec.ts#L119))
-- mapa filtra por estado y comunidad presenta fuentes ([línea 128](../tests/e2e/polish.spec.ts#L128))
-- las estadísticas señalan lo que más espera y llevan al expediente ([línea 173](../tests/e2e/polish.spec.ts#L173))
-- el tema oscuro conserva el color de las gráficas y del mapa ([línea 203](../tests/e2e/polish.spec.ts#L203))
-- el asistente de análisis no existe para quien no es del Consejo ([línea 230](../tests/e2e/polish.spec.ts#L230))
-- la redacción con IA se cierra en el servidor, no solo en la interfaz ([línea 248](../tests/e2e/polish.spec.ts#L248))
-- el informe se arma con la portada y el cierre del Consejo ([línea 265](../tests/e2e/polish.spec.ts#L265))
-- la portada del informe declara el filtro con el que se emitió ([línea 292](../tests/e2e/polish.spec.ts#L292))
-- ninguna superficie se estira al llegar al tope ([línea 319](../tests/e2e/polish.spec.ts#L319))
+- el acceso comparte el escenario de la bienvenida ([línea 68](../tests/e2e/polish.spec.ts#L68))
+- el acceso se adapta al teléfono sin perder el formulario ([línea 85](../tests/e2e/polish.spec.ts#L85))
+- el acceso con Google lleva su marca de cuatro colores ([línea 105](../tests/e2e/polish.spec.ts#L105))
+- acceso presenta formulario sin simular una sesión ([línea 120](../tests/e2e/polish.spec.ts#L120))
+- mapa filtra por estado y comunidad presenta fuentes ([línea 129](../tests/e2e/polish.spec.ts#L129))
+- las estadísticas señalan lo que más espera y llevan al expediente ([línea 174](../tests/e2e/polish.spec.ts#L174))
+- el tema oscuro conserva el color de las gráficas y del mapa ([línea 204](../tests/e2e/polish.spec.ts#L204))
+- el asistente de análisis no existe para quien no es del Consejo ([línea 231](../tests/e2e/polish.spec.ts#L231))
+- la redacción con IA se cierra en el servidor, no solo en la interfaz ([línea 249](../tests/e2e/polish.spec.ts#L249))
+- el informe se arma con la portada y el cierre del Consejo ([línea 266](../tests/e2e/polish.spec.ts#L266))
+- la portada del informe declara el filtro con el que se emitió ([línea 293](../tests/e2e/polish.spec.ts#L293))
+- ninguna superficie se estira al llegar al tope ([línea 320](../tests/e2e/polish.spec.ts#L320))
 
 ### [tests/e2e/production-boundaries.spec.ts](../tests/e2e/production-boundaries.spec.ts) — 11 casos
 
@@ -770,10 +889,10 @@ Inventario generado a partir de los nombres que reportan Vitest y Playwright. **
 - la página del territorio no expone los mandos de prueba ([línea 94](../tests/e2e/production-boundaries.spec.ts#L94))
 - la API del Consejo rechaza acceso anónimo ([línea 104](../tests/e2e/production-boundaries.spec.ts#L104))
 - oscuro conserva contraste y banner a color, detalle navega como página ([línea 109](../tests/e2e/production-boundaries.spec.ts#L109))
-- la aplicación llega con sus cabeceras de seguridad ([línea 147](../tests/e2e/production-boundaries.spec.ts#L147))
-- los buscadores no recorren expedientes ni el panel del Consejo ([línea 168](../tests/e2e/production-boundaries.spec.ts#L168))
-- una dirección que no existe se explica y ofrece salida ([línea 177](../tests/e2e/production-boundaries.spec.ts#L177))
-- un punto del mapa enseña lo que tiene y lleva al expediente ([línea 196](../tests/e2e/production-boundaries.spec.ts#L196))
+- la aplicación llega con sus cabeceras de seguridad ([línea 151](../tests/e2e/production-boundaries.spec.ts#L151))
+- los buscadores no recorren expedientes ni el panel del Consejo ([línea 172](../tests/e2e/production-boundaries.spec.ts#L172))
+- una dirección que no existe se explica y ofrece salida ([línea 181](../tests/e2e/production-boundaries.spec.ts#L181))
+- un punto del mapa enseña lo que tiene y lleva al expediente ([línea 200](../tests/e2e/production-boundaries.spec.ts#L200))
 
 ### [tests/e2e/push-ajuste.spec.ts](../tests/e2e/push-ajuste.spec.ts) — 1 casos
 

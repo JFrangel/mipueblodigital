@@ -4,7 +4,7 @@ Los dos manuales de Mi Pueblo Digital —el del ciudadano y el del Consejo— se
 leen dentro de la aplicación, se descargan en PDF y se pueden leer en Markdown
 en este repositorio. Los tres salen **del mismo texto**.
 
-Fecha de esta documentación: 21 de octubre de 2026.
+Fecha de esta documentación: 23 de octubre de 2026.
 
 | Para quién | Dónde se lee | PDF | Hoja |
 | --- | --- | --- | --- |
@@ -69,6 +69,16 @@ npm run manuales:pdf   # imprime los dos y actualiza manifest.json
 
 - Imprime en **dos pasadas**: la primera lee en qué hoja cae cada capítulo; la
   segunda vuelve a imprimir con esos números en el índice.
+- **Ajusta la paginación solo.** Antes de la pasada final repite la impresión
+  hasta que ningún capítulo deje una cola suelta en una hoja aparte:
+  - si un capítulo arranca al pie de una hoja con muy pocas líneas, pasa
+    entero a la hoja siguiente;
+  - si deja una cola corta al comienzo de la hoja siguiente, se aprieta ese
+    capítulo (letra y espacios hasta un 82 % del tamaño normal, en tres niveles)
+    hasta que quepa;
+  - donde queda al pie de una hoja un hueco de 45 mm o más, se rellena con uno
+    de los dibujos del territorio; los huecos pequeños se dejan vacíos.
+  Resultado actual: 21 hojas el del ciudadano (A5) y 16 el del Consejo (A4).
 - Sale **etiquetado y con marcadores**: los lectores de pantalla lo leen y el
   visor de PDF muestra el índice de capítulos.
 - La ruta que imprime, `/manuales/impresion/<manual>/`, **no existe en

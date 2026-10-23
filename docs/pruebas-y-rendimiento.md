@@ -1,5 +1,7 @@
 # Pruebas, resultados y rendimiento
 
+Actualización del 23 de octubre: **554/554 unitarias en 76 archivos y 91/91 de navegador en 19**, con tipos y lint sin avisos. La prueba de comunicados que fallaba por datos reales ya pasa. Entran las pruebas del catálogo de veredas, la paginación de la bandeja y de la lista personal más allá de 200, la eliminación de cuenta por páginas y retomable, y la auditoría de módulos sin uso. Los dispositivos móviles dejan de animar las hojas (medido: de 128 a 0 ms de pintado al desplazar una pantalla larga con la CPU cuatro veces más lenta, en Chromium de escritorio; no se midió en un teléfono real). Las cifras de la sección del 21 de octubre se conservan como histórico.
+
 Actualización del 21 de octubre: el informe de estadísticas imprime sin la primera hoja en blanco, el informe del APK se abre aislado y con el diseño del proyecto, y hay una sección de manuales con PDF. **492/492 unitarias**; en navegador, **86 de 88** pasaron y las dos que no son ajenas a este cambio (ver la última sección). Tipos y lint (sin avisos) pasan.
 
 Actualización del 3 de octubre (noche): tras corregir los textos de privacidad y
@@ -10,7 +12,7 @@ aserciones, dobles y alcance del editor histórico en
 [la entrega del editor histórico](editor-historia-cabecera-2026-10-03.md).
 Los resultados de fechas anteriores se conservan como bitácora histórica.
 
-Fecha de corte: 3 de octubre de 2026 (America/Bogota). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
+Fecha de corte: 23 de octubre de 2026 (America/Bogota). El [catálogo individual](catalogo-pruebas.md) enumera **cada caso y su archivo** a partir del reporte JSON de Vitest y de `playwright test --list --reporter=json`; evita una cifra sin trazabilidad. Este documento explica qué comprueba cada capa, cómo repetirla y qué queda sin demostrar. Un nombre de prueba no es una evidencia de que se haya ejecutado.
 
 ## 1. Matriz de verificación
 
@@ -18,9 +20,9 @@ Fecha de corte: 3 de octubre de 2026 (America/Bogota). El [catálogo individual]
 | --- | --- | --- | --- |
 | Formato/lint | `npm run lint` | Reglas estáticas ESLint de todo el proyecto | Comportamiento, accesibilidad o seguridad de servicios externos |
 | Tipos | `npm run typecheck` | Contratos TypeScript | Permisos efectivos, errores de red, experiencia en teléfono |
-| Unitarias y rutas aisladas | `npm test` | 492 casos en 59 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
+| Unitarias y rutas aisladas | `npm test` | 554 casos en 76 archivos; lógica, almacenes, contratos de API con dobles | Firebase/Supabase reales, conectividad, dispositivo físico |
 | Build | `npm run build` | Compilación de producción Next, rutas y empaquetado web | Que el backend esté configurado ni que las cuentas reales funcionen |
-| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 88 casos en 18 archivos; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
+| Navegador | `npx playwright test` tras build; o `npm run test:e2e` | 91 casos en 19 archivos; flujos de interfaz Chromium local | Android real, velocidades de río, autorización de recursos externos |
 | Reglas de base | `npm run test:rules` | Reglas de Firestore en emulador con los casos de [`rules.mjs`](../tests/integration/rules.mjs) | API Admin, consola real, configuración de producción |
 | Integraciones manuales | [`auth.mjs`](../tests/integration/auth.mjs) y [`remote-incidents.mjs`](../tests/integration/remote-incidents.mjs) | Flujos reales si se facilitan credenciales y entorno aislado | No deben ejecutarse sobre datos comunitarios sin preparar el entorno |
 | Rendimiento local | `npm run test:perf` con servidor de producción local | Cinco cargas nuevas por ruta, DOMContentLoaded, load y tiempo de respuesta | Carga concurrente, experiencia de campo o Web Vitals reales |
@@ -140,3 +142,18 @@ Sobre el árbol con el arreglo de impresión, el informe del APK y los manuales,
 | Pruebas instrumentadas de Android, reglas de Firestore | **No se repitieron** | Esta tanda no toca el APK ni `firestore.rules`. |
 
 Cómo se comprobó la hoja en blanco: antes del arreglo, el PDF de Estadísticas con sesión del Consejo tenía **0 caracteres en la primera hoja** y la portada aparecía después del panel de cifras del territorio; después, la portada abre la hoja 1 en las tres variantes (cuenta ciudadana, Consejo y Consejo con un panel de 18 veredas).
+
+## Verificación — 23 de octubre de 2026
+
+Sobre el árbol con el trabajo de consistencia de reportes y eliminación de cuentas, el catálogo de veredas y los cambios de rendimiento en móvil, compilado con `npm run build`.
+
+| Verificación | Resultado | Notas |
+| --- | --- | --- |
+| `npm test` | **554/554**, 76 archivos | Treinta y cuatro casos más que el 21 de octubre: catálogo de veredas, paginación de la bandeja y de la lista personal, eliminación de cuenta retomable, recibos de entrega y auditoría de módulos. |
+| `npx playwright test` | **91/91**, 19 archivos | Incluye `comunicado.spec.ts` «un comunicado largo…», que antes fallaba por datos reales. |
+| `npx tsc --noEmit` | Salida 0 | |
+| `npx eslint .` | Salida 0, sin avisos | |
+| Desplazamiento en móvil | Pintado por desplazamiento: 128 → 10 ms («Mis reportes») y 234 → 15 ms («Memoria») | Chromium de escritorio con CPU a 4× más lenta y toque simulado, antes y después de dejar quietas las hojas. La barra superior desenfocada, las sombras y las máscaras se midieron aparte: no pesan. **No sustituye una prueba en un teléfono real.** |
+| Pruebas instrumentadas de Android, reglas de Firestore | **No se repitieron** | Esta tanda no toca el APK ni `firestore.rules`. |
+
+El índice de Firestore de `incidents` por `owner`, `date` y `__name__` (en `firebase/firestore.indexes.json`) se desplegó al proyecto de producción el 21 de octubre; falta confirmar en la consola que quedó «Habilitado».

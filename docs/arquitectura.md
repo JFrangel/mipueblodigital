@@ -85,7 +85,7 @@ src/
     bienvenida/   Primera visita
     noticia/[id]/ Comunicado público
     reporte/[id]/ Detalle de un expediente
-    api/          25 rutas de servidor (§6)
+    api/          39 rutas de servidor (§6)
     globals.css   Hoja única de la aplicación
   components/     Piezas compartidas de interfaz (workspace, ui, case-list…)
   features/       Pantallas completas (report, council-inbox, territory…)
@@ -297,6 +297,12 @@ permisos que no se tienen.
 | `/api/admin/roles`                   | GET, POST         | Consejo | Listado de cuentas y designación. Cada cuenta dice si su puerta está cerrada                                                              |
 | `/api/admin/accounts/restablecer`   | POST              | Consejo | Vuelve a abrir una cuenta que su dueña cerró ([§8.6](#86-volver-después-de-haberse-ido))                                                 |
 | `/api/admin/territorio`              | GET, POST         | Consejo | Sitúa en el mapa las veredas que el catálogo no sitúa ([§15](#15-las-veredas-que-el-catálogo-no-sitúa))                                  |
+| `/api/admin/incidents/export` | GET | Consejo | La bandeja entera en CSV, aunque la pantalla solo haya cargado unas páginas |
+| `/api/admin/incidents/{id}/events/{event}/image` | GET | Consejo | La imagen adjunta a una actuación (visita técnica o nota con foto) |
+| `/api/admin/accounts/eliminacion` | POST | Consejo | Retoma una eliminación de cuenta que quedó a medias, con el correo de la cuenta |
+| `/api/admin/territorio/catalogo` | GET, POST | Consejo | El catálogo de veredas: crear, renombrar, retirar sin borrar y validar una versión |
+| `/api/admin/history` | GET | Consejo | Los hitos de la memoria del Consejo, con borradores y archivados |
+| `/api/admin/history/{id}` | PUT | Consejo | Guarda un hito (control de versión, el autor sale de la sesión) |
 | `/api/admin/statistics`              | GET               | Consejo | Cifras agregadas del territorio                                                                                                          |
 | `/api/admin/analysis`                | POST              | Consejo | Lectura asistida de la bandeja                                                                                                           |
 | `/api/admin/news`                    | GET               | Consejo | Los comunicados, incluidos los borradores                                                                                                |
@@ -313,8 +319,11 @@ permisos que no se tienen.
 | `/api/news/{id}/portada`         | GET        | —       | Su portada, si está publicado. `Cache-Control: public, max-age=86400` |
 | `/api/news/{id}/media/{mediaId}` | GET        | —       | Sus imágenes, si está publicado                                       |
 | `/api/notifications`             | GET, PATCH | miembro | Bandeja personal; `?scope=council` exige el rol                       |
+| `/api/territorio/catalogo` | GET | miembro | El catálogo de veredas vigente, sin quién lo validó |
+| `/api/statistics/export` | POST | miembro | Guarda un informe y devuelve un billete de un solo uso (el navegador del APK lo abre aislado) |
+| `/api/history` | GET | — | La línea de tiempo pública de la memoria del Consejo |
 
-Las cuatro rutas sin guardia comprueban `status === "published"` antes de
+Las rutas de comunicados sin guardia comprueban `status === "published"` antes de
 devolver nada: **la portada de un borrador no se ve adivinando la dirección**.
 
 ### 6.5. Asistencia de IA

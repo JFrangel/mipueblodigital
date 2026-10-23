@@ -4,6 +4,37 @@ Aplicación de gestión de incidencias del **Gran Consejo Comunitario Río
 Satinga**, Olaya Herrera, Nariño. La comunidad reporta lo que pasa en el
 territorio; el Consejo lo recibe, lo gestiona y responde.
 
+[![Video de demostración: de la vereda al Consejo y de vuelta](docs/imagenes/video-portada.png)](docs/video/mi-pueblo-digital-demo.mp4)
+
+▶ **[Ver el video de demostración](docs/video/mi-pueblo-digital-demo.mp4)** (4 min 28 s, con voz): cómo un reporte sale de la vereda,
+llega al Consejo, se gestiona, se publica como resumen y vuelve a quien lo envió.
+
+## Cómo se ve
+
+| Bienvenida | Reportar | Detalle de un reporte | Mapa |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/imagenes/01-bienvenida.png" width="170" alt="Pantalla de bienvenida"> | <img src="docs/imagenes/02-reportar.png" width="170" alt="Primer paso del reporte: tipo de situación"> | <img src="docs/imagenes/03-detalle-reporte.png" width="170" alt="Detalle de un reporte con su seguimiento"> | <img src="docs/imagenes/04-mapa.png" width="170" alt="Mapa con los puntos de la comunidad"> |
+
+| Memoria del Consejo | Manuales | Panel del Consejo |
+| :---: | :---: | :---: |
+| <img src="docs/imagenes/05-memoria.png" width="170" alt="Memoria documentada del Consejo"> | <img src="docs/imagenes/06-manuales.png" width="170" alt="Sección de manuales"> | <img src="docs/imagenes/07-panel-consejo.png" width="330" alt="Panel del Consejo con la bandeja de expedientes"> |
+
+Capturas de la aplicación real con **datos de ejemplo**: el producto no lleva
+reportes inventados. El detalle de un expediente en el panel del Consejo está en
+[`docs/imagenes/08-panel-expediente.png`](docs/imagenes/08-panel-expediente.png).
+
+## Manuales en PDF
+
+| Manual | Para quién | PDF |
+| --- | --- | --- |
+| Del ciudadano | Quien reporta (formato A5, pensado para el teléfono) | [`manual-ciudadano.pdf`](public/manuales/manual-ciudadano.pdf) · [en Markdown](docs/manual-ciudadano.md) |
+| Operativo del Consejo | Quien gestiona (A4, con tablas) | [`manual-consejo.pdf`](public/manuales/manual-consejo.pdf) · [en Markdown](docs/manual-consejo.md) |
+
+Los dos PDF, el Markdown y la vista de la aplicación salen **del mismo texto**
+([cómo se mantienen](docs/manuales.md)). Dentro de la aplicación están en
+**Herramientas → Manuales**; el del Consejo solo se muestra con una cuenta del
+Consejo, pero el archivo del repositorio no contiene datos internos.
+
 ## Qué hace hoy
 
 - **Reportar** con fotografía, vereda y punto en el mapa, con sesión real de
@@ -12,10 +43,22 @@ territorio; el Consejo lo recibe, lo gestiona y responde.
 - **Seguir el propio reporte** desde cualquier teléfono: el historial es de la
   cuenta, no del aparato.
 - **Bandeja del Consejo** con estado, prioridad, responsable, control de versión
-  optimista y auditoría de cada actuación.
+  optimista y auditoría de cada actuación. Se pagina completa (más de 500
+  expedientes sin perder ni duplicar), se exporta entera a CSV y el Consejo ve
+  el nombre con el que se registró quien reportó; la comunidad, nunca.
+- **Visitas técnicas y notas con imagen** en cada expediente, y **hasta cinco
+  fotografías** por reporte.
+- **Catálogo de veredas** administrado por el Consejo: crear, renombrar, retirar
+  sin borrar y validar una versión; la captura y el mapa usan el catálogo vigente.
 - **Publicación comunitaria revisada**: solo un resumen aprobado por el Consejo
   puede aparecer, 24 horas después de su aprobación. El relato original queda privado.
-- **Retirada de un expediente con su motivo**, que le llega a quien reportó.
+- **Retirada de un expediente con su motivo**, que le llega a quien reportó, y
+  **reapertura de un resumen publicado** sin volver a mostrar el relato.
+- **Memoria del Consejo**: línea de tiempo de hitos con fecha, período y fuentes
+  enlazadas, que el propio Consejo puede ampliar desde su panel.
+- **Manuales de uso** del ciudadano y del Consejo, dentro de la aplicación y en PDF.
+- **Informe de estadísticas** para la asamblea, que se imprime con portada y
+  cierre del Consejo y también se abre desde el APK.
 - **Comunicados** con portada, imágenes y anclado.
 - **Mapa, estadísticas y calendario** sobre los reportes reales del territorio.
 - **Avisos que llegan al teléfono** con la aplicación cerrada, en el APK y en el
@@ -27,8 +70,12 @@ territorio; el Consejo lo recibe, lo gestiona y responde.
   lo acepta y la vereda entra al mapa con su nombre.
 - **Tres ayudas de redacción** con un modelo de lenguaje, solo con modelos
   gratuitos y sin que salga del territorio más de lo que cada una necesita.
-- **Eliminación de cuenta** con anonimización de los expedientes, y
-  **restablecimiento por el Consejo** si quien la cerró cambia de idea.
+- **Eliminación de cuenta**: se borran fotografías, ubicación y notas, los
+  reportes pasan a ser anónimos (el Consejo conserva categoría, vereda, estado y
+  fechas para las cifras), el trabajo interrumpido se retoma, y el Consejo puede
+  **restablecer** la cuenta si quien la cerró cambia de idea.
+- **Fluidez en el teléfono**: en pantallas de 800 px o menos las hojas decorativas
+  no se animan y el telón de arranque no se dibuja; en escritorio siguen.
 
 La aplicación **no lleva datos inventados**: lo que se ve es lo que la comunidad
 reportó. Una instalación nueva arranca vacía, y cada pantalla dice de dónde sale
@@ -94,6 +141,8 @@ correo@ejemplo.com` o desde el Panel del Consejo. Véase
 | [Auditoría y entrega Android 2.2](docs/auditoria-entrega-2026-10-02.md) | Quien valida, actualiza y opera la app |
 | [Memoria documentada del Consejo](docs/investigacion-consejo-rio-satinga.md) | Consejo, comunidad e investigadores             |
 | [Pruebas y rendimiento](docs/pruebas-y-rendimiento.md)                    | Quien valida y opera la app                      |
+| [Mejoras del Consejo: verificación](docs/verificacion-mejoras-consejo-2026-10-21.md) | Quien revise el catálogo de veredas, la bandeja y las visitas |
+| [Consistencia de reportes: corrección y registro](docs/correccion-consistencia-reportes-2026-10-21.md) | Quien revise listas, historial y eliminación de cuentas |
 | [Catálogo de pruebas](docs/catalogo-pruebas.md)                           | Quien revisa cada caso automatizado              |
 | [Guía de pruebas por archivo](docs/guia-pruebas-por-archivo.md)           | Quien necesita entender el alcance de cada suite |
 | [Seguridad y privacidad](docs/seguridad-y-privacidad.md)                  | Consejo, operador y responsable de datos         |
