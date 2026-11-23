@@ -283,22 +283,30 @@ export async function POST(request: Request) {
         .digest("hex");
       return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
     });
+    let archivoConfirmado = true;
     for (const [index, image] of photos.entries()) {
-      await evidenceRequest("?on_conflict=id", {
-        method: "POST",
-        headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
-        body: JSON.stringify({
-          id: evidenceIds[index],
-          incident_id: id,
-          owner_uid: uid,
-          ...image,
-        }),
-      });
-      const stored = await (
-        await evidenceRequest(
-          `?id=eq.${evidenceIds[index]}&select=sha256,owner_uid,incident_id`,
-        )
-      ).json();
+      let stored;
+      try {
+        await evidenceRequest("?on_conflict=id", {
+          method: "POST",
+          headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+          body: JSON.stringify({
+            id: evidenceIds[index],
+            incident_id: id,
+            owner_uid: uid,
+            ...image,
+          }),
+        });
+        stored = await (
+          await evidenceRequest(
+            `?id=eq.${evidenceIds[index]}&select=sha256,owner_uid,incident_id`,
+          )
+        ).json();
+      } catch (error) {
+        if (!(error instanceof ApiError) || error.status !== 503) throw error;
+        archivoConfirmado = false;
+        break;
+      }
       if (
         stored[0]?.sha256 !== image.sha256 ||
         stored[0]?.owner_uid !== uid ||
@@ -309,6 +317,16 @@ export async function POST(request: Request) {
           "No se pudo verificar la integridad de la fotografía.",
         );
     }
+    const copias = archivoConfirmado
+      ? []
+      : await Promise.all(
+          photos.map((image) => buildBackup(image.content_base64)),
+        );
+    if (copias.some((copia) => !copia))
+      throw new ApiError(
+        503,
+        "No se pudo conservar la fotografía. Reintenta el envío.",
+      );
     const receipt = await db.runTransaction(async (tx) => {
       const account = (await tx.get(db.doc(`accounts/${uid}`))).data();
       if (account?.active !== true)
@@ -344,10 +362,22 @@ export async function POST(request: Request) {
         locationVerified: false,
         evidenceId,
         evidenceIds,
+        evidenceArchive: archivoConfirmado ? "verified" : "reduced",
         version: 1,
         sensitivity,
         publication: "private",
       });
+      for (const [index, copia] of copias.entries()) {
+        tx.set(
+          db.doc(`incidentEvidence/${index === 0 ? id : `${id}_${index}`}`),
+          {
+            ...copia,
+            incident_id: id,
+            owner: uid,
+            at: date,
+          },
+        );
+      }
       tx.create(ref.collection("events").doc("received"), {
         type: "received",
         at: date,
@@ -389,20 +419,21 @@ export async function POST(request: Request) {
        Va en documento aparte porque `incidents/{id}` se lista de veinticinco en
        veinticinco en la bandeja del Consejo, y nadie quiere arrastrar ahí
        cientos de kilobytes de imagen por cada fila. */
-    void Promise.all(
-      photos.map(async (image, index) => {
-        const copia = await buildBackup(image.content_base64);
-        if (copia)
-          await db
-            .doc(`incidentEvidence/${index === 0 ? id : `${id}_${index}`}`)
-            .set({
-              ...copia,
-              incident_id: id,
-              owner: uid,
-              at: new Date().toISOString(),
-            });
-      }),
-    ).catch(() => undefined);
+    if (archivoConfirmado)
+      void Promise.all(
+        photos.map(async (image, index) => {
+          const copia = await buildBackup(image.content_base64);
+          if (copia)
+            await db
+              .doc(`incidentEvidence/${index === 0 ? id : `${id}_${index}`}`)
+              .set({
+                ...copia,
+                incident_id: id,
+                owner: uid,
+                at: new Date().toISOString(),
+              });
+        }),
+      ).catch(() => undefined);
     /* Que el Consejo se entere sin abrir la aplicación. Fuera de la
        transacción y con `void` por lo mismo que el respaldo de la fotografía:
        un recibo confirmado es un recibo confirmado aunque el aviso no salga. Y
