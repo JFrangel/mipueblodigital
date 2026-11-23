@@ -275,28 +275,34 @@ async function shrink(
   const height = Math.max(1, Math.floor(real.height * factor));
 
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context)
-    throw new Error(
-      "Este navegador no pudo ajustar la fotografía. Usa una de menor tamaño.",
-    );
-  context.imageSmoothingQuality = "high";
-  context.drawImage(bitmap, 0, 0, width, height);
+  try {
+    for (const escala of [1, 0.8, 0.64, 0.5, 0.35]) {
+      canvas.width = Math.max(1, Math.floor(width * escala));
+      canvas.height = Math.max(1, Math.floor(height * escala));
+      const context = canvas.getContext("2d");
+      if (!context) break;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
-  for (const quality of [0.92, 0.85, 0.78, 0.7, 0.6, 0.48, 0.35, 0.25]) {
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", quality),
-    );
-    if (!blob) break;
-    if (blob.size <= maxBytes)
-      return {
-        dataUrl: await readAsDataUrl(blob),
-        megapixels: round(width * height),
-      };
+      for (const type of ["image/webp", "image/jpeg"]) {
+        for (const quality of [0.94, 0.88, 0.82, 0.75]) {
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, type, quality),
+          );
+          if (!blob || blob.type !== type) break;
+          if (blob.size <= maxBytes)
+            return {
+              dataUrl: await readAsDataUrl(blob),
+              megapixels: round(canvas.width * canvas.height),
+            };
+        }
+      }
+    }
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
   }
   throw new Error(
-    "No se pudo ajustar la fotografía a 10 MB. Usa una de menor tamaño.",
+    "No se pudo comprimir esta fotografía para enviarla. Prueba con otra imagen.",
   );
 }
