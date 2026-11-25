@@ -10,8 +10,7 @@ export type Material = Aggregate & { actuaciones?: string[] };
 
 export function openRouterModel() {
   const configured = process.env.OPENROUTER_MODEL;
-  return;
-  configured && configured !== "nvidia/nemotron-3-super-120b-a12b:free"
+  return configured && configured !== "nvidia/nemotron-3-super-120b-a12b:free"
     ? configured
     : "openrouter/free";
 }
