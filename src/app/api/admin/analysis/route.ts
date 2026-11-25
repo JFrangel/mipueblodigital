@@ -102,7 +102,10 @@ export async function POST(request: Request) {
       return Response.json(
         {
           aggregate,
-          text: "El proveedor no pudo generar un borrador válido. Puedes consultar los conteos verificados y reintentar más tarde.",
+          text: [
+            "La IA no está disponible en este momento. Este resumen se calculó con los datos de Firestore.",
+            `Se contabilizaron ${aggregate.total} reportes${aggregate.sampled ? " en la muestra consultada" : ""}. Hay ${aggregate.open} abiertos, de los cuales ${aggregate.unassigned} siguen sin responsable. Se registraron ${aggregate.lastWeek} en los últimos siete días y ${aggregate.lastMonth} en los últimos treinta.`,
+          ].join(" "),
           generated: false,
         },
         { headers: { "Cache-Control": "no-store" } },
