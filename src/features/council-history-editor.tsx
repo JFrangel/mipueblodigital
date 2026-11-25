@@ -260,11 +260,6 @@ export function CouncilHistoryEditor() {
               disabled={busy}
               style={{ border: 0, padding: 0, display: "contents" }}
             >
-              {items.some((item) => item.id === draft.id) && (
-                <button className="btn" type="button" onClick={remove}>
-                  Eliminar hito
-                </button>
-              )}
               <label className="field-label">
                 Título
                 <input
@@ -463,6 +458,11 @@ export function CouncilHistoryEditor() {
                       ? "Archivar hito"
                       : "Guardar borrador"}
               </button>
+              {items.some((item) => item.id === draft.id) && (
+                <button className="btn" type="button" onClick={remove}>
+                  Eliminar hito
+                </button>
+              )}
               <small>
                 Los cambios solo quedan guardados cuando el servidor confirma.{" "}
                 {dirty ? "Tienes cambios sin guardar." : ""}
