@@ -55,12 +55,7 @@ export async function describeAggregate(aggregate: Material) {
       }
       const result = await response.json();
       const text = result.choices?.[0]?.message?.content;
-      if (
-        typeof text === "string" &&
-        text.trim() &&
-        text.length <= 5000 &&
-        !/\d|%/.test(text)
-      )
+      if (typeof text === "string" && text.trim() && text.length <= 5000)
         return text.trim();
       console.warn("Informe IA: respuesta fuera del formato esperado");
     } catch (error) {
