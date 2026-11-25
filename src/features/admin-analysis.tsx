@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
-import { Sparkles } from "lucide-react";
+import { FileText, Sparkles } from "lucide-react";
 import { firebaseClient } from "@/data/firebase/client";
 import { statuses } from "@/data/catalog";
+import styles from "./admin-analysis.module.css";
 
 export function AdminAnalysis() {
   const [busy, setBusy] = useState(false);
@@ -12,11 +13,44 @@ export function AdminAnalysis() {
     generated: boolean;
     aggregate: { total: number; states: Record<string, number> };
   } | null>(null);
+  const text = result?.text.trim() ?? "";
+  const questionStart = result?.generated ? text.indexOf("¿") : -1;
+  const questionTail = questionStart >= 0 ? text.slice(questionStart) : "";
+  const matchedQuestions = questionTail.match(/¿[^¿?]+\?/g) ?? [];
+  const questions =
+    matchedQuestions.length &&
+    !questionTail
+      .replace(/¿[^¿?]+\?/g, "")
+      .replace(/[\s,;:.]/g, "")
+      .replace(/^[ye]$/i, "")
+      ? matchedQuestions
+      : [];
+  const narrative = questions.length
+    ? text.slice(0, questionStart).trim()
+    : text;
+  const paragraphs = narrative.split(/\n\s*\n/).filter(Boolean);
+  const sentences =
+    paragraphs.length === 1 && typeof Intl.Segmenter === "function"
+      ? Array.from(
+          new Intl.Segmenter("es", { granularity: "sentence" }).segment(
+            paragraphs[0],
+          ),
+          ({ segment }) => segment,
+        )
+      : [];
+  const reportBlocks =
+    sentences.length > 2
+      ? sentences.flatMap((sentence, index) =>
+          index % 2 === 0
+            ? [(sentence + (sentences[index + 1] ?? "")).trim()]
+            : [],
+        )
+      : paragraphs;
+
   async function analyze() {
     if (busy) return;
     setBusy(true);
     setError("");
-    setResult(null);
     try {
       const { auth } = firebaseClient();
       await auth.authStateReady();
@@ -72,23 +106,59 @@ export function AdminAnalysis() {
         </p>
       )}
       {result && (
-        <div role="status">
-          <h3>{result.aggregate.total} reportes contabilizados</h3>
-          <dl>
+        <section
+          className={styles.report}
+          aria-label="Informe del Consejo"
+          aria-busy={busy}
+        >
+          <div className={styles.summary}>
+            <span className={styles.icon}>
+              <FileText size={22} aria-hidden="true" />
+            </span>
+            <div>
+              <h3>Informe del Consejo</h3>
+              <p role="status">
+                {result.aggregate.total} reportes contabilizados
+              </p>
+            </div>
+          </div>
+          <dl className={styles.counts}>
             {Object.entries(statuses).map(([id, label]) => (
-              <div key={id}>
+              <div key={id} data-empty={!result.aggregate.states[id]}>
                 <dt>{label}</dt>
                 <dd>{result.aggregate.states[id] ?? 0}</dd>
               </div>
             ))}
           </dl>
-          <strong>
-            {result.generated
-              ? "Borrador de IA · requiere revisión humana"
-              : "Resultado de la consulta"}
-          </strong>
-          <p>{result.text}</p>
-        </div>
+          <article className={styles.draft}>
+            <header>
+              <h4>
+                {result.generated
+                  ? "Lectura para la asamblea"
+                  : "Resultado de la consulta"}
+              </h4>
+              {result.generated && (
+                <span>Borrador de IA · Requiere revisión humana</span>
+              )}
+            </header>
+            {reportBlocks.map((block, index) => (
+              <p key={index}>{block}</p>
+            ))}
+            {questions.length > 0 && (
+              <section
+                className={styles.questions}
+                aria-label="Preguntas para la asamblea"
+              >
+                <h5>Preguntas para la asamblea</h5>
+                <ul>
+                  {questions.map((question, index) => (
+                    <li key={index}>{question}</li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </article>
+        </section>
       )}
     </section>
   );

@@ -1,0 +1,83 @@
+.report {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+}
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.summary h3,
+.summary p,
+.draft h4 {
+  margin: 0;
+}
+.icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.8rem;
+  background: color-mix(in srgb, #478968 18%, var(--surface));
+}
+.report .counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+.report .counts > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.4rem;
+  background: color-mix(in srgb, #478968 13%, var(--surface));
+}
+.report .counts > div[data-empty="true"] {
+  background: color-mix(in srgb, var(--muted) 9%, var(--surface));
+}
+.draft {
+  padding: clamp(1rem, 3vw, 2rem);
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+  background: color-mix(in srgb, #478968 5%, var(--surface));
+}
+.draft header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 1rem;
+  margin-bottom: 1rem;
+}
+.draft header span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.report .draft p {
+  max-width: 76ch;
+  margin: 0 0 0.9rem;
+  line-height: 1.65;
+}
+.report .draft p:last-child {
+  margin-bottom: 0;
+}
+
+.questions {
+  margin-top: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-inline-start: 3px solid #478968;
+  border-radius: 0.5rem;
+  background: var(--surface);
+}
+.questions h5 {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+}
+.questions ul {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+.questions li + li {
+  margin-top: 0.45rem;
+}
