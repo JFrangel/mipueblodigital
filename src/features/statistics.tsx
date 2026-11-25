@@ -93,7 +93,21 @@ export function Statistics({
     signed && category === "all" && vereda === "all" && !from && !until;
   const aggregate = unfiltered ? global.data : null;
   const s = aggregate?.summary ?? summarize(selected);
-  const management = managementMetrics(selected, today);
+  const publishedManagement = managementMetrics(selected, today);
+  const management = aggregate
+    ? {
+        ...publishedManagement,
+        open: aggregate.management.open,
+        unassigned: aggregate.management.unassigned,
+        escalated: aggregate.states["escalado"] ?? 0,
+        medianWait: aggregate.management.open
+          ? aggregate.management.medianOpenDays
+          : null,
+      }
+    : publishedManagement;
+  const countState = (id: string) =>
+    aggregate?.states[id] ??
+    selected.filter((item) => item.status === id).length;
   /* Seis caben en la tarjeta sin volverla un listado; para el resto está la
      bandeja del Consejo, que es donde se trabaja. */
   /* La lectura es un cálculo local e instantáneo, así que no se esconde tras
@@ -238,7 +252,9 @@ export function Statistics({
       : (categories.find((c) => c.id === category)?.name ?? category);
   function modeloDelInforme(): InformeModelo {
     return {
-      periodo: periodoTexto,
+      periodo: aggregate
+        ? "Todo el registro · detalle de reportes publicados"
+        : periodoTexto,
       categoria: categoriaTexto,
       vereda: vereda === "all" ? "Todas" : vereda,
       registros: s.total,
@@ -266,7 +282,7 @@ export function Statistics({
       estados: Object.entries(statuses).map(([id, nombre]) => ({
         id,
         nombre,
-        valor: selected.filter((i) => i.status === id).length,
+        valor: countState(id),
       })),
       espera: waiting.map(({ item, days }) => ({
         titulo: item.title,
@@ -550,8 +566,10 @@ export function Statistics({
             casos que siguen abiertos. El tiempo hasta solución va desde la
             creación hasta la última solución registrada, solo para casos
             actualmente solucionados con fecha verificable:{" "}
-            {management.timedSolutions} casos. No se infieren fechas de los
-            ejemplos. Todos estos indicadores respetan los filtros.
+            {management.timedSolutions} casos.{" "}
+            {aggregate
+              ? " El tiempo hasta solución usa los reportes publicados."
+              : " Todos estos indicadores respetan los filtros."}
           </p>
         </section>
         <section className="panel">
@@ -608,9 +626,7 @@ export function Statistics({
           </div>
           <div className="bar-chart">
             {Object.entries(statuses).map(([id, label]) => {
-              const n =
-                aggregate?.states[id] ??
-                selected.filter((i) => i.status === id).length;
+              const n = countState(id);
               return (
                 <div className="bar-row" key={id}>
                   <span>{label}</span>
