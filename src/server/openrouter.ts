@@ -15,9 +15,8 @@ export async function describeAggregate(aggregate: Material) {
     process.env.OPENROUTER_MODEL || "nvidia/nemotron-3-super-120b-a12b:free";
   if (!model.endsWith(":free") && model !== "openrouter/free")
     throw new Error("Este entorno admite únicamente modelos gratuitos.");
-  const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
+  const solicitar = (modelo: string) =>
+    fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
@@ -25,7 +24,7 @@ export async function describeAggregate(aggregate: Material) {
       },
       signal: AbortSignal.timeout(25000),
       body: JSON.stringify({
-        model,
+        model: modelo,
         reasoning: { enabled: false },
         temperature: 0.2,
         max_tokens: 500,
@@ -38,8 +37,12 @@ export async function describeAggregate(aggregate: Material) {
           { role: "user", content: JSON.stringify(aggregate) },
         ],
       }),
-    },
-  );
+    });
+  let response = await solicitar(model);
+  if (response.status === 404 && model !== "openrouter/free") {
+    await response.body?.cancel();
+    response = await solicitar("openrouter/free");
+  }
   if (!response.ok)
     throw new Error(
       "OpenRouter no respondió. Consulta los conteos y vuelve a intentarlo más tarde.",
