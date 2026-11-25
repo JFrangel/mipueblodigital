@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Undo2 } from "lucide-react";
+import { Share2, Sparkles, Undo2 } from "lucide-react";
 import { firebaseClient } from "@/data/firebase/client";
 import { useSession } from "@/data/session";
 import { shareableReading, type Finding } from "@/domain/reading";
@@ -32,6 +32,31 @@ export function ReadingAssistant({ findings }: { findings: Finding[] }) {
   const request = useRef<AbortController | null>(null);
   useEffect(() => () => request.current?.abort(), []);
 
+  const [shareMessage, setShareMessage] = useState("");
+  const shareLines = shareableReading(findings);
+  async function shareReading() {
+    setShareMessage("");
+    const title = "Lectura para la asamblea";
+    const text = [title, "", ...shareLines.map((line) => `• ${line}`)].join(
+      "\n",
+    );
+    try {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, text });
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError")
+            return;
+        }
+      }
+      await navigator.clipboard.writeText(text);
+      setShareMessage("Lectura copiada.");
+    } catch {
+      setShareMessage("No se pudo compartir la lectura desde este navegador.");
+    }
+  }
+
   async function draft() {
     if (busy) return;
     setBusy(true);
@@ -56,7 +81,7 @@ export function ReadingAssistant({ findings }: { findings: Finding[] }) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ findings: shareableReading(findings) }),
+        body: JSON.stringify({ findings: shareLines }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
@@ -84,6 +109,16 @@ export function ReadingAssistant({ findings }: { findings: Finding[] }) {
           {busy ? "Redactando…" : "Redactar con IA para la asamblea"}
         </button>
       )}
+      {shareLines.length > 0 && (
+        <button
+          type="button"
+          className="btn"
+          onClick={() => void shareReading()}
+        >
+          <Share2 size={15} /> Compartir lectura
+        </button>
+      )}
+      {shareMessage && <p role="status">{shareMessage}</p>}
       {error && (
         <p role="alert" className="errors">
           {error}
