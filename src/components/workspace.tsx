@@ -65,7 +65,6 @@ import { LeafFall } from "@/features/leaf-fall";
 import { Olas } from "./olas";
 import { useTonoDeMarca } from "@/data/tono-marca";
 import { Territory } from "@/features/territory";
-import { CommunityStatisticsTotal } from "@/features/community-statistics-total";
 import { Statistics } from "@/features/statistics";
 import { Report } from "@/features/report";
 import { Outbox } from "@/features/outbox";
@@ -840,9 +839,6 @@ export function Workspace({
               COMUNITARIO» una tasa de solución calculada sobre los reportes de
               un teléfono. Es el mismo error que ya se había corregido en el
               mapa y en el historial, en la pantalla que faltaba. */}
-          {section === "estadisticas" && session.uid && (
-            <CommunityStatisticsTotal key={session.uid} />
-          )}
           {section === "estadisticas" &&
             (session.uid && !community.length && !shared.complete ? (
               <section className="panel">
@@ -862,6 +858,7 @@ export function Workspace({
               </section>
             ) : (
               <Statistics
+                key={session.uid ?? "guest"}
                 items={community}
                 partial={!online || (!!session.uid && !shared.complete)}
                 partialNotice={communityNotice || undefined}

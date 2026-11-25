@@ -31,6 +31,7 @@ import { useSession } from "@/data/session";
 import { informeHtml, type InformeModelo } from "@/domain/informe-html";
 import { esNativo } from "@/platform/native";
 import { abrirExportacion } from "@/platform/export";
+import { useCommunityStatistics } from "./community-statistics-total";
 import { toast } from "@/data/toasts";
 const colors = ["#174d3d", "#709c75", "#cfad63", "#9bc5c7", "#c8d1cb"];
 export function Statistics({
@@ -87,7 +88,11 @@ export function Statistics({
      lectura interpretada, que nombra expedientes y señala a quién le falta
      responsable, es material de trabajo interno. */
   const council = useSession().admin;
-  const s = summarize(selected);
+  const global = useCommunityStatistics(signed);
+  const unfiltered =
+    signed && category === "all" && vereda === "all" && !from && !until;
+  const aggregate = unfiltered ? global.data : null;
+  const s = aggregate?.summary ?? summarize(selected);
   const management = managementMetrics(selected, today);
   /* Seis caben en la tarjeta sin volverla un listado; para el resto está la
      bandeja del Consejo, que es donde se trabaja. */
@@ -103,7 +108,9 @@ export function Statistics({
   );
   const counts = categories.map((c) => ({
     ...c,
-    value: selected.filter((i) => i.category === c.id).length,
+    value:
+      aggregate?.categories[c.id] ??
+      selected.filter((i) => i.category === c.id).length,
   }));
   /**
    * Exportación tabular para hoja de cálculo.
@@ -427,7 +434,7 @@ export function Statistics({
             <option key={v}>{v}</option>
           ))}
         </select>
-        <span className="tag">{selected.length} registros en el periodo</span>
+        <span className="tag">{s.total} registros en el periodo</span>
       </div>
       {/* Una cifra que no puede ser cierta no se enseña como si lo fuera. Sin
           señal aquí solo está lo que guarda este teléfono, y un observatorio
@@ -448,6 +455,24 @@ export function Statistics({
       {from && until && from > until && (
         <p className="errors" role="alert">
           La fecha inicial debe ser anterior o igual a la final.
+        </p>
+      )}
+      {signed && (
+        <p className="muted" role="status">
+          {aggregate
+            ? "Las tarjetas y gráficos incluyen todos los reportes. El detalle y los filtros usan los reportes publicados."
+            : unfiltered && !global.failed
+              ? "Consultando las cifras de todos los reportes…"
+              : "Mostrando cifras de los reportes publicados."}
+          {unfiltered && global.failed && (
+            <button
+              className="text-button"
+              type="button"
+              onClick={global.retry}
+            >
+              Actualizar cifras
+            </button>
+          )}
         </p>
       )}
       <div className="metrics four">
@@ -562,7 +587,9 @@ export function Statistics({
           </div>
           <div className="bar-chart">
             {Object.entries(statuses).map(([id, label]) => {
-              const n = selected.filter((i) => i.status === id).length;
+              const n =
+                aggregate?.states[id] ??
+                selected.filter((i) => i.status === id).length;
               return (
                 <div className="bar-row" key={id}>
                   <span>{label}</span>
