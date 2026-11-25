@@ -139,6 +139,41 @@ export function CouncilHistoryEditor() {
       setBusy(false);
     }
   }
+  async function remove() {
+    if (
+      !draft ||
+      lock.current ||
+      !window.confirm("¿Eliminar este hito de la memoria del Consejo?")
+    )
+      return;
+    lock.current = true;
+    setBusy(true);
+    setMessage("");
+    try {
+      const { headers } = await memberHeaders();
+      const response = await fetch(`/api/admin/history/${draft.id}/`, {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ version: draft.version }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error(body?.error || "No se pudo eliminar el hito.");
+      }
+      setItems((current) => current.filter((item) => item.id !== draft.id));
+      setDraft(null);
+      setStored("");
+      setMessage("Hito eliminado.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "No se pudo eliminar el hito.",
+      );
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
   const patch = (value: Partial<HistoryEntry>) =>
     setDraft((current) => (current ? { ...current, ...value } : current));
   return (
@@ -225,6 +260,11 @@ export function CouncilHistoryEditor() {
               disabled={busy}
               style={{ border: 0, padding: 0, display: "contents" }}
             >
+              {items.some((item) => item.id === draft.id) && (
+                <button className="btn" type="button" onClick={remove}>
+                  Eliminar hito
+                </button>
+              )}
               <label className="field-label">
                 Título
                 <input

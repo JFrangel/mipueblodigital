@@ -14,11 +14,18 @@ export async function readHistory(db: Firestore, publishedOnly = false) {
       503,
       "El archivo necesita ampliar su paginación. Contacta al responsable técnico.",
     );
-  const overrides = result.docs.map((doc) => ({
-    id: doc.id,
-    ...validateHistory(doc.data()),
-  }));
-  return mergeHistory(overrides, publishedOnly);
+  const deleted = new Set(
+    result.docs.filter((doc) => doc.data().deletedAt).map((doc) => doc.id),
+  );
+  const overrides = result.docs
+    .filter((doc) => !deleted.has(doc.id))
+    .map((doc) => ({
+      id: doc.id,
+      ...validateHistory(doc.data()),
+    }));
+  return mergeHistory(overrides, publishedOnly).filter(
+    (item) => !deleted.has(item.id),
+  );
 }
 
 /** La ficha pública se arma campo a campo: ni versión, ni estado, ni autor. */
