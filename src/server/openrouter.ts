@@ -22,7 +22,7 @@ export async function describeAggregate(aggregate: Material) {
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(12000),
       body: JSON.stringify({
         model: modelo,
         reasoning: { enabled: false },
@@ -38,25 +38,31 @@ export async function describeAggregate(aggregate: Material) {
         ],
       }),
     });
-  let response = await solicitar(model);
-  if (response.status === 404 && model !== "openrouter/free") {
-    await response.body?.cancel();
-    response = await solicitar("openrouter/free");
+  for (const modelo of [model, "openrouter/free"]) {
+    try {
+      const response = await solicitar(modelo);
+      if (!response.ok) {
+        console.warn("Informe IA: respuesta del proveedor", response.status);
+        await response.body?.cancel();
+        if ([401, 403].includes(response.status)) break;
+        continue;
+      }
+      const result = await response.json();
+      const text = result.choices?.[0]?.message?.content;
+      if (
+        typeof text === "string" &&
+        text.trim() &&
+        text.length <= 5000 &&
+        !/\d|%/.test(text)
+      )
+        return text.trim();
+      console.warn("Informe IA: respuesta fuera del formato esperado");
+    } catch (error) {
+      console.warn(
+        "Informe IA: solicitud interrumpida",
+        error instanceof Error ? error.name : "Error",
+      );
+    }
   }
-  if (!response.ok)
-    throw new Error(
-      "OpenRouter no respondió. Consulta los conteos y vuelve a intentarlo más tarde.",
-    );
-  const result = await response.json();
-  const text = result.choices?.[0]?.message?.content;
-  if (
-    typeof text !== "string" ||
-    !text.trim() ||
-    text.length > 5000 ||
-    /\d|%/.test(text)
-  )
-    throw new Error(
-      "El borrador no superó la validación. Los conteos siguen disponibles.",
-    );
-  return text.trim();
+  throw new Error("No se obtuvo un borrador válido de OpenRouter.");
 }
