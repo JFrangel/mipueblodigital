@@ -1,3 +1,4 @@
+import { openRouterModel } from "@/server/openrouter";
 import { ApiError, requireMember } from "@/server/admin-auth";
 export const runtime = "nodejs";
 export async function POST(request: Request) {
@@ -37,8 +38,7 @@ export async function POST(request: Request) {
     )
       throw new ApiError(400, "Escribe entre 20 caracteres y 500 palabras.");
     const key = process.env.OPENROUTER_API_KEY || process.env.apikey_openrouter;
-    const model =
-      process.env.OPENROUTER_MODEL || "nvidia/nemotron-3-super-120b-a12b:free";
+    const model = openRouterModel();
     if (!key || !(model.endsWith(":free") || model === "openrouter/free"))
       throw new ApiError(503, "La asistencia no está configurada.");
     const day = new Date().toISOString().slice(0, 10);
@@ -53,17 +53,16 @@ export async function POST(request: Request) {
         );
       tx.set(ref, { day, count: count + 1, at: Date.now() });
     });
-    const response = await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
+    const solicitar = (modelo: string) =>
+      fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(8500),
         headers: {
           Authorization: `Bearer ${key}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model,
+          model: modelo,
           temperature: 0.1,
           max_tokens: 900,
           reasoning: { enabled: false },
@@ -76,28 +75,43 @@ export async function POST(request: Request) {
             { role: "user", content: JSON.stringify({ relato: text }) },
           ],
         }),
-      },
-    );
-    if (!response.ok)
-      throw new ApiError(
-        503,
-        "El proveedor no está disponible. Tu texto original se conserva.",
-      );
-    const data = await response.json();
-    const suggestion = data.choices?.[0]?.message?.content;
-    if (
-      typeof suggestion !== "string" ||
-      !suggestion.trim() ||
-      suggestion.length > 10000 ||
-      suggestion.trim().split(/\s+/).length > 500
-    )
-      throw new ApiError(
-        502,
-        "La propuesta no superó la validación. Conserva tu texto original.",
-      );
-    return Response.json(
-      { suggestion: suggestion.trim() },
-      { headers: { "Cache-Control": "no-store" } },
+      });
+    for (const modelo of [model, "openrouter/free"]) {
+      try {
+        const response = await solicitar(modelo);
+        if (!response.ok) {
+          console.warn(
+            "Mejorar texto: respuesta del proveedor",
+            response.status,
+          );
+          await response.body?.cancel();
+          if ([401, 403].includes(response.status)) break;
+          continue;
+        }
+        const data = await response.json();
+        const suggestion = data.choices?.[0]?.message?.content;
+        if (
+          typeof suggestion === "string" &&
+          suggestion.trim() &&
+          suggestion.length <= 10000 &&
+          suggestion.trim().split(/\s+/).length <= 500
+        )
+          return Response.json(
+            { suggestion: suggestion.trim() },
+            {
+              headers: { "Cache-Control": "no-store" },
+            },
+          );
+      } catch (error) {
+        console.warn(
+          "Mejorar texto: solicitud interrumpida",
+          error instanceof Error ? error.name : "Error",
+        );
+      }
+    }
+    throw new ApiError(
+      503,
+      "No se pudo obtener una propuesta. Tu texto original se conserva.",
     );
   } catch (error) {
     return Response.json(

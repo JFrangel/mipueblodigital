@@ -8,14 +8,18 @@ export type { Aggregate };
  */
 export type Material = Aggregate & { actuaciones?: string[] };
 
+export function openRouterModel() {
+  const configured = process.env.OPENROUTER_MODEL;
+  return;
+  configured && configured !== "nvidia/nemotron-3-super-120b-a12b:free"
+    ? configured
+    : "openrouter/free";
+}
+
 export async function describeAggregate(aggregate: Material) {
   const key = process.env.OPENROUTER_API_KEY || process.env.apikey_openrouter;
   if (!key) throw new Error("OpenRouter no está configurado en el servidor.");
-  const configured = process.env.OPENROUTER_MODEL;
-  const model =
-    configured && configured !== "nvidia/nemotron-3-super-120b-a12b:free"
-      ? configured
-      : "openrouter/free";
+  const model = openRouterModel();
   if (!model.endsWith(":free") && model !== "openrouter/free")
     throw new Error("Este entorno admite únicamente modelos gratuitos.");
   const solicitar = (modelo: string) =>
