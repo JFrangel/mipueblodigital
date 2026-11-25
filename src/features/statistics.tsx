@@ -98,10 +98,31 @@ export function Statistics({
      bandeja del Consejo, que es donde se trabaja. */
   /* La lectura es un cálculo local e instantáneo, así que no se esconde tras
      un botón: esperar un clic para algo que ya está hecho es fricción. */
-  const reading = useMemo(
-    () => (council ? readStatistics(selected, today) : []),
-    [council, selected, today],
-  );
+  const reading = useMemo(() => {
+    if (!council) return [];
+    if (!unfiltered) return readStatistics(selected, today);
+    if (!aggregate) return [];
+    const { total, solved, active, pending, rate } = aggregate.summary;
+    const { open, unassigned, medianOpenDays } = aggregate.management;
+    return [
+      {
+        id: "volumen",
+        text: `Se contabilizaron ${total} reportes: ${solved} solucionados (${rate} %), ${active} en proceso y ${pending} pendientes.`,
+      },
+      {
+        id: "cola",
+        text: `Hay ${open} reportes abiertos y ${unassigned} abiertos sin responsable.`,
+      },
+      ...(medianOpenDays > 0
+        ? [
+            {
+              id: "espera",
+              text: `La espera mediana de los reportes abiertos es de ${medianOpenDays} días.`,
+            },
+          ]
+        : []),
+    ];
+  }, [council, unfiltered, aggregate, selected, today]);
   const waiting = useMemo(
     () => waitingCases(selected, today).slice(0, 6),
     [selected, today],
@@ -711,6 +732,13 @@ export function Statistics({
               tarjeta se desmentía a sí misma. Cada parte lleva ahora el suyo,
               donde corresponde. El detalle del cálculo está en «Ver fuentes y
               método», que para eso existe. */}
+          {unfiltered && !aggregate && (
+            <p role="status">
+              {global.failed
+                ? "No se pudieron consultar todos los reportes."
+                : "Consultando todos los reportes…"}
+            </p>
+          )}
           <ul className="reading">
             {reading.map((finding) => (
               <li key={finding.id} className={`reading-${finding.id}`}>
@@ -723,10 +751,7 @@ export function Statistics({
             lectura, hoy y dentro de un año.
           </p>
           {/* Remontar por conjunto descarta el párrafo del filtro anterior. */}
-          <ReadingAssistant
-            key={reading.map((f) => f.id).join("|")}
-            findings={reading}
-          />
+          <ReadingAssistant key={JSON.stringify(reading)} findings={reading} />
           <details className="reading-method">
             <summary>Ver fuentes y método</summary>
             <p>

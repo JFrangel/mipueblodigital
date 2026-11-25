@@ -7,6 +7,7 @@ import { onReportUpdate } from "@/data/report-updates";
 export function useCommunityStatistics(signed: boolean) {
   const [data, setData] = useState<{
     summary: ReturnType<typeof import("@/domain/logic").summarize>;
+    management: { open: number; unassigned: number; medianOpenDays: number };
     states: Record<string, number>;
     categories: Record<string, number>;
   } | null>(null);
@@ -32,6 +33,7 @@ export function useCommunityStatistics(signed: boolean) {
         const data = await response.json();
         if (
           !Number.isSafeInteger(data.summary?.total) ||
+          !data.management ||
           !data.states ||
           !data.categories
         )
