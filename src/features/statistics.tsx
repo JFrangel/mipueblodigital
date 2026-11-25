@@ -28,7 +28,6 @@ import { bogotaDay, spokenDay } from "@/domain/calendar";
 import { managementMetrics, waitingCases } from "@/domain/management-metrics";
 import { useToday } from "@/data/today";
 import { useSession } from "@/data/session";
-import { CouncilStatistics } from "./council-statistics";
 import { informeHtml, type InformeModelo } from "@/domain/informe-html";
 import { esNativo } from "@/platform/native";
 import { abrirExportacion } from "@/platform/export";
@@ -665,7 +664,6 @@ export function Statistics({
       </footer>
       {/* Las cifras del servidor van antes que la lectura: primero lo que hay
           en todo el territorio, después lo que puede leerse de ello. */}
-      {council && <CouncilStatistics />}
       {council && (
         <section className="insight-panel">
           <div className="insight-heading">

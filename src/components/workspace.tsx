@@ -65,6 +65,7 @@ import { LeafFall } from "@/features/leaf-fall";
 import { Olas } from "./olas";
 import { useTonoDeMarca } from "@/data/tono-marca";
 import { Territory } from "@/features/territory";
+import { CouncilStatistics } from "@/features/council-statistics";
 import { Statistics } from "@/features/statistics";
 import { Report } from "@/features/report";
 import { Outbox } from "@/features/outbox";
@@ -119,6 +120,9 @@ export function Workspace({
     [storageError, setStorageError] = useState("");
   const dark = useSyncExternalStore(subscribeTheme, getTheme, getServerTheme);
   const session = useSession();
+  const [statisticsView, setStatisticsView] = useState<"community" | "council">(
+    "community",
+  );
   const items = useMemo(
     () =>
       storedItems.filter((item) =>
@@ -838,7 +842,43 @@ export function Workspace({
               COMUNITARIO» una tasa de solución calculada sobre los reportes de
               un teléfono. Es el mismo error que ya se había corregido en el
               mapa y en el historial, en la pantalla que faltaba. */}
+          {section === "estadisticas" && session.admin && (
+            <section className="panel" aria-label="Vista de estadísticas">
+              <div
+                role="group"
+                aria-label="Seleccionar vista"
+                style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+              >
+                <button
+                  type="button"
+                  className={
+                    statisticsView === "community" ? "btn primary" : "btn"
+                  }
+                  aria-pressed={statisticsView === "community"}
+                  onClick={() => setStatisticsView("community")}
+                >
+                  Vista ciudadana
+                </button>
+                <button
+                  type="button"
+                  className={
+                    statisticsView === "council" ? "btn primary" : "btn"
+                  }
+                  aria-pressed={statisticsView === "council"}
+                  onClick={() => setStatisticsView("council")}
+                >
+                  Vista del Consejo
+                </button>
+              </div>
+            </section>
+          )}
           {section === "estadisticas" &&
+            session.admin &&
+            statisticsView === "council" && (
+              <CouncilStatistics key={session.uid} />
+            )}
+          {section === "estadisticas" &&
+            !(session.admin && statisticsView === "council") &&
             (session.uid &&
             !territory.length &&
             (!account.complete || !shared.complete) ? (

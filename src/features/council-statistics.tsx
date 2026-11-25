@@ -11,6 +11,7 @@ import {
 import { memberHeaders } from "@/data/remote-reports";
 import { onReportUpdate } from "@/data/report-updates";
 import type { Aggregate } from "@/domain/aggregate";
+import { statuses } from "@/data/catalog";
 import { alertsFor } from "@/domain/council-alerts";
 
 /**
@@ -92,6 +93,17 @@ export function CouncilStatistics() {
         {data.sampled && " (muestra: hay más de los que caben en una consulta)"}
         .
       </p>
+      <h3>Reportes por estado</h3>
+      <dl className="metrics council-metrics">
+        {Object.entries(statuses).map(([id, label]) => (
+          <div className="metric" key={id}>
+            <dt>{label}</dt>
+            <dd style={{ margin: 0 }}>
+              <strong>{data.states[id] ?? 0}</strong>
+            </dd>
+          </div>
+        ))}
+      </dl>
       {/* Lo que conviene mirar, antes que las cifras: un tablero contesta
           preguntas que alguien ya se hizo; esto señala las que todavía no. */}
       <ul className="council-alerts">
