@@ -23,6 +23,6 @@ it('IA devuelve propuesta y solo envía relato',async()=>{
  const sent=JSON.parse(fetch.mock.calls[0][1].body);expect(JSON.parse(sent.messages[1].content)).toEqual({relato:'El muelle tiene varias tablas sueltas.'});
 });
 it('IA rechaza salida vacía',async()=>{
- setup();vi.stubGlobal('fetch',vi.fn().mockResolvedValue(new Response(JSON.stringify({choices:[{message:{content:''}}]}))));
- expect((await POST(request())).status).toBe(502);
+ setup();vi.stubGlobal('fetch',vi.fn().mockImplementation(async () => new Response(JSON.stringify({choices:[{message:{content:''}}]}))));
+ expect((await POST(request())).status).toBe(503);
 });

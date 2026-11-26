@@ -126,9 +126,10 @@ it("archiva todas las fotos y conserva los identificadores al reintentar", async
   await POST(req({ photos: ["uno", "dos", "tres"] }));
   expect(state.evidence.size).toBe(3);
 });
-it("rechaza más de cinco fotos y una lista vacía", async () => {
+it("rechaza más de cinco fotos y recupera la foto de envíos anteriores", async () => {
   expect((await POST(req({ photos: Array(6).fill("foto") }))).status).toBe(400);
-  expect((await POST(req({ photos: [] }))).status).toBe(400);
+  expect((await POST(req({ photos: [], photo: "" }))).status).toBe(400);
+  expect((await POST(req({ photos: [] }))).status).toBe(200);
 });
 it("recibo repetido no crea otro expediente ni notificación", async () => {
   const a = await POST(req()),

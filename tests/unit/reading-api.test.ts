@@ -120,7 +120,7 @@ it("descarta una redacción más larga de lo que cabe en un párrafo", async () 
   setup();
   // Más palabras de las enviadas significa que el modelo agregó de su cosecha.
   vi.stubGlobal("fetch", respuesta(Array(220).fill("palabra").join(" ")));
-  expect((await POST(request())).status).toBe(502);
+  expect((await POST(request())).status).toBe(503);
 });
 
 it("sin proveedor configurado lo dice en vez de fallar en silencio", async () => {

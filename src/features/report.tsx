@@ -296,14 +296,18 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
        * sincronización, sin tener que volver a escribirlos ni mandarlos uno por
        * uno. Ver sin-cuenta.ts.
        */
+      const payload = {
+        category: data.category,
+        vereda: data.vereda,
+        description: data.description,
+        phone: data.phone,
+        photo: photos[0],
+        photos,
+        sensitive,
+        ...(point ?? {}),
+      };
       if (!uid) {
-        await enqueue(SIN_CUENTA, {
-          ...data,
-          photo: photos[0],
-          ...(photos.length > 1 ? { photos } : {}),
-          sensitive,
-          ...(point ?? {}),
-        });
+        await enqueue(SIN_CUENTA, payload);
         marcar();
         /* Y el borrador se limpia: el reporte ya está entero en la bandeja, y
            dejarlo también aquí haría que al volver el formulario apareciera
@@ -318,13 +322,6 @@ export function Report({ onSave }: { onSave: (c: Case) => Promise<void> }) {
         router.push("/acceso/?volver=reporte");
         return;
       }
-      const payload = {
-        ...data,
-        photo: photos[0],
-        ...(photos.length > 1 ? { photos } : {}),
-        sensitive,
-        ...(point ?? {}),
-      };
       const entry = await enqueue(uid, payload);
       /* WorkManager necesita una copia privada del envío para poder despertar
          sin esta ventana. Conserva exactamente el mismo requestId. */

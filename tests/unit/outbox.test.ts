@@ -6,6 +6,8 @@ import {
   claimOutgoing,
   settleOutgoing,
   retryOutgoing,
+  replaceOutgoingPhotos,
+  MISSING_OUTGOING_CONTENT,
   retryDelay,
   readPayload,
   pendingAnnouncements,
@@ -58,6 +60,37 @@ describe("bandeja persistente", () => {
     expect(await readPayload(item.key)).toBeUndefined();
     expect(saved.bytes).toBe(0);
   });
+  it("sustituye la foto de un envío rechazado sin cambiar su identidad", async () => {
+    const owner = crypto.randomUUID();
+    const entry = await enqueue(owner, payload);
+    const claimed = (await claimOutgoing(entry.key, owner))!;
+    await settleOutgoing(claimed, { error: "Fotografía inválida", permanent: true });
+    const photo = "data:image/png;base64,ZGVm";
+    await expect(replaceOutgoingPhotos(entry.key, "otra-cuenta", [photo])).rejects.toThrow();
+    await replaceOutgoingPhotos(entry.key, owner, [photo]);
+    const retry = (await claimOutgoing(entry.key, owner))!;
+    expect(retry.requestId).toBe(entry.requestId);
+    expect(retry.payload).toEqual({ ...payload, photo, photos: [photo] });
+  });
+
+  it("marca un envío sin contenido como requiere atención", async () => {
+    const owner = crypto.randomUUID();
+    const entry = await enqueue(owner, payload);
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open("mi-pueblo-outbox", 2);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("payloads", "readwrite");
+        tx.objectStore("payloads").delete(entry.key);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onabort = () => { db.close(); reject(tx.error); };
+      };
+    });
+    expect(await claimOutgoing(entry.key, owner)).toBeNull();
+    expect((await outgoingFor(owner))[0]).toMatchObject({ state: "attention", error: MISSING_OUTGOING_CONTENT });
+  });
+
   it("limita a diez reportes sin eliminar pendientes", async () => {
     const owner = crypto.randomUUID();
     for (let i = 0; i < 10; i++)

@@ -158,7 +158,16 @@ export async function POST(request: Request) {
      * (500 MB) no aguanta cientos de fotografías de teléfono sin recomprimir.
      * Ver `archivePhoto` en `evidence.ts` para el porqué exacto.
      */
-    const images = input.photos === undefined ? [input.photo] : input.photos;
+    // Los borradores de versiones anteriores podían dejar photos vacío
+    // junto a la foto válida del envío.
+    const images =
+      input.photos === undefined ||
+      (Array.isArray(input.photos) &&
+        input.photos.length === 0 &&
+        typeof input.photo === "string" &&
+        input.photo.length > 0)
+        ? [input.photo]
+        : input.photos;
     if (
       !Array.isArray(images) ||
       images.length < 1 ||

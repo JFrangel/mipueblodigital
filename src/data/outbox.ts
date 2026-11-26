@@ -184,7 +184,14 @@ export async function claimOutgoing(
       const load = tx.objectStore("payloads").get(key);
       load.onsuccess = () => {
         const payload: ReportPayload | undefined = load.result;
-        if (!payload) return;
+        if (!payload) {
+          store.put({
+            ...item,
+            state: "attention",
+            error: MISSING_OUTGOING_CONTENT,
+          });
+          return;
+        }
         const claimed = {
           ...item,
           state: "sending" as const,
@@ -286,6 +293,87 @@ export async function markDeliveriesSeen(owner: string) {
     tx.onabort = tx.onerror = () => {
       db.close();
       reject(tx.error);
+    };
+  });
+}
+
+export const MISSING_OUTGOING_CONTENT =
+  "Faltan los datos del envío en este dispositivo. Si conservas el borrador, ábrelo para recuperar el reporte.";
+
+export async function replaceOutgoingPhotos(
+  key: string,
+  owner: string,
+  photos: string[],
+) {
+  if (photos.length < 1 || photos.length > 5)
+    throw new Error("Selecciona entre una y cinco fotografías.");
+  const db = await openDb();
+  return new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(["reports", "payloads"], "readwrite");
+    const reports = tx.objectStore("reports");
+    const payloads = tx.objectStore("payloads");
+    const request = reports.get(key);
+    let failure: string | undefined;
+    const abort = (message: string) => {
+      failure = message;
+      tx.abort();
+    };
+    request.onsuccess = () => {
+      const item = request.result as Outgoing | undefined;
+      if (
+        !item ||
+        item.owner !== owner ||
+        item.state !== "attention" ||
+        item.leaseUntil > Date.now()
+      ) {
+        abort("El envío cambió de estado. Vuelve a abrir la bandeja.");
+        return;
+      }
+      const load = payloads.get(key);
+      load.onsuccess = () => {
+        const payload = load.result as ReportPayload | undefined;
+        if (!payload) {
+          abort(MISSING_OUTGOING_CONTENT);
+          return;
+        }
+        const next = { ...payload, photo: photos[0], photos };
+        const bytes = new TextEncoder().encode(JSON.stringify(next)).length;
+        const listing = reports.index("owner").getAll(owner);
+        listing.onsuccess = () => {
+          const used = (listing.result as Outgoing[]).reduce(
+            (total, entry) =>
+              total +
+              (entry.key === key || entry.state === "confirmed"
+                ? 0
+                : entry.bytes),
+            0,
+          );
+          if (used + bytes > OUTBOX_BYTES) {
+            abort("La bandeja no tiene espacio para estas fotografías.");
+            return;
+          }
+          payloads.put(next, key);
+          reports.put({
+            ...item,
+            bytes,
+            state: "queued",
+            attempts: 0,
+            nextAt: 0,
+            lease: undefined,
+            leaseUntil: 0,
+            error: undefined,
+          });
+        };
+      };
+    };
+    tx.oncomplete = () => {
+      db.close();
+      changed();
+      resolve();
+    };
+    tx.onabort = () => {
+      db.close();
+      reject(new Error(failure ?? "No se pudieron guardar las fotografías."));
     };
   });
 }

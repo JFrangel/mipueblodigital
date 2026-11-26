@@ -67,6 +67,7 @@ import { useTonoDeMarca } from "@/data/tono-marca";
 import { Territory } from "@/features/territory";
 import { Statistics } from "@/features/statistics";
 import { Report } from "@/features/report";
+import { outgoingFor, readPayload, SIN_CUENTA } from "@/data/outbox";
 import { Outbox } from "@/features/outbox";
 import {
   Notifications,
@@ -284,12 +285,84 @@ export function Workspace({
     () => items.find((item) => item.id === reportId),
     [items, reportId],
   );
+  const queuedKey =
+    section === "detalle" && reportId?.startsWith("LOCAL-")
+      ? reportId.slice("LOCAL-".length)
+      : null;
+  const owner = session.uid ?? SIN_CUENTA;
+  const [queueDetail, setQueueDetail] = useState<{
+    key: string;
+    owner: string;
+    item?: Case;
+  } | null>(null);
+  const queued =
+    queueDetail?.key === queuedKey && queueDetail.owner === owner
+      ? queueDetail
+      : null;
+  useEffect(() => {
+    if (!queuedKey) return;
+    let active = true;
+    async function load(key: string) {
+      try {
+        const entry = (await outgoingFor(owner)).find(
+          (item) => item.key === key,
+        );
+        if (entry?.receipt && active) {
+          router.replace(
+            `/reporte/${encodeURIComponent(entry.receipt.id)}/?desde=${encodeURIComponent(returnTo)}`,
+          );
+          return;
+        }
+        const payload = entry ? await readPayload(entry.key) : undefined;
+        if (!active) return;
+        setQueueDetail({
+          key,
+          owner,
+          item:
+            entry && payload
+              ? {
+                  id: `LOCAL-${key}`,
+                  title: entry.title,
+                  category: payload.category,
+                  vereda: payload.vereda,
+                  description: payload.description,
+                  date: entry.createdAt,
+                  status: "pendiente",
+                  owner: "propio",
+                  delivery: "en-cola",
+                  notes: [
+                    entry.error || "El reporte sigue en la bandeja de salida.",
+                  ],
+                  photo: payload.photo,
+                  photos: payload.photos?.length
+                    ? payload.photos
+                    : payload.photo
+                      ? [payload.photo]
+                      : [],
+                  lat: payload.lat,
+                  lng: payload.lng,
+                }
+              : undefined,
+        });
+      } catch {
+        if (active) setQueueDetail({ key, owner });
+      }
+    }
+    const refreshQueue = () => void load(queuedKey);
+    refreshQueue();
+    window.addEventListener("outbox-change", refreshQueue);
+    return () => {
+      active = false;
+      window.removeEventListener("outbox-change", refreshQueue);
+    };
+  }, [queuedKey, owner, deliveryRevision, router, returnTo]);
   /* Se pregunta por lo que pudo llegar al servidor: si la copia de aquí nunca
      salió, no hay expediente que consultar y la respuesta sería siempre la
      misma. Y no antes de leer el almacén, para no gastar una consulta que al
      instante siguiente sobra. */
   const lookup = useReportLookup(
     section === "detalle" &&
+      !queuedKey &&
       loaded &&
       (!local || deliveryOf(local) === "enviado")
       ? reportId
@@ -298,16 +371,18 @@ export function Workspace({
   );
   const selected = useMemo(
     () =>
-      local
+      queued?.item ??
+      (local
         ? lookup.item
           ? { ...local, status: lookup.item.status }
           : local
-        : (lookup.item ?? undefined),
-    [local, lookup.item],
+        : (lookup.item ?? undefined)),
+    [local, queued?.item, lookup.item],
   );
   /* Solo lo guardado aquí se puede retirar, retomar o gestionar en el aparato.
      Lo que llega del servidor es una consulta, no una copia. */
-  const searching = !loaded || (!local && !lookup.ready);
+  const searching =
+    !loaded || (!local && (queuedKey ? !queued : !lookup.ready));
   function setSelected(item: Case) {
     router.push(`/reporte/${encodeURIComponent(item.id)}/?desde=${section}`);
   }

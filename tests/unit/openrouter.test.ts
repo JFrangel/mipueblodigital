@@ -26,7 +26,7 @@ it("impide usar modelos de pago por configuración", async () => {
   ).rejects.toThrow("gratuitos");
   expect(request).not.toHaveBeenCalled();
 });
-it("solo envía agregados y rechaza cifras en la redacción", async () => {
+it("envía el agregado y admite números dentro del borrador", async () => {
   vi.stubEnv("OPENROUTER_API_KEY", "synthetic-test-key");
   vi.stubEnv("OPENROUTER_MODEL", "provider/model:free");
   const request = vi
@@ -34,7 +34,7 @@ it("solo envía agregados y rechaza cifras en la redacción", async () => {
     .mockResolvedValue(
       new Response(
         JSON.stringify({
-          choices: [{ message: { content: "Hay 99 casos." } }],
+          choices: [{ message: { content: "La nota menciona el año 2026." } }],
         }),
         { status: 200 },
       ),
@@ -45,7 +45,7 @@ it("solo envía agregados y rechaza cifras en la redacción", async () => {
       ...muestra(),
       actuaciones: ["Se repuso la luminaria."],
     }),
-  ).rejects.toThrow("validación");
+  ).resolves.toBe("La nota menciona el año 2026.");
   const payload = JSON.parse(request.mock.calls[0][1].body);
   const enviado = JSON.parse(payload.messages[1].content);
   /* Las actuaciones sí viajan —son lo que el Consejo escribió al cerrar— y la

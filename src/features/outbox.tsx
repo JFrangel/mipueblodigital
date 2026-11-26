@@ -8,6 +8,8 @@ import {
   outgoingFor,
   pendingAnnouncements,
   retryOutgoing,
+  replaceOutgoingPhotos,
+  MISSING_OUTGOING_CONTENT,
   traspasar,
   OUTBOX_LIMIT,
   SIN_CUENTA,
@@ -17,7 +19,12 @@ import { onFlushRequest, syncOutbox } from "@/data/sync-outbox";
 import { LeafFall } from "./leaf-fall";
 import { askDeliveryAlerts, useDeliveryAlerts } from "@/data/delivery-alert";
 import { toast } from "@/data/toasts";
-import { reconcileNative, stagePendingNative } from "@/platform/native-outbox";
+import { prepareEvidence } from "@/platform/evidence";
+import {
+  acknowledgeNative,
+  reconcileNative,
+  stagePendingNative,
+} from "@/platform/native-outbox";
 const labels: Record<Outgoing["state"], string> = {
   queued: "En cola · sin confirmar",
   sending: "Enviando…",
@@ -125,6 +132,38 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
   const pending = ownItems.filter((i) => i.state !== "confirmed");
   /* Entregas ocurridas sin que nadie mirara: son una novedad, no un estado. */
   const delivered = pendingAnnouncements(ownItems);
+  const [replacing, setReplacing] = useState<string | null>(null);
+
+  async function replacePhotos(item: Outgoing, files: File[]) {
+    if (!files.length || replacing) return;
+    setError("");
+    setReplacing(item.key);
+    try {
+      if (files.length > 5)
+        throw new Error("Selecciona hasta cinco fotografías.");
+      const photos = [];
+      for (const file of files)
+        photos.push((await prepareEvidence(file, 550_000)).dataUrl);
+      if (getSession().uid !== item.owner) return;
+      await reconcileNative(item.owner);
+      await replaceOutgoingPhotos(item.key, item.owner, photos);
+      await acknowledgeNative(item.owner, item.requestId);
+      await stagePendingNative(item.owner);
+      await syncOutbox(
+        item.owner,
+        () => getSession().uid === item.owner,
+        false,
+      );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron sustituir las fotografías.",
+      );
+    } finally {
+      setReplacing(null);
+    }
+  }
   if (compact) {
     /* La entrega manda sobre todo lo demás: es lo único que pasó mientras no
        se miraba. Antes este renglón decía «envíos confirmados» para siempre,
@@ -298,13 +337,38 @@ export function Outbox({ compact = false }: { compact?: boolean }) {
             <strong>{item.title}</strong>
             <span>{labels[item.state]}</span>
             {item.error && item.state !== "confirmed" && <p>{item.error}</p>}
+            {!anonima &&
+              item.state === "attention" &&
+              item.error !== MISSING_OUTGOING_CONTENT && (
+                <label className="field-label">
+                  {replacing === item.key
+                    ? "Preparando fotografías…"
+                    : "Sustituir fotografías"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={!!replacing}
+                    onChange={(event) => {
+                      const files = Array.from(event.currentTarget.files ?? []);
+                      event.currentTarget.value = "";
+                      void replacePhotos(item, files);
+                    }}
+                  />
+                  <small>
+                    Las fotos seleccionadas reemplazan todas las fotos del
+                    envío.
+                  </small>
+                </label>
+              )}
             {/* Sin cuenta no hay a dónde reintentar: lo que falta no es la red,
               es la sesión, y el botón de entrar ya está arriba. */}
             {!anonima &&
-              (item.state === "attention" || item.state === "queued") && (
+              (item.state === "attention" || item.state === "queued") &&
+              item.error !== MISSING_OUTGOING_CONTENT && (
                 <button
                   className="btn"
-                  disabled={!online}
+                  disabled={!online || !!replacing}
                   onClick={() =>
                     void reconcileNative(item.owner)
                       .then(() => retryOutgoing(item.key, item.owner))
